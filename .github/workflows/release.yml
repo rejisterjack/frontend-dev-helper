@@ -27,31 +27,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
-      - name: Build extension
-        run: pnpm run build
+      - name: Build and package
+        run: pnpm run release
       
-      - name: Create Chrome ZIP
-        run: |
-          cd dist
-          zip -r ../frontend-dev-helper-chrome.zip .
-          cd ..
-      
-      - name: Create Firefox ZIP
-        run: |
-          # Modify manifest for Firefox (Manifest V2 compatibility)
-          cd dist
-          # Convert service_worker to scripts for Firefox MV2
-          cat manifest.json | sed 's/"service_worker": "\([^"]*\)"/"scripts": ["\1"]/' > manifest-firefox.json
-          mv manifest-firefox.json manifest.json
-          zip -r ../frontend-dev-helper-firefox.zip .
-          cd ..
-      
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            frontend-dev-helper-chrome.zip
-            frontend-dev-helper-firefox.zip
+            releases/*.zip
           generate_release_notes: true
           draft: false
           prerelease: false

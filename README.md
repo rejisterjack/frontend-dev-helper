@@ -66,7 +66,14 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 ## 🚀 Installation
 
 ### From Chrome Web Store
-_Coming soon!_
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?style=for-the-badge&logo=google-chrome)](https://chrome.google.com/webstore/detail/frontenddevhelper/PLACEHOLDER_ID)
+
+👉 [Install FrontendDevHelper from Chrome Web Store](https://chrome.google.com/webstore/detail/frontenddevhelper/PLACEHOLDER_ID)
+
+### From Firefox Add-ons
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox%20Add--ons-Install-orange?style=for-the-badge&logo=firefox)](https://addons.mozilla.org/en-US/firefox/addon/frontenddevhelper/)
+
+👉 [Install FrontendDevHelper from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/frontenddevhelper/)
 
 ### Manual Installation (Developer Mode)
 

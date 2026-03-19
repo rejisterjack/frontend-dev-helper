@@ -16,7 +16,9 @@
     "lint:fix": "biome lint src --write",
     "format": "biome format src --write",
     "check": "biome check src",
-    "check:fix": "biome check src --write"
+    "check:fix": "biome check src --write",
+    "release": "./scripts/build-release.sh",
+    "release:win": "node scripts/build-release.js"
   },
   "keywords": [
     "browser-extension",
@@ -40,6 +42,7 @@
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^1.6.0",
+    "archiver": "^6.0.1",
     "autoprefixer": "^10.4.16",
     "jsdom": "^29.0.0",
     "postcss": "^8.4.32",
