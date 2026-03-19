@@ -119,7 +119,7 @@ export class ScreenshotStudio {
   private state: ScreenshotStudioState;
   private dragState: DragState;
   private textEditState: TextEditState;
-  
+
   // DOM Elements
   private container: HTMLElement | null = null;
   private canvas: HTMLCanvasElement | null = null;
@@ -205,14 +205,14 @@ export class ScreenshotStudio {
    */
   async capture(options: CaptureOptions = {}): Promise<string> {
     const { fullPage = false, format = 'png', quality = 0.92 } = options;
-    
+
     try {
       const dataUrl = await this.captureScreenshot(fullPage);
-      
+
       if (format === 'jpeg') {
         return this.convertToFormat(dataUrl, format, quality);
       }
-      
+
       return dataUrl;
     } catch (error) {
       console.error('[ScreenshotStudio] Capture failed:', error);
@@ -250,12 +250,12 @@ export class ScreenshotStudio {
 
   private async startCapture(): Promise<void> {
     this.state.isCapturing = true;
-    
+
     try {
       // Capture screenshot first
       const dataUrl = await this.captureScreenshot(true);
       this.state.screenshotDataUrl = dataUrl;
-      
+
       // Setup the UI
       this.createContainer();
       this.createCanvas();
@@ -265,7 +265,7 @@ export class ScreenshotStudio {
       this.createActionBar();
       this.createInstructions();
       this.attachEventListeners();
-      
+
       this.state.isCapturing = false;
       this.state.isEditing = true;
     } catch (error) {
@@ -353,14 +353,8 @@ export class ScreenshotStudio {
       }
 
       if (fullPage) {
-        canvas.width = Math.max(
-          document.documentElement.scrollWidth,
-          document.body.scrollWidth
-        );
-        canvas.height = Math.max(
-          document.documentElement.scrollHeight,
-          document.body.scrollHeight
-        );
+        canvas.width = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+        canvas.height = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
       } else {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -711,15 +705,11 @@ export class ScreenshotStudio {
     this.actionBar.appendChild(copyBtn);
 
     // Download PNG button
-    const downloadPngBtn = this.createActionButton('PNG', '💾', () =>
-      this.download('png')
-    );
+    const downloadPngBtn = this.createActionButton('PNG', '💾', () => this.download('png'));
     this.actionBar.appendChild(downloadPngBtn);
 
     // Download JPG button
-    const downloadJpgBtn = this.createActionButton('JPG', '🖼️', () =>
-      this.download('jpeg')
-    );
+    const downloadJpgBtn = this.createActionButton('JPG', '🖼️', () => this.download('jpeg'));
     this.actionBar.appendChild(downloadJpgBtn);
 
     // Divider
@@ -893,9 +883,7 @@ export class ScreenshotStudio {
 
     if (this.state.currentTool === 'select' && this.dragState.annotationId) {
       // Move existing annotation
-      const annotation = this.state.annotations.find(
-        (a) => a.id === this.dragState.annotationId
-      );
+      const annotation = this.state.annotations.find((a) => a.id === this.dragState.annotationId);
       if (annotation) {
         const dx = x - this.dragState.startPoint.x;
         const dy = y - this.dragState.startPoint.y;
@@ -1119,9 +1107,7 @@ export class ScreenshotStudio {
   private updateSelectionBox(): void {
     if (!this.selectionBox || !this.state.selectedAnnotationId) return;
 
-    const annotation = this.state.annotations.find(
-      (a) => a.id === this.state.selectedAnnotationId
-    );
+    const annotation = this.state.annotations.find((a) => a.id === this.state.selectedAnnotationId);
     if (!annotation) {
       this.hideSelectionBox();
       return;
@@ -1146,7 +1132,7 @@ export class ScreenshotStudio {
     }
   }
 
-  private positionResizeHandles(annotation: Annotation): void {
+  private positionResizeHandles(_annotation: Annotation): void {
     const handles: Record<string, { x: string; y: string }> = {
       nw: { x: '-4px', y: '-4px' },
       n: { x: '50%', y: '-4px' },
@@ -1165,11 +1151,12 @@ export class ScreenshotStudio {
         handle.style.display = 'block';
         handle.style.left = posData.x;
         handle.style.top = posData.y;
-        handle.style.transform = pos.includes('n') && pos !== 'n' && pos !== 'nw' && pos !== 'ne' 
-          ? 'translate(-50%, 0)' 
-          : pos === 'w' || pos === 'e' 
-            ? 'translate(0, -50%)'
-            : 'none';
+        handle.style.transform =
+          pos.includes('n') && pos !== 'n' && pos !== 'nw' && pos !== 'ne'
+            ? 'translate(-50%, 0)'
+            : pos === 'w' || pos === 'e'
+              ? 'translate(0, -50%)'
+              : 'none';
       }
     }
   }
@@ -1420,11 +1407,9 @@ export class ScreenshotStudio {
     try {
       const dataUrl = this.getAnnotatedImage();
       const blob = await this.dataUrlToBlob(dataUrl);
-      
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ]);
-      
+
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+
       this.showNotification('Screenshot copied to clipboard!');
     } catch (error) {
       console.error('[ScreenshotStudio] Failed to copy:', error);
@@ -1457,7 +1442,11 @@ export class ScreenshotStudio {
     return this.canvas.toDataURL('image/png');
   }
 
-  private async convertToFormat(dataUrl: string, format: ExportFormat, quality: number): Promise<string> {
+  private async convertToFormat(
+    dataUrl: string,
+    format: ExportFormat,
+    quality: number
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -1492,17 +1481,17 @@ export class ScreenshotStudio {
         reject(new Error('Invalid data URL'));
         return;
       }
-      
+
       const mimeMatch = arr[0].match(/:(.*?);/);
       const mime = mimeMatch ? mimeMatch[1] : 'image/png';
       const bstr = atob(arr[1]);
       let n = bstr.length;
       const u8arr = new Uint8Array(n);
-      
+
       while (n--) {
         u8arr[n] = bstr.charCodeAt(n);
       }
-      
+
       resolve(new Blob([u8arr], { type: mime }));
     });
   }
@@ -1514,7 +1503,9 @@ export class ScreenshotStudio {
   private updateToolbarUI(): void {
     if (!this.toolbar) return;
 
-    const buttons = Array.from(this.toolbar.querySelectorAll<HTMLButtonElement>(`.${PREFIX}-tool-btn`));
+    const buttons = Array.from(
+      this.toolbar.querySelectorAll<HTMLButtonElement>(`.${PREFIX}-tool-btn`)
+    );
     for (const btn of buttons) {
       let toolType: AnnotationTool | 'delete' | null = null;
       if (btn.className.includes('select')) toolType = 'select';
@@ -1535,7 +1526,9 @@ export class ScreenshotStudio {
   private updateColorPickerUI(): void {
     if (!this.colorPicker) return;
 
-    const buttons = Array.from(this.colorPicker.querySelectorAll<HTMLButtonElement>(`.${PREFIX}-color-btn`));
+    const buttons = Array.from(
+      this.colorPicker.querySelectorAll<HTMLButtonElement>(`.${PREFIX}-color-btn`)
+    );
     for (const btn of buttons) {
       const color = btn.dataset.color;
       btn.style.borderColor = color === this.state.currentColor ? '#f3f4f6' : 'transparent';

@@ -9,7 +9,7 @@
  * - Export modified CSS
  */
 
-import { rgbToHex as utilRgbToHex, parseColor } from '../utils/color';
+import { parseColor } from '../utils/color';
 
 // ============================================
 // Types and Interfaces
@@ -286,7 +286,7 @@ let selectedElement: HTMLElement | null = null;
 let activeCategory = 'Layout';
 let panel: HTMLElement | null = null;
 let highlightOverlay: HTMLElement | null = null;
-const computedStylesTooltip: HTMLElement | null = null;
+const _computedStylesTooltip: HTMLElement | null = null;
 const history: CSSEdit[] = [];
 let historyIndex = -1;
 const MAX_HISTORY_SIZE = 50;
@@ -1168,13 +1168,13 @@ function convertRgbToHex(cssColor: string): string | null {
   return localRgbToHex(parsed.r, parsed.g, parsed.b);
 }
 
-function rgbToHex(r: number, g: number, b: number): string {
+function _rgbToHex(r: number, g: number, b: number): string {
   return (
     '#' +
     [r, g, b]
       .map((x) => {
         const hex = Math.round(x).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
+        return hex.length === 1 ? `0${hex}` : hex;
       })
       .join('')
   );
@@ -1349,14 +1349,6 @@ export function destroy(): void {
 
 export class CSSLiveEditor {
   private options: Required<CSSEditorOptions>;
-  private isActive = false;
-  private selectedElement: HTMLElement | null = null;
-  private activeCategory = 'Layout';
-  private panel: HTMLElement | null = null;
-  private highlightOverlay: HTMLElement | null = null;
-  private history: CSSEdit[] = [];
-  private historyIndex = -1;
-  private modifiedElements = new Map<HTMLElement, ElementStyles>();
 
   constructor(opts?: CSSEditorOptions) {
     this.options = {

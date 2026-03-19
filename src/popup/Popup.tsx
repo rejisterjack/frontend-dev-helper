@@ -227,9 +227,15 @@ export const Popup: React.FC = () => {
               [ToolType.SITE_REPORT]: response.states.siteReportGenerator || { enabled: false },
               [ToolType.CSS_EDITOR]: response.states.cssEditor || { enabled: false },
               [ToolType.SCREENSHOT_STUDIO]: response.states.screenshotStudio || { enabled: false },
-              [ToolType.ANIMATION_INSPECTOR]: response.states.animationInspector || { enabled: false },
-              [ToolType.RESPONSIVE_PREVIEW]: response.states.responsivePreview || { enabled: false },
-              [ToolType.DESIGN_SYSTEM_VALIDATOR]: response.states.designSystemValidator || { enabled: false },
+              [ToolType.ANIMATION_INSPECTOR]: response.states.animationInspector || {
+                enabled: false,
+              },
+              [ToolType.RESPONSIVE_PREVIEW]: response.states.responsivePreview || {
+                enabled: false,
+              },
+              [ToolType.DESIGN_SYSTEM_VALIDATOR]: response.states.designSystemValidator || {
+                enabled: false,
+              },
               [ToolType.NETWORK_ANALYZER]: response.states.networkAnalyzer || { enabled: false },
             });
           }
@@ -323,7 +329,9 @@ export const Popup: React.FC = () => {
         messageType = enabled ? 'RESPONSIVE_PREVIEW_ENABLE' : 'RESPONSIVE_PREVIEW_DISABLE';
         break;
       case ToolType.DESIGN_SYSTEM_VALIDATOR:
-        messageType = enabled ? 'DESIGN_SYSTEM_VALIDATOR_ENABLE' : 'DESIGN_SYSTEM_VALIDATOR_DISABLE';
+        messageType = enabled
+          ? 'DESIGN_SYSTEM_VALIDATOR_ENABLE'
+          : 'DESIGN_SYSTEM_VALIDATOR_DISABLE';
         break;
       case ToolType.NETWORK_ANALYZER:
         messageType = enabled ? 'NETWORK_ANALYZER_ENABLE' : 'NETWORK_ANALYZER_DISABLE';

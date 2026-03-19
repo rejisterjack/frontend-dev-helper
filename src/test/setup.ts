@@ -30,7 +30,7 @@ const mockChrome = {
     query: vi.fn(),
     get: vi.fn(),
     sendMessage: vi.fn(),
-    captureVisibleTab: vi.fn((options, callback) => {
+    captureVisibleTab: vi.fn((_options, callback) => {
       // Mock successful screenshot capture
       if (callback) {
         callback('data:image/png;base64,mock-screenshot');
@@ -78,7 +78,7 @@ const mockChrome = {
         return Promise.resolve();
       }),
       clear: vi.fn(() => {
-        Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
+        Object.keys(mockStorageData).forEach((key) => delete mockStorageData[key]);
         return Promise.resolve();
       }),
     },
@@ -116,7 +116,7 @@ const mockChrome = {
         return Promise.resolve();
       }),
       clear: vi.fn(() => {
-        Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
+        Object.keys(mockStorageData).forEach((key) => delete mockStorageData[key]);
         return Promise.resolve();
       }),
     },
@@ -188,7 +188,7 @@ global.Image = class MockImage {
   height = 100;
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
-  
+
   constructor() {
     // Simulate async image loading
     setTimeout(() => {
@@ -217,5 +217,5 @@ global.Image = class MockImage {
 afterEach(() => {
   vi.clearAllMocks();
   // Clear mock storage
-  Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
+  Object.keys(mockStorageData).forEach((key) => delete mockStorageData[key]);
 });

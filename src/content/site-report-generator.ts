@@ -12,7 +12,7 @@
  * Generates professional HTML, PDF, and JSON reports
  */
 
-import type { AccessibilityReport, MemoryInfo, PerformanceMetrics } from '../types';
+import type { AccessibilityReport, MemoryInfo } from '../types';
 
 // ============================================
 // Type Definitions
@@ -371,7 +371,7 @@ export interface ReportOptions {
 // ============================================
 
 let isActive = false;
-const reportOverlay: HTMLElement | null = null;
+const _reportOverlay: HTMLElement | null = null;
 let currentReport: SiteReport | null = null;
 
 // ============================================
@@ -873,7 +873,7 @@ function colorToHex(color: string): string | null {
  * Convert RGB to hex
  */
 function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
 }
 
 /**
@@ -1085,7 +1085,7 @@ function analyzeSEO(): SEOReport {
   });
   const externalLinks = Array.from(allLinks).filter((a) => {
     const href = a.getAttribute('href');
-    return href && href.startsWith('http') && !href.includes(window.location.hostname);
+    return href?.startsWith('http') && !href.includes(window.location.hostname);
   });
 
   if (internalLinks.length === 0) {

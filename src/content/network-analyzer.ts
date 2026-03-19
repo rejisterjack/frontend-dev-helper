@@ -238,7 +238,7 @@ function interceptXHR(): void {
   ): void {
     (this as XMLHttpRequest & { _fdhMethod?: string; _fdhUrl?: string })._fdhMethod = method;
     (this as XMLHttpRequest & { _fdhMethod?: string; _fdhUrl?: string })._fdhUrl = String(url);
-    return originalOpen!.call(this, method, url, async ?? true, username, password);
+    originalOpen!.call(this, method, url, async ?? true, username, password);
   };
 
   XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null): void {
@@ -319,7 +319,7 @@ function interceptXHR(): void {
       }
     };
 
-    return originalSend!.call(this, body);
+    originalSend!.call(this, body);
   };
 }
 

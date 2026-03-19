@@ -6,7 +6,13 @@
  */
 
 import type { ToolId } from '@/constants';
-import { DEFAULT_SETTINGS, ERROR_MESSAGES, STORAGE_KEYS, TOOL_IDS, TOOL_METADATA } from '@/constants';
+import {
+  DEFAULT_SETTINGS,
+  ERROR_MESSAGES,
+  STORAGE_KEYS,
+  TOOL_IDS,
+  TOOL_METADATA,
+} from '@/constants';
 import type { ToolState, ToolsState } from '@/types';
 
 // ============================================

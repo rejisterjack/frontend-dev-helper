@@ -437,8 +437,8 @@ export const PerformanceTab: React.FC = () => {
               <div>
                 <div className="text-[10px] text-dev-muted mb-2">Slowest Resources</div>
                 <div className="space-y-1">
-                  {resources.slowestResources.slice(0, 3).map((resource, idx) => (
-                    <div key={idx} className="flex justify-between text-xs truncate">
+                  {resources.slowestResources.slice(0, 3).map((resource) => (
+                    <div key={resource.url} className="flex justify-between text-xs truncate">
                       <span className="text-dev-muted truncate max-w-[180px]" title={resource.url}>
                         {resource.url.split('/').pop() || resource.url}
                       </span>
@@ -484,8 +484,8 @@ export const PerformanceTab: React.FC = () => {
           {expandedSections.has('images') && (
             <div className="p-3 pt-0 border-t border-dev-border">
               <div className="space-y-2">
-                {imageOptimizations.slice(0, 3).map((img, idx) => (
-                  <div key={idx} className="rounded bg-dev-bg p-2 text-xs">
+                {imageOptimizations.slice(0, 3).map((img) => (
+                  <div key={img.src} className="rounded bg-dev-bg p-2 text-xs">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="truncate text-dev-text">{img.src.split('/').pop()}</span>
                       <span className="text-[10px] px-1 py-0.5 rounded bg-dev-border text-dev-muted">
@@ -497,9 +497,9 @@ export const PerformanceTab: React.FC = () => {
                       {formatBytes(img.potentialSavings)}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {img.recommendations.map((rec, i) => (
+                      {img.recommendations.map((rec) => (
                         <span
-                          key={i}
+                          key={rec}
                           className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary-500/10 text-primary-400"
                         >
                           {rec}
@@ -551,8 +551,11 @@ export const PerformanceTab: React.FC = () => {
           {expandedSections.has('blocking') && (
             <div className="p-3 pt-0 border-t border-dev-border">
               <div className="space-y-1">
-                {renderBlocking.map((resource, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-xs py-1">
+                {renderBlocking.map((resource) => (
+                  <div
+                    key={resource.url}
+                    className="flex justify-between items-center text-xs py-1"
+                  >
                     <div className="flex items-center gap-2">
                       <span
                         className={

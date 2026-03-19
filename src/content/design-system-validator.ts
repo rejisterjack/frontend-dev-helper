@@ -108,7 +108,18 @@ export const PRESETS: Record<string, DesignSystemTokens> = {
     colors: {
       primary: ['#6750A4', '#7F67BE', '#9A82DB', '#B69DF8'],
       secondary: ['#625B71', '#7A7289', '#958DA5', '#B0A7C0'],
-      neutral: ['#1C1B1F', '#313033', '#484649', '#605D62', '#787579', '#939094', '#AEAAAE', '#CAC4D0', '#E7E0EC', '#F5EFF7'],
+      neutral: [
+        '#1C1B1F',
+        '#313033',
+        '#484649',
+        '#605D62',
+        '#787579',
+        '#939094',
+        '#AEAAAE',
+        '#CAC4D0',
+        '#E7E0EC',
+        '#F5EFF7',
+      ],
       semantic: {
         success: ['#4CAF50', '#81C784', '#A5D6A7'],
         warning: ['#FF9800', '#FFB74D', '#FFCC80'],
@@ -151,7 +162,18 @@ export const PRESETS: Record<string, DesignSystemTokens> = {
     colors: {
       primary: ['#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF'],
       secondary: ['#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6'],
-      neutral: ['#0F172A', '#1E293B', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0', '#F1F5F9', '#F8FAFC'],
+      neutral: [
+        '#0F172A',
+        '#1E293B',
+        '#334155',
+        '#475569',
+        '#64748B',
+        '#94A3B8',
+        '#CBD5E1',
+        '#E2E8F0',
+        '#F1F5F9',
+        '#F8FAFC',
+      ],
       semantic: {
         success: ['#22C55E', '#16A34A', '#15803D'],
         warning: ['#F59E0B', '#D97706', '#B45309'],
@@ -163,7 +185,17 @@ export const PRESETS: Record<string, DesignSystemTokens> = {
       fontSizes: [12, 14, 16, 18, 20, 24, 30, 36, 48, 60, 72, 96, 128],
       fontWeights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
       lineHeights: [1, 1.25, 1.375, 1.5, 1.625, 2],
-      fontFamilies: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      fontFamilies: [
+        'ui-sans-serif',
+        'system-ui',
+        '-apple-system',
+        'BlinkMacSystemFont',
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        'Arial',
+        'sans-serif',
+      ],
       unit: 'px',
     },
     borderRadius: {
@@ -193,7 +225,16 @@ export const PRESETS: Record<string, DesignSystemTokens> = {
     colors: {
       primary: ['#0D6EFD', '#0B5ED7', '#0A58CA', '#094DB1'],
       secondary: ['#6C757D', '#5C636A', '#565E64', '#4C5258'],
-      neutral: ['#212529', '#343A40', '#495057', '#6C757D', '#ADB5BD', '#DEE2E6', '#E9ECEF', '#F8F9FA'],
+      neutral: [
+        '#212529',
+        '#343A40',
+        '#495057',
+        '#6C757D',
+        '#ADB5BD',
+        '#DEE2E6',
+        '#E9ECEF',
+        '#F8F9FA',
+      ],
       semantic: {
         success: ['#198754', '#157347', '#146C43'],
         warning: ['#FFC107', '#FFCA2C', '#FFCD39'],
@@ -205,7 +246,15 @@ export const PRESETS: Record<string, DesignSystemTokens> = {
       fontSizes: [12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64],
       fontWeights: [300, 400, 500, 600, 700, 800, 900],
       lineHeights: [1, 1.2, 1.25, 1.4, 1.5, 1.6, 1.75],
-      fontFamilies: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      fontFamilies: [
+        'system-ui',
+        '-apple-system',
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        'Arial',
+        'sans-serif',
+      ],
       unit: 'px',
     },
     borderRadius: {
@@ -240,7 +289,7 @@ const state: ValidatorState = {
 let shadowHost: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
 let panelElement: HTMLElement | null = null;
-const highlightOverlay: HTMLElement | null = null;
+const _highlightOverlay: HTMLElement | null = null;
 
 // ============================================================================
 // Color Utilities
@@ -322,7 +371,10 @@ function parseColor(color: string): { r: number; g: number; b: number; a: number
   return null;
 }
 
-function colorDistance(c1: { r: number; g: number; b: number }, c2: { r: number; g: number; b: number }): number {
+function colorDistance(
+  c1: { r: number; g: number; b: number },
+  c2: { r: number; g: number; b: number }
+): number {
   const dr = c1.r - c2.r;
   const dg = c1.g - c2.g;
   const db = c1.b - c2.b;
@@ -376,11 +428,17 @@ function convertToUnit(value: number, fromUnit: string, toUnit: string): number 
   return value;
 }
 
-function isValueInScale(value: string, scale: number[], unit: string, tolerance: number = 1): boolean {
+function isValueInScale(
+  value: string,
+  scale: number[],
+  unit: string,
+  tolerance: number = 1
+): boolean {
   const parsed = parseValue(value);
   if (!parsed) return false;
 
-  const valueInPx = parsed.unit === 'px' ? parsed.num : convertToUnit(parsed.num, parsed.unit, 'px');
+  const valueInPx =
+    parsed.unit === 'px' ? parsed.num : convertToUnit(parsed.num, parsed.unit, 'px');
 
   for (const scaleValue of scale) {
     const scaleInPx = unit === 'px' ? scaleValue : convertToUnit(scaleValue, unit, 'px');
@@ -390,11 +448,7 @@ function isValueInScale(value: string, scale: number[], unit: string, tolerance:
 }
 
 function normalizeShadow(shadow: string): string {
-  return shadow
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/,\s*/g, ',')
-    .trim();
+  return shadow.toLowerCase().replace(/\s+/g, ' ').replace(/,\s*/g, ',').trim();
 }
 
 function shadowMatches(value: string, shadows: string[]): boolean {
@@ -438,7 +492,14 @@ function validateElement(element: HTMLElement, tokens: DesignSystemTokens): Viol
         const fullProp = `${prop}-${dir}`;
         const value = computed.getPropertyValue(fullProp);
         if (value && value !== '0px' && value !== 'auto') {
-          if (!isValueInScale(value, tokens.spacing.scale, tokens.spacing.unit, tokens.spacing.tolerance)) {
+          if (
+            !isValueInScale(
+              value,
+              tokens.spacing.scale,
+              tokens.spacing.unit,
+              tokens.spacing.tolerance
+            )
+          ) {
             violations.push({
               id: `${id}-${fullProp}`,
               type: 'spacing',
@@ -455,7 +516,14 @@ function validateElement(element: HTMLElement, tokens: DesignSystemTokens): Viol
     } else {
       const value = computed.getPropertyValue(prop);
       if (value && value !== '0px' && value !== 'normal') {
-        if (!isValueInScale(value, tokens.spacing.scale, tokens.spacing.unit, tokens.spacing.tolerance)) {
+        if (
+          !isValueInScale(
+            value,
+            tokens.spacing.scale,
+            tokens.spacing.unit,
+            tokens.spacing.tolerance
+          )
+        ) {
           violations.push({
             id: `${id}-${prop}`,
             type: 'spacing',
@@ -472,7 +540,15 @@ function validateElement(element: HTMLElement, tokens: DesignSystemTokens): Viol
   }
 
   // Color validation
-  const colorProps = ['color', 'background-color', 'border-color', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'];
+  const colorProps = [
+    'color',
+    'background-color',
+    'border-color',
+    'border-top-color',
+    'border-right-color',
+    'border-bottom-color',
+    'border-left-color',
+  ];
   const allColors = getAllColors(tokens);
 
   for (const prop of colorProps) {
@@ -533,7 +609,9 @@ function validateElement(element: HTMLElement, tokens: DesignSystemTokens): Viol
   const lineHeight = computed.getPropertyValue('line-height');
   if (lineHeight && lineHeight !== 'normal') {
     const lineHeightNum = Number.parseFloat(lineHeight);
-    const hasMatch = tokens.typography.lineHeights.some((lh) => Math.abs(lh - lineHeightNum) < 0.05);
+    const hasMatch = tokens.typography.lineHeights.some(
+      (lh) => Math.abs(lh - lineHeightNum) < 0.05
+    );
     if (!hasMatch && !lineHeight.includes('px')) {
       violations.push({
         id: `${id}-line-height`,
@@ -608,7 +686,7 @@ function calculateStats(violations: Violation[], totalElements: number): Validat
   const totalViolations = violations.length;
   const estimatedValid = Math.max(0, totalChecks - totalViolations);
 
-  const perTypeViolations = Math.floor(totalViolations / 5);
+  const _perTypeViolations = Math.floor(totalViolations / 5);
   const perTypeValid = Math.floor(estimatedValid / 5);
 
   for (const type of Object.keys(stats) as Array<keyof typeof stats>) {
@@ -619,7 +697,7 @@ function calculateStats(violations: Violation[], totalElements: number): Validat
   return stats;
 }
 
-function calculateTokenUsage(violations: Violation[]): ValidationReport['tokenUsage'] {
+function calculateTokenUsage(_violations: Violation[]): ValidationReport['tokenUsage'] {
   const usage: ValidationReport['tokenUsage'] = {
     spacing: {},
     colors: {},
@@ -1157,11 +1235,14 @@ function updateStats(report: ValidationReport): void {
         </div>
       `;
     } else {
-      const grouped = report.violations.slice(0, 20).reduce((acc, v) => {
-        acc[v.type] = acc[v.type] || [];
-        acc[v.type].push(v);
-        return acc;
-      }, {} as Record<string, Violation[]>);
+      const grouped = report.violations.slice(0, 20).reduce(
+        (acc, v) => {
+          acc[v.type] = acc[v.type] || [];
+          acc[v.type].push(v);
+          return acc;
+        },
+        {} as Record<string, Violation[]>
+      );
 
       violationsListEl.innerHTML = Object.entries(grouped)
         .map(([type, violations]) =>
