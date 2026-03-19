@@ -169,7 +169,7 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
 
           <a
-            href="https://github.com/frontend-dev-helper/frontend-dev-helper/issues"
+            href="https://github.com/rejisterjack/frontend-dev-helper/issues"
             target="_blank"
             rel="noopener noreferrer"
             style={{

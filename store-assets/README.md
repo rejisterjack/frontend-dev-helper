@@ -114,7 +114,7 @@ Developer Tools
 English
 
 ### Website
-https://github.com/frontend-dev-helper/frontend-dev-helper
+https://github.com/rejisterjack/frontend-dev-helper
 
 ### Support Email
 (Your support email)

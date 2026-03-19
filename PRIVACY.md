@@ -61,4 +61,4 @@ If you have any questions about this Privacy Policy, please open an issue on our
 ### Open Source
 
 FrontendDevHelper is open source. You can review our code at:
-https://github.com/frontend-dev-helper/frontend-dev-helper
+https://github.com/rejisterjack/frontend-dev-helper

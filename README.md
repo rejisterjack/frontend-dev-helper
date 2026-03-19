@@ -3,10 +3,10 @@
 > **One extension. Every visual debugging tool you actually need.**
 > Built for Chrome, Brave & Firefox · Manifest V3 · Open Source
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/frontend-dev-helper/frontend-dev-helper)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/rejisterjack/frontend-dev-helper)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](public/manifest.json)
-[![CI](https://github.com/frontend-dev-helper/frontend-dev-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/frontend-dev-helper/frontend-dev-helper/actions)
+[![CI](https://github.com/rejisterjack/frontend-dev-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/rejisterjack/frontend-dev-helper/actions)
 
 ---
 
@@ -57,14 +57,14 @@ _Coming soon!_
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/frontend-dev-helper/frontend-dev-helper.git
+git clone https://github.com/rejisterjack/frontend-dev-helper.git
 cd frontend-dev-helper
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Build the extension
-npm run build
+pnpm run build
 
 # 4. Load in Chrome / Brave
 # → Open chrome://extensions
