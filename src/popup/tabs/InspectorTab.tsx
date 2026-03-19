@@ -16,9 +16,7 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab.id) {
       await chrome.tabs.sendMessage(tab.id, {
-        type: 'INSPECT_ELEMENT',
-        timestamp: Date.now(),
-        id: crypto.randomUUID(),
+        type: 'TOGGLE_INSPECTOR',
       });
       window.close();
     }
@@ -57,24 +55,24 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
         />
 
         <FeatureToggle
-          label="Computed Styles"
-          description="Show computed CSS styles"
-          enabled={features?.computedStyles ?? false}
-          onChange={() => onToggleFeature('computedStyles')}
+          label="CSS Scanner"
+          description="Scan and highlight CSS issues"
+          enabled={features?.cssScanner ?? false}
+          onChange={() => onToggleFeature('cssScanner')}
         />
 
         <FeatureToggle
-          label="Layout Overlay"
-          description="Visualize box model"
-          enabled={features?.layoutOverlay ?? false}
-          onChange={() => onToggleFeature('layoutOverlay')}
+          label="Grid Overlay"
+          description="Visualize grid and box model"
+          enabled={features?.gridOverlay ?? false}
+          onChange={() => onToggleFeature('gridOverlay')}
         />
 
         <FeatureToggle
-          label="Accessibility Tree"
-          description="Show ARIA properties"
-          enabled={features?.accessibilityTree ?? false}
-          onChange={() => onToggleFeature('accessibilityTree')}
+          label="Measure Tool"
+          description="Measure distances on the page"
+          enabled={features?.measureTool ?? false}
+          onChange={() => onToggleFeature('measureTool')}
         />
       </div>
 

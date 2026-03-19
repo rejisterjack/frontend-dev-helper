@@ -25,24 +25,24 @@ export const CSSTab: React.FC<CSSTabProps> = ({ features, onToggleFeature }) => 
         />
 
         <FeatureToggle
-          label="Unused CSS Detector"
-          description="Find unused CSS rules"
-          enabled={features?.unusedCssDetector ?? false}
-          onChange={() => onToggleFeature('unusedCssDetector')}
+          label="Spacing Visualizer"
+          description="Visualize element spacing and margins"
+          enabled={features?.spacingVisualizer ?? false}
+          onChange={() => onToggleFeature('spacingVisualizer')}
         />
 
         <FeatureToggle
-          label="Specificity Analyzer"
-          description="Show selector specificity"
-          enabled={features?.cssSpecificity ?? false}
-          onChange={() => onToggleFeature('cssSpecificity')}
+          label="Pixel Ruler"
+          description="Measure pixel-precise dimensions"
+          enabled={features?.pixelRuler ?? false}
+          onChange={() => onToggleFeature('pixelRuler')}
         />
 
         <FeatureToggle
-          label="Animation Inspector"
-          description="Inspect CSS animations"
-          enabled={features?.animationInspector ?? false}
-          onChange={() => onToggleFeature('animationInspector')}
+          label="Measure Tool"
+          description="Measure distances on the page"
+          enabled={features?.measureTool ?? false}
+          onChange={() => onToggleFeature('measureTool')}
         />
       </div>
 
@@ -59,10 +59,10 @@ export const CSSTab: React.FC<CSSTabProps> = ({ features, onToggleFeature }) => 
         />
 
         <FeatureToggle
-          label="Device Simulator"
-          description="Simulate different devices"
-          enabled={features?.deviceSimulator ?? false}
-          onChange={() => onToggleFeature('deviceSimulator')}
+          label="Breakpoint Overlay"
+          description="Show active responsive breakpoints"
+          enabled={features?.breakpointOverlay ?? false}
+          onChange={() => onToggleFeature('breakpointOverlay')}
         />
       </div>
 
