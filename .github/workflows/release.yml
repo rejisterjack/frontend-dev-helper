@@ -17,13 +17,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'pnpm'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
       
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Build extension
-        run: npm run build
+        run: pnpm run build
       
       - name: Create Chrome ZIP
         run: |
@@ -33,15 +38,16 @@ jobs:
       
       - name: Create Firefox ZIP
         run: |
-          # Modify manifest for Firefox
+          # Modify manifest for Firefox (Manifest V2 compatibility)
           cd dist
-          cat manifest.json | sed 's/"service_worker": "src\/background\/index.ts"/"scripts": ["src\/background\/index.ts"]/' > manifest-firefox.json
+          # Convert service_worker to scripts for Firefox MV2
+          cat manifest.json | sed 's/"service_worker": "\([^"]*\)"/"scripts": ["\1"]/' > manifest-firefox.json
           mv manifest-firefox.json manifest.json
           zip -r ../frontend-dev-helper-firefox.zip .
           cd ..
       
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             frontend-dev-helper-chrome.zip

@@ -61,16 +61,15 @@ const CONTEXT_MENU_ITEMS = {
   TOGGLE_BREAKPOINT: 'fdh-toggle-breakpoint',
 } as const;
 
-// Command to tool ID mapping
+// Command to tool ID mapping (matches generated manifest.json command names)
 const COMMAND_TO_TOOL_ID: Record<string, ToolId> = {
-  toggle_dom_outliner: TOOL_IDS.DOM_OUTLINER,
-  toggle_spacing_visualizer: TOOL_IDS.SPACING_VISUALIZER,
-  toggle_font_inspector: TOOL_IDS.FONT_INSPECTOR,
-  toggle_color_picker: TOOL_IDS.COLOR_PICKER,
-  toggle_pixel_ruler: TOOL_IDS.PIXEL_RULER,
-  toggle_breakpoint_overlay: TOOL_IDS.RESPONSIVE_BREAKPOINT,
-  toggle_inspector: TOOL_IDS.ELEMENT_INSPECTOR,
-  take_screenshot: TOOL_IDS.SCREENSHOT_TOOL,
+  'toggle-pesticide': TOOL_IDS.DOM_OUTLINER,
+  'toggle-spacing': TOOL_IDS.SPACING_VISUALIZER,
+  'toggle-font-inspector': TOOL_IDS.FONT_INSPECTOR,
+  'toggle-color-picker': TOOL_IDS.COLOR_PICKER,
+  'toggle-pixel-ruler': TOOL_IDS.PIXEL_RULER,
+  'toggle-breakpoint': TOOL_IDS.RESPONSIVE_BREAKPOINT,
+  'toggle-inspector': TOOL_IDS.ELEMENT_INSPECTOR,
 };
 
 // ============================================

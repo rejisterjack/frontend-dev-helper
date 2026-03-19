@@ -37,7 +37,8 @@
     "storage",
     "scripting",
     "tabs",
-    "clipboardWrite"
+    "clipboardWrite",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -54,6 +55,7 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
+  "options_page": "options.html",
   "commands": {
     "_execute_action": {
       "suggested_key": {
@@ -62,12 +64,41 @@
       },
       "description": "Open FrontendDevHelper popup"
     },
-    "toggle-inspector": {
+    "toggle-pesticide": {
       "suggested_key": {
-        "default": "Ctrl+Shift+I",
-        "mac": "Command+Shift+I"
+        "default": "Alt+P"
       },
-      "description": "Toggle element inspector"
+      "description": "Toggle DOM Outliner"
+    },
+    "toggle-spacing": {
+      "suggested_key": {
+        "default": "Alt+S"
+      },
+      "description": "Toggle Spacing Visualizer"
+    },
+    "toggle-font-inspector": {
+      "suggested_key": {
+        "default": "Alt+F"
+      },
+      "description": "Toggle Font Inspector"
+    },
+    "toggle-color-picker": {
+      "suggested_key": {
+        "default": "Alt+C"
+      },
+      "description": "Toggle Color Picker"
+    },
+    "toggle-pixel-ruler": {
+      "suggested_key": {
+        "default": "Alt+M"
+      },
+      "description": "Toggle Pixel Ruler"
+    },
+    "toggle-breakpoint": {
+      "suggested_key": {
+        "default": "Alt+B"
+      },
+      "description": "Toggle Breakpoint Overlay"
     }
   },
   "optional_permissions": [

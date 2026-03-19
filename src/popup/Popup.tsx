@@ -234,12 +234,9 @@ export const Popup: React.FC = () => {
    * Open settings for a tool
    */
   const handleOpenSettings = useCallback((tool: ToolType) => {
-    const message: PopupMessage = {
-      type: 'OPEN_SETTINGS',
-      tool,
-    };
-    console.log('Opening settings for:', tool);
-    // Would open settings panel
+    // Open the options page with the tool pre-selected
+    const url = chrome.runtime.getURL(`options.html#tool=${tool}`);
+    chrome.tabs.create({ url });
   }, []);
 
   /**
@@ -431,7 +428,7 @@ export const Popup: React.FC = () => {
             Pro Tip
           </h4>
           <p className="text-[11px] text-slate-400">
-            Use <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Alt+Shift+F</kbd> to quickly toggle the most recently used tool.
+            Use <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd> to open the popup, <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Esc</kbd> to disable all tools.
           </p>
         </div>
       </main>
@@ -444,7 +441,7 @@ export const Popup: React.FC = () => {
           </span>
           <span className="text-slate-600">•</span>
           <a
-            href="https://github.com/your-username/frontend-dev-helper"
+            href="https://github.com/rejisterjack/frontend-dev-helper"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
@@ -462,21 +459,18 @@ export const Popup: React.FC = () => {
             className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
             onClick={(e) => {
               e.preventDefault();
-              // Would open options page
-              console.log('Opening options page...');
+              const url = chrome.runtime.getURL('options.html');
+              chrome.tabs.create({ url });
             }}
           >
             Settings
           </a>
           <span className="text-slate-600">•</span>
           <a
-            href="#"
+            href="https://github.com/rejisterjack/frontend-dev-helper#readme"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              // Would open help/docs
-              console.log('Opening help...');
-            }}
           >
             Help
           </a>

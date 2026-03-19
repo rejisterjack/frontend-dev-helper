@@ -17,22 +17,8 @@ export enum ToolType {
   TECH_DETECTOR = 'techDetector',
 }
 
-/** Tool ID type */
-export type ToolId = 
-  | 'domOutliner'
-  | 'spacingVisualizer'
-  | 'fontInspector'
-  | 'colorPicker'
-  | 'pixelRuler'
-  | 'breakpointOverlay'
-  | 'elementInspector'
-  | 'gridOverlay'
-  | 'measureTool'
-  | 'cssInspector'
-  | 'contrastChecker'
-  | 'layoutVisualizer'
-  | 'zIndexVisualizer'
-  | 'techDetector';
+/** Tool ID type - imported from constants to ensure consistency */
+export type { ToolId } from '@/constants';
 
 /** State of an individual tool */
 export interface ToolState {
@@ -181,6 +167,12 @@ export interface ResponsiveBreakpointSettings {
   customBreakpoints: number[];
 }
 
+/** Element Inspector settings */
+export interface ElementInspectorSettings {
+  showTooltips: boolean;
+  highlightStyles: boolean;
+}
+
 /** Union of all tool settings */
 export type ToolSettings =
   | DOMOutlinerSettings
@@ -188,7 +180,8 @@ export type ToolSettings =
   | FontInspectorSettings
   | ColorPickerSettings
   | PixelRulerSettings
-  | ResponsiveBreakpointSettings;
+  | ResponsiveBreakpointSettings
+  | ElementInspectorSettings;
 
 // ============================================
 // Extension Settings
@@ -226,6 +219,7 @@ export interface ExtensionSettings {
   theme: 'light' | 'dark' | 'system';
   shortcuts: Record<string, string>;
   autoSave: boolean;
+  autoOpenDevTools: boolean;
 }
 
 // ============================================

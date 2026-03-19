@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Popup } from './Popup';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // ============================================
 // FrontendDevHelper - Popup Entry Point
@@ -12,7 +13,9 @@ if (container) {
   const root = createRoot(container);
   root.render(
     <React.StrictMode>
-      <Popup />
+      <ErrorBoundary>
+        <Popup />
+      </ErrorBoundary>
     </React.StrictMode>
   );
 } else {

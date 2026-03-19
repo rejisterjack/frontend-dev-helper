@@ -10,6 +10,7 @@ export default defineManifest({
     'activeTab',
     'scripting',
     'tabs',
+    'notifications',
   ],
   host_permissions: [
     '<all_urls>',
@@ -58,6 +59,42 @@ export default defineManifest({
         mac: 'Command+Shift+F',
       },
       description: 'Open FrontendDevHelper popup',
+    },
+    toggle_dom_outliner: {
+      suggested_key: {
+        default: 'Alt+P',
+      },
+      description: 'Toggle DOM Outliner (Pesticide)',
+    },
+    toggle_spacing_visualizer: {
+      suggested_key: {
+        default: 'Alt+S',
+      },
+      description: 'Toggle Spacing Visualizer',
+    },
+    toggle_font_inspector: {
+      suggested_key: {
+        default: 'Alt+F',
+      },
+      description: 'Toggle Font Inspector',
+    },
+    toggle_color_picker: {
+      suggested_key: {
+        default: 'Alt+C',
+      },
+      description: 'Toggle Color Picker',
+    },
+    toggle_pixel_ruler: {
+      suggested_key: {
+        default: 'Alt+M',
+      },
+      description: 'Toggle Pixel Ruler',
+    },
+    toggle_breakpoint_overlay: {
+      suggested_key: {
+        default: 'Alt+B',
+      },
+      description: 'Toggle Breakpoint Overlay',
     },
     toggle_inspector: {
       suggested_key: {

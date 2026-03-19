@@ -15,23 +15,22 @@ import type { ToolSettings, DOMOutlinerSettings, SpacingVisualizerSettings, Font
  * Unique identifiers for all extension tools
  */
 export const TOOL_IDS = {
-  // Core Inspection Tools
+  // Core Inspection Tools (11 implemented tools)
   DOM_OUTLINER: 'domOutliner',
   SPACING_VISUALIZER: 'spacingVisualizer',
   FONT_INSPECTOR: 'fontInspector',
   COLOR_PICKER: 'colorPicker',
   PIXEL_RULER: 'pixelRuler',
   RESPONSIVE_BREAKPOINT: 'responsiveBreakpoint',
-
-  // Additional Tools
+  CSS_INSPECTOR: 'cssInspector',
+  CONTRAST_CHECKER: 'contrastChecker',
+  LAYOUT_VISUALIZER: 'layoutVisualizer',
+  ZINDEX_VISUALIZER: 'zIndexVisualizer',
+  TECH_DETECTOR: 'techDetector',
+  
+  // Additional Tools (internal/helpers)
   ELEMENT_INSPECTOR: 'elementInspector',
-  CSS_SCANNER: 'cssScanner',
-  UNUSED_CSS_DETECTOR: 'unusedCssDetector',
-  SPECIFICITY_ANALYZER: 'specificityAnalyzer',
-  SCREENSHOT_TOOL: 'screenshotTool',
   MEASUREMENT_TOOL: 'measurementTool',
-  PERF_MONITOR: 'perfMonitor',
-  GRID_OVERLAY: 'gridOverlay',
 } as const;
 
 /**
@@ -58,6 +57,7 @@ export interface ToolMetadata {
  * Metadata for all tools
  */
 export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
+  // Core 11 implemented tools
   [TOOL_IDS.DOM_OUTLINER]: {
     id: TOOL_IDS.DOM_OUTLINER,
     name: 'DOM Outliner',
@@ -118,6 +118,52 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     defaultEnabled: false,
     shortcut: 'Alt+B',
   },
+  [TOOL_IDS.CSS_INSPECTOR]: {
+    id: TOOL_IDS.CSS_INSPECTOR,
+    name: 'CSS Inspector',
+    description: 'View all computed CSS properties by category',
+    icon: 'scan',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.CONTRAST_CHECKER]: {
+    id: TOOL_IDS.CONTRAST_CHECKER,
+    name: 'Contrast Checker',
+    description: 'Check WCAG AA/AAA color contrast compliance',
+    icon: 'eye',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.LAYOUT_VISUALIZER]: {
+    id: TOOL_IDS.LAYOUT_VISUALIZER,
+    name: 'Flex/Grid Visualizer',
+    description: 'Visualize flexbox and grid layouts',
+    icon: 'grid',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.ZINDEX_VISUALIZER]: {
+    id: TOOL_IDS.ZINDEX_VISUALIZER,
+    name: 'Z-Index Visualizer',
+    description: 'See stacking order and z-index hierarchy',
+    icon: 'layers',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.TECH_DETECTOR]: {
+    id: TOOL_IDS.TECH_DETECTOR,
+    name: 'Tech Detector',
+    description: 'Detect frameworks, libraries, and tools',
+    icon: 'search',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  // Helper/internal tools
   [TOOL_IDS.ELEMENT_INSPECTOR]: {
     id: TOOL_IDS.ELEMENT_INSPECTOR,
     name: 'Element Inspector',
@@ -128,43 +174,6 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     defaultEnabled: false,
     shortcut: 'Ctrl+Shift+I',
   },
-  [TOOL_IDS.CSS_SCANNER]: {
-    id: TOOL_IDS.CSS_SCANNER,
-    name: 'CSS Scanner',
-    description: 'Scan and analyze CSS',
-    icon: 'scan',
-    category: 'css',
-    hasSettings: true,
-    defaultEnabled: false,
-  },
-  [TOOL_IDS.UNUSED_CSS_DETECTOR]: {
-    id: TOOL_IDS.UNUSED_CSS_DETECTOR,
-    name: 'Unused CSS Detector',
-    description: 'Find unused CSS rules',
-    icon: 'trash-2',
-    category: 'css',
-    hasSettings: false,
-    defaultEnabled: false,
-  },
-  [TOOL_IDS.SPECIFICITY_ANALYZER]: {
-    id: TOOL_IDS.SPECIFICITY_ANALYZER,
-    name: 'Specificity Analyzer',
-    description: 'Analyze CSS selector specificity',
-    icon: 'bar-chart-2',
-    category: 'css',
-    hasSettings: false,
-    defaultEnabled: false,
-  },
-  [TOOL_IDS.SCREENSHOT_TOOL]: {
-    id: TOOL_IDS.SCREENSHOT_TOOL,
-    name: 'Screenshot Tool',
-    description: 'Capture screenshots',
-    icon: 'camera',
-    category: 'utility',
-    hasSettings: true,
-    defaultEnabled: false,
-    shortcut: 'Ctrl+Shift+S',
-  },
   [TOOL_IDS.MEASUREMENT_TOOL]: {
     id: TOOL_IDS.MEASUREMENT_TOOL,
     name: 'Measurement Tool',
@@ -172,24 +181,6 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     icon: 'maximize',
     category: 'utility',
     hasSettings: false,
-    defaultEnabled: false,
-  },
-  [TOOL_IDS.PERF_MONITOR]: {
-    id: TOOL_IDS.PERF_MONITOR,
-    name: 'Performance Monitor',
-    description: 'Monitor Core Web Vitals',
-    icon: 'activity',
-    category: 'performance',
-    hasSettings: true,
-    defaultEnabled: false,
-  },
-  [TOOL_IDS.GRID_OVERLAY]: {
-    id: TOOL_IDS.GRID_OVERLAY,
-    name: 'Grid Overlay',
-    description: 'Show grid alignment guides',
-    icon: 'grid',
-    category: 'responsive',
-    hasSettings: true,
     defaultEnabled: false,
   },
 };
@@ -373,12 +364,6 @@ export const KEYBOARD_SHORTCUTS = {
     command: 'toggle_inspector',
     description: 'Toggle Element Inspector',
   },
-  TAKE_SCREENSHOT: {
-    key: 'Ctrl+Shift+S',
-    macKey: 'Command+Shift+S',
-    command: 'take_screenshot',
-    description: 'Take Screenshot',
-  },
 
   // Context menu
   INSPECT_ELEMENT: {
@@ -482,14 +467,13 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.COLOR_PICKER]: DEFAULT_COLOR_PICKER_SETTINGS,
   [TOOL_IDS.PIXEL_RULER]: DEFAULT_PIXEL_RULER_SETTINGS,
   [TOOL_IDS.RESPONSIVE_BREAKPOINT]: DEFAULT_RESPONSIVE_BREAKPOINT_SETTINGS,
+  [TOOL_IDS.CSS_INSPECTOR]: {},
+  [TOOL_IDS.CONTRAST_CHECKER]: {},
+  [TOOL_IDS.LAYOUT_VISUALIZER]: {},
+  [TOOL_IDS.ZINDEX_VISUALIZER]: {},
+  [TOOL_IDS.TECH_DETECTOR]: {},
   [TOOL_IDS.ELEMENT_INSPECTOR]: { showTooltips: true, highlightStyles: true },
-  [TOOL_IDS.CSS_SCANNER]: {},
-  [TOOL_IDS.UNUSED_CSS_DETECTOR]: {},
-  [TOOL_IDS.SPECIFICITY_ANALYZER]: {},
-  [TOOL_IDS.SCREENSHOT_TOOL]: { format: 'png', quality: 90, fullPage: false },
   [TOOL_IDS.MEASUREMENT_TOOL]: {},
-  [TOOL_IDS.PERF_MONITOR]: { showOverlay: true, trackWebVitals: true },
-  [TOOL_IDS.GRID_OVERLAY]: { columns: 12, gutter: 24, maxWidth: 1200 },
 };
 
 /**

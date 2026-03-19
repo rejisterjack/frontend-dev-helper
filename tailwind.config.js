@@ -39,6 +39,15 @@ export default {
           error: '#ef4444',
           info: '#3b82f6',
         },
+        // Dev theme colors (for options page)
+        dev: {
+          bg: '#0f172a',
+          surface: '#1e293b',
+          border: '#334155',
+          text: '#f1f5f9',
+          muted: '#94a3b8',
+          error: '#ef4444',
+        },
       },
       fontFamily: {
         sans: [

@@ -151,6 +151,32 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 // ============================================
+// Keyboard Shortcuts
+// ============================================
+
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (!tab?.id) return;
+  
+  console.log('[Background] Command received:', command);
+  
+  const commandMap: Record<string, string> = {
+    'toggle-pesticide': 'PESTICIDE_TOGGLE',
+    'toggle-spacing': 'SPACING_TOGGLE',
+    'toggle-font-inspector': 'FONT_INSPECTOR_TOGGLE',
+    'toggle-color-picker': 'COLOR_PICKER_TOGGLE',
+    'toggle-pixel-ruler': 'PIXEL_RULER_TOGGLE',
+    'toggle-breakpoint': 'BREAKPOINT_OVERLAY_TOGGLE',
+  };
+  
+  const messageType = commandMap[command];
+  if (messageType) {
+    chrome.tabs.sendMessage(tab.id, { type: messageType }).catch((err) => {
+      console.error('[Background] Failed to send command:', err);
+    });
+  }
+});
+
+// ============================================
 // Message Handling
 // ============================================
 
