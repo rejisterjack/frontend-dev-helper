@@ -30,7 +30,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
 /**
@@ -87,7 +87,7 @@ export function deepClone<T>(obj: T): T {
 
   const cloned = {} as T;
   for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+    if (Object.hasOwn(obj, key)) {
       cloned[key] = deepClone(obj[key]);
     }
   }
@@ -122,7 +122,7 @@ export function isEmpty(value: unknown): boolean {
  */
 export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
-  return str.slice(0, length) + '...';
+  return `${str.slice(0, length)}...`;
 }
 
 /**
@@ -130,7 +130,7 @@ export function truncate(str: string, length: number): string {
  */
 export function parseCssValue(value: string): number {
   const num = parseFloat(value);
-  return isNaN(num) ? 0 : num;
+  return Number.isNaN(num) ? 0 : num;
 }
 
 /**
@@ -197,7 +197,7 @@ export function getLuminance(color: string): number {
 
   const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((v) => {
     v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
   });
 
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
@@ -235,11 +235,7 @@ export function sleep(ms: number): Promise<void> {
 /**
  * Retry a function with exponential backoff
  */
-export async function retry<T>(
-  fn: () => Promise<T>,
-  retries = 3,
-  delay = 1000
-): Promise<T> {
+export async function retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
     return await fn();
   } catch (error) {
@@ -260,9 +256,7 @@ export function isExtensionContext(): boolean {
  * Check if dark mode is preferred
  */
 export function isDarkMode(): boolean {
-  return (
-    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 }
 
 /**

@@ -2,7 +2,7 @@
  * Tab Bar Component
  */
 
-import React from 'react';
+import type React from 'react';
 import type { UITab } from '@/types';
 
 interface TabBarProps {
@@ -20,9 +20,7 @@ export const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onChange }) => 
           onClick={() => onChange(tab.id)}
           disabled={tab.disabled}
           className={`relative flex flex-1 flex-col items-center py-2 text-xs transition-colors ${
-            activeTab === tab.id
-              ? 'text-primary-400'
-              : 'text-dev-muted hover:text-dev-text'
+            activeTab === tab.id ? 'text-primary-400' : 'text-dev-muted hover:text-dev-text'
           } ${tab.disabled ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           <span className="mb-1 text-base">{tab.icon}</span>

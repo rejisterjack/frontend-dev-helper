@@ -2,8 +2,9 @@
  * Performance Tab
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import type { PerformanceMetrics, MemoryInfo } from '@/types';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { MemoryInfo, PerformanceMetrics } from '@/types';
 
 export const PerformanceTab: React.FC = () => {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
@@ -204,7 +205,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 // Sub-components
@@ -237,9 +238,7 @@ const TimingRow: React.FC<{
   highlight?: boolean;
 }> = ({ label, value, highlight }) => (
   <div className="flex justify-between text-sm">
-    <span className={highlight ? 'font-medium text-dev-text' : 'text-dev-muted'}>
-      {label}
-    </span>
+    <span className={highlight ? 'font-medium text-dev-text' : 'text-dev-muted'}>{label}</span>
     <span className={highlight ? 'font-medium text-primary-400' : 'text-dev-text'}>
       {Math.round(value)}ms
     </span>
@@ -250,7 +249,7 @@ const MemoryBar: React.FC<{
   used: number;
   total: number;
   limit: number;
-}> = ({ used, total, limit }) => {
+}> = ({ used, limit }) => {
   const percentage = (used / limit) * 100;
 
   return (

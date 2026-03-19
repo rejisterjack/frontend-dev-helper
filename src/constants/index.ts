@@ -5,7 +5,15 @@
  * color mappings, breakpoints, and keyboard shortcuts.
  */
 
-import type { ToolSettings, DOMOutlinerSettings, SpacingVisualizerSettings, FontInspectorSettings, ColorPickerSettings, PixelRulerSettings, ResponsiveBreakpointSettings } from '@/types';
+import type {
+  ColorPickerSettings,
+  DOMOutlinerSettings,
+  FontInspectorSettings,
+  PixelRulerSettings,
+  ResponsiveBreakpointSettings,
+  SpacingVisualizerSettings,
+  ToolSettings,
+} from '@/types';
 
 // ============================================
 // Tool IDs
@@ -27,7 +35,7 @@ export const TOOL_IDS = {
   LAYOUT_VISUALIZER: 'layoutVisualizer',
   ZINDEX_VISUALIZER: 'zIndexVisualizer',
   TECH_DETECTOR: 'techDetector',
-  
+
   // Additional Tools (internal/helpers)
   ELEMENT_INSPECTOR: 'elementInspector',
   MEASUREMENT_TOOL: 'measurementTool',
@@ -36,7 +44,7 @@ export const TOOL_IDS = {
 /**
  * Type for tool IDs derived from TOOL_IDS constant
  */
-export type ToolId = typeof TOOL_IDS[keyof typeof TOOL_IDS];
+export type ToolId = (typeof TOOL_IDS)[keyof typeof TOOL_IDS];
 
 // ============================================
 // Tool Metadata
@@ -196,16 +204,16 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
 export const COLOR_MAP = {
   // Level colors (depth-based)
   levels: [
-    { bg: 'rgba(255, 0, 0, 0.15)', border: '#ff0000' },    // Level 0: Red
-    { bg: 'rgba(0, 255, 0, 0.15)', border: '#00ff00' },    // Level 1: Green
-    { bg: 'rgba(0, 0, 255, 0.15)', border: '#0000ff' },    // Level 2: Blue
-    { bg: 'rgba(255, 255, 0, 0.15)', border: '#ffff00' },  // Level 3: Yellow
-    { bg: 'rgba(255, 0, 255, 0.15)', border: '#ff00ff' },  // Level 4: Magenta
-    { bg: 'rgba(0, 255, 255, 0.15)', border: '#00ffff' },  // Level 5: Cyan
-    { bg: 'rgba(255, 128, 0, 0.15)', border: '#ff8000' },  // Level 6: Orange
-    { bg: 'rgba(128, 0, 255, 0.15)', border: '#8000ff' },  // Level 7: Purple
-    { bg: 'rgba(0, 255, 128, 0.15)', border: '#00ff80' },  // Level 8: Spring Green
-    { bg: 'rgba(255, 0, 128, 0.15)', border: '#ff0080' },  // Level 9: Rose
+    { bg: 'rgba(255, 0, 0, 0.15)', border: '#ff0000' }, // Level 0: Red
+    { bg: 'rgba(0, 255, 0, 0.15)', border: '#00ff00' }, // Level 1: Green
+    { bg: 'rgba(0, 0, 255, 0.15)', border: '#0000ff' }, // Level 2: Blue
+    { bg: 'rgba(255, 255, 0, 0.15)', border: '#ffff00' }, // Level 3: Yellow
+    { bg: 'rgba(255, 0, 255, 0.15)', border: '#ff00ff' }, // Level 4: Magenta
+    { bg: 'rgba(0, 255, 255, 0.15)', border: '#00ffff' }, // Level 5: Cyan
+    { bg: 'rgba(255, 128, 0, 0.15)', border: '#ff8000' }, // Level 6: Orange
+    { bg: 'rgba(128, 0, 255, 0.15)', border: '#8000ff' }, // Level 7: Purple
+    { bg: 'rgba(0, 255, 128, 0.15)', border: '#00ff80' }, // Level 8: Spring Green
+    { bg: 'rgba(255, 0, 128, 0.15)', border: '#ff0080' }, // Level 9: Rose
   ],
 
   // Semantic colors
@@ -229,10 +237,10 @@ export const COLOR_MAP = {
 
   // Spacing visualizer colors
   spacing: {
-    margin: 'rgba(255, 165, 0, 0.3)',    // Orange
-    padding: 'rgba(0, 128, 0, 0.3)',     // Green
-    gap: 'rgba(0, 0, 255, 0.3)',         // Blue
-    border: 'rgba(255, 0, 0, 0.5)',      // Red
+    margin: 'rgba(255, 165, 0, 0.3)', // Orange
+    padding: 'rgba(0, 128, 0, 0.3)', // Green
+    gap: 'rgba(0, 0, 255, 0.3)', // Blue
+    border: 'rgba(255, 0, 0, 0.5)', // Red
   },
 } as const;
 
@@ -322,32 +330,32 @@ export const KEYBOARD_SHORTCUTS = {
   // Tool toggles
   TOGGLE_DOM_OUTLINER: {
     key: 'Alt+P',
-    command: 'toggle_dom_outliner',
+    command: 'toggle-pesticide',
     description: 'Toggle DOM Outliner',
   },
   TOGGLE_SPACING_VISUALIZER: {
     key: 'Alt+S',
-    command: 'toggle_spacing_visualizer',
+    command: 'toggle-spacing',
     description: 'Toggle Spacing Visualizer',
   },
   TOGGLE_FONT_INSPECTOR: {
     key: 'Alt+F',
-    command: 'toggle_font_inspector',
+    command: 'toggle-font-inspector',
     description: 'Toggle Font Inspector',
   },
   TOGGLE_COLOR_PICKER: {
     key: 'Alt+C',
-    command: 'toggle_color_picker',
+    command: 'toggle-color-picker',
     description: 'Toggle Color Picker',
   },
   TOGGLE_PIXEL_RULER: {
     key: 'Alt+M',
-    command: 'toggle_pixel_ruler',
+    command: 'toggle-pixel-ruler',
     description: 'Toggle Pixel Ruler',
   },
   TOGGLE_BREAKPOINT_OVERLAY: {
     key: 'Alt+B',
-    command: 'toggle_breakpoint_overlay',
+    command: 'toggle-breakpoint',
     description: 'Toggle Breakpoint Overlay',
   },
 
@@ -386,7 +394,9 @@ export const KEYBOARD_SHORTCUTS = {
 /**
  * Get keyboard shortcut by command name
  */
-export function getShortcutByCommand(command: string): typeof KEYBOARD_SHORTCUTS[keyof typeof KEYBOARD_SHORTCUTS] | undefined {
+export function getShortcutByCommand(
+  command: string
+): (typeof KEYBOARD_SHORTCUTS)[keyof typeof KEYBOARD_SHORTCUTS] | undefined {
   return Object.values(KEYBOARD_SHORTCUTS).find((shortcut) => shortcut.command === command);
 }
 
@@ -514,16 +524,16 @@ export const STORAGE_KEYS = {
   SETTINGS: 'fdh_settings',
   TOOL_STATES: 'fdh_tool_states',
   TAB_STATES: 'fdh_tab_states',
-  
+
   // Tool-specific
   DOM_OUTLINER_STATE: 'fdh_dom_outliner',
   SPACING_VISUALIZER_STATE: 'fdh_spacing_visualizer',
   COLOR_PICKER_HISTORY: 'fdh_color_history',
-  
+
   // Session
   SESSION_DATA: 'fdh_session',
   LAST_ACTIVE_TAB: 'fdh_last_active_tab',
-  
+
   // Version for migrations
   STORAGE_VERSION: 'fdh_storage_version',
 } as const;
@@ -541,30 +551,30 @@ export const MESSAGE_TYPES = {
   GET_TOOL_STATE: 'GET_TOOL_STATE',
   SET_TOOL_STATE: 'SET_TOOL_STATE',
   GET_ALL_TOOL_STATES: 'GET_ALL_TOOL_STATES',
-  
+
   // Tab management
   TAB_CHANGED: 'TAB_CHANGED',
   URL_CHANGED: 'URL_CHANGED',
   INIT: 'INIT',
-  
+
   // Feature toggles
   TOGGLE_FEATURE: 'TOGGLE_FEATURE',
   GET_FEATURES: 'GET_FEATURES',
-  
+
   // Settings
   GET_SETTINGS: 'GET_SETTINGS',
   UPDATE_SETTINGS: 'UPDATE_SETTINGS',
-  
+
   // Ping/Connectivity
   PING: 'PING',
   PONG: 'PONG',
-  
+
   // Context menu
   CONTEXT_MENU_CLICKED: 'CONTEXT_MENU_CLICKED',
   INSPECT_ELEMENT: 'INSPECT_ELEMENT',
   MEASURE_DISTANCE: 'MEASURE_DISTANCE',
   PICK_COLOR: 'PICK_COLOR',
-  
+
   // Tool-specific
   COLOR_PICKED: 'COLOR_PICKED',
   MEASUREMENT_COMPLETE: 'MEASUREMENT_COMPLETE',

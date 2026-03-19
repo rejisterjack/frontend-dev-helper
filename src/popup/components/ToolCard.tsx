@@ -1,6 +1,6 @@
-import React from 'react';
+import type React from 'react';
+import type { ToolType } from '../../types';
 import { ToggleSwitch } from './ToggleSwitch';
-import { ToolType } from '../../types';
 
 // ============================================
 // Tool Card Component
@@ -48,10 +48,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't toggle if clicking on the toggle switch or settings button
     const target = e.target as HTMLElement;
-    if (
-      target.closest('.toggle-switch') ||
-      target.closest('.settings-btn')
-    ) {
+    if (target.closest('.toggle-switch') || target.closest('.settings-btn')) {
       return;
     }
     onToggle(!enabled);
@@ -69,9 +66,10 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       className={`
         tool-card animate-fade-in
         relative flex items-center gap-3 p-3 rounded-xl cursor-pointer
-        ${enabled 
-          ? 'bg-gradient-to-r from-slate-800 to-slate-800/80 border border-emerald-500/50' 
-          : 'bg-slate-800/50 hover:bg-slate-800 border border-transparent'
+        ${
+          enabled
+            ? 'bg-gradient-to-r from-slate-800 to-slate-800/80 border border-emerald-500/50'
+            : 'bg-slate-800/50 hover:bg-slate-800 border border-transparent'
         }
         ${className}
         ${animationDelay}
@@ -97,27 +95,25 @@ export const ToolCard: React.FC<ToolCardProps> = ({
         `}
         style={{ color: enabled ? color : '#64748b' }}
       >
-        <span className={`tool-icon ${enabled ? 'animate-pulse-soft' : ''}`}>
-          {icon}
-        </span>
+        <span className={`tool-icon ${enabled ? 'animate-pulse-soft' : ''}`}>{icon}</span>
       </div>
 
       {/* Tool Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h3 className={`
+          <h3
+            className={`
             font-semibold text-sm truncate
             ${enabled ? 'text-white' : 'text-slate-200'}
-          `}>
+          `}
+          >
             {name}
           </h3>
           {enabled && (
             <span className="flex-shrink-0 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           )}
         </div>
-        <p className="text-xs text-slate-400 truncate mt-0.5">
-          {description}
-        </p>
+        <p className="text-xs text-slate-400 truncate mt-0.5">{description}</p>
       </div>
 
       {/* Controls */}
@@ -136,12 +132,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
             title={`${name} settings`}
             aria-label={`${name} settings`}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -159,11 +150,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
         )}
 
         {/* Toggle Switch */}
-        <ToggleSwitch
-          checked={enabled}
-          onChange={onToggle}
-          label={`Toggle ${name}`}
-        />
+        <ToggleSwitch checked={enabled} onChange={onToggle} label={`Toggle ${name}`} />
       </div>
     </div>
   );

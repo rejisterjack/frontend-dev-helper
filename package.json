@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A browser extension for frontend developers with essential dev tools",
   "type": "module",
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,8 +12,11 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "lint": "eslint src --ext .ts,.tsx",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\""
+    "lint": "biome lint src",
+    "lint:fix": "biome lint src --write",
+    "format": "biome format src --write",
+    "check": "biome check src",
+    "check:fix": "biome check src --write"
   },
   "keywords": [
     "browser-extension",
@@ -25,6 +29,7 @@
   "author": "FrontendDevHelper Team",
   "license": "MIT",
   "devDependencies": {
+    "@biomejs/biome": "^2.4.8",
     "@crxjs/vite-plugin": "^2.0.0-beta.23",
     "@playwright/test": "^1.58.2",
     "@types/chrome": "^0.0.254",

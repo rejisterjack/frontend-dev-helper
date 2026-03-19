@@ -1,6 +1,6 @@
 /**
  * CSS Property Inspector
- * 
+ *
  * Hover over any element to see all computed CSS properties.
  * Filter by categories and copy CSS with one click.
  */
@@ -23,48 +23,190 @@ interface CSSPropertyGroup {
 const CSS_CATEGORIES: CSSPropertyGroup[] = [
   {
     name: 'Layout',
-    properties: ['display', 'position', 'top', 'right', 'bottom', 'left', 'float', 'clear', 'z-index', 'overflow', 'overflow-x', 'overflow-y', 'visibility']
+    properties: [
+      'display',
+      'position',
+      'top',
+      'right',
+      'bottom',
+      'left',
+      'float',
+      'clear',
+      'z-index',
+      'overflow',
+      'overflow-x',
+      'overflow-y',
+      'visibility',
+    ],
   },
   {
     name: 'Box Model',
-    properties: ['width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'box-sizing']
+    properties: [
+      'width',
+      'height',
+      'min-width',
+      'max-width',
+      'min-height',
+      'max-height',
+      'margin',
+      'margin-top',
+      'margin-right',
+      'margin-bottom',
+      'margin-left',
+      'padding',
+      'padding-top',
+      'padding-right',
+      'padding-bottom',
+      'padding-left',
+      'box-sizing',
+    ],
   },
   {
     name: 'Typography',
-    properties: ['font-family', 'font-size', 'font-weight', 'font-style', 'font-variant', 'line-height', 'letter-spacing', 'word-spacing', 'text-align', 'text-decoration', 'text-transform', 'white-space', 'word-wrap', 'text-overflow', 'color']
+    properties: [
+      'font-family',
+      'font-size',
+      'font-weight',
+      'font-style',
+      'font-variant',
+      'line-height',
+      'letter-spacing',
+      'word-spacing',
+      'text-align',
+      'text-decoration',
+      'text-transform',
+      'white-space',
+      'word-wrap',
+      'text-overflow',
+      'color',
+    ],
   },
   {
     name: 'Background',
-    properties: ['background-color', 'background-image', 'background-position', 'background-size', 'background-repeat', 'background-attachment', 'background-clip', 'background-origin']
+    properties: [
+      'background-color',
+      'background-image',
+      'background-position',
+      'background-size',
+      'background-repeat',
+      'background-attachment',
+      'background-clip',
+      'background-origin',
+    ],
   },
   {
     name: 'Border',
-    properties: ['border', 'border-width', 'border-style', 'border-color', 'border-top', 'border-right', 'border-bottom', 'border-left', 'border-radius', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-left-radius', 'border-bottom-right-radius']
+    properties: [
+      'border',
+      'border-width',
+      'border-style',
+      'border-color',
+      'border-top',
+      'border-right',
+      'border-bottom',
+      'border-left',
+      'border-radius',
+      'border-top-left-radius',
+      'border-top-right-radius',
+      'border-bottom-left-radius',
+      'border-bottom-right-radius',
+    ],
   },
   {
     name: 'Flexbox',
-    properties: ['flex', 'flex-grow', 'flex-shrink', 'flex-basis', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items', 'align-content', 'align-self', 'order', 'gap', 'row-gap', 'column-gap']
+    properties: [
+      'flex',
+      'flex-grow',
+      'flex-shrink',
+      'flex-basis',
+      'flex-direction',
+      'flex-wrap',
+      'justify-content',
+      'align-items',
+      'align-content',
+      'align-self',
+      'order',
+      'gap',
+      'row-gap',
+      'column-gap',
+    ],
   },
   {
     name: 'Grid',
-    properties: ['grid', 'grid-template', 'grid-template-columns', 'grid-template-rows', 'grid-template-areas', 'grid-column', 'grid-row', 'grid-area', 'grid-auto-columns', 'grid-auto-rows', 'grid-auto-flow', 'grid-gap', 'grid-column-gap', 'grid-row-gap', 'justify-items', 'align-items', 'justify-content', 'align-content', 'place-items', 'place-content']
+    properties: [
+      'grid',
+      'grid-template',
+      'grid-template-columns',
+      'grid-template-rows',
+      'grid-template-areas',
+      'grid-column',
+      'grid-row',
+      'grid-area',
+      'grid-auto-columns',
+      'grid-auto-rows',
+      'grid-auto-flow',
+      'grid-gap',
+      'grid-column-gap',
+      'grid-row-gap',
+      'justify-items',
+      'align-items',
+      'justify-content',
+      'align-content',
+      'place-items',
+      'place-content',
+    ],
   },
   {
     name: 'Transform',
-    properties: ['transform', 'transform-origin', 'transform-style', 'perspective', 'perspective-origin', 'backface-visibility']
+    properties: [
+      'transform',
+      'transform-origin',
+      'transform-style',
+      'perspective',
+      'perspective-origin',
+      'backface-visibility',
+    ],
   },
   {
     name: 'Transition',
-    properties: ['transition', 'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay']
+    properties: [
+      'transition',
+      'transition-property',
+      'transition-duration',
+      'transition-timing-function',
+      'transition-delay',
+    ],
   },
   {
     name: 'Animation',
-    properties: ['animation', 'animation-name', 'animation-duration', 'animation-timing-function', 'animation-delay', 'animation-iteration-count', 'animation-direction', 'animation-fill-mode', 'animation-play-state']
+    properties: [
+      'animation',
+      'animation-name',
+      'animation-duration',
+      'animation-timing-function',
+      'animation-delay',
+      'animation-iteration-count',
+      'animation-direction',
+      'animation-fill-mode',
+      'animation-play-state',
+    ],
   },
   {
     name: 'Other',
-    properties: ['opacity', 'cursor', 'pointer-events', 'user-select', 'box-shadow', 'text-shadow', 'clip', 'clip-path', 'filter', 'mix-blend-mode', 'isolation']
-  }
+    properties: [
+      'opacity',
+      'cursor',
+      'pointer-events',
+      'user-select',
+      'box-shadow',
+      'text-shadow',
+      'clip',
+      'clip-path',
+      'filter',
+      'mix-blend-mode',
+      'isolation',
+    ],
+  },
 ];
 
 // State
@@ -114,53 +256,56 @@ function getAllCSSProperties(element: HTMLElement): CSSProperty[] {
   const computed = window.getComputedStyle(element);
   const parent = element.parentElement;
   const parentComputed = parent ? window.getComputedStyle(parent) : null;
-  
+
   const properties: CSSProperty[] = [];
-  
+
   // Get all CSS properties
   for (let i = 0; i < computed.length; i++) {
     const name = computed[i];
     const value = computed.getPropertyValue(name);
-    
+
     // Check if inherited
     let inherited = false;
     if (parentComputed) {
       const parentValue = parentComputed.getPropertyValue(name);
       inherited = value === parentValue && value !== '';
     }
-    
+
     properties.push({
       name,
       value,
       computed: value,
-      inherited
+      inherited,
     });
   }
-  
+
   return properties;
 }
 
 /**
  * Get CSS properties organized by category
  */
-function getPropertiesByCategory(
-  element: HTMLElement,
-  categoryName: string
-): CSSProperty[] {
+function getPropertiesByCategory(element: HTMLElement, categoryName: string): CSSProperty[] {
   const allProps = getAllCSSProperties(element);
-  
+
   if (categoryName === 'All') {
-    return allProps.filter(p => {
+    return allProps.filter((p) => {
       if (!showInherited && p.inherited) return false;
       // Filter out default/empty values
-      return p.value && p.value !== 'none' && p.value !== 'normal' && p.value !== 'auto' && p.value !== '0px';
+      return (
+        p.value &&
+        p.value !== 'none' &&
+        p.value !== 'normal' &&
+        p.value !== 'auto' &&
+        p.value !== '0px'
+      );
     });
   }
-  
-  const category = CSS_CATEGORIES.find(c => c.name === categoryName);
+
+  const category = CSS_CATEGORIES.find((c) => c.name === categoryName);
   if (!category) return [];
-  
-  return allProps.filter(p => {
+
+  return allProps.filter((p) => {
     if (!showInherited && p.inherited) return false;
     return category.properties.includes(p.name);
   });
@@ -172,22 +317,31 @@ function getPropertiesByCategory(
 function generateCSSRule(element: HTMLElement, selector: string): string {
   const computed = window.getComputedStyle(element);
   let css = `${selector} {\n`;
-  
+
   // Get important properties
   const importantProps = [
-    'display', 'position', 'width', 'height',
-    'margin', 'padding', 'background-color', 'color',
-    'font-family', 'font-size', 'font-weight',
-    'border', 'border-radius'
+    'display',
+    'position',
+    'width',
+    'height',
+    'margin',
+    'padding',
+    'background-color',
+    'color',
+    'font-family',
+    'font-size',
+    'font-weight',
+    'border',
+    'border-radius',
   ];
-  
+
   for (const prop of importantProps) {
     const value = computed.getPropertyValue(prop);
     if (value && value !== 'none' && value !== 'normal' && value !== 'auto') {
       css += `  ${prop}: ${value};\n`;
     }
   }
-  
+
   css += '}';
   return css;
 }
@@ -199,22 +353,22 @@ function buildTooltipContent(element: HTMLElement): string {
   const tagName = element.tagName.toLowerCase();
   const id = element.id ? `#${element.id}` : '';
   const classes = Array.from(element.classList)
-    .filter(c => !c.startsWith('fdh-'))
-    .map(c => `.${c}`)
+    .filter((c) => !c.startsWith('fdh-'))
+    .map((c) => `.${c}`)
     .join('');
-  
+
   const selector = `${tagName}${id}${classes}`;
   const rect = element.getBoundingClientRect();
-  
+
   // Get properties for current category
   const properties = getPropertiesByCategory(element, currentCategory);
-  
+
   // Calculate contrast if we have color info
   const computed = window.getComputedStyle(element);
   const bgColor = computed.backgroundColor;
   const textColor = computed.color;
   let contrastInfo = '';
-  
+
   if (bgColor && textColor && bgColor !== 'rgba(0, 0, 0, 0)') {
     const contrast = getContrastRatio(textColor, bgColor);
     const rating = getWCAGRating(contrast);
@@ -235,15 +389,19 @@ function buildTooltipContent(element: HTMLElement): string {
       </div>
     `;
   }
-  
+
   // Category selector
-  const categoryOptions = ['All', ...CSS_CATEGORIES.map(c => c.name)]
-    .map(c => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`)
+  const categoryOptions = ['All', ...CSS_CATEGORIES.map((c) => c.name)]
+    .map((c) => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`)
     .join('');
-  
+
   // Properties list
-  const propertiesHtml = properties.length > 0
-    ? properties.slice(0, 50).map(p => `
+  const propertiesHtml =
+    properties.length > 0
+      ? properties
+          .slice(0, 50)
+          .map(
+            (p) => `
         <div class="fdh-prop-row" style="
           display: flex;
           justify-content: space-between;
@@ -254,9 +412,11 @@ function buildTooltipContent(element: HTMLElement): string {
           <span class="fdh-prop-name" style="color: #93c5fd;">${p.name}</span>
           <span class="fdh-prop-value" style="color: #a5f3fc; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.value}</span>
         </div>
-      `).join('')
-    : '<div style="color: #64748b; padding: 8px;">No properties to display</div>';
-  
+      `
+          )
+          .join('')
+      : '<div style="color: #64748b; padding: 8px;">No properties to display</div>';
+
   return `
     <div class="fdh-css-header" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -309,14 +469,14 @@ function buildTooltipContent(element: HTMLElement): string {
  */
 function updateTooltipPosition(x: number, y: number): void {
   if (!tooltip) return;
-  
+
   const rect = tooltip.getBoundingClientRect();
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  
+
   let left = x + 20;
   let top = y + 20;
-  
+
   // Keep within viewport
   if (left + rect.width > viewportWidth) {
     left = x - rect.width - 10;
@@ -324,7 +484,7 @@ function updateTooltipPosition(x: number, y: number): void {
   if (top + rect.height > viewportHeight) {
     top = y - rect.height - 10;
   }
-  
+
   tooltip.style.left = `${Math.max(10, left)}px`;
   tooltip.style.top = `${Math.max(10, top)}px`;
 }
@@ -355,15 +515,15 @@ function removeHighlight(): void {
  */
 function handleMouseMove(e: MouseEvent): void {
   if (!isActive || !tooltip) return;
-  
+
   const target = e.target as HTMLElement;
   if (!target || target.closest('.fdh-css-inspector')) return;
-  
+
   highlightElement(target);
   tooltip.innerHTML = buildTooltipContent(target);
   tooltip.style.display = 'block';
   updateTooltipPosition(e.clientX, e.clientY);
-  
+
   // Attach event listeners to controls
   setupTooltipControls();
 }
@@ -373,43 +533,48 @@ function handleMouseMove(e: MouseEvent): void {
  */
 function setupTooltipControls(): void {
   if (!tooltip) return;
-  
+
   // Category selector
-  const categorySelect = tooltip.querySelector('.fdh-category-select') as HTMLSelectElement;
+  const categorySelect = tooltip.querySelector('.fdh-category-select') as HTMLSelectElement | null;
   if (categorySelect) {
     categorySelect.addEventListener('change', (e) => {
       currentCategory = (e.target as HTMLSelectElement).value;
-      if (highlightedElement) {
+      if (highlightedElement && tooltip) {
         tooltip.innerHTML = buildTooltipContent(highlightedElement);
         setupTooltipControls();
       }
     });
   }
-  
+
   // Inherited toggle
-  const inheritedToggle = tooltip.querySelector('.fdh-inherited-toggle') as HTMLInputElement;
+  const inheritedToggle = tooltip.querySelector('.fdh-inherited-toggle') as HTMLInputElement | null;
   if (inheritedToggle) {
     inheritedToggle.addEventListener('change', (e) => {
       showInherited = (e.target as HTMLInputElement).checked;
-      if (highlightedElement) {
+      if (highlightedElement && tooltip) {
         tooltip.innerHTML = buildTooltipContent(highlightedElement);
         setupTooltipControls();
       }
     });
   }
-  
+
   // Copy CSS button
-  const copyBtn = tooltip.querySelector('.fdh-copy-css-btn') as HTMLButtonElement;
+  const copyBtn = tooltip.querySelector('.fdh-copy-css-btn') as HTMLButtonElement | null;
   if (copyBtn && highlightedElement) {
+    const element = highlightedElement; // Capture in closure
     copyBtn.addEventListener('click', () => {
-      const selector = highlightedElement.tagName.toLowerCase() + 
-        (highlightedElement.id ? `#${highlightedElement.id}` : '') +
-        Array.from(highlightedElement.classList).filter(c => !c.startsWith('fdh-')).map(c => `.${c}`).join('');
-      
-      const css = generateCSSRule(highlightedElement, selector);
+      const selector =
+        element.tagName.toLowerCase() +
+        (element.id ? `#${element.id}` : '') +
+        Array.from(element.classList)
+          .filter((c) => !c.startsWith('fdh-'))
+          .map((c) => `.${c}`)
+          .join('');
+
+      const css = generateCSSRule(element, selector);
       navigator.clipboard.writeText(css).then(() => {
         copyBtn.textContent = 'Copied!';
-        setTimeout(() => copyBtn.textContent = 'Copy CSS', 1500);
+        setTimeout(() => (copyBtn.textContent = 'Copy CSS'), 1500);
       });
     });
   }
@@ -420,18 +585,22 @@ function setupTooltipControls(): void {
  */
 function handleClick(e: MouseEvent): void {
   if (!isActive) return;
-  
+
   if (e.ctrlKey || e.metaKey) {
     e.preventDefault();
     const target = e.target as HTMLElement;
     if (target && !target.closest('.fdh-css-inspector')) {
-      const selector = target.tagName.toLowerCase() + 
+      const selector =
+        target.tagName.toLowerCase() +
         (target.id ? `#${target.id}` : '') +
-        Array.from(target.classList).filter(c => !c.startsWith('fdh-')).map(c => `.${c}`).join('');
-      
+        Array.from(target.classList)
+          .filter((c) => !c.startsWith('fdh-'))
+          .map((c) => `.${c}`)
+          .join('');
+
       const css = generateCSSRule(target, selector);
       navigator.clipboard.writeText(css);
-      
+
       showNotification('CSS copied to clipboard!');
     }
   }
@@ -457,7 +626,7 @@ function showNotification(message: string): void {
   `;
   notification.textContent = message;
   document.body.appendChild(notification);
-  
+
   setTimeout(() => {
     notification.style.animation = 'fadeOut 0.3s ease-out';
     setTimeout(() => notification.remove(), 300);
@@ -479,19 +648,19 @@ function handleKeyDown(e: KeyboardEvent): void {
 export function enable(): void {
   if (isActive) return;
   isActive = true;
-  
+
   if (!tooltip) {
     tooltip = createTooltip();
   }
-  
+
   mouseMoveHandler = handleMouseMove;
   clickHandler = handleClick;
   keyDownHandler = handleKeyDown;
-  
+
   document.addEventListener('mousemove', mouseMoveHandler, { passive: true });
   document.addEventListener('click', clickHandler);
   document.addEventListener('keydown', keyDownHandler);
-  
+
   document.body.style.cursor = 'crosshair';
   console.log('[CSSInspector] Enabled');
 }
@@ -502,7 +671,7 @@ export function enable(): void {
 export function disable(): void {
   if (!isActive) return;
   isActive = false;
-  
+
   if (mouseMoveHandler) {
     document.removeEventListener('mousemove', mouseMoveHandler);
   }
@@ -512,12 +681,12 @@ export function disable(): void {
   if (keyDownHandler) {
     document.removeEventListener('keydown', keyDownHandler);
   }
-  
+
   removeHighlight();
   if (tooltip) {
     tooltip.style.display = 'none';
   }
-  
+
   document.body.style.cursor = '';
   console.log('[CSSInspector] Disabled');
 }
@@ -540,7 +709,7 @@ export function getState(): { enabled: boolean; category: string; showInherited:
   return {
     enabled: isActive,
     category: currentCategory,
-    showInherited
+    showInherited,
   };
 }
 
@@ -577,7 +746,7 @@ export const cssInspector = {
   getState,
   setCategory,
   setShowInherited,
-  destroy
+  destroy,
 };
 
 export default cssInspector;

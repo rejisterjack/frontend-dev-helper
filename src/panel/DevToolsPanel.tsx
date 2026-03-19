@@ -1,10 +1,11 @@
 /**
  * DevTools Panel Component
- * 
+ *
  * The main panel interface for Chrome DevTools integration.
  */
 
-import React, { useState, useEffect } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import type { ElementInfo } from '@/types';
 
 export const DevToolsPanel: React.FC = () => {
@@ -85,8 +86,7 @@ export const DevToolsPanel: React.FC = () => {
               )}
             </div>
             <div className="mt-1 text-xs text-dev-muted">
-              {Math.round(selectedElement.rect.width)} ×{' '}
-              {Math.round(selectedElement.rect.height)}
+              {Math.round(selectedElement.rect.width)} × {Math.round(selectedElement.rect.height)}
             </div>
           </div>
 
@@ -110,7 +110,10 @@ export const DevToolsPanel: React.FC = () => {
           {/* Content */}
           <div className="flex-1 overflow-auto p-4">
             {activeTab === 'styles' && (
-              <StylesTab styles={selectedElement.styles} inlineStyles={selectedElement.inlineStyles} />
+              <StylesTab
+                styles={selectedElement.styles}
+                inlineStyles={selectedElement.inlineStyles}
+              />
             )}
             {activeTab === 'computed' && <ComputedTab element={selectedElement} />}
             {activeTab === 'layout' && <LayoutTab rect={selectedElement.rect} />}

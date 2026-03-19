@@ -51,7 +51,7 @@ export function parseColor(color: string): RGBA | null {
  */
 export function hexToRgb(hex: string): RGB | null {
   const cleanHex = hex.replace('#', '');
-  
+
   // Handle shorthand (#RGB)
   if (cleanHex.length === 3) {
     const r = parseInt(cleanHex[0] + cleanHex[0], 16);
@@ -59,7 +59,7 @@ export function hexToRgb(hex: string): RGB | null {
     const b = parseInt(cleanHex[2] + cleanHex[2], 16);
     return { r, g, b };
   }
-  
+
   // Handle standard (#RRGGBB)
   if (cleanHex.length === 6) {
     const r = parseInt(cleanHex.slice(0, 2), 16);
@@ -67,7 +67,7 @@ export function hexToRgb(hex: string): RGB | null {
     const b = parseInt(cleanHex.slice(4, 6), 16);
     return { r, g, b };
   }
-  
+
   return null;
 }
 
@@ -86,7 +86,7 @@ export function hexToHsl(hex: string): HSL | null {
 export function rgbToHex(r: number, g: number, b: number): string {
   const toHex = (n: number) => {
     const hex = Math.round(Math.max(0, Math.min(255, n))).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
+    return hex.length === 1 ? `0${hex}` : hex;
   };
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toLowerCase();
 }
@@ -179,7 +179,7 @@ export function hslToHex(h: number, s: number, l: number): string {
 function getLuminance(r: number, g: number, b: number): number {
   const [rs, gs, bs] = [r, g, b].map((c) => {
     c /= 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   });
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
@@ -190,15 +190,15 @@ function getLuminance(r: number, g: number, b: number): number {
 export function getContrastRatio(color1: string, color2: string): number {
   const c1 = parseColor(color1);
   const c2 = parseColor(color2);
-  
+
   if (!c1 || !c2) return 0;
-  
+
   const l1 = getLuminance(c1.r, c1.g, c1.b);
   const l2 = getLuminance(c2.r, c2.g, c2.b);
-  
+
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
-  
+
   return (lighter + 0.05) / (darker + 0.05);
 }
 
@@ -254,20 +254,22 @@ export function formatHsl(h: number, s: number, l: number, a = 1): string {
 export function normalizeHex(hex: string): string {
   const clean = hex.replace('#', '').toLowerCase();
   if (clean.length === 3) {
-    return '#' + clean.split('').map(c => c + c).join('');
+    return (
+      '#' +
+      clean
+        .split('')
+        .map((c) => c + c)
+        .join('')
+    );
   }
-  return '#' + clean;
+  return `#${clean}`;
 }
 
 /**
  * Calculate color distance using Euclidean distance in RGB space
  */
 export function colorDistance(c1: RGB, c2: RGB): number {
-  return Math.sqrt(
-    Math.pow(c1.r - c2.r, 2) +
-    Math.pow(c1.g - c2.g, 2) +
-    Math.pow(c1.b - c2.b, 2)
-  );
+  return Math.sqrt((c1.r - c2.r) ** 2 + (c1.g - c2.g) ** 2 + (c1.b - c2.b) ** 2);
 }
 
 /**
@@ -275,7 +277,7 @@ export function colorDistance(c1: RGB, c2: RGB): number {
  */
 export function groupSimilarColors(colors: string[], threshold = 30): string[][] {
   const rgbColors: { original: string; rgb: RGB }[] = [];
-  
+
   for (const color of colors) {
     const parsed = parseColor(color);
     if (parsed) {
@@ -294,7 +296,7 @@ export function groupSimilarColors(colors: string[], threshold = 30): string[][]
 
     for (let j = i + 1; j < rgbColors.length; j++) {
       if (used.has(j)) continue;
-      
+
       const distance = colorDistance(rgbColors[i].rgb, rgbColors[j].rgb);
       if (distance <= threshold) {
         group.push(rgbColors[j].original);
@@ -400,7 +402,6 @@ export async function copyColorToClipboard(
         formatted = formatHsl(hsl.h, hsl.s, hsl.l, parsed.a);
         break;
       }
-      case 'hex':
       default:
         formatted = rgbToHex(parsed.r, parsed.g, parsed.b);
         break;
@@ -421,9 +422,7 @@ export function generateCSSVariables(
   colors: { name: string; value: string }[],
   prefix = '--color'
 ): string {
-  return colors
-    .map(({ name, value }) => `${prefix}-${name}: ${value};`)
-    .join('\n');
+  return colors.map(({ name, value }) => `${prefix}-${name}: ${value};`).join('\n');
 }
 
 /**
@@ -436,7 +435,7 @@ export function exportPaletteAsJSON(
     const parsed = parseColor(value);
     const rgb = parsed ? { r: parsed.r, g: parsed.g, b: parsed.b } : undefined;
     const hsl = rgb ? rgbToHsl(rgb.r, rgb.g, rgb.b) : undefined;
-    
+
     return {
       name,
       hex: normalizeHex(value),

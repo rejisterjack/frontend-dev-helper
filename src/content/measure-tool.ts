@@ -1,6 +1,6 @@
 /**
  * Measure Tool Module
- * 
+ *
  * Provides distance measurement between two points on the page.
  */
 
@@ -150,7 +150,7 @@ export class MeasureTool {
     if (this.startPoint && this.endPoint) {
       const distance = this.calculateDistance(this.startPoint, this.endPoint);
       const angle = this.calculateAngle(this.startPoint, this.endPoint);
-      
+
       this.options.onMeasurementComplete(distance, 'px', angle);
     }
 
@@ -188,7 +188,7 @@ export class MeasureTool {
     // Position label at midpoint
     const midX = (this.startPoint.x + this.endPoint.x) / 2;
     const midY = (this.startPoint.y + this.endPoint.y) / 2;
-    
+
     const labelRect = this.label.getBoundingClientRect();
     this.label.style.left = `${midX - labelRect.width / 2}px`;
     this.label.style.top = `${midY - labelRect.height - 8}px`;

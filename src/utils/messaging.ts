@@ -232,10 +232,7 @@ export function generateMessageId(): string {
 /**
  * Create a base message with common fields
  */
-export function createMessage<T extends BaseMessage>(
-  type: T['type'],
-  payload?: T['payload']
-): T {
+export function createMessage<T extends BaseMessage>(type: T['type'], payload?: T['payload']): T {
   return {
     type,
     id: generateMessageId(),
@@ -324,9 +321,7 @@ export async function sendMessageToAllTabs(
  * @param message - Message to broadcast
  * @returns Promise resolving when message is sent
  */
-export async function broadcastMessage(
-  message: ExtensionMessage
-): Promise<void> {
+export async function broadcastMessage(message: ExtensionMessage): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       chrome.runtime.sendMessage(message, () => {
@@ -481,10 +476,7 @@ export function createToggleToolMessage(
 /**
  * Create a get tool state message
  */
-export function createGetToolStateMessage(
-  toolId: string,
-  tabId?: number
-): GetToolStateMessage {
+export function createGetToolStateMessage(toolId: string, tabId?: number): GetToolStateMessage {
   return createMessage<GetToolStateMessage>(MESSAGE_TYPES.GET_TOOL_STATE, {
     toolId,
     tabId,
@@ -583,8 +575,6 @@ export function createPort(name: string): chrome.runtime.Port {
  * Listen for port connections
  * @param callback - Callback for new connections
  */
-export function onPortConnect(
-  callback: (port: chrome.runtime.Port) => void
-): void {
+export function onPortConnect(callback: (port: chrome.runtime.Port) => void): void {
   chrome.runtime.onConnect.addListener(callback);
 }

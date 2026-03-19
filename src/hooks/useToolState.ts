@@ -5,9 +5,9 @@
  * Provides reactive state updates and persistence.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ToolState, ToolsState } from '@/types';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ToolId } from '@/constants';
+import type { ToolState, ToolsState } from '@/types';
 
 // ============================================
 // Types
@@ -81,12 +81,12 @@ const DEFAULT_TOOL_STATE: ToolState = {
  * @param toolId - The tool identifier
  * @param tabId - Optional tab ID for tab-specific state
  * @returns Tool state and control functions
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { state, toggle, updateSettings } = useToolState(TOOL_IDS.DOM_OUTLINER);
- *   
+ *
  *   return (
  *     <button onClick={toggle}>
  *       {state.enabled ? 'Disable' : 'Enable'} DOM Outliner
@@ -109,17 +109,19 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
     return () => {
       mountedRef.current = false;
     };
-  }, [toolId, tabId]);
+  }, [loadState]);
 
   // Listen for storage changes
   useEffect(() => {
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>) => {
       const toolStatesChange = changes.fdh_tool_states;
       if (toolStatesChange) {
-        const newValue = toolStatesChange.newValue as {
-          global?: Record<ToolId, ToolState>;
-          tabs?: Record<number, Record<ToolId, ToolState>>;
-        } | undefined;
+        const newValue = toolStatesChange.newValue as
+          | {
+              global?: Record<ToolId, ToolState>;
+              tabs?: Record<number, Record<ToolId, ToolState>>;
+            }
+          | undefined;
 
         if (newValue) {
           let newState: ToolState | undefined;
@@ -148,10 +150,12 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
 
     try {
       const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as {
-        global?: Record<ToolId, ToolState>;
-        tabs?: Record<number, Record<ToolId, ToolState>>;
-      } | undefined;
+      const storage = result.fdh_tool_states as
+        | {
+            global?: Record<ToolId, ToolState>;
+            tabs?: Record<number, Record<ToolId, ToolState>>;
+          }
+        | undefined;
 
       let loadedState: ToolState | undefined;
 
@@ -176,38 +180,43 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
   }, [toolId, tabId]);
 
   // Save state to storage
-  const saveState = useCallback(async (newState: ToolState): Promise<void> => {
-    try {
-      const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as {
-        global: Record<ToolId, ToolState>;
-        tabs: Record<number, Record<ToolId, ToolState>>;
-      } || { global: {}, tabs: {} };
+  const saveState = useCallback(
+    async (newState: ToolState): Promise<void> => {
+      try {
+        const result = await chrome.storage.local.get('fdh_tool_states');
+        const storage = (result.fdh_tool_states as {
+          global: Record<ToolId, ToolState>;
+          tabs: Record<number, Record<ToolId, ToolState>>;
+        }) || { global: {}, tabs: {} };
 
-      if (tabId !== undefined) {
-        if (!storage.tabs[tabId]) {
-          storage.tabs[tabId] = {};
+        if (tabId !== undefined) {
+          if (!storage.tabs[tabId]) {
+            storage.tabs[tabId] = {};
+          }
+          storage.tabs[tabId][toolId] = newState;
+        } else {
+          storage.global[toolId] = newState;
         }
-        storage.tabs[tabId][toolId] = newState;
-      } else {
-        storage.global[toolId] = newState;
+
+        await chrome.storage.local.set({ fdh_tool_states: storage });
+
+        // Notify background script
+        await chrome.runtime
+          .sendMessage({
+            type: 'TOOL_STATE_CHANGED',
+            payload: { toolId, state: newState, tabId },
+            timestamp: Date.now(),
+          })
+          .catch(() => {
+            // Ignore errors - background may not be listening
+          });
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+        throw err;
       }
-
-      await chrome.storage.local.set({ fdh_tool_states: storage });
-
-      // Notify background script
-      await chrome.runtime.sendMessage({
-        type: 'TOOL_STATE_CHANGED',
-        payload: { toolId, state: newState, tabId },
-        timestamp: Date.now(),
-      }).catch(() => {
-        // Ignore errors - background may not be listening
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      throw err;
-    }
-  }, [toolId, tabId]);
+    },
+    [toolId, tabId]
+  );
 
   // Enable the tool
   const enable = useCallback(async () => {
@@ -232,21 +241,27 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
   }, [state, saveState]);
 
   // Update the tool state
-  const setState = useCallback(async (partialState: Partial<ToolState>): Promise<void> => {
-    const newState = { ...state, ...partialState };
-    setLocalState(newState);
-    await saveState(newState);
-  }, [state, saveState]);
+  const setState = useCallback(
+    async (partialState: Partial<ToolState>): Promise<void> => {
+      const newState = { ...state, ...partialState };
+      setLocalState(newState);
+      await saveState(newState);
+    },
+    [state, saveState]
+  );
 
   // Update tool settings
-  const updateSettings = useCallback(async (settings: Record<string, unknown>): Promise<void> => {
-    const newState = {
-      ...state,
-      settings: { ...state.settings, ...settings },
-    };
-    setLocalState(newState);
-    await saveState(newState);
-  }, [state, saveState]);
+  const updateSettings = useCallback(
+    async (settings: Record<string, unknown>): Promise<void> => {
+      const newState = {
+        ...state,
+        settings: { ...state.settings, ...settings },
+      };
+      setLocalState(newState);
+      await saveState(newState);
+    },
+    [state, saveState]
+  );
 
   return {
     state,
@@ -268,12 +283,12 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
  * Hook for managing all tool states
  * @param tabId - Optional tab ID for tab-specific states
  * @returns All tool states and control functions
- * 
+ *
  * @example
  * ```tsx
  * function Toolbar() {
  *   const { states, toggleTool, disableAll } = useAllToolStates();
- *   
+ *
  *   return (
  *     <div>
  *       {Object.entries(states).map(([toolId, state]) => (
@@ -301,7 +316,7 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
     return () => {
       mountedRef.current = false;
     };
-  }, [tabId]);
+  }, [refresh]);
 
   // Listen for storage changes
   useEffect(() => {
@@ -314,7 +329,7 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, [tabId]);
+  }, [refresh]);
 
   // Refresh states from storage
   const refresh = useCallback(async () => {
@@ -325,10 +340,12 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
       // Import TOOL_IDS dynamically to avoid issues during SSR
       const { TOOL_IDS } = await import('@/constants');
       const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as {
-        global?: Record<ToolId, ToolState>;
-        tabs?: Record<number, Record<ToolId, ToolState>>;
-      } | undefined;
+      const storage = result.fdh_tool_states as
+        | {
+            global?: Record<ToolId, ToolState>;
+            tabs?: Record<number, Record<ToolId, ToolState>>;
+          }
+        | undefined;
 
       const allStates: Partial<Record<ToolId, ToolState>> = {};
 
@@ -369,83 +386,106 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
   }, [tabId]);
 
   // Save a single tool state
-  const saveToolState = useCallback(async (toolId: ToolId, newState: ToolState): Promise<void> => {
-    try {
-      const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as {
-        global: Record<ToolId, ToolState>;
-        tabs: Record<number, Record<ToolId, ToolState>>;
-      } || { global: {}, tabs: {} };
+  const saveToolState = useCallback(
+    async (toolId: ToolId, newState: ToolState): Promise<void> => {
+      try {
+        const result = await chrome.storage.local.get('fdh_tool_states');
+        const storage = (result.fdh_tool_states as {
+          global: Record<ToolId, ToolState>;
+          tabs: Record<number, Record<ToolId, ToolState>>;
+        }) || { global: {}, tabs: {} };
 
-      if (tabId !== undefined) {
-        if (!storage.tabs[tabId]) {
-          storage.tabs[tabId] = {} as Record<ToolId, ToolState>;
+        if (tabId !== undefined) {
+          if (!storage.tabs[tabId]) {
+            storage.tabs[tabId] = {} as Record<ToolId, ToolState>;
+          }
+          storage.tabs[tabId][toolId] = newState;
+        } else {
+          storage.global[toolId] = newState;
         }
-        storage.tabs[tabId][toolId] = newState;
-      } else {
-        storage.global[toolId] = newState;
+
+        await chrome.storage.local.set({ fdh_tool_states: storage });
+
+        // Update local state
+        setStates((prev) => ({
+          ...prev,
+          [toolId]: newState,
+        }));
+
+        // Notify background script
+        await chrome.runtime
+          .sendMessage({
+            type: 'TOOL_STATE_CHANGED',
+            payload: { toolId, state: newState, tabId },
+            timestamp: Date.now(),
+          })
+          .catch(() => {
+            // Ignore errors - background may not be listening
+          });
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+        throw err;
       }
-
-      await chrome.storage.local.set({ fdh_tool_states: storage });
-
-      // Update local state
-      setStates((prev) => ({
-        ...prev,
-        [toolId]: newState,
-      }));
-
-      // Notify background script
-      await chrome.runtime.sendMessage({
-        type: 'TOOL_STATE_CHANGED',
-        payload: { toolId, state: newState, tabId },
-        timestamp: Date.now(),
-      }).catch(() => {
-        // Ignore errors - background may not be listening
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      throw err;
-    }
-  }, [tabId]);
+    },
+    [tabId]
+  );
 
   // Set state for a specific tool
-  const setToolState = useCallback(async (toolId: ToolId, partialState: Partial<ToolState>): Promise<void> => {
-    const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
-    const newState = { ...currentState, ...partialState };
-    await saveToolState(toolId, newState);
-  }, [states, saveToolState]);
+  const setToolState = useCallback(
+    async (toolId: ToolId, partialState: Partial<ToolState>): Promise<void> => {
+      const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
+      const newState = { ...currentState, ...partialState };
+      await saveToolState(toolId, newState);
+    },
+    [states, saveToolState]
+  );
 
   // Toggle a specific tool
-  const toggleTool = useCallback(async (toolId: ToolId): Promise<boolean> => {
-    const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
-    const newState = { ...currentState, enabled: !currentState.enabled };
-    await saveToolState(toolId, newState);
-    return newState.enabled;
-  }, [states, saveToolState]);
+  const toggleTool = useCallback(
+    async (toolId: ToolId): Promise<boolean> => {
+      const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
+      const newState = { ...currentState, enabled: !currentState.enabled };
+      await saveToolState(toolId, newState);
+      return newState.enabled;
+    },
+    [states, saveToolState]
+  );
 
   // Enable a specific tool
-  const enableTool = useCallback(async (toolId: ToolId): Promise<void> => {
-    const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
-    const newState = { ...currentState, enabled: true };
-    await saveToolState(toolId, newState);
-  }, [states, saveToolState]);
+  const enableTool = useCallback(
+    async (toolId: ToolId): Promise<void> => {
+      const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
+      const newState = { ...currentState, enabled: true };
+      await saveToolState(toolId, newState);
+    },
+    [states, saveToolState]
+  );
 
   // Disable a specific tool
-  const disableTool = useCallback(async (toolId: ToolId): Promise<void> => {
-    const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
-    const newState = { ...currentState, enabled: false };
-    await saveToolState(toolId, newState);
-  }, [states, saveToolState]);
+  const disableTool = useCallback(
+    async (toolId: ToolId): Promise<void> => {
+      const currentState = states[toolId] ?? DEFAULT_TOOL_STATE;
+      const newState = { ...currentState, enabled: false };
+      await saveToolState(toolId, newState);
+    },
+    [states, saveToolState]
+  );
 
   // Enable multiple tools
-  const enableMultiple = useCallback(async (toolIds: ToolId[]): Promise<void> => {
-    await Promise.all(toolIds.map((id) => enableTool(id)));
-  }, [enableTool]);
+  const enableMultiple = useCallback(
+    async (toolIds: ToolId[]): Promise<void> => {
+      await Promise.all(toolIds.map((id) => enableTool(id)));
+    },
+    [enableTool]
+  );
 
   // Disable multiple tools
-  const disableMultiple = useCallback(async (toolIds: ToolId[]): Promise<void> => {
-    await Promise.all(toolIds.map((id) => disableTool(id)));
-  }, [disableTool]);
+  const disableMultiple = useCallback(
+    async (toolIds: ToolId[]): Promise<void> => {
+      await Promise.all(toolIds.map((id) => disableTool(id)));
+    },
+    [disableTool]
+  );
 
   // Disable all tools
   const disableAll = useCallback(async (): Promise<void> => {

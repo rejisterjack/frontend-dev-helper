@@ -1,6 +1,6 @@
 /**
  * Message Types for FrontendDevHelper
- * 
+ *
  * Defines all possible message types that can be sent between
  * background script, content script, and popup.
  */

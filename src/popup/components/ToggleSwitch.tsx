@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 // ============================================
 // Toggle Switch Component
@@ -74,9 +74,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           `}
         />
       </span>
-      {label && (
-        <span className="ml-2 text-sm text-slate-300 sr-only">{label}</span>
-      )}
+      {label && <span className="ml-2 text-sm text-slate-300 sr-only">{label}</span>}
     </label>
   );
 };

@@ -2,7 +2,7 @@
  * Feature Toggle Component
  */
 
-import React from 'react';
+import type React from 'react';
 
 interface FeatureToggleProps {
   label: string;
@@ -27,9 +27,7 @@ export const FeatureToggle: React.FC<FeatureToggleProps> = ({
     >
       <div className="flex-1 pr-4">
         <div className="text-sm font-medium text-dev-text">{label}</div>
-        {description && (
-          <div className="mt-0.5 text-xs text-dev-muted">{description}</div>
-        )}
+        {description && <div className="mt-0.5 text-xs text-dev-muted">{description}</div>}
       </div>
       <button
         onClick={onChange}

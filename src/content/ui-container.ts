@@ -1,6 +1,6 @@
 /**
  * UI Container
- * 
+ *
  * Creates and manages the root container for content script UI elements.
  */
 

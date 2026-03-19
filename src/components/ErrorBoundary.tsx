@@ -1,11 +1,11 @@
 /**
  * Error Boundary Component
- * 
+ *
  * Catches JavaScript errors in child components and displays a fallback UI
  * instead of crashing the entire extension.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -73,7 +73,7 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             ⚠️
           </div>
-          
+
           <h2
             style={{
               margin: 0,
@@ -84,7 +84,7 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             Something went wrong
           </h2>
-          
+
           <p
             style={{
               margin: 0,
@@ -94,10 +94,9 @@ export class ErrorBoundary extends Component<Props, State> {
               lineHeight: 1.5,
             }}
           >
-            The extension encountered an unexpected error. 
-            Try reloading or resetting the extension.
+            The extension encountered an unexpected error. Try reloading or resetting the extension.
           </p>
-          
+
           {this.state.error && (
             <details
               style={{
@@ -110,9 +109,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 color: '#64748b',
               }}
             >
-              <summary style={{ cursor: 'pointer', color: '#94a3b8' }}>
-                Error details
-              </summary>
+              <summary style={{ cursor: 'pointer', color: '#94a3b8' }}>Error details</summary>
               <pre
                 style={{
                   margin: '8px 0 0',
@@ -127,7 +124,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             </details>
           )}
-          
+
           <div
             style={{
               display: 'flex',
@@ -170,7 +167,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Reload Extension
             </button>
           </div>
-          
+
           <a
             href="https://github.com/frontend-dev-helper/frontend-dev-helper/issues"
             target="_blank"

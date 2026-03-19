@@ -1,6 +1,6 @@
 /**
  * Popup Entry Point
- * 
+ *
  * The main popup UI for the browser extension.
  */
 

@@ -1,6 +1,6 @@
 /**
  * Context Menu Manager
- * 
+ *
  * Manages right-click context menus in the browser.
  */
 
@@ -106,7 +106,6 @@ export class ContextMenuManager {
       case 'copy-selector':
         await this.sendMessageToTab(tab.id, {
           type: 'COPY_CSS',
-          payload: { target: info.targetElementId },
           timestamp: Date.now(),
           id: crypto.randomUUID(),
         });

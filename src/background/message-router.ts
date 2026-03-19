@@ -1,6 +1,6 @@
 /**
  * Message Router
- * 
+ *
  * Routes messages between different extension contexts
  * (popup, content script, devtools panel, background).
  */
@@ -32,10 +32,15 @@ export class MessageRouter {
     // Async handling requires returning true
     (async () => {
       try {
-        console.log('[MessageRouter] Received message:', message.type, 'from', sender.tab?.id ?? 'popup/devtools');
+        console.log(
+          '[MessageRouter] Received message:',
+          message.type,
+          'from',
+          sender.tab?.id ?? 'popup/devtools'
+        );
 
         const handler = this.handlers.get(message.type);
-        
+
         if (!handler) {
           sendResponse({
             success: false,
@@ -46,7 +51,7 @@ export class MessageRouter {
         }
 
         const result = await handler(message);
-        
+
         sendResponse({
           success: true,
           data: result,
@@ -54,7 +59,7 @@ export class MessageRouter {
         });
       } catch (error) {
         console.error('[MessageRouter] Error handling message:', error);
-        
+
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -69,10 +74,7 @@ export class MessageRouter {
   /**
    * Register a message handler
    */
-  registerHandler(
-    type: string,
-    handler: (message: ExtensionMessage) => Promise<unknown>
-  ): void {
+  registerHandler(type: string, handler: (message: ExtensionMessage) => Promise<unknown>): void {
     this.handlers.set(type, handler);
   }
 
@@ -121,10 +123,10 @@ export class MessageRouter {
     this.registerHandler('TOGGLE_FEATURE', async (message) => {
       const { payload } = message;
       const { feature, enabled } = payload as { feature: string; enabled: boolean };
-      
+
       // Broadcast to content scripts
       const tabs = await chrome.tabs.query({});
-      
+
       for (const tab of tabs) {
         if (tab.id) {
           try {
@@ -139,14 +141,14 @@ export class MessageRouter {
           }
         }
       }
-      
+
       return { success: true, feature, enabled };
     });
 
     // Copy to clipboard handler
     this.registerHandler('COPY_TO_CLIPBOARD', async (message) => {
       const { text } = message.payload as { text: string };
-      
+
       // Use offscreen document for clipboard operations in MV3
       // For now, return the text - actual copying happens in content/popup context
       return { text, copied: true };

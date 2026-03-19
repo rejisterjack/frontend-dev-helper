@@ -2,8 +2,8 @@
  * Inspector Tab
  */
 
-import React from 'react';
 import { FeatureToggle } from '@components/ui/FeatureToggle';
+import type React from 'react';
 import type { FeatureToggles } from '@/types';
 
 interface InspectorTabProps {
@@ -11,10 +11,7 @@ interface InspectorTabProps {
   onToggleFeature: (feature: keyof FeatureToggles) => void;
 }
 
-export const InspectorTab: React.FC<InspectorTabProps> = ({
-  features,
-  onToggleFeature,
-}) => {
+export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFeature }) => {
   const handleInspectClick = async (): Promise<void> => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab.id) {
@@ -50,9 +47,7 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">
-          Features
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">Features</h3>
 
         <FeatureToggle
           label="Element Inspector"

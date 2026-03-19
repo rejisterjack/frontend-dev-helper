@@ -111,6 +111,8 @@ export interface ContentScriptMessage extends BaseMessage {
 export interface ExtensionMessage {
   type: string;
   payload?: unknown;
+  id?: string;
+  timestamp?: number;
 }
 
 /** Message response type */
@@ -118,6 +120,7 @@ export interface MessageResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+  id?: string;
 }
 
 // ============================================
@@ -198,6 +201,8 @@ export interface FeatureToggles {
   elementInspector: boolean;
   gridOverlay: boolean;
   measureTool: boolean;
+  cssScanner: boolean;
+  breakpointVisualizer: boolean;
 }
 
 /** Default feature toggles */
@@ -211,6 +216,8 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   elementInspector: true,
   gridOverlay: true,
   measureTool: true,
+  cssScanner: false,
+  breakpointVisualizer: false,
 };
 
 /** Extension settings */
@@ -315,5 +322,6 @@ export interface ContextMenuConfig {
   title: string;
   contexts: chrome.contextMenus.ContextType[];
   parentId?: string;
+  enabled?: boolean;
   onclick?: (info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab) => void;
 }

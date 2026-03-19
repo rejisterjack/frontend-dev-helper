@@ -234,7 +234,8 @@ export class BreakpointOverlay {
   private getResizeButtonsHTML(): string {
     return `
       <div class="fdh-resize-buttons" style="${this.getResizeButtonsStyles()}">
-        ${DEVICE_PRESETS.map((device) => `
+        ${DEVICE_PRESETS.map(
+          (device) => `
           <button 
             class="fdh-resize-btn" 
             data-width="${device.width}" 
@@ -245,7 +246,8 @@ export class BreakpointOverlay {
             <span style="font-size: 14px;">${device.icon}</span>
             <span style="${this.getResizeButtonLabelStyles()}">${device.width}px</span>
           </button>
-        `).join('')}
+        `
+        ).join('')}
       </div>
     `;
   }
@@ -352,7 +354,10 @@ export class BreakpointOverlay {
   private applyPositionStyles(): void {
     if (!this.overlay) return;
 
-    const positions: Record<Position, { top?: string; bottom?: string; left?: string; right?: string }> = {
+    const positions: Record<
+      Position,
+      { top?: string; bottom?: string; left?: string; right?: string }
+    > = {
       'top-left': { top: '16px', left: '16px' },
       'top-right': { top: '16px', right: '16px' },
       'bottom-left': { bottom: '16px', left: '16px' },
@@ -523,13 +528,15 @@ export class BreakpointOverlay {
 
     // Send message to background script to attempt resize via extension API
     if (typeof chrome !== 'undefined' && chrome.runtime) {
-      chrome.runtime.sendMessage({
-        type: 'RESIZE_WINDOW',
-        width,
-        height,
-      }).catch(() => {
-        // Extension API may not support window resize
-      });
+      chrome.runtime
+        .sendMessage({
+          type: 'RESIZE_WINDOW',
+          width,
+          height,
+        })
+        .catch(() => {
+          // Extension API may not support window resize
+        });
     }
 
     // Visual feedback

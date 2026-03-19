@@ -1,15 +1,15 @@
 /**
  * Content Script
- * 
+ *
  * Injected into web pages to provide inspection capabilities,
  * DOM manipulation, and communication with the background script.
  */
 
+import type { ExtensionSettings } from '@/types';
+import { FeatureManager } from './feature-manager';
 import { ElementInspector } from './inspector';
 import { MessageHandler } from './message-handler';
-import { FeatureManager } from './feature-manager';
 import { createRootContainer } from './ui-container';
-import type { ExtensionSettings } from '@/types';
 import './content.css';
 
 // Prevent double initialization

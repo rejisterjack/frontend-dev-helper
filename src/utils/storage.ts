@@ -5,13 +5,8 @@
  * Wraps chrome.storage with type safety and error handling.
  */
 
-import {
-  TOOL_IDS,
-  STORAGE_KEYS,
-  DEFAULT_SETTINGS,
-  ERROR_MESSAGES,
-} from '@/constants';
 import type { ToolId } from '@/constants';
+import { DEFAULT_SETTINGS, ERROR_MESSAGES, STORAGE_KEYS, TOOL_IDS } from '@/constants';
 import type { ToolState, ToolsState } from '@/types';
 
 // ============================================
@@ -64,10 +59,7 @@ export interface MigrationResult {
  * @param tabId - Optional tab ID for tab-specific state
  * @returns The tool state or null if not found
  */
-export async function getToolState(
-  toolId: ToolId,
-  tabId?: number
-): Promise<ToolState | null> {
+export async function getToolState(toolId: ToolId, tabId?: number): Promise<ToolState | null> {
   try {
     const storageKey = STORAGE_KEYS.TOOL_STATES;
     const result = await chrome.storage.local.get(storageKey);
@@ -194,11 +186,9 @@ export async function getAllToolStates(tabId?: number): Promise<ToolsState> {
  * Clear all tool states
  * @param options - Options for what to clear
  */
-export async function clearAllStates(options: {
-  global?: boolean;
-  tabs?: boolean;
-  specificTabId?: number;
-} = {}): Promise<void> {
+export async function clearAllStates(
+  options: { global?: boolean; tabs?: boolean; specificTabId?: number } = {}
+): Promise<void> {
   const { global = true, tabs = false, specificTabId } = options;
 
   try {
@@ -239,10 +229,7 @@ export async function clearAllStates(options: {
  * @param tabId - Optional tab ID for tab-specific state
  * @returns The new enabled state
  */
-export async function toggleToolState(
-  toolId: ToolId,
-  tabId?: number
-): Promise<boolean> {
+export async function toggleToolState(toolId: ToolId, tabId?: number): Promise<boolean> {
   const currentState = await getToolState(toolId, tabId);
   const newEnabled = !(currentState?.enabled ?? false);
 
@@ -268,10 +255,7 @@ export async function toggleToolState(
  * @param toolId - The tool identifier
  * @returns The tool state or null
  */
-export async function getTabToolState(
-  tabId: number,
-  toolId: ToolId
-): Promise<ToolState | null> {
+export async function getTabToolState(tabId: number, toolId: ToolId): Promise<ToolState | null> {
   return getToolState(toolId, tabId);
 }
 
@@ -406,7 +390,9 @@ async function migrateFromLegacyStorage(result: MigrationResult): Promise<void> 
       result.changes.push(`Migrated ${migratedCount} tool states from legacy format`);
     }
   } catch (error) {
-    result.errors.push(`Legacy migration failed: ${error instanceof Error ? error.message : String(error)}`);
+    result.errors.push(
+      `Legacy migration failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -441,9 +427,7 @@ export async function getSettings(): Promise<typeof DEFAULT_SETTINGS> {
  * Update extension settings
  * @param settings - Partial settings to update
  */
-export async function updateSettings(
-  settings: Partial<typeof DEFAULT_SETTINGS>
-): Promise<void> {
+export async function updateSettings(settings: Partial<typeof DEFAULT_SETTINGS>): Promise<void> {
   try {
     const current = await getSettings();
     const updated = { ...current, ...settings };
@@ -461,9 +445,9 @@ export async function updateSettings(
 /**
  * Get default enabled state for a tool
  */
-function getDefaultToolEnabled(toolId: ToolId): boolean {
+async function getDefaultToolEnabled(toolId: ToolId): Promise<boolean> {
   // Import dynamically to avoid circular dependencies
-  const { TOOL_METADATA } = require('@/constants');
+  const { TOOL_METADATA } = await import('@/constants');
   return TOOL_METADATA[toolId]?.defaultEnabled ?? false;
 }
 

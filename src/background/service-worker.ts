@@ -10,34 +10,30 @@
  * - Badge updates
  */
 
-import type { ToolState, ToolsState, ToolType } from '@/types';
 import type { ToolId } from '@/constants';
 import {
+  DEFAULT_SETTINGS,
+  MESSAGE_TYPES,
+  STORAGE_KEYS,
   TOOL_IDS,
   TOOL_METADATA,
-  KEYBOARD_SHORTCUTS,
-  DEFAULT_SETTINGS,
-  STORAGE_KEYS,
-  MESSAGE_TYPES,
 } from '@/constants';
+import type { ToolState, ToolsState } from '@/types';
 import {
-  getToolState,
-  setToolState,
-  getAllToolStates,
-  clearAllStates,
-  toggleToolState,
-  clearTabStates,
-  migrateStorage,
-  getActiveToolsCount,
-} from '@/utils/storage';
-import {
-  sendMessageToTab,
-  sendMessageToAllTabs,
   broadcastMessage,
-  createMessage,
   type ExtensionMessage,
-  type MessageResponse,
+  sendMessageToAllTabs,
+  sendMessageToTab,
 } from '@/utils/messaging';
+import {
+  clearTabStates,
+  getActiveToolsCount,
+  getAllToolStates,
+  getToolState,
+  migrateStorage,
+  setToolState,
+  toggleToolState,
+} from '@/utils/storage';
 
 // ============================================
 // Constants
@@ -165,7 +161,9 @@ async function handleInstalled(details: chrome.runtime.InstalledDetails): Promis
       'Click the extension icon to start debugging!'
     );
   } else if (details.reason === 'update') {
-    console.log(`[${EXTENSION_NAME}] Updated from ${details.previousVersion} to ${EXTENSION_VERSION}`);
+    console.log(
+      `[${EXTENSION_NAME}] Updated from ${details.previousVersion} to ${EXTENSION_VERSION}`
+    );
 
     // Handle version-specific migrations
     await handleVersionMigration(details.previousVersion);
@@ -376,9 +374,7 @@ async function handleMessage(
       return handleGetToolState(payload as { toolId: ToolId; tabId?: number });
 
     case MESSAGE_TYPES.SET_TOOL_STATE:
-      return handleSetToolState(
-        payload as { toolId: ToolId; state: ToolState; tabId?: number }
-      );
+      return handleSetToolState(payload as { toolId: ToolId; state: ToolState; tabId?: number });
 
     case MESSAGE_TYPES.GET_ALL_TOOL_STATES:
       return handleGetAllToolStates(payload as { tabId?: number } | undefined);
@@ -389,10 +385,7 @@ async function handleMessage(
 
     // Feature toggles
     case MESSAGE_TYPES.TOGGLE_FEATURE:
-      return handleToggleFeature(
-        payload as { feature: string; enabled: boolean },
-        sender.tab?.id
-      );
+      return handleToggleFeature(payload as { feature: string; enabled: boolean }, sender.tab?.id);
 
     // Settings
     case MESSAGE_TYPES.GET_SETTINGS:
@@ -674,7 +667,9 @@ function setupStorageListeners(): void {
 /**
  * Handle storage changes
  */
-async function handleStorageChanges(changes: Record<string, chrome.storage.StorageChange>): Promise<void> {
+async function handleStorageChanges(
+  changes: Record<string, chrome.storage.StorageChange>
+): Promise<void> {
   // Update badge if tool states changed
   if (changes[STORAGE_KEYS.TOOL_STATES]) {
     await updateBadge();
@@ -775,9 +770,10 @@ async function updateBadge(tabId?: number): Promise<void> {
     await chrome.action.setBadgeBackgroundColor({ color: badgeColor });
 
     // Update badge title (tooltip)
-    const title = count > 0
-      ? `${EXTENSION_NAME} (${count} active tool${count > 1 ? 's' : ''})`
-      : EXTENSION_NAME;
+    const title =
+      count > 0
+        ? `${EXTENSION_NAME} (${count} active tool${count > 1 ? 's' : ''})`
+        : EXTENSION_NAME;
     await chrome.action.setTitle({ title, tabId });
   } catch (error) {
     console.error(`[${EXTENSION_NAME}] Failed to update badge:`, error);
@@ -893,11 +889,11 @@ initialize();
 
 // Export for testing
 export {
-  state,
-  handleMessage,
-  handleCommand,
-  updateBadge,
   activateToolOnTab,
-  toggleToolOnTab,
   getActiveToolIds,
+  handleCommand,
+  handleMessage,
+  state,
+  toggleToolOnTab,
+  updateBadge,
 };

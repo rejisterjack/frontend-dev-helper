@@ -1,6 +1,6 @@
 /**
  * Grid Overlay Module
- * 
+ *
  * Provides a customizable grid overlay for layout debugging.
  */
 
@@ -82,9 +82,9 @@ export class GridOverlay {
   private createGrid(): void {
     this.gridElement = document.createElement('div');
     this.gridElement.className = 'fdh-grid-lines';
-    
+
     const rgba = this.hexToRgba(this.options.color, this.options.opacity);
-    
+
     this.gridElement.style.cssText = `
       position: absolute;
       inset: 0;
@@ -144,12 +144,12 @@ export class GridOverlay {
     const tickSize = this.options.size;
     const isHorizontal = orientation === 'horizontal';
     const size = isHorizontal ? window.innerWidth : window.innerHeight;
-    
+
     for (let i = 0; i < size; i += tickSize) {
       const tick = document.createElement('div');
       const isMajor = i % (tickSize * 5) === 0;
       const tickLength = isMajor ? 12 : 6;
-      
+
       if (isHorizontal) {
         tick.style.cssText = `
           position: absolute;
@@ -159,7 +159,7 @@ export class GridOverlay {
           height: ${tickLength}px;
           background: ${isMajor ? this.options.color : 'rgba(156, 163, 175, 0.5)'};
         `;
-        
+
         if (isMajor) {
           const label = document.createElement('span');
           label.textContent = `${i}`;
@@ -182,7 +182,7 @@ export class GridOverlay {
           height: 1px;
           background: ${isMajor ? this.options.color : 'rgba(156, 163, 175, 0.5)'};
         `;
-        
+
         if (isMajor) {
           const label = document.createElement('span');
           label.textContent = `${i}`;
@@ -197,7 +197,7 @@ export class GridOverlay {
           ruler.appendChild(label);
         }
       }
-      
+
       ruler.appendChild(tick);
     }
   }

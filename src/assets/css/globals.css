@@ -14,7 +14,9 @@
 
   body {
     @apply bg-dev-bg text-dev-text antialiased;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 
   /* Custom scrollbar */

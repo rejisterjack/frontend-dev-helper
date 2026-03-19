@@ -2,8 +2,8 @@
  * CSS Tab
  */
 
-import React from 'react';
 import { FeatureToggle } from '@components/ui/FeatureToggle';
+import type React from 'react';
 import type { FeatureToggles } from '@/types';
 
 interface CSSTabProps {
@@ -15,9 +15,7 @@ export const CSSTab: React.FC<CSSTabProps> = ({ features, onToggleFeature }) => 
   return (
     <div className="space-y-4 p-4">
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">
-          CSS Tools
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">CSS Tools</h3>
 
         <FeatureToggle
           label="CSS Scanner"
@@ -69,9 +67,7 @@ export const CSSTab: React.FC<CSSTabProps> = ({ features, onToggleFeature }) => 
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">
-          Utilities
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">Utilities</h3>
 
         <FeatureToggle
           label="Color Picker"

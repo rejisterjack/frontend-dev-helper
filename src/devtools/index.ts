@@ -1,42 +1,32 @@
 /**
  * DevTools Entry Point
- * 
+ *
  * Creates the DevTools panel for the extension.
  */
 
 // Create the DevTools panel
-chrome.devtools.panels.create(
-  'FrontendDevHelper',
-  'icons/icon-32.png',
-  'panel.html',
-  (panel) => {
-    console.log('[FrontendDevHelper] DevTools panel created');
+chrome.devtools.panels.create('FrontendDevHelper', 'icons/icon-32.png', 'panel.html', (panel) => {
+  console.log('[FrontendDevHelper] DevTools panel created');
 
-    // Panel shown/hidden events
-    panel.onShown.addListener((window) => {
-      console.log('[FrontendDevHelper] Panel shown');
-      // Notify the panel it's now visible
-      (window as Window).postMessage(
-        { type: 'PANEL_SHOWN', timestamp: Date.now() },
-        '*'
-      );
-    });
+  // Panel shown/hidden events
+  panel.onShown.addListener((window) => {
+    console.log('[FrontendDevHelper] Panel shown');
+    // Notify the panel it's now visible
+    (window as Window).postMessage({ type: 'PANEL_SHOWN', timestamp: Date.now() }, '*');
+  });
 
-    panel.onHidden.addListener(() => {
-      console.log('[FrontendDevHelper] Panel hidden');
-    });
-  }
-);
+  panel.onHidden.addListener(() => {
+    console.log('[FrontendDevHelper] Panel hidden');
+  });
+});
 
 // Create a sidebar in the Elements panel
-chrome.devtools.panels.elements.createSidebarPane(
-  'FrontendDevHelper',
-  (sidebar) => {
-    console.log('[FrontendDevHelper] Elements sidebar created');
+chrome.devtools.panels.elements.createSidebarPane('FrontendDevHelper', (sidebar) => {
+  console.log('[FrontendDevHelper] Elements sidebar created');
 
-    // Update sidebar content when selection changes
-    const updateSidebar = (): void => {
-      sidebar.setExpression(`
+  // Update sidebar content when selection changes
+  const updateSidebar = (): void => {
+    sidebar.setExpression(`
         (() => {
           const el = $0;
           if (!el) return { error: 'No element selected' };
@@ -60,12 +50,11 @@ chrome.devtools.panels.elements.createSidebarPane(
           };
         })()
       `);
-    };
+  };
 
-    // Listen for selection changes
-    chrome.devtools.panels.elements.onSelectionChanged.addListener(updateSidebar);
+  // Listen for selection changes
+  chrome.devtools.panels.elements.onSelectionChanged.addListener(updateSidebar);
 
-    // Initial update
-    updateSidebar();
-  }
-);
+  // Initial update
+  updateSidebar();
+});

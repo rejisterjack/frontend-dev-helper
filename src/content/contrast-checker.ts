@@ -1,16 +1,11 @@
 /**
  * Contrast Checker
- * 
+ *
  * Check WCAG AA/AAA compliance for color combinations.
  * Pick foreground and background colors to analyze contrast.
  */
 
-import { getContrastRatio, meetsWCAGAA, meetsWCAGAAA, hexToRgb } from '../utils/color';
-
-interface ColorPair {
-  foreground: string;
-  background: string;
-}
+import { getContrastRatio, hexToRgb } from '../utils/color';
 
 interface ContrastResult {
   ratio: number;
@@ -56,7 +51,7 @@ function createOverlay(): HTMLElement {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(12px);
   `;
-  
+
   document.body.appendChild(el);
   return el;
 }
@@ -66,7 +61,7 @@ function createOverlay(): HTMLElement {
  */
 function buildOverlayContent(): string {
   const result = analyzeContrast(foregroundColor, backgroundColor);
-  
+
   // Determine grade color
   let gradeColor = '#ef4444'; // red for fail
   let grade = 'Fail';
@@ -77,11 +72,11 @@ function buildOverlayContent(): string {
     gradeColor = '#3b82f6'; // blue
     grade = 'AA';
   }
-  
+
   // Preview text samples
   const normalText = 'The quick brown fox jumps over the lazy dog.';
   const largeText = 'Large Text (18pt+ or 14pt bold)';
-  
+
   return `
     <div class="fdh-contrast-header" style="margin-bottom: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -230,12 +225,16 @@ function buildOverlayContent(): string {
         </div>
       </div>
       
-      ${result.suggestions.length > 0 ? `
+      ${
+        result.suggestions.length > 0
+          ? `
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
           <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">💡 Suggestions:</div>
-          ${result.suggestions.map(s => `<div style="font-size: 11px; color: #fbbf24; margin-bottom: 4px;">• ${s}</div>`).join('')}
+          ${result.suggestions.map((s) => `<div style="font-size: 11px; color: #fbbf24; margin-bottom: 4px;">• ${s}</div>`).join('')}
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
     
     <!-- Preview -->
@@ -297,7 +296,7 @@ function buildOverlayContent(): string {
  */
 function analyzeContrast(fg: string, bg: string): ContrastResult {
   const ratio = getContrastRatio(fg, bg);
-  
+
   // WCAG thresholds
   // AA: 4.5:1 for normal, 3:1 for large text
   // AAA: 7:1 for normal, 4.5:1 for large text
@@ -305,16 +304,16 @@ function analyzeContrast(fg: string, bg: string): ContrastResult {
   const wcagAAA = ratio >= 7;
   const wcagAALarge = ratio >= 3;
   const wcagAAALarge = ratio >= 4.5;
-  
+
   const suggestions: string[] = [];
-  
+
   if (!wcagAA) {
     suggestions.push('Consider using a darker text color or lighter background');
   }
   if (ratio < 3) {
     suggestions.push('This combination may be difficult to read for many users');
   }
-  
+
   // Check if colors are too similar
   const rgb1 = hexToRgb(fg);
   const rgb2 = hexToRgb(bg);
@@ -324,14 +323,14 @@ function analyzeContrast(fg: string, bg: string): ContrastResult {
       suggestions.push('Colors are very similar - increase the contrast difference');
     }
   }
-  
+
   return {
     ratio,
     wcagAA,
     wcagAAA,
     wcagAALarge,
     wcagAAALarge,
-    suggestions
+    suggestions,
   };
 }
 
@@ -340,13 +339,13 @@ function analyzeContrast(fg: string, bg: string): ContrastResult {
  */
 function setupOverlayControls(): void {
   if (!overlay) return;
-  
+
   // Close button
   const closeBtn = overlay.querySelector('.fdh-close-btn');
   if (closeBtn) {
     closeBtn.addEventListener('click', disable);
   }
-  
+
   // Color inputs
   const fgInput = overlay.querySelector('.fdh-fg-input') as HTMLInputElement;
   if (fgInput) {
@@ -355,7 +354,7 @@ function setupOverlayControls(): void {
       updateOverlay();
     });
   }
-  
+
   const bgInput = overlay.querySelector('.fdh-bg-input') as HTMLInputElement;
   if (bgInput) {
     bgInput.addEventListener('change', (e) => {
@@ -363,7 +362,7 @@ function setupOverlayControls(): void {
       updateOverlay();
     });
   }
-  
+
   // Pick from page buttons
   const pickFgBtn = overlay.querySelector('.fdh-pick-fg-btn');
   if (pickFgBtn) {
@@ -372,7 +371,7 @@ function setupOverlayControls(): void {
       updateOverlay();
     });
   }
-  
+
   const pickBgBtn = overlay.querySelector('.fdh-pick-bg-btn');
   if (pickBgBtn) {
     pickBgBtn.addEventListener('click', () => {
@@ -380,7 +379,7 @@ function setupOverlayControls(): void {
       updateOverlay();
     });
   }
-  
+
   // Swap button
   const swapBtn = overlay.querySelector('.fdh-swap-btn');
   if (swapBtn) {
@@ -391,7 +390,7 @@ function setupOverlayControls(): void {
       updateOverlay();
     });
   }
-  
+
   // Copy button
   const copyBtn = overlay.querySelector('.fdh-copy-btn');
   if (copyBtn) {
@@ -407,16 +406,16 @@ Contrast Ratio: ${result.ratio.toFixed(2)}:1
 WCAG Compliance:
 - Normal Text AA: ${result.wcagAA ? 'PASS' : 'FAIL'} (needs 4.5:1)
 - Normal Text AAA: ${result.wcagAAA ? 'PASS' : 'FAIL'} (needs 7:1)
-- Large Text AA: ${result.wcogAALarge ? 'PASS' : 'FAIL'} (needs 3:1)
+- Large Text AA: ${result.wcagAALarge ? 'PASS' : 'FAIL'} (needs 3:1)
 - Large Text AAA: ${result.wcagAAALarge ? 'PASS' : 'FAIL'} (needs 4.5:1)
 
-Overall Grade: ${result.wcagAAA ? 'AAA' : result.wcogAA ? 'AA' : 'FAIL'}
+Overall Grade: ${result.wcagAAA ? 'AAA' : result.wcagAA ? 'AA' : 'FAIL'}
       `.trim();
-      
+
       navigator.clipboard.writeText(report).then(() => {
         const btn = copyBtn as HTMLButtonElement;
         btn.textContent = '✓ Copied!';
-        setTimeout(() => btn.textContent = '📋 Copy Report', 1500);
+        setTimeout(() => (btn.textContent = '📋 Copy Report'), 1500);
       });
     });
   }
@@ -436,22 +435,22 @@ function updateOverlay(): void {
  */
 function handlePageClick(e: MouseEvent): void {
   if (!isActive || !pickerMode) return;
-  
+
   // Don't pick from the overlay itself
   if ((e.target as HTMLElement).closest('.fdh-contrast-overlay')) return;
-  
+
   e.preventDefault();
   e.stopPropagation();
-  
+
   const target = e.target as HTMLElement;
   const computed = window.getComputedStyle(target);
-  
+
   if (pickerMode === 'foreground') {
     foregroundColor = rgbToHex(computed.color) || '#000000';
   } else {
     foregroundColor = rgbToHex(computed.backgroundColor) || '#ffffff';
   }
-  
+
   pickerMode = null;
   updateOverlay();
 }
@@ -462,15 +461,20 @@ function handlePageClick(e: MouseEvent): void {
 function rgbToHex(rgb: string): string | null {
   const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (!match) return null;
-  
+
   const r = parseInt(match[1], 10);
   const g = parseInt(match[2], 10);
   const b = parseInt(match[3], 10);
-  
-  return '#' + [r, g, b].map(x => {
-    const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+
+  return (
+    '#' +
+    [r, g, b]
+      .map((x) => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? `0${hex}` : hex;
+      })
+      .join('')
+  );
 }
 
 /**
@@ -490,9 +494,9 @@ function handleKeyDown(e: KeyboardEvent): void {
 /**
  * Handle mouse move during color picking
  */
-function handleMouseMove(e: MouseEvent): void {
+function handleMouseMove(_event: MouseEvent): void {
   if (!isActive || !pickerMode) return;
-  
+
   document.body.style.cursor = 'crosshair';
 }
 
@@ -502,22 +506,22 @@ function handleMouseMove(e: MouseEvent): void {
 export function enable(): void {
   if (isActive) return;
   isActive = true;
-  
+
   if (!overlay) {
     overlay = createOverlay();
   }
-  
+
   overlay.innerHTML = buildOverlayContent();
   setupOverlayControls();
-  
+
   clickHandler = handlePageClick;
   keyHandler = handleKeyDown;
   mouseMoveHandler = handleMouseMove;
-  
+
   document.addEventListener('click', clickHandler, true);
   document.addEventListener('keydown', keyHandler);
   document.addEventListener('mousemove', mouseMoveHandler, { passive: true });
-  
+
   console.log('[ContrastChecker] Enabled');
 }
 
@@ -528,7 +532,7 @@ export function disable(): void {
   if (!isActive) return;
   isActive = false;
   pickerMode = null;
-  
+
   if (clickHandler) {
     document.removeEventListener('click', clickHandler, true);
   }
@@ -538,14 +542,14 @@ export function disable(): void {
   if (mouseMoveHandler) {
     document.removeEventListener('mousemove', mouseMoveHandler);
   }
-  
+
   document.body.style.cursor = '';
-  
+
   if (overlay) {
     overlay.remove();
     overlay = null;
   }
-  
+
   console.log('[ContrastChecker] Disabled');
 }
 
@@ -578,7 +582,7 @@ export function getState(): { enabled: boolean; foreground: string; background: 
   return {
     enabled: isActive,
     foreground: foregroundColor,
-    background: backgroundColor
+    background: backgroundColor,
   };
 }
 
@@ -596,7 +600,7 @@ export const contrastChecker = {
   toggle,
   setColors,
   getState,
-  destroy
+  destroy,
 };
 
 export default contrastChecker;

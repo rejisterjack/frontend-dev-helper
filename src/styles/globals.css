@@ -222,7 +222,7 @@
 
   .fdh-grid-overlay {
     @apply fdh-overlay;
-    background-image: 
+    background-image:
       linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
@@ -231,7 +231,9 @@
   /* Inspector highlight */
   .fdh-inspector-highlight {
     @apply fixed pointer-events-none z-[2147483647] border-2 border-blue-500 bg-blue-500/10 rounded-sm;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 0 0 1px rgba(59, 130, 246, 0.5),
+      0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 
   /* Tooltip for inspector */
@@ -281,10 +283,10 @@
 
 #frontend-dev-helper-root {
   all: initial;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 /* Ensure content script elements are on top */
 [data-fdh-element] {
-  z-index: 2147483647 !important;
+  z-index: 2147483647;
 }

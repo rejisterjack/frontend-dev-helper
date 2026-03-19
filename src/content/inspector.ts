@@ -1,6 +1,6 @@
 /**
  * Element Inspector Module
- * 
+ *
  * Provides element inspection functionality including:
  * - Highlighting elements on hover
  * - Selecting elements on click
@@ -20,7 +20,6 @@ export class Inspector {
   private isActive = false;
   private highlightBox: HTMLElement | null = null;
   private tooltip: HTMLElement | null = null;
-  private originalOutline = new WeakMap<HTMLElement, string>();
 
   constructor(options: InspectorOptions = {}) {
     this.options = {
@@ -34,7 +33,7 @@ export class Inspector {
 
   activate(): void {
     if (this.isActive) return;
-    
+
     this.isActive = true;
     this.createHighlightBox();
     if (this.options.showTooltip) {
@@ -120,7 +119,7 @@ export class Inspector {
 
   private handleMouseOver = (e: MouseEvent): void => {
     if (!this.isActive) return;
-    
+
     const target = e.target as HTMLElement;
     if (this.isExtensionElement(target)) return;
 
@@ -131,7 +130,7 @@ export class Inspector {
 
   private handleMouseOut = (e: MouseEvent): void => {
     if (!this.isActive) return;
-    
+
     const target = e.target as HTMLElement;
     this.removeHighlight(target);
   };
@@ -174,7 +173,7 @@ export class Inspector {
     }
   }
 
-  private removeHighlight(element: HTMLElement): void {
+  private removeHighlight(_element: HTMLElement): void {
     if (this.highlightBox) {
       this.highlightBox.style.display = 'none';
     }
@@ -189,11 +188,11 @@ export class Inspector {
     const tagName = element.tagName.toLowerCase();
     const id = element.id ? `#${element.id}` : '';
     const classes = Array.from(element.classList)
-      .filter(c => !c.startsWith('fdh-'))
+      .filter((c) => !c.startsWith('fdh-'))
       .slice(0, 2)
       .join('.');
     const classStr = classes ? `.${classes}` : '';
-    
+
     const width = Math.round(rect.width);
     const height = Math.round(rect.height);
 
@@ -203,7 +202,7 @@ export class Inspector {
     // Position tooltip above the element
     const tooltipRect = this.tooltip.getBoundingClientRect();
     const top = rect.top - tooltipRect.height - 8;
-    
+
     if (top > 0) {
       this.tooltip.style.top = `${top + window.scrollY}px`;
     } else {
@@ -214,10 +213,12 @@ export class Inspector {
   }
 
   private isExtensionElement(element: HTMLElement): boolean {
-    return element.classList.contains('fdh-inspector-highlight') ||
-           element.classList.contains('fdh-inspector-tooltip') ||
-           element.closest('.fdh-inspector-highlight') !== null ||
-           element.closest('.fdh-inspector-tooltip') !== null;
+    return (
+      element.classList.contains('fdh-inspector-highlight') ||
+      element.classList.contains('fdh-inspector-tooltip') ||
+      element.closest('.fdh-inspector-highlight') !== null ||
+      element.closest('.fdh-inspector-tooltip') !== null
+    );
   }
 
   private hexToRgba(hex: string, alpha: number): string {

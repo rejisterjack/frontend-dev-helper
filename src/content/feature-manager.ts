@@ -1,10 +1,10 @@
 /**
  * Feature Manager
- * 
+ *
  * Manages feature toggles and their lifecycle in the content script.
  */
 
-import type { FeatureToggles, DEFAULT_FEATURE_TOGGLES } from '@/types';
+import type { FeatureToggles } from '@/types';
 
 type FeatureHandler = {
   enable: () => void;

@@ -1,6 +1,6 @@
 /**
  * Storage Manager
- * 
+ *
  * Handles all chrome.storage operations with type safety,
  * caching, and change listeners.
  */
@@ -9,7 +9,8 @@ import type { ExtensionStorage, StorageArea } from '@/types';
 
 export class StorageManager {
   private cache: Map<string, unknown> = new Map();
-  private listeners: Set<(changes: Record<string, chrome.storage.StorageChange>) => void> = new Set();
+  private listeners: Set<(changes: Record<string, chrome.storage.StorageChange>) => void> =
+    new Set();
 
   constructor() {
     this.setupChangeListener();
@@ -20,8 +21,8 @@ export class StorageManager {
    */
   async get<K extends keyof ExtensionStorage>(
     key: K,
-    area: StorageArea = 'local'
-  ): Promise<ExtensionStorage[K]['value'] | null> {
+    _area: StorageArea = 'local'
+  ): Promise<ExtensionStorage[K] | null> {
     // Check cache first
     const cached = this.cache.get(key);
     if (cached !== undefined) {
@@ -29,13 +30,13 @@ export class StorageManager {
     }
 
     try {
-      const result = await chrome.storage[area].get(key);
+      const result = await chrome.storage[_area].get(key);
       const value = result[key] ?? null;
-      
+
       if (value !== null) {
         this.cache.set(key, value);
       }
-      
+
       return value;
     } catch (error) {
       console.error(`[StorageManager] Failed to get ${key}:`, error);
@@ -48,7 +49,7 @@ export class StorageManager {
    */
   async set<K extends keyof ExtensionStorage>(
     key: K,
-    value: ExtensionStorage[K]['value'],
+    value: ExtensionStorage[K],
     area: StorageArea = 'local'
   ): Promise<void> {
     try {
@@ -111,13 +112,10 @@ export class StorageManager {
   /**
    * Set multiple values in storage
    */
-  async setMultiple(
-    items: Partial<ExtensionStorage>,
-    area: StorageArea = 'local'
-  ): Promise<void> {
+  async setMultiple(items: Partial<ExtensionStorage>, area: StorageArea = 'local'): Promise<void> {
     try {
       const storageItems: Record<string, unknown> = {};
-      
+
       for (const [key, value] of Object.entries(items)) {
         const storageItem = {
           value,
@@ -147,7 +145,7 @@ export class StorageManager {
    * Set up the storage change listener
    */
   private setupChangeListener(): void {
-    chrome.storage.onChanged.addListener((changes, area) => {
+    chrome.storage.onChanged.addListener((changes, _area) => {
       // Update cache with new values
       for (const [key, change] of Object.entries(changes)) {
         if (change.newValue !== undefined) {

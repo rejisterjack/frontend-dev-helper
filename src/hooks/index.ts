@@ -2,7 +2,7 @@
  * Custom React Hooks
  */
 
-import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { AsyncState } from '@/types';
 
 /**
@@ -121,9 +121,7 @@ export function usePrevious<T>(value: T): T | undefined {
 /**
  * Hook for toggling a boolean state
  */
-export function useToggle(
-  initialValue = false
-): [boolean, () => void, (value: boolean) => void] {
+export function useToggle(initialValue = false): [boolean, () => void, (value: boolean) => void] {
   const [value, setValue] = useState(initialValue);
 
   const toggle = useCallback(() => setValue((v) => !v), []);
@@ -172,7 +170,7 @@ export function useInterval(callback: () => void, delay: number | null): void {
  */
 export function useElementSize<T extends HTMLElement>(): [
   React.RefObject<T>,
-  { width: number; height: number }
+  { width: number; height: number },
 ] {
   const ref = useRef<T>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -200,10 +198,7 @@ export function useElementSize<T extends HTMLElement>(): [
 /**
  * Hook for key press detection
  */
-export function useKeyPress(
-  targetKey: string,
-  callback: () => void
-): void {
+export function useKeyPress(targetKey: string, callback: () => void): void {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.key === targetKey) {
@@ -238,8 +233,8 @@ export function useMediaQuery(query: string): boolean {
  * Hook for dark mode
  */
 export function useDarkMode(): [boolean, () => void] {
-  const [isDark, setIsDark] = useState(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches
+  const [isDark, setIsDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
   );
 
   const toggle = useCallback(() => {
@@ -259,9 +254,10 @@ export function useDarkMode(): [boolean, () => void] {
 /**
  * Hook for copy to clipboard
  */
-export function useClipboard(
-  timeout = 2000
-): { copied: boolean; copy: (text: string) => Promise<void> } {
+export function useClipboard(timeout = 2000): {
+  copied: boolean;
+  copy: (text: string) => Promise<void>;
+} {
   const [copied, setCopied] = useState(false);
 
   const copy = useCallback(
@@ -296,9 +292,7 @@ export function useMounted(): boolean {
 /**
  * Hook for safe state updates (only when mounted)
  */
-export function useSafeState<T>(
-  initialState: T
-): [T, React.Dispatch<React.SetStateAction<T>>] {
+export function useSafeState<T>(initialState: T): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [state, setState] = useState(initialState);
   const mountedRef = useRef(false);
 
@@ -309,14 +303,11 @@ export function useSafeState<T>(
     };
   }, []);
 
-  const safeSetState = useCallback(
-    (value: React.SetStateAction<T>) => {
-      if (mountedRef.current) {
-        setState(value);
-      }
-    },
-    []
-  );
+  const safeSetState = useCallback((value: React.SetStateAction<T>) => {
+    if (mountedRef.current) {
+      setState(value);
+    }
+  }, []);
 
   return [state, safeSetState];
 }

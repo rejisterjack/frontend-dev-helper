@@ -46,7 +46,7 @@ export function getElementDimensions(element: Element): {
 
   const parseValue = (value: string): number => {
     const num = parseFloat(value);
-    return isNaN(num) ? 0 : num;
+    return Number.isNaN(num) ? 0 : num;
   };
 
   return {

@@ -1,6 +1,6 @@
 /**
  * Content Script Styles
- * 
+ *
  * These styles are injected into the page along with the content script.
  * They provide styling for the various tools (inspector, color picker, etc.)
  */
@@ -10,31 +10,31 @@
    ============================================ */
 
 .fdh-inspector-highlight {
-  position: absolute !important;
-  pointer-events: none !important;
-  z-index: 2147483646 !important;
-  border: 2px solid #3b82f6 !important;
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  border-radius: 2px !important;
-  transition: all 0.1s ease-out !important;
-  box-shadow: 
+  position: absolute;
+  pointer-events: none;
+  z-index: 2147483646;
+  border: 2px solid #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 2px;
+  transition: all 0.1s ease-out;
+  box-shadow:
     0 0 0 1px rgba(59, 130, 246, 0.5),
-    0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .fdh-inspector-tooltip {
-  position: absolute !important;
-  z-index: 2147483647 !important;
-  background: #1f2937 !important;
-  color: #ffffff !important;
-  padding: 6px 10px !important;
-  border-radius: 4px !important;
-  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
-  font-size: 11px !important;
-  pointer-events: none !important;
-  white-space: nowrap !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  position: absolute;
+  z-index: 2147483647;
+  background: #1f2937;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 11px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
@@ -42,48 +42,48 @@
    ============================================ */
 
 .fdh-color-magnifier {
-  position: fixed !important;
-  z-index: 2147483647 !important;
-  width: 100px !important;
-  height: 100px !important;
-  border-radius: 50% !important;
-  border: 3px solid #3b82f6 !important;
-  background: #ffffff !important;
-  pointer-events: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  overflow: hidden !important;
+  position: fixed;
+  z-index: 2147483647;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #3b82f6;
+  background: #ffffff;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
 }
 
 .fdh-color-preview {
-  position: absolute !important;
-  bottom: 8px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  background: rgba(0, 0, 0, 0.8) !important;
-  color: #ffffff !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
-  font-size: 11px !important;
-  white-space: nowrap !important;
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .fdh-color-preview-bar {
-  position: fixed !important;
-  bottom: 20px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 2147483647 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  padding: 12px 20px !important;
-  background: #1f2937 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
-  font-size: 12px !important;
-  color: #ffffff !important;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #1f2937;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 12px;
+  color: #ffffff;
 }
 
 /* ============================================
@@ -91,55 +91,55 @@
    ============================================ */
 
 .fdh-measure-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2147483646 !important;
-  cursor: crosshair !important;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  cursor: crosshair;
 }
 
 .fdh-measure-line {
-  position: absolute !important;
-  height: 2px !important;
-  background: #3b82f6 !important;
-  transform-origin: left center !important;
-  pointer-events: none !important;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+  position: absolute;
+  height: 2px;
+  background: #3b82f6;
+  transform-origin: left center;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 .fdh-measure-line::before,
 .fdh-measure-line::after {
-  content: '' !important;
-  position: absolute !important;
-  width: 8px !important;
-  height: 8px !important;
-  background: #3b82f6 !important;
-  border: 2px solid #ffffff !important;
-  border-radius: 50% !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .fdh-measure-line::before {
-  left: -4px !important;
+  left: -4px;
 }
 
 .fdh-measure-line::after {
-  right: -4px !important;
+  right: -4px;
 }
 
 .fdh-measure-label {
-  position: absolute !important;
-  background: #3b82f6 !important;
-  color: #ffffff !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  white-space: nowrap !important;
-  pointer-events: none !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  position: absolute;
+  background: #3b82f6;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ============================================
@@ -147,20 +147,20 @@
    ============================================ */
 
 .fdh-grid-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2147483645 !important;
-  pointer-events: none !important;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  pointer-events: none;
 }
 
 .fdh-grid-lines {
-  position: absolute !important;
-  inset: 0 !important;
+  position: absolute;
+  inset: 0;
 }
 
 .fdh-grid-rulers {
-  position: absolute !important;
-  inset: 0 !important;
+  position: absolute;
+  inset: 0;
 }
 
 /* ============================================
@@ -168,35 +168,37 @@
    ============================================ */
 
 .fdh-notification {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  background: #1f2937 !important;
-  color: #ffffff !important;
-  padding: 12px 20px !important;
-  border-radius: 8px !important;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  font-size: 14px !important;
-  z-index: 2147483647 !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-  animation: fdh-slide-in 0.3s ease-out !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  max-width: 300px !important;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #1f2937;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  z-index: 2147483647;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  animation: fdh-slide-in 0.3s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 300px;
 }
 
 .fdh-notification.fdh-notification-error {
-  background: #ef4444 !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
+  background: #ef4444;
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .fdh-notification.fdh-notification-success {
-  background: #10b981 !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
+  background: #10b981;
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .fdh-notification.fdh-notification-warning {
-  background: #f59e0b !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
+  background: #f59e0b;
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 /* ============================================
@@ -224,7 +226,8 @@
 }
 
 @keyframes fdh-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -237,17 +240,17 @@
    ============================================ */
 
 .fdh-hidden {
-  display: none !important;
+  display: none;
 }
 
 .fdh-invisible {
-  visibility: hidden !important;
+  visibility: hidden;
 }
 
 .fdh-no-events {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 .fdh-all-events {
-  pointer-events: all !important;
+  pointer-events: all;
 }

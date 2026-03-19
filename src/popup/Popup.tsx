@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ToolCard } from './components/ToolCard';
+import React, { useCallback, useEffect, useState } from 'react';
+import { type ToolMeta, type ToolsState, ToolType } from '../types';
 import { ColorLegend } from './components/ColorLegend';
-import { ToolType, ToolMeta, ToolsState, PopupMessage } from '../types';
+import { ToolCard } from './components/ToolCard';
 import './popup.css';
 
 // ============================================
@@ -121,7 +121,7 @@ export const Popup: React.FC = () => {
 
   // UI states
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Load initial state from content script
@@ -140,7 +140,9 @@ export const Popup: React.FC = () => {
               [ToolType.FONT_INSPECTOR]: response.states.fontInspector || { enabled: false },
               [ToolType.COLOR_PICKER]: response.states.colorPicker || { enabled: false },
               [ToolType.PIXEL_RULER]: response.states.pixelRuler || { enabled: false },
-              [ToolType.RESPONSIVE_BREAKPOINT]: response.states.breakpointOverlay || { enabled: false },
+              [ToolType.RESPONSIVE_BREAKPOINT]: response.states.breakpointOverlay || {
+                enabled: false,
+              },
               [ToolType.CSS_INSPECTOR]: response.states.cssInspector || { enabled: false },
               [ToolType.CONTRAST_CHECKER]: response.states.contrastChecker || { enabled: false },
               [ToolType.LAYOUT_VISUALIZER]: response.states.layoutVisualizer || { enabled: false },
@@ -282,7 +284,7 @@ export const Popup: React.FC = () => {
         'ZINDEX_VISUALIZER_DISABLE',
         'TECH_DETECTOR_DISABLE',
       ];
-      
+
       for (const messageType of disableMessages) {
         try {
           await chrome.tabs.sendMessage(tab.id, { type: messageType });
@@ -296,9 +298,7 @@ export const Popup: React.FC = () => {
   /**
    * Get count of active tools
    */
-  const activeToolsCount = Object.values(toolsState).filter(
-    (s) => s.enabled
-  ).length;
+  const activeToolsCount = Object.values(toolsState).filter((s) => s.enabled).length;
 
   if (isLoading) {
     return (
@@ -345,7 +345,7 @@ export const Popup: React.FC = () => {
               />
             </svg>
           </div>
-          
+
           <div>
             <h1 className="font-bold text-sm logo-text">FrontendDevHelper</h1>
             <p className="text-[10px] text-slate-400">
@@ -366,9 +366,10 @@ export const Popup: React.FC = () => {
             onClick={handleResetAll}
             className={`
               btn-icon text-xs px-2 w-auto gap-1
-              ${showResetConfirm 
-                ? 'text-red-400 bg-red-500/10' 
-                : 'text-slate-400 hover:text-slate-200'
+              ${
+                showResetConfirm
+                  ? 'text-red-400 bg-red-500/10'
+                  : 'text-slate-400 hover:text-slate-200'
               }
             `}
             title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
@@ -380,7 +381,12 @@ export const Popup: React.FC = () => {
               </>
             ) : (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
             )}
           </button>
@@ -404,7 +410,7 @@ export const Popup: React.FC = () => {
               onSettingsClick={() => handleOpenSettings(tool.type)}
               animationDelay={`stagger-${index + 1}`}
             />
-            
+
             {/* Show color legend below DOM Outliner when enabled */}
             {tool.type === ToolType.DOM_OUTLINER && toolsState[tool.type].enabled && (
               <div className="animate-fade-in stagger-1">
@@ -428,7 +434,10 @@ export const Popup: React.FC = () => {
             Pro Tip
           </h4>
           <p className="text-[11px] text-slate-400">
-            Use <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd> to open the popup, <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Esc</kbd> to disable all tools.
+            Use <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd>{' '}
+            to open the popup,{' '}
+            <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Esc</kbd> to disable
+            all tools.
           </p>
         </div>
       </main>
@@ -436,9 +445,7 @@ export const Popup: React.FC = () => {
       {/* Footer */}
       <footer className="popup-footer px-3 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-500">
-            v{EXTENSION_VERSION}
-          </span>
+          <span className="text-[10px] text-slate-500">v{EXTENSION_VERSION}</span>
           <span className="text-slate-600">•</span>
           <a
             href="https://github.com/rejisterjack/frontend-dev-helper"
@@ -447,7 +454,11 @@ export const Popup: React.FC = () => {
             className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
           >
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clipRule="evenodd"
+              />
             </svg>
             GitHub
           </a>

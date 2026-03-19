@@ -1,11 +1,12 @@
 /**
  * Options Page Component
- * 
+ *
  * Full-page settings interface for the extension.
  */
 
-import React, { useState, useEffect } from 'react';
-import type { ExtensionSettings, FeatureToggles, DEFAULT_FEATURE_TOGGLES } from '@/types';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import type { ExtensionSettings, FeatureToggles } from '@/types';
 
 export const Options: React.FC = () => {
   const [settings, setSettings] = useState<ExtensionSettings | null>(null);
@@ -16,7 +17,7 @@ export const Options: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const loadData = async (): Promise<void> => {
     try {
@@ -186,7 +187,9 @@ const GeneralSection: React.FC<{
         </div>
         <select
           value={settings.theme}
-          onChange={(e) => setSettings({ ...settings, theme: e.target.value as ExtensionSettings['theme'] })}
+          onChange={(e) =>
+            setSettings({ ...settings, theme: e.target.value as ExtensionSettings['theme'] })
+          }
           className="rounded border border-dev-border bg-dev-bg px-4 py-2"
         >
           <option value="dark">Dark</option>
@@ -198,7 +201,9 @@ const GeneralSection: React.FC<{
       <div className="flex items-center justify-between rounded-lg bg-dev-surface p-4">
         <div>
           <div className="font-medium">Auto-open DevTools</div>
-          <div className="text-sm text-dev-muted">Automatically open DevTools panel on page load</div>
+          <div className="text-sm text-dev-muted">
+            Automatically open DevTools panel on page load
+          </div>
         </div>
         <input
           type="checkbox"
@@ -271,7 +276,9 @@ const AdvancedSection: React.FC = () => (
     <div className="space-y-4">
       <div className="rounded-lg border border-dev-border p-4">
         <h3 className="mb-2 font-medium">Export Settings</h3>
-        <p className="mb-3 text-sm text-dev-muted">Download your extension settings as a JSON file</p>
+        <p className="mb-3 text-sm text-dev-muted">
+          Download your extension settings as a JSON file
+        </p>
         <button
           onClick={() => {
             chrome.storage.local.get(null, (data) => {
@@ -306,7 +313,7 @@ const AdvancedSection: React.FC = () => (
                   chrome.storage.local.set(data, () => {
                     window.location.reload();
                   });
-                } catch (error) {
+                } catch (_error) {
                   alert('Invalid settings file');
                 }
               };

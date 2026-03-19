@@ -2,7 +2,8 @@
  * Settings Tab
  */
 
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import type { ExtensionSettings } from '@/types';
 
 interface SettingsTabProps {
@@ -49,9 +50,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
   return (
     <div className="space-y-4 p-4">
       <div className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">
-          General
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">General</h3>
 
         <SettingRow label="Theme">
           <select
@@ -85,10 +84,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
           Keyboard Shortcuts
         </h3>
 
-        <ShortcutRow
-          label="Open Popup"
-          shortcut={settings.shortcuts.openPopup || 'Ctrl+Shift+F'}
-        />
+        <ShortcutRow label="Open Popup" shortcut={settings.shortcuts.openPopup || 'Ctrl+Shift+F'} />
         <ShortcutRow
           label="Toggle Inspector"
           shortcut={settings.shortcuts.toggleInspector || 'Ctrl+Shift+I'}
@@ -100,9 +96,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">
-          Data
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">Data</h3>
 
         <button
           onClick={async () => {

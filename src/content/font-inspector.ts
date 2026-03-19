@@ -34,7 +34,7 @@ let highlightedElement: HTMLElement | null = null;
  */
 function detectFontSource(fontFamily: string): { source: FontInfo['source']; url?: string } {
   const cleanFamily = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
-  
+
   // Check Google Fonts
   const googleFontLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"]');
   for (const link of googleFontLinks) {
@@ -45,17 +45,23 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
   }
 
   // Check for WebFont loader (async Google Fonts)
-  if ((window as any).WebFont) {
-    const webFontConfig = (window as any).WebFontConfig;
-    if (webFontConfig?.google?.families?.some((f: string) => 
-      f.toLowerCase().includes(cleanFamily.toLowerCase())
-    )) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as unknown as Record<string, unknown>;
+  if (win.WebFont) {
+    const webFontConfig = win.WebFontConfig as { google?: { families?: string[] } } | undefined;
+    if (
+      webFontConfig?.google?.families?.some((f: string) =>
+        f.toLowerCase().includes(cleanFamily.toLowerCase())
+      )
+    ) {
       return { source: 'google', url: 'Loaded via WebFont.js' };
     }
   }
 
   // Check Adobe Typekit
-  const typekitScripts = document.querySelectorAll('script[src*="typekit.net"], script[src*="use.typekit.net"]');
+  const typekitScripts = document.querySelectorAll(
+    'script[src*="typekit.net"], script[src*="use.typekit.net"]'
+  );
   if (typekitScripts.length > 0) {
     for (const script of typekitScripts) {
       const src = script.getAttribute('src') || '';
@@ -66,7 +72,9 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
   }
 
   // Check Adobe Fonts (new Typekit)
-  const adobeLinks = document.querySelectorAll('link[href*="use.typekit.net"], link[href*="p.typekit.net"]');
+  const adobeLinks = document.querySelectorAll(
+    'link[href*="use.typekit.net"], link[href*="p.typekit.net"]'
+  );
   if (adobeLinks.length > 0) {
     return { source: 'adobe', url: adobeLinks[0].getAttribute('href') || undefined };
   }
@@ -86,9 +94,9 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
               if (urlMatch) {
                 const fontUrl = new URL(urlMatch[1], location.href);
                 const isSelfHosted = fontUrl.origin === location.origin;
-                return { 
-                  source: isSelfHosted ? 'self-hosted' : 'unknown', 
-                  url: fontUrl.href 
+                return {
+                  source: isSelfHosted ? 'self-hosted' : 'unknown',
+                  url: fontUrl.href,
                 };
               }
             }
@@ -96,22 +104,47 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
           }
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // Cross-origin stylesheet, skip
     }
   }
 
   // Check if it's likely a system font
   const systemFonts = [
-    'arial', 'helvetica', 'times', 'times new roman', 'courier', 'courier new',
-    'verdana', 'georgia', 'palatino', 'garamond', 'bookman', 'comic sans ms',
-    'trebuchet ms', 'arial black', 'impact', 'system-ui', '-apple-system',
-    'blinkmacsystemfont', 'segoe ui', 'roboto', 'oxygen', 'ubuntu', 'cantarell',
-    'fira sans', 'droid sans', 'helvetica neue', 'sans-serif', 'serif',
-    'monospace', 'cursive', 'fantasy'
+    'arial',
+    'helvetica',
+    'times',
+    'times new roman',
+    'courier',
+    'courier new',
+    'verdana',
+    'georgia',
+    'palatino',
+    'garamond',
+    'bookman',
+    'comic sans ms',
+    'trebuchet ms',
+    'arial black',
+    'impact',
+    'system-ui',
+    '-apple-system',
+    'blinkmacsystemfont',
+    'segoe ui',
+    'roboto',
+    'oxygen',
+    'ubuntu',
+    'cantarell',
+    'fira sans',
+    'droid sans',
+    'helvetica neue',
+    'sans-serif',
+    'serif',
+    'monospace',
+    'cursive',
+    'fantasy',
   ];
-  
-  if (systemFonts.some(sf => cleanFamily.toLowerCase().includes(sf))) {
+
+  if (systemFonts.some((sf) => cleanFamily.toLowerCase().includes(sf))) {
     return { source: 'system' };
   }
 
@@ -123,10 +156,10 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
  */
 function getFontInfo(element: HTMLElement): FontInfo {
   const computedStyle = window.getComputedStyle(element);
-  
+
   // Get font family and parse fallback stack
   const fullFontFamily = computedStyle.fontFamily;
-  const fontStack = fullFontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''));
+  const fontStack = fullFontFamily.split(',').map((f) => f.trim().replace(/['"]/g, ''));
   const primaryFamily = fontStack[0] || 'Unknown';
   const fallbacks = fontStack.slice(1);
 
@@ -161,7 +194,7 @@ function getFontInfo(element: HTMLElement): FontInfo {
  */
 function generateFontCSS(info: FontInfo): string {
   const lines = [
-    `font-family: "${info.family}"${info.fallbackStack.length > 0 ? ', ' + info.fallbackStack.join(', ') : ''};`,
+    `font-family: "${info.family}"${info.fallbackStack.length > 0 ? `, ${info.fallbackStack.join(', ')}` : ''};`,
     `font-size: ${info.sizeRem}; /* ${info.size} */`,
     `font-weight: ${info.weight};`,
   ];
@@ -457,11 +490,11 @@ function updateTooltip(info: FontInfo): void {
     badgeEl.textContent = getSourceLabel(info.source);
     // Update badge color based on source
     const badgeColors: Record<string, string> = {
-      'google': '#4285f4',
-      'adobe': '#ff0000',
+      google: '#4285f4',
+      adobe: '#ff0000',
       'self-hosted': '#10b981',
-      'system': '#64748b',
-      'unknown': '#94a3b8',
+      system: '#64748b',
+      unknown: '#94a3b8',
     };
     (badgeEl as HTMLElement).style.background = badgeColors[info.source] || '#64748b';
   }
@@ -484,9 +517,8 @@ function updateTooltip(info: FontInfo): void {
   if (sourceUrlRow && sourceLinkEl) {
     if (info.sourceUrl) {
       sourceUrlRow.style.display = 'flex';
-      sourceLinkEl.textContent = info.sourceUrl.length > 40 
-        ? info.sourceUrl.slice(0, 40) + '...' 
-        : info.sourceUrl;
+      sourceLinkEl.textContent =
+        info.sourceUrl.length > 40 ? `${info.sourceUrl.slice(0, 40)}...` : info.sourceUrl;
       sourceLinkEl.href = info.sourceUrl;
       sourceLinkEl.title = info.sourceUrl;
     } else {
@@ -505,7 +537,7 @@ function updateTooltip(info: FontInfo): void {
  */
 function showTooltip(x: number, y: number): void {
   const tooltip = createFontTooltip();
-  
+
   // Position tooltip
   const tooltipRect = tooltip.getBoundingClientRect();
   let left = x + 15;
@@ -539,11 +571,11 @@ function hideTooltip(): void {
 function highlightElement(element: HTMLElement): void {
   removeHighlight();
   highlightedElement = element;
-  
+
   // Store original outline
   (element as any).__fdhOriginalOutline = element.style.outline;
   (element as any).__fdhOriginalOutlineOffset = element.style.outlineOffset;
-  
+
   element.style.outline = '2px solid #3b82f6';
   element.style.outlineOffset = '2px';
 }
@@ -554,17 +586,10 @@ function highlightElement(element: HTMLElement): void {
 function removeHighlight(): void {
   if (highlightedElement) {
     highlightedElement.style.outline = (highlightedElement as any).__fdhOriginalOutline || '';
-    highlightedElement.style.outlineOffset = (highlightedElement as any).__fdhOriginalOutlineOffset || '';
+    highlightedElement.style.outlineOffset =
+      (highlightedElement as any).__fdhOriginalOutlineOffset || '';
     highlightedElement = null;
   }
-}
-
-/**
- * Check if element contains text content
- */
-function hasTextContent(element: HTMLElement): boolean {
-  const text = element.textContent?.trim();
-  return !!text && text.length > 0;
 }
 
 /**
@@ -583,8 +608,9 @@ function isValidTextElement(element: HTMLElement): boolean {
   }
 
   // Check if element or its children have visible text
-  const hasVisibleText = element.childNodes.length > 0 && 
-    Array.from(element.childNodes).some(node => {
+  const hasVisibleText =
+    element.childNodes.length > 0 &&
+    Array.from(element.childNodes).some((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         return node.textContent?.trim().length > 0;
       }
@@ -614,7 +640,7 @@ function handleMouseOver(e: MouseEvent): void {
   if (!isValidTextElement(target)) return;
 
   state.currentElement = target;
-  
+
   const fontInfo = getFontInfo(target);
   updateTooltip(fontInfo);
   showTooltip(e.clientX, e.clientY);
@@ -648,9 +674,9 @@ function handleMouseOut(e: MouseEvent): void {
  */
 export function activateFontInspector(): void {
   if (state.isActive) return;
-  
+
   state.isActive = true;
-  
+
   // Add event listeners
   document.addEventListener('mouseover', handleMouseOver, true);
   document.addEventListener('mousemove', handleMouseMove, true);
@@ -666,12 +692,12 @@ export function activateFontInspector(): void {
 export function deactivateFontInspector(): void {
   state.isActive = false;
   state.currentElement = null;
-  
+
   // Remove event listeners
   document.removeEventListener('mouseover', handleMouseOver, true);
   document.removeEventListener('mousemove', handleMouseMove, true);
   document.removeEventListener('mouseout', handleMouseOut, true);
-  
+
   hideTooltip();
   removeHighlight();
 }
@@ -747,7 +773,7 @@ export function getInspectorState(): InspectorState {
  */
 export function cleanupFontInspector(): void {
   deactivateFontInspector();
-  
+
   if (fontTooltip) {
     fontTooltip.remove();
     fontTooltip = null;
@@ -760,7 +786,7 @@ export function cleanupFontInspector(): void {
 export function initializeFontInspector(): void {
   // Listen for messages from the extension
   if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       switch (message.action) {
         case 'ACTIVATE_FONT_INSPECTOR':
           activateFontInspector();

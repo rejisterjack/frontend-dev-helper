@@ -1,6 +1,6 @@
 /**
  * Color Picker Module
- * 
+ *
  * Provides color picking functionality from the page.
  */
 
@@ -157,7 +157,7 @@ export class ColorPicker {
 
     const color = this.getColorAtPoint(e.clientX, e.clientY);
     this.updatePreview(color);
-    
+
     if (this.magnifier) {
       this.updateMagnifier(e.clientX, e.clientY, color);
     }
@@ -188,7 +188,14 @@ export class ColorPicker {
     try {
       this.ctx.drawImage(
         document.documentElement as unknown as CanvasImageSource,
-        x, y, 1, 1, 0, 0, 1, 1
+        x,
+        y,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1
       );
     } catch {
       // Fallback: try to get element color
@@ -226,7 +233,6 @@ export class ColorPicker {
     if (!this.magnifier) return;
 
     const magnifierSize = 100;
-    const zoomLevel = 5;
     const offset = magnifierSize / 2;
 
     // Position magnifier near cursor but not covering it
@@ -254,12 +260,18 @@ export class ColorPicker {
     if (ctx) {
       ctx.clearRect(0, 0, 100, 100);
       ctx.imageSmoothingEnabled = false;
-      
+
       try {
         ctx.drawImage(
           document.documentElement as unknown as CanvasImageSource,
-          x - 10, y - 10, 20, 20,
-          0, 0, 100, 100
+          x - 10,
+          y - 10,
+          20,
+          20,
+          0,
+          0,
+          100,
+          100
         );
       } catch {
         // Fallback
@@ -284,10 +296,15 @@ export class ColorPicker {
   }
 
   private rgbToHex(r: number, g: number, b: number): string {
-    return '#' + [r, g, b].map(x => {
-      const hex = x.toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
+    return (
+      '#' +
+      [r, g, b]
+        .map((x) => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? `0${hex}` : hex;
+        })
+        .join('')
+    );
   }
 
   private hexToRgb(hex: string): string {

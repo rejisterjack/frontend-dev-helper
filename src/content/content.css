@@ -9,7 +9,7 @@
   height: 100%;
   pointer-events: none;
   z-index: 2147483647;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 #frontend-dev-helper-root > * {
@@ -33,7 +33,7 @@
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   pointer-events: none;
   z-index: 2147483647;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
@@ -43,7 +43,7 @@
 }
 
 .fdh-inspector-tooltip::before {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -6px;
   left: 12px;
@@ -76,7 +76,7 @@
   color: #fff;
   padding: 2px 8px;
   font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   border-radius: 4px 4px 0 0;
   white-space: nowrap;
 }
@@ -131,7 +131,7 @@
   color: #fff;
   padding: 4px 8px;
   border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   white-space: nowrap;
 }
@@ -150,7 +150,7 @@
   color: #fff;
   padding: 2px 6px;
   font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   border-radius: 4px;
   z-index: 2147483647;
   pointer-events: none;
@@ -158,18 +158,18 @@
 
 /* CSS Scanner Highlights */
 .fdh-unused-css {
-  outline: 2px dashed #f59e0b !important;
-  outline-offset: 2px !important;
+  outline: 2px dashed #f59e0b;
+  outline-offset: 2px;
 }
 
 .fdh-unused-css::after {
-  content: 'Unused';
+  content: "Unused";
   position: absolute;
   background: #f59e0b;
   color: #000;
   padding: 2px 6px;
   font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   border-radius: 0 0 4px 0;
   top: 0;
   left: 0;
@@ -203,7 +203,7 @@
 .fdh-measurement-line,
 .fdh-measurement-label {
   all: initial;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
   box-sizing: border-box;
 }
 
@@ -212,5 +212,5 @@
 .fdh-highlight-box__label,
 .fdh-color-preview__value,
 .fdh-measurement-label {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
 }

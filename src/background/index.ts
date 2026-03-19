@@ -1,6 +1,6 @@
 /**
  * Background Service Worker for FrontendDevHelper
- * 
+ *
  * This script runs in the background and handles:
  * - Extension lifecycle events
  * - Message passing between content scripts and popup
@@ -9,7 +9,7 @@
  * - Keyboard shortcuts
  */
 
-import { MessageType, type MessagePayload } from '../types/messages';
+import { type MessagePayload, MessageType } from '../types/messages';
 
 // ============================================
 // Extension Installation & Update
@@ -140,13 +140,16 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   };
 
   const messageType = menuActions[info.menuItemId as string];
-  
+
   if (messageType) {
     sendMessageToTab(tab.id, { type: messageType });
   } else if (info.menuItemId === 'fdh-settings') {
-    chrome.runtime.openOptionsPage?.() || chrome.tabs.create({
-      url: chrome.runtime.getURL('index.html'),
-    });
+    const optionsUrl = chrome.runtime.getURL('options.html');
+    if (chrome.runtime.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      chrome.tabs.create({ url: optionsUrl });
+    }
   }
 });
 
@@ -156,9 +159,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.commands.onCommand.addListener((command, tab) => {
   if (!tab?.id) return;
-  
+
   console.log('[Background] Command received:', command);
-  
+
   const commandMap: Record<string, string> = {
     'toggle-pesticide': 'PESTICIDE_TOGGLE',
     'toggle-spacing': 'SPACING_TOGGLE',
@@ -167,7 +170,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
     'toggle-pixel-ruler': 'PIXEL_RULER_TOGGLE',
     'toggle-breakpoint': 'BREAKPOINT_OVERLAY_TOGGLE',
   };
-  
+
   const messageType = commandMap[command];
   if (messageType) {
     chrome.tabs.sendMessage(tab.id, { type: messageType }).catch((err) => {
@@ -180,11 +183,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
 // Message Handling
 // ============================================
 
-chrome.runtime.onMessage.addListener((
-  message: MessagePayload,
-  sender,
-  sendResponse
-) => {
+chrome.runtime.onMessage.addListener((message: MessagePayload, sender, sendResponse) => {
   console.log('[Background] Received message:', message, 'from:', sender);
 
   (async () => {
@@ -199,10 +198,11 @@ chrome.runtime.onMessage.addListener((
           }
           break;
 
-        case MessageType.GET_SETTINGS:
+        case MessageType.GET_SETTINGS: {
           const settings = await chrome.storage.sync.get('settings');
           sendResponse({ success: true, data: settings.settings });
           break;
+        }
 
         case MessageType.SET_SETTINGS:
           if (message.payload) {
@@ -213,47 +213,55 @@ chrome.runtime.onMessage.addListener((
           }
           break;
 
-        case MessageType.COPY_TO_CLIPBOARD:
-          if (message.payload?.text) {
-            await chrome.offscreen?.createDocument?.({
-              url: 'offscreen.html',
-              reasons: ['CLIPBOARD'],
-              justification: 'Write text to clipboard',
-            }).catch(() => {});
-            
+        case MessageType.COPY_TO_CLIPBOARD: {
+          const payload = message.payload as { text?: string } | undefined;
+          if (payload?.text) {
+            await chrome.offscreen
+              ?.createDocument?.({
+                url: 'offscreen.html',
+                reasons: ['CLIPBOARD' as chrome.offscreen.Reason],
+                justification: 'Write text to clipboard',
+              })
+              .catch(() => {});
+
             sendResponse({ success: true });
           }
           break;
+        }
 
-        case MessageType.INJECT_CONTENT_SCRIPT:
-          if (message.payload?.tabId) {
-            await injectContentScript(message.payload.tabId);
+        case MessageType.INJECT_CONTENT_SCRIPT: {
+          const payload = message.payload as { tabId?: number } | undefined;
+          if (payload?.tabId) {
+            await injectContentScript(payload.tabId);
             sendResponse({ success: true });
           }
           break;
+        }
 
-        case MessageType.CAPTURE_SCREENSHOT:
+        case MessageType.CAPTURE_SCREENSHOT: {
           try {
-            const dataUrl = await chrome.tabs.captureVisibleTab(undefined, {
+            const currentWindow = await chrome.windows.getCurrent();
+            const dataUrl = await chrome.tabs.captureVisibleTab(currentWindow.id, {
               format: 'png',
             });
             sendResponse({ success: true, data: dataUrl });
           } catch (error) {
-            sendResponse({ 
-              success: false, 
-              error: (error as Error).message 
+            sendResponse({
+              success: false,
+              error: (error as Error).message,
             });
           }
           break;
+        }
 
         default:
           sendResponse({ success: false, error: 'Unknown message type' });
       }
     } catch (error) {
       console.error('[Background] Error handling message:', error);
-      sendResponse({ 
-        success: false, 
-        error: (error as Error).message 
+      sendResponse({
+        success: false,
+        error: (error as Error).message,
       });
     }
   })();
@@ -288,12 +296,14 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   // Notify popup about tab change
-  chrome.runtime.sendMessage({
-    type: MessageType.TAB_CHANGED,
-    payload: { tabId },
-  }).catch(() => {
-    // Popup might not be open, ignore error
-  });
+  chrome.runtime
+    .sendMessage({
+      type: MessageType.TAB_CHANGED,
+      payload: { tabId },
+    })
+    .catch(() => {
+      // Popup might not be open, ignore error
+    });
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -307,13 +317,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Helper Functions
 // ============================================
 
-async function sendMessageToTab(
-  tabId: number, 
-  message: MessagePayload
-): Promise<void> {
+async function sendMessageToTab(tabId: number, message: MessagePayload): Promise<void> {
   try {
     await chrome.tabs.sendMessage(tabId, message);
-  } catch (error) {
+  } catch (_error) {
     // Content script might not be loaded, try to inject it
     await injectContentScript(tabId);
     // Retry sending message

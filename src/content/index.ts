@@ -1,6 +1,6 @@
 /**
  * Content Script for FrontendDevHelper
- * 
+ *
  * This script runs in the context of web pages and provides:
  * - DOM Outliner (Pesticide Reborn)
  * - Spacing Visualizer
@@ -14,20 +14,20 @@
  */
 
 import { MessageType } from '../types/messages';
-import { pesticide } from './pesticide';
-import { spacingVisualizer } from './spacing';
-import { fontInspector } from './font-inspector';
-import { colorPicker } from './color-picker';
-import { pixelRuler } from './pixel-ruler';
 import { breakpointOverlay } from './breakpoint-overlay';
-import { cssInspector } from './css-inspector';
+import { colorPicker } from './color-picker';
 import { contrastChecker } from './contrast-checker';
-import { layoutVisualizer } from './layout-visualizer';
-import { zIndexVisualizer } from './zindex-visualizer';
-import { techDetector } from './tech-detector';
-import { Inspector } from './inspector';
-import { MeasureTool } from './measure-tool';
+import { cssInspector } from './css-inspector';
+import { fontInspector } from './font-inspector';
 import { GridOverlay } from './grid-overlay';
+import { Inspector } from './inspector';
+import { layoutVisualizer } from './layout-visualizer';
+import { MeasureTool } from './measure-tool';
+import { pesticide } from './pesticide';
+import { pixelRuler } from './pixel-ruler';
+import { spacingVisualizer } from './spacing';
+import { techDetector } from './tech-detector';
+import { zIndexVisualizer } from './zindex-visualizer';
 
 // ============================================
 // State Management
@@ -68,326 +68,324 @@ const state: ContentScriptState = {
 // Message Handler
 // ============================================
 
-chrome.runtime.onMessage.addListener((
-  message: { type: string; payload?: Record<string, unknown> },
-  _sender,
-  sendResponse
-) => {
-  console.log('[Content] Received message:', message);
+chrome.runtime.onMessage.addListener(
+  (message: { type: string; payload?: Record<string, unknown> }, _sender, sendResponse) => {
+    console.log('[Content] Received message:', message);
 
-  try {
-    switch (message.type) {
-      // DOM Outliner
-      case 'PESTICIDE_TOGGLE':
-        pesticide.toggle();
-        state.domOutlinerEnabled = pesticide.getState().enabled;
-        sendResponse({ success: true, active: state.domOutlinerEnabled });
-        break;
-      case 'PESTICIDE_ENABLE':
-        pesticide.enable();
-        state.domOutlinerEnabled = true;
-        sendResponse({ success: true, active: true });
-        break;
-      case 'PESTICIDE_DISABLE':
-        pesticide.disable();
-        state.domOutlinerEnabled = false;
-        sendResponse({ success: true, active: false });
-        break;
-      case 'PESTICIDE_GET_STATE':
-        sendResponse({ success: true, state: pesticide.getState() });
-        break;
-      case 'PESTICIDE_SET_TAG_VISIBILITY':
-        if (message.payload?.tag !== undefined && message.payload?.visible !== undefined) {
-          pesticide.toggleTag(String(message.payload.tag), Boolean(message.payload.visible));
-          sendResponse({ success: true });
-        } else {
-          sendResponse({ success: false, error: 'Missing tag or visible parameter' });
-        }
-        break;
-
-      // Spacing Visualizer
-      case 'SPACING_TOGGLE':
-        spacingVisualizer.toggle();
-        state.spacingVisualizerEnabled = spacingVisualizer.getState().enabled;
-        sendResponse({ success: true, active: state.spacingVisualizerEnabled });
-        break;
-      case 'SPACING_ENABLE':
-        spacingVisualizer.enable();
-        state.spacingVisualizerEnabled = true;
-        sendResponse({ success: true, active: true });
-        break;
-      case 'SPACING_DISABLE':
-        spacingVisualizer.disable();
-        state.spacingVisualizerEnabled = false;
-        sendResponse({ success: true, active: false });
-        break;
-      case 'SPACING_GET_STATE':
-        sendResponse({ success: true, state: spacingVisualizer.getState() });
-        break;
-
-      // Font Inspector
-      case 'FONT_INSPECTOR_TOGGLE':
-        fontInspector.toggle();
-        state.fontInspectorEnabled = fontInspector.getState().enabled;
-        sendResponse({ success: true, active: state.fontInspectorEnabled });
-        break;
-      case 'FONT_INSPECTOR_ENABLE':
-        fontInspector.enable();
-        state.fontInspectorEnabled = true;
-        sendResponse({ success: true, active: true });
-        break;
-      case 'FONT_INSPECTOR_DISABLE':
-        fontInspector.disable();
-        state.fontInspectorEnabled = false;
-        sendResponse({ success: true, active: false });
-        break;
-      case 'FONT_INSPECTOR_GET_STATE':
-        sendResponse({ success: true, state: fontInspector.getState() });
-        break;
-
-      // Color Picker
-      case 'COLOR_PICKER_TOGGLE':
-        colorPicker.toggle();
-        sendResponse({ success: true, active: colorPicker.getState().enabled });
-        break;
-      case 'COLOR_PICKER_ENABLE':
-        colorPicker.enable();
-        sendResponse({ success: true, active: true });
-        break;
-      case 'COLOR_PICKER_DISABLE':
-        colorPicker.disable();
-        sendResponse({ success: true, active: false });
-        break;
-      case 'COLOR_PICKER_GET_STATE':
-        sendResponse({ success: true, state: colorPicker.getState() });
-        break;
-      case 'COLOR_PICKER_SET_FORMAT':
-        if (message.payload?.format) {
-          colorPicker.setFormat(message.payload.format as 'hex' | 'rgb' | 'hsl');
-          sendResponse({ success: true });
-        } else {
-          sendResponse({ success: false, error: 'Missing format parameter' });
-        }
-        break;
-      case 'COLOR_PICKER_EXTRACT_PALETTE':
-        colorPicker.extractPalette();
-        sendResponse({ success: true });
-        break;
-
-      // Pixel Ruler
-      case 'PIXEL_RULER_TOGGLE':
-        pixelRuler.toggle();
-        state.pixelRulerEnabled = pixelRuler.getState().enabled;
-        sendResponse({ success: true, active: state.pixelRulerEnabled });
-        break;
-      case 'PIXEL_RULER_ENABLE':
-        pixelRuler.enable();
-        state.pixelRulerEnabled = true;
-        sendResponse({ success: true, active: true });
-        break;
-      case 'PIXEL_RULER_DISABLE':
-        pixelRuler.disable();
-        state.pixelRulerEnabled = false;
-        sendResponse({ success: true, active: false });
-        break;
-      case 'PIXEL_RULER_GET_STATE':
-        sendResponse({ success: true, state: pixelRuler.getState() });
-        break;
-      case 'PIXEL_RULER_CLEAR':
-        pixelRuler.clearAllMeasurements();
-        sendResponse({ success: true });
-        break;
-
-      // Breakpoint Overlay
-      case 'BREAKPOINT_OVERLAY_TOGGLE':
-        breakpointOverlay.toggle();
-        state.breakpointOverlayEnabled = breakpointOverlay.getState().enabled;
-        sendResponse({ success: true, active: state.breakpointOverlayEnabled });
-        break;
-      case 'BREAKPOINT_OVERLAY_ENABLE':
-        breakpointOverlay.enable();
-        state.breakpointOverlayEnabled = true;
-        sendResponse({ success: true, active: true });
-        break;
-      case 'BREAKPOINT_OVERLAY_DISABLE':
-        breakpointOverlay.disable();
-        state.breakpointOverlayEnabled = false;
-        sendResponse({ success: true, active: false });
-        break;
-      case 'BREAKPOINT_OVERLAY_GET_STATE':
-        sendResponse({ success: true, state: breakpointOverlay.getState() });
-        break;
-      case 'BREAKPOINT_OVERLAY_SET_FRAMEWORK':
-        if (message.payload?.framework) {
-          breakpointOverlay.setFramework(message.payload.framework as 'tailwind' | 'bootstrap');
-          sendResponse({ success: true });
-        } else {
-          sendResponse({ success: false, error: 'Missing framework parameter' });
-        }
-        break;
-
-      // CSS Inspector
-      case 'CSS_INSPECTOR_TOGGLE':
-        cssInspector.toggle();
-        sendResponse({ success: true, active: cssInspector.getState().enabled });
-        break;
-      case 'CSS_INSPECTOR_ENABLE':
-        cssInspector.enable();
-        sendResponse({ success: true, active: true });
-        break;
-      case 'CSS_INSPECTOR_DISABLE':
-        cssInspector.disable();
-        sendResponse({ success: true, active: false });
-        break;
-      case 'CSS_INSPECTOR_GET_STATE':
-        sendResponse({ success: true, state: cssInspector.getState() });
-        break;
-
-      // Contrast Checker
-      case 'CONTRAST_CHECKER_TOGGLE':
-        contrastChecker.toggle();
-        sendResponse({ success: true, active: contrastChecker.getState().enabled });
-        break;
-      case 'CONTRAST_CHECKER_ENABLE':
-        contrastChecker.enable();
-        sendResponse({ success: true, active: true });
-        break;
-      case 'CONTRAST_CHECKER_DISABLE':
-        contrastChecker.disable();
-        sendResponse({ success: true, active: false });
-        break;
-      case 'CONTRAST_CHECKER_GET_STATE':
-        sendResponse({ success: true, state: contrastChecker.getState() });
-        break;
-
-      // Layout Visualizer (Flexbox/Grid)
-      case 'LAYOUT_VISUALIZER_TOGGLE':
-        layoutVisualizer.toggle();
-        sendResponse({ success: true, active: layoutVisualizer.getState().enabled });
-        break;
-      case 'LAYOUT_VISUALIZER_ENABLE':
-        layoutVisualizer.enable();
-        sendResponse({ success: true, active: true });
-        break;
-      case 'LAYOUT_VISUALIZER_DISABLE':
-        layoutVisualizer.disable();
-        sendResponse({ success: true, active: false });
-        break;
-      case 'LAYOUT_VISUALIZER_GET_STATE':
-        sendResponse({ success: true, state: layoutVisualizer.getState() });
-        break;
-
-      // Z-Index Visualizer
-      case 'ZINDEX_VISUALIZER_TOGGLE':
-        zIndexVisualizer.toggle();
-        sendResponse({ success: true, active: zIndexVisualizer.getState().enabled });
-        break;
-      case 'ZINDEX_VISUALIZER_ENABLE':
-        zIndexVisualizer.enable();
-        sendResponse({ success: true, active: true });
-        break;
-      case 'ZINDEX_VISUALIZER_DISABLE':
-        zIndexVisualizer.disable();
-        sendResponse({ success: true, active: false });
-        break;
-      case 'ZINDEX_VISUALIZER_GET_STATE':
-        sendResponse({ success: true, state: zIndexVisualizer.getState() });
-        break;
-
-      // Tech Detector
-      case 'TECH_DETECTOR_TOGGLE':
-        techDetector.toggle();
-        sendResponse({ success: true, active: techDetector.getState().enabled });
-        break;
-      case 'TECH_DETECTOR_ENABLE':
-        techDetector.enable();
-        sendResponse({ success: true, active: true });
-        break;
-      case 'TECH_DETECTOR_DISABLE':
-        techDetector.disable();
-        sendResponse({ success: true, active: false });
-        break;
-      case 'TECH_DETECTOR_GET_STATE':
-        sendResponse({ success: true, state: techDetector.getState() });
-        break;
-
-      // Get all states
-      case 'GET_ALL_STATES':
-        sendResponse({
-          success: true,
-          states: {
-            pesticide: pesticide.getState(),
-            spacing: spacingVisualizer.getState(),
-            fontInspector: fontInspector.getState(),
-            colorPicker: colorPicker.getState(),
-            pixelRuler: pixelRuler.getState(),
-            breakpointOverlay: breakpointOverlay.getState(),
-            cssInspector: cssInspector.getState(),
-            contrastChecker: contrastChecker.getState(),
-            layoutVisualizer: layoutVisualizer.getState(),
-            zIndexVisualizer: zIndexVisualizer.getState(),
-            techDetector: techDetector.getState(),
-            inspector: { enabled: state.isInspectorActive },
-            measureTool: { enabled: state.isMeasureToolActive },
-            gridOverlay: { visible: state.isGridVisible },
+    try {
+      switch (message.type) {
+        // DOM Outliner
+        case 'PESTICIDE_TOGGLE':
+          pesticide.toggle();
+          state.domOutlinerEnabled = pesticide.getState().enabled;
+          sendResponse({ success: true, active: state.domOutlinerEnabled });
+          break;
+        case 'PESTICIDE_ENABLE':
+          pesticide.enable();
+          state.domOutlinerEnabled = true;
+          sendResponse({ success: true, active: true });
+          break;
+        case 'PESTICIDE_DISABLE':
+          pesticide.disable();
+          state.domOutlinerEnabled = false;
+          sendResponse({ success: true, active: false });
+          break;
+        case 'PESTICIDE_GET_STATE':
+          sendResponse({ success: true, state: pesticide.getState() });
+          break;
+        case 'PESTICIDE_SET_TAG_VISIBILITY':
+          if (message.payload?.tag !== undefined && message.payload?.visible !== undefined) {
+            pesticide.toggleTag(String(message.payload.tag), Boolean(message.payload.visible));
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing tag or visible parameter' });
           }
-        });
-        break;
+          break;
 
-      // Legacy message types
-      case MessageType.TOGGLE_INSPECTOR:
-        toggleInspector();
-        sendResponse({ success: true, active: state.isInspectorActive });
-        break;
+        // Spacing Visualizer
+        case 'SPACING_TOGGLE':
+          spacingVisualizer.toggle();
+          state.spacingVisualizerEnabled = spacingVisualizer.getState().enabled;
+          sendResponse({ success: true, active: state.spacingVisualizerEnabled });
+          break;
+        case 'SPACING_ENABLE':
+          spacingVisualizer.enable();
+          state.spacingVisualizerEnabled = true;
+          sendResponse({ success: true, active: true });
+          break;
+        case 'SPACING_DISABLE':
+          spacingVisualizer.disable();
+          state.spacingVisualizerEnabled = false;
+          sendResponse({ success: true, active: false });
+          break;
+        case 'SPACING_GET_STATE':
+          sendResponse({ success: true, state: spacingVisualizer.getState() });
+          break;
 
-      case MessageType.PICK_COLOR:
-        toggleColorPicker();
-        sendResponse({ success: true, active: state.isColorPickerActive });
-        break;
+        // Font Inspector
+        case 'FONT_INSPECTOR_TOGGLE':
+          fontInspector.toggle();
+          state.fontInspectorEnabled = fontInspector.getState().enabled;
+          sendResponse({ success: true, active: state.fontInspectorEnabled });
+          break;
+        case 'FONT_INSPECTOR_ENABLE':
+          fontInspector.enable();
+          state.fontInspectorEnabled = true;
+          sendResponse({ success: true, active: true });
+          break;
+        case 'FONT_INSPECTOR_DISABLE':
+          fontInspector.disable();
+          state.fontInspectorEnabled = false;
+          sendResponse({ success: true, active: false });
+          break;
+        case 'FONT_INSPECTOR_GET_STATE':
+          sendResponse({ success: true, state: fontInspector.getState() });
+          break;
 
-      case MessageType.MEASURE_DISTANCE:
-        toggleMeasureTool();
-        sendResponse({ success: true, active: state.isMeasureToolActive });
-        break;
+        // Color Picker
+        case 'COLOR_PICKER_TOGGLE':
+          colorPicker.toggle();
+          sendResponse({ success: true, active: colorPicker.getState().enabled });
+          break;
+        case 'COLOR_PICKER_ENABLE':
+          colorPicker.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'COLOR_PICKER_DISABLE':
+          colorPicker.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'COLOR_PICKER_GET_STATE':
+          sendResponse({ success: true, state: colorPicker.getState() });
+          break;
+        case 'COLOR_PICKER_SET_FORMAT':
+          if (message.payload?.format) {
+            colorPicker.setFormat(message.payload.format as 'hex' | 'rgb' | 'hsl');
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing format parameter' });
+          }
+          break;
+        case 'COLOR_PICKER_EXTRACT_PALETTE':
+          colorPicker.extractPalette();
+          sendResponse({ success: true });
+          break;
 
-      case MessageType.TOGGLE_GRID:
-        toggleGridOverlay();
-        sendResponse({ success: true, visible: state.isGridVisible });
-        break;
+        // Pixel Ruler
+        case 'PIXEL_RULER_TOGGLE':
+          pixelRuler.toggle();
+          state.pixelRulerEnabled = pixelRuler.getState().enabled;
+          sendResponse({ success: true, active: state.pixelRulerEnabled });
+          break;
+        case 'PIXEL_RULER_ENABLE':
+          pixelRuler.enable();
+          state.pixelRulerEnabled = true;
+          sendResponse({ success: true, active: true });
+          break;
+        case 'PIXEL_RULER_DISABLE':
+          pixelRuler.disable();
+          state.pixelRulerEnabled = false;
+          sendResponse({ success: true, active: false });
+          break;
+        case 'PIXEL_RULER_GET_STATE':
+          sendResponse({ success: true, state: pixelRuler.getState() });
+          break;
+        case 'PIXEL_RULER_CLEAR':
+          pixelRuler.clearAllMeasurements();
+          sendResponse({ success: true });
+          break;
 
-      case MessageType.COPY_CSS:
-        copyComputedCSS();
-        sendResponse({ success: true });
-        break;
+        // Breakpoint Overlay
+        case 'BREAKPOINT_OVERLAY_TOGGLE':
+          breakpointOverlay.toggle();
+          state.breakpointOverlayEnabled = breakpointOverlay.getState().enabled;
+          sendResponse({ success: true, active: state.breakpointOverlayEnabled });
+          break;
+        case 'BREAKPOINT_OVERLAY_ENABLE':
+          breakpointOverlay.enable();
+          state.breakpointOverlayEnabled = true;
+          sendResponse({ success: true, active: true });
+          break;
+        case 'BREAKPOINT_OVERLAY_DISABLE':
+          breakpointOverlay.disable();
+          state.breakpointOverlayEnabled = false;
+          sendResponse({ success: true, active: false });
+          break;
+        case 'BREAKPOINT_OVERLAY_GET_STATE':
+          sendResponse({ success: true, state: breakpointOverlay.getState() });
+          break;
+        case 'BREAKPOINT_OVERLAY_SET_FRAMEWORK':
+          if (message.payload?.framework) {
+            breakpointOverlay.setFramework(message.payload.framework as 'tailwind' | 'bootstrap');
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing framework parameter' });
+          }
+          break;
 
-      case MessageType.COPY_HTML:
-        copyHTML();
-        sendResponse({ success: true });
-        break;
+        // CSS Inspector
+        case 'CSS_INSPECTOR_TOGGLE':
+          cssInspector.toggle();
+          sendResponse({ success: true, active: cssInspector.getState().enabled });
+          break;
+        case 'CSS_INSPECTOR_ENABLE':
+          cssInspector.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'CSS_INSPECTOR_DISABLE':
+          cssInspector.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'CSS_INSPECTOR_GET_STATE':
+          sendResponse({ success: true, state: cssInspector.getState() });
+          break;
 
-      case MessageType.GET_ELEMENT_INFO:
-        if (message.payload?.selector) {
-          const info = getElementInfo(message.payload.selector);
-          sendResponse({ success: true, data: info });
-        } else {
-          sendResponse({ success: false, error: 'No selector provided' });
-        }
-        break;
+        // Contrast Checker
+        case 'CONTRAST_CHECKER_TOGGLE':
+          contrastChecker.toggle();
+          sendResponse({ success: true, active: contrastChecker.getState().enabled });
+          break;
+        case 'CONTRAST_CHECKER_ENABLE':
+          contrastChecker.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'CONTRAST_CHECKER_DISABLE':
+          contrastChecker.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'CONTRAST_CHECKER_GET_STATE':
+          sendResponse({ success: true, state: contrastChecker.getState() });
+          break;
 
-      case MessageType.PING:
-        sendResponse({ success: true, data: 'pong' });
-        break;
+        // Layout Visualizer (Flexbox/Grid)
+        case 'LAYOUT_VISUALIZER_TOGGLE':
+          layoutVisualizer.toggle();
+          sendResponse({ success: true, active: layoutVisualizer.getState().enabled });
+          break;
+        case 'LAYOUT_VISUALIZER_ENABLE':
+          layoutVisualizer.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'LAYOUT_VISUALIZER_DISABLE':
+          layoutVisualizer.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'LAYOUT_VISUALIZER_GET_STATE':
+          sendResponse({ success: true, state: layoutVisualizer.getState() });
+          break;
 
-      default:
-        sendResponse({ success: false, error: 'Unknown message type' });
+        // Z-Index Visualizer
+        case 'ZINDEX_VISUALIZER_TOGGLE':
+          zIndexVisualizer.toggle();
+          sendResponse({ success: true, active: zIndexVisualizer.getState().enabled });
+          break;
+        case 'ZINDEX_VISUALIZER_ENABLE':
+          zIndexVisualizer.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'ZINDEX_VISUALIZER_DISABLE':
+          zIndexVisualizer.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'ZINDEX_VISUALIZER_GET_STATE':
+          sendResponse({ success: true, state: zIndexVisualizer.getState() });
+          break;
+
+        // Tech Detector
+        case 'TECH_DETECTOR_TOGGLE':
+          techDetector.toggle();
+          sendResponse({ success: true, active: techDetector.getState().enabled });
+          break;
+        case 'TECH_DETECTOR_ENABLE':
+          techDetector.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'TECH_DETECTOR_DISABLE':
+          techDetector.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'TECH_DETECTOR_GET_STATE':
+          sendResponse({ success: true, state: techDetector.getState() });
+          break;
+
+        // Get all states
+        case 'GET_ALL_STATES':
+          sendResponse({
+            success: true,
+            states: {
+              pesticide: pesticide.getState(),
+              spacing: spacingVisualizer.getState(),
+              fontInspector: fontInspector.getState(),
+              colorPicker: colorPicker.getState(),
+              pixelRuler: pixelRuler.getState(),
+              breakpointOverlay: breakpointOverlay.getState(),
+              cssInspector: cssInspector.getState(),
+              contrastChecker: contrastChecker.getState(),
+              layoutVisualizer: layoutVisualizer.getState(),
+              zIndexVisualizer: zIndexVisualizer.getState(),
+              techDetector: techDetector.getState(),
+              inspector: { enabled: state.isInspectorActive },
+              measureTool: { enabled: state.isMeasureToolActive },
+              gridOverlay: { visible: state.isGridVisible },
+            },
+          });
+          break;
+
+        // Legacy message types
+        case MessageType.TOGGLE_INSPECTOR:
+          toggleInspector();
+          sendResponse({ success: true, active: state.isInspectorActive });
+          break;
+
+        case MessageType.PICK_COLOR:
+          toggleColorPicker();
+          sendResponse({ success: true, active: state.isColorPickerActive });
+          break;
+
+        case MessageType.MEASURE_DISTANCE:
+          toggleMeasureTool();
+          sendResponse({ success: true, active: state.isMeasureToolActive });
+          break;
+
+        case MessageType.TOGGLE_GRID:
+          toggleGridOverlay();
+          sendResponse({ success: true, visible: state.isGridVisible });
+          break;
+
+        case MessageType.COPY_CSS:
+          copyComputedCSS();
+          sendResponse({ success: true });
+          break;
+
+        case MessageType.COPY_HTML:
+          copyHTML();
+          sendResponse({ success: true });
+          break;
+
+        case MessageType.GET_ELEMENT_INFO:
+          if (message.payload?.selector) {
+            const info = getElementInfo(message.payload.selector);
+            sendResponse({ success: true, data: info });
+          } else {
+            sendResponse({ success: false, error: 'No selector provided' });
+          }
+          break;
+
+        case MessageType.PING:
+          sendResponse({ success: true, data: 'pong' });
+          break;
+
+        default:
+          sendResponse({ success: false, error: 'Unknown message type' });
+      }
+    } catch (error) {
+      console.error('[Content] Error handling message:', error);
+      sendResponse({ success: false, error: (error as Error).message });
     }
-  } catch (error) {
-    console.error('[Content] Error handling message:', error);
-    sendResponse({ success: false, error: (error as Error).message });
-  }
 
-  return true; // Async response
-});
+    return true; // Async response
+  }
+);
 
 // ============================================
 // Tool Functions
@@ -402,7 +400,7 @@ function toggleInspector(): void {
   }
 
   state.isInspectorActive = !state.isInspectorActive;
-  
+
   if (state.isInspectorActive) {
     state.inspector.activate();
     deactivateOtherTools('inspector');
@@ -416,7 +414,7 @@ function toggleInspector(): void {
 
 function toggleColorPicker(): void {
   state.isColorPickerActive = !state.isColorPickerActive;
-  
+
   if (state.isColorPickerActive) {
     colorPicker.enable();
     deactivateOtherTools('colorPicker');
@@ -436,7 +434,7 @@ function toggleMeasureTool(): void {
   }
 
   state.isMeasureToolActive = !state.isMeasureToolActive;
-  
+
   if (state.isMeasureToolActive) {
     state.measureTool.activate();
     deactivateOtherTools('measureTool');
@@ -454,7 +452,7 @@ function toggleGridOverlay(): void {
   }
 
   state.isGridVisible = !state.isGridVisible;
-  
+
   if (state.isGridVisible) {
     state.gridOverlay.show();
   } else {
@@ -500,7 +498,7 @@ function deactivateOtherTools(except: string): void {
 
 function handleElementSelect(element: HTMLElement): void {
   const info = extractElementInfo(element);
-  
+
   // Send to background/popup
   chrome.runtime.sendMessage({
     type: MessageType.ELEMENT_SELECTED,
@@ -523,10 +521,11 @@ function handleElementHover(element: HTMLElement): void {
   });
 }
 
-function handleColorSelect(color: string): void {
-  copyToClipboard(color);
-  showNotification(`Color ${color} copied to clipboard`);
-}
+// Note: handleColorSelect can be used when color picker is implemented
+// function handleColorSelect(color: string): void {
+//   copyToClipboard(color);
+//   showNotification(`Color ${color} copied to clipboard`);
+// }
 
 function handleMeasurementComplete(distance: number, unit: string): void {
   copyToClipboard(`${distance}${unit}`);
@@ -570,9 +569,9 @@ function generateSelector(element: HTMLElement): string {
   }
 
   const classes = Array.from(element.classList)
-    .filter(c => !c.startsWith('fdh-'))
+    .filter((c) => !c.startsWith('fdh-'))
     .join('.');
-  
+
   if (classes) {
     return `${element.tagName.toLowerCase()}.${classes}`;
   }
@@ -584,17 +583,17 @@ function generateSelector(element: HTMLElement): string {
   while (current && current !== document.body) {
     let selector = current.tagName.toLowerCase();
     const parent = current.parentElement;
-    
+
     if (parent) {
       const siblings = Array.from(parent.children).filter(
-        child => child.tagName === current!.tagName
+        (child) => child.tagName === current!.tagName
       );
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1;
         selector += `:nth-of-type(${index})`;
       }
     }
-    
+
     path.unshift(selector);
     current = parent;
   }
@@ -614,7 +613,7 @@ function getElementInfo(selector: string): Record<string, unknown> | null {
 function copyComputedCSS(): void {
   const selection = window.getSelection();
   const element = selection?.anchorNode?.parentElement;
-  
+
   if (element) {
     const info = extractElementInfo(element);
     const cssText = generateCSSText(info.styles as Record<string, string>);
@@ -626,7 +625,7 @@ function copyComputedCSS(): void {
 function copyHTML(): void {
   const selection = window.getSelection();
   const element = selection?.anchorNode?.parentElement;
-  
+
   if (element) {
     copyToClipboard(element.outerHTML);
     showNotification('HTML copied to clipboard');

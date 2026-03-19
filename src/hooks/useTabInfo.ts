@@ -1,10 +1,10 @@
 /**
  * useTabInfo Hook
- * 
+ *
  * A custom React hook for getting information about the current tab.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface TabInfo {
   id?: number;
@@ -22,9 +22,9 @@ export function useTabInfo() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
+
       if (!tab) {
         throw new Error('No active tab found');
       }
@@ -47,7 +47,7 @@ export function useTabInfo() {
 
     // Listen for tab changes
     const handleTabChange = () => fetchTabInfo();
-    
+
     chrome.tabs.onActivated.addListener(handleTabChange);
     chrome.tabs.onUpdated.addListener(handleTabChange);
 

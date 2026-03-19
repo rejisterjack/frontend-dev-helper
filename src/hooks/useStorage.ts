@@ -1,10 +1,10 @@
 /**
  * useStorage Hook
- * 
+ *
  * A custom React hook for syncing state with Chrome storage.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface StorageOptions<T> {
   defaultValue: T;
@@ -48,10 +48,9 @@ export function useStorage<T>(key: string, options: StorageOptions<T>) {
   // Update storage when value changes
   const updateStorage = useCallback(
     async (newValue: T | ((prev: T) => T)) => {
-      const valueToStore = typeof newValue === 'function' 
-        ? (newValue as (prev: T) => T)(value) 
-        : newValue;
-      
+      const valueToStore =
+        typeof newValue === 'function' ? (newValue as (prev: T) => T)(value) : newValue;
+
       try {
         const storage = chrome.storage[storageArea];
         await storage.set({ [key]: valueToStore });

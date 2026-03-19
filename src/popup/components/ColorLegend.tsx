@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 
 // ============================================
 // Color Legend Component
@@ -56,12 +57,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
         aria-expanded={isExpanded}
       >
         <span className="flex items-center gap-2">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -77,12 +73,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
@@ -106,9 +97,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
                   className="color-swatch w-6 h-6 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-[10px] text-slate-400 font-mono">
-                  &lt;{item.tag}&gt;
-                </span>
+                <span className="text-[10px] text-slate-400 font-mono">&lt;{item.tag}&gt;</span>
                 {copiedColor === item.color && (
                   <span className="absolute -top-1 -right-1 text-[8px] bg-emerald-500 text-white px-1 rounded">
                     ✓
@@ -117,7 +106,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
               </button>
             ))}
           </div>
-          
+
           {/* Legend Description */}
           <p className="mt-2 text-[10px] text-slate-500 text-center">
             Each color represents a different HTML element type when outlines are visible

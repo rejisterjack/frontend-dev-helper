@@ -1,6 +1,6 @@
 /**
  * Tab Manager
- * 
+ *
  * Manages tab lifecycle events and communication with content scripts.
  */
 
@@ -57,7 +57,7 @@ export class TabManager {
    */
   private async handleTabActivated(tabId: number): Promise<void> {
     console.log('[TabManager] Tab activated:', tabId);
-    
+
     // Notify the tab it's now active
     try {
       await chrome.tabs.sendMessage(tabId, {
@@ -81,14 +81,14 @@ export class TabManager {
   ): void {
     if (changeInfo.status === 'complete' && tab.url) {
       console.log('[TabManager] Tab loaded:', tabId, tab.url);
-      
+
       // Notify content script that page has loaded
       this.notifyTabLoaded(tabId, tab.url);
     }
 
     if (changeInfo.url) {
       console.log('[TabManager] URL changed:', tabId, changeInfo.url);
-      
+
       // Notify of URL change
       this.notifyUrlChanged(tabId, changeInfo.url);
     }

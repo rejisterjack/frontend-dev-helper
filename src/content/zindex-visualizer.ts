@@ -1,6 +1,6 @@
 /**
  * Z-Index Visualizer
- * 
+ *
  * Visualize the stacking order of positioned elements.
  * Shows z-index values and stacking context hierarchy.
  */
@@ -20,7 +20,6 @@ let overlay: HTMLElement | null = null;
 let stackingData: StackingElement[] = [];
 
 // Event handlers
-let clickHandler: ((e: MouseEvent) => void) | null = null;
 let keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
 /**
@@ -28,62 +27,62 @@ let keyHandler: ((e: KeyboardEvent) => void) | null = null;
  */
 function createsStackingContext(element: HTMLElement): { isContext: boolean; reason: string } {
   const computed = window.getComputedStyle(element);
-  
+
   // z-index other than auto
   if (computed.zIndex !== 'auto') {
     return { isContext: true, reason: `z-index: ${computed.zIndex}` };
   }
-  
+
   // opacity < 1
   if (parseFloat(computed.opacity) < 1) {
     return { isContext: true, reason: `opacity: ${computed.opacity}` };
   }
-  
+
   // transform
   if (computed.transform && computed.transform !== 'none') {
     return { isContext: true, reason: 'transform' };
   }
-  
+
   // filter
   if (computed.filter && computed.filter !== 'none') {
     return { isContext: true, reason: 'filter' };
   }
-  
+
   // perspective
   if (computed.perspective && computed.perspective !== 'none') {
     return { isContext: true, reason: 'perspective' };
   }
-  
+
   // clip-path
   if (computed.clipPath && computed.clipPath !== 'none') {
     return { isContext: true, reason: 'clip-path' };
   }
-  
+
   // mask
   if (computed.mask && computed.mask !== 'none') {
     return { isContext: true, reason: 'mask' };
   }
-  
+
   // isolation: isolate
   if (computed.isolation === 'isolate') {
     return { isContext: true, reason: 'isolation' };
   }
-  
+
   // mix-blend-mode
   if (computed.mixBlendMode && computed.mixBlendMode !== 'normal') {
     return { isContext: true, reason: 'mix-blend-mode' };
   }
-  
+
   // will-change
   if (computed.willChange && computed.willChange !== 'auto') {
     return { isContext: true, reason: `will-change: ${computed.willChange}` };
   }
-  
+
   // contain
   if (computed.contain && computed.contain !== 'none') {
     return { isContext: true, reason: 'contain' };
   }
-  
+
   return { isContext: false, reason: '' };
 }
 
@@ -93,30 +92,30 @@ function createsStackingContext(element: HTMLElement): { isContext: boolean; rea
 function collectStackingElements(): StackingElement[] {
   const elements: StackingElement[] = [];
   const allElements = document.querySelectorAll('*');
-  
-  allElements.forEach(el => {
+
+  allElements.forEach((el) => {
     if (el instanceof HTMLElement) {
       const computed = window.getComputedStyle(el);
       const position = computed.position;
-      
+
       // Only include positioned elements or stacking contexts
       if (position !== 'static' || createsStackingContext(el).isContext) {
         const zIndex = computed.zIndex;
         const isAuto = zIndex === 'auto';
         const contextInfo = createsStackingContext(el);
-        
+
         elements.push({
           element: el,
           zIndex: isAuto ? 0 : parseInt(zIndex, 10),
           isAuto,
           isStackingContext: contextInfo.isContext,
           reason: contextInfo.reason,
-          level: 0
+          level: 0,
         });
       }
     }
   });
-  
+
   // Sort by z-index (descending)
   return elements.sort((a, b) => b.zIndex - a.zIndex);
 }
@@ -145,7 +144,7 @@ function createOverlay(): HTMLElement {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(12px);
   `;
-  
+
   document.body.appendChild(el);
   return el;
 }
@@ -155,20 +154,20 @@ function createOverlay(): HTMLElement {
  */
 function buildOverlayContent(): string {
   stackingData = collectStackingElements();
-  
+
   // Group by z-index
   const byZIndex = new Map<number, StackingElement[]>();
-  stackingData.forEach(item => {
+  stackingData.forEach((item) => {
     const key = item.zIndex;
     if (!byZIndex.has(key)) {
       byZIndex.set(key, []);
     }
     byZIndex.get(key)!.push(item);
   });
-  
+
   // Sort z-index values
   const sortedZIndices = Array.from(byZIndex.keys()).sort((a, b) => b - a);
-  
+
   return `
     <div class="fdh-zindex-header" style="margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -189,9 +188,10 @@ function buildOverlayContent(): string {
     </div>
     
     <div class="fdh-zindex-list" style="display: flex; flex-direction: column; gap: 8px;">
-      ${sortedZIndices.map(zIndex => {
-        const items = byZIndex.get(zIndex)!;
-        return `
+      ${sortedZIndices
+        .map((zIndex) => {
+          const items = byZIndex.get(zIndex)!;
+          return `
           <div class="fdh-zindex-group" style="
             background: rgba(30, 41, 59, 0.6);
             border-radius: 8px;
@@ -210,16 +210,18 @@ function buildOverlayContent(): string {
               <span style="font-size: 11px; opacity: 0.7;">${items.length} element${items.length > 1 ? 's' : ''}</span>
             </div>
             <div style="padding: 8px;">
-              ${items.slice(0, 5).map(item => {
-                const tag = item.element.tagName.toLowerCase();
-                const id = item.element.id ? `#${item.element.id}` : '';
-                const classes = Array.from(item.element.classList)
-                  .filter(c => !c.startsWith('fdh-'))
-                  .slice(0, 2)
-                  .map(c => `.${c}`)
-                  .join('');
-                
-                return `
+              ${items
+                .slice(0, 5)
+                .map((item) => {
+                  const tag = item.element.tagName.toLowerCase();
+                  const id = item.element.id ? `#${item.element.id}` : '';
+                  const classes = Array.from(item.element.classList)
+                    .filter((c) => !c.startsWith('fdh-'))
+                    .slice(0, 2)
+                    .map((c) => `.${c}`)
+                    .join('');
+
+                  return `
                   <div class="fdh-zindex-item" data-element-id="${item.element.dataset.fdhId || ''}" style="
                     padding: 6px 8px;
                     margin-bottom: 4px;
@@ -236,12 +238,14 @@ function buildOverlayContent(): string {
                     ${item.reason ? `<div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">${item.reason}</div>` : ''}
                   </div>
                 `;
-              }).join('')}
+                })
+                .join('')}
               ${items.length > 5 ? `<div style="text-align: center; padding: 8px; color: #64748b; font-size: 11px;">...and ${items.length - 5} more</div>` : ''}
             </div>
           </div>
         `;
-      }).join('')}
+        })
+        .join('')}
     </div>
     
     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -287,12 +291,12 @@ function buildOverlayContent(): string {
  */
 function visualizeStackingOrder(): void {
   // Remove existing visualizations
-  document.querySelectorAll('.fdh-zindex-viz').forEach(el => el.remove());
-  
-  stackingData.forEach((item, index) => {
+  document.querySelectorAll('.fdh-zindex-viz').forEach((el) => el.remove());
+
+  stackingData.forEach((item) => {
     const rect = item.element.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
-    
+
     const viz = document.createElement('div');
     viz.className = 'fdh-zindex-viz';
     viz.style.cssText = `
@@ -306,7 +310,7 @@ function visualizeStackingOrder(): void {
       pointer-events: none;
       z-index: 2147483646;
     `;
-    
+
     // Add z-index label
     const label = document.createElement('div');
     label.style.cssText = `
@@ -323,13 +327,13 @@ function visualizeStackingOrder(): void {
     `;
     label.textContent = item.isAuto ? 'auto' : String(item.zIndex);
     viz.appendChild(label);
-    
+
     document.body.appendChild(viz);
   });
-  
+
   // Auto-remove after 5 seconds
   setTimeout(() => {
-    document.querySelectorAll('.fdh-zindex-viz').forEach(el => el.remove());
+    document.querySelectorAll('.fdh-zindex-viz').forEach((el) => el.remove());
   }, 5000);
 }
 
@@ -338,13 +342,13 @@ function visualizeStackingOrder(): void {
  */
 function setupOverlayControls(): void {
   if (!overlay) return;
-  
+
   // Close button
   const closeBtn = overlay.querySelector('.fdh-close-btn');
   if (closeBtn) {
     closeBtn.addEventListener('click', disable);
   }
-  
+
   // Refresh button
   const refreshBtn = overlay.querySelector('.fdh-refresh-btn');
   if (refreshBtn) {
@@ -353,15 +357,15 @@ function setupOverlayControls(): void {
       setupOverlayControls();
     });
   }
-  
+
   // Visualize button
   const visualizeBtn = overlay.querySelector('.fdh-visualize-btn');
   if (visualizeBtn) {
     visualizeBtn.addEventListener('click', visualizeStackingOrder);
   }
-  
+
   // Item hover
-  overlay.querySelectorAll('.fdh-zindex-item').forEach(item => {
+  overlay.querySelectorAll('.fdh-zindex-item').forEach((item) => {
     item.addEventListener('mouseenter', () => {
       (item as HTMLElement).style.background = 'rgba(99, 102, 241, 0.2)';
     });
@@ -386,17 +390,17 @@ function handleKeyDown(e: KeyboardEvent): void {
 export function enable(): void {
   if (isActive) return;
   isActive = true;
-  
+
   if (!overlay) {
     overlay = createOverlay();
   }
-  
+
   overlay.innerHTML = buildOverlayContent();
   setupOverlayControls();
-  
+
   keyHandler = handleKeyDown;
   document.addEventListener('keydown', keyHandler);
-  
+
   console.log('[ZIndexVisualizer] Enabled');
 }
 
@@ -406,19 +410,19 @@ export function enable(): void {
 export function disable(): void {
   if (!isActive) return;
   isActive = false;
-  
+
   if (keyHandler) {
     document.removeEventListener('keydown', keyHandler);
   }
-  
+
   // Remove visualizations
-  document.querySelectorAll('.fdh-zindex-viz').forEach(el => el.remove());
-  
+  document.querySelectorAll('.fdh-zindex-viz').forEach((el) => el.remove());
+
   if (overlay) {
     overlay.remove();
     overlay = null;
   }
-  
+
   console.log('[ZIndexVisualizer] Disabled');
 }
 
@@ -439,7 +443,7 @@ export function toggle(): void {
 export function getState(): { enabled: boolean; elementCount: number } {
   return {
     enabled: isActive,
-    elementCount: stackingData.length
+    elementCount: stackingData.length,
   };
 }
 
@@ -456,7 +460,7 @@ export const zIndexVisualizer = {
   disable,
   toggle,
   getState,
-  destroy
+  destroy,
 };
 
 export default zIndexVisualizer;

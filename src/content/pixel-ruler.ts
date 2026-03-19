@@ -5,7 +5,7 @@
  * horizontal, vertical, and element-to-element measurements.
  */
 
-import { createOverlay, positionTooltip, createTooltip, getElementDimensions } from '@/utils/dom';
+import { createOverlay, createTooltip, positionTooltip } from '@/utils/dom';
 
 type MeasurementMode = 'horizontal' | 'vertical' | 'element';
 type MeasurementType = 'drag' | 'element';
@@ -462,7 +462,11 @@ export class PixelRuler {
     const line = this.createMeasurementLine(startX, startY, endX, endY);
 
     // Create arrows
-    const startArrow = this.createArrow(startX, startY, this.getAngle(startX, startY, endX, endY) + 180);
+    const startArrow = this.createArrow(
+      startX,
+      startY,
+      this.getAngle(startX, startY, endX, endY) + 180
+    );
     const endArrow = this.createArrow(endX, endY, this.getAngle(startX, startY, endX, endY));
 
     // Create badge
@@ -481,7 +485,7 @@ export class PixelRuler {
     line.setAttribute('data-fdh-overlay', 'true');
     line.setAttribute('data-fdh-measurement', 'true');
 
-    const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
     const angle = this.getAngle(x1, y1, x2, y2);
     const centerX = (x1 + x2) / 2 - length / 2;
     const centerY = (y1 + y2) / 2;
@@ -583,7 +587,7 @@ export class PixelRuler {
     // Calculate distance
     const distanceX = Math.abs(endX - startX);
     const distanceY = Math.abs(endY - startY);
-    const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+    const distance = Math.sqrt(distanceX ** 2 + distanceY ** 2);
 
     const measurement: Measurement = {
       id: `measure-el-${Date.now()}`,
@@ -624,7 +628,7 @@ export class PixelRuler {
 
   private calculateDistance(measurement: Measurement): number {
     const { startX, startY, endX, endY } = measurement;
-    return Math.round(Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)));
+    return Math.round(Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2));
   }
 
   private formatMeasurement(px: number): string {
@@ -655,7 +659,7 @@ export class PixelRuler {
       const badgeRect = measurement.badge.getBoundingClientRect();
       const centerX = badgeRect.left + badgeRect.width / 2;
       const centerY = badgeRect.top + badgeRect.height / 2;
-      const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+      const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
 
       if (distance < closestDistance && distance < 50) {
         closestDistance = distance;

@@ -1,6 +1,6 @@
 /**
  * Content Script Message Handler
- * 
+ *
  * Processes messages from the background script and popup.
  */
 
@@ -98,7 +98,7 @@ export class MessageHandler {
           });
           break;
 
-        case 'GET_ELEMENT_INFO':
+        case 'GET_ELEMENT_INFO': {
           const element = this.deps.elementInspector.getSelectedElement();
           sendResponse({
             success: true,
@@ -106,8 +106,9 @@ export class MessageHandler {
             id: message.id,
           });
           break;
+        }
 
-        case 'GET_COMPUTED_STYLES':
+        case 'GET_COMPUTED_STYLES': {
           const styles = this.getComputedStylesForElement(message.payload?.selector as string);
           sendResponse({
             success: true,
@@ -115,8 +116,9 @@ export class MessageHandler {
             id: message.id,
           });
           break;
+        }
 
-        case 'COPY_CSS':
+        case 'COPY_CSS': {
           const css = this.generateCSS(message.payload?.selector as string);
           await this.copyToClipboard(css);
           sendResponse({
@@ -125,6 +127,7 @@ export class MessageHandler {
             id: message.id,
           });
           break;
+        }
 
         case 'TAKE_SCREENSHOT':
           // Screenshot is handled by background script using chrome.tabs.captureVisibleTab
@@ -280,7 +283,7 @@ export class MessageHandler {
     for (let i = 0; i < computed.length; i++) {
       const prop = computed[i];
       const value = computed.getPropertyValue(prop);
-      
+
       // Skip default/initial values
       if (value && value !== 'initial' && value !== 'auto') {
         css += `  ${prop}: ${value};\n`;

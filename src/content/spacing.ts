@@ -148,7 +148,11 @@ class SpacingVisualizer {
     // Create padding overlays
     const paddingTop = this.createOverlayElement('padding-top', PADDING_COLOR, PADDING_BORDER);
     const paddingRight = this.createOverlayElement('padding-right', PADDING_COLOR, PADDING_BORDER);
-    const paddingBottom = this.createOverlayElement('padding-bottom', PADDING_COLOR, PADDING_BORDER);
+    const paddingBottom = this.createOverlayElement(
+      'padding-bottom',
+      PADDING_COLOR,
+      PADDING_BORDER
+    );
     const paddingLeft = this.createOverlayElement('padding-left', PADDING_COLOR, PADDING_BORDER);
 
     // Append all to container
@@ -183,7 +187,7 @@ class SpacingVisualizer {
     if (this.overlay) {
       // Fade out animation
       this.overlay.container.style.opacity = '0';
-      
+
       setTimeout(() => {
         if (this.overlay) {
           this.overlay.container.remove();
