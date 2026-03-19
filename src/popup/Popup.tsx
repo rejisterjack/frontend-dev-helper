@@ -115,6 +115,54 @@ const TOOLS: ToolMeta[] = [
     hasSettings: true,
     color: '#f43f5e',
   },
+  {
+    type: ToolType.CSS_EDITOR,
+    name: 'Live CSS Editor',
+    description: 'Edit CSS in real-time with live preview',
+    icon: '✏️',
+    hasSettings: true,
+    color: '#ec4899',
+  },
+  {
+    type: ToolType.SCREENSHOT_STUDIO,
+    name: 'Screenshot Studio',
+    description: 'Capture and annotate screenshots',
+    icon: '📸',
+    hasSettings: true,
+    color: '#14b8a6',
+  },
+  {
+    type: ToolType.ANIMATION_INSPECTOR,
+    name: 'Animation Inspector',
+    description: 'Debug CSS animations and transitions',
+    icon: '🎬',
+    hasSettings: true,
+    color: '#f59e0b',
+  },
+  {
+    type: ToolType.RESPONSIVE_PREVIEW,
+    name: 'Responsive Preview',
+    description: 'Multi-device preview side-by-side',
+    icon: '📱',
+    hasSettings: true,
+    color: '#06b6d4',
+  },
+  {
+    type: ToolType.DESIGN_SYSTEM_VALIDATOR,
+    name: 'Design System Validator',
+    description: 'Check consistency with design tokens',
+    icon: '🎨',
+    hasSettings: true,
+    color: '#8b5cf6',
+  },
+  {
+    type: ToolType.NETWORK_ANALYZER,
+    name: 'Network Analyzer',
+    description: 'Monitor network requests and waterfall',
+    icon: '🌐',
+    hasSettings: true,
+    color: '#22c55e',
+  },
 ];
 
 /** Extension version */
@@ -136,6 +184,12 @@ export const Popup: React.FC = () => {
     [ToolType.TECH_DETECTOR]: { enabled: false },
     [ToolType.ACCESSIBILITY_AUDIT]: { enabled: false },
     [ToolType.SITE_REPORT]: { enabled: false },
+    [ToolType.CSS_EDITOR]: { enabled: false },
+    [ToolType.SCREENSHOT_STUDIO]: { enabled: false },
+    [ToolType.ANIMATION_INSPECTOR]: { enabled: false },
+    [ToolType.RESPONSIVE_PREVIEW]: { enabled: false },
+    [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enabled: false },
+    [ToolType.NETWORK_ANALYZER]: { enabled: false },
   });
 
   // UI states
@@ -170,6 +224,13 @@ export const Popup: React.FC = () => {
               [ToolType.ACCESSIBILITY_AUDIT]: response.states.accessibilityAudit || {
                 enabled: false,
               },
+              [ToolType.SITE_REPORT]: response.states.siteReportGenerator || { enabled: false },
+              [ToolType.CSS_EDITOR]: response.states.cssEditor || { enabled: false },
+              [ToolType.SCREENSHOT_STUDIO]: response.states.screenshotStudio || { enabled: false },
+              [ToolType.ANIMATION_INSPECTOR]: response.states.animationInspector || { enabled: false },
+              [ToolType.RESPONSIVE_PREVIEW]: response.states.responsivePreview || { enabled: false },
+              [ToolType.DESIGN_SYSTEM_VALIDATOR]: response.states.designSystemValidator || { enabled: false },
+              [ToolType.NETWORK_ANALYZER]: response.states.networkAnalyzer || { enabled: false },
             });
           }
         }
@@ -249,6 +310,24 @@ export const Popup: React.FC = () => {
       case ToolType.SITE_REPORT:
         messageType = enabled ? 'SITE_REPORT_ENABLE' : 'SITE_REPORT_DISABLE';
         break;
+      case ToolType.CSS_EDITOR:
+        messageType = enabled ? 'CSS_EDITOR_ENABLE' : 'CSS_EDITOR_DISABLE';
+        break;
+      case ToolType.SCREENSHOT_STUDIO:
+        messageType = enabled ? 'SCREENSHOT_STUDIO_ENABLE' : 'SCREENSHOT_STUDIO_DISABLE';
+        break;
+      case ToolType.ANIMATION_INSPECTOR:
+        messageType = enabled ? 'ANIMATION_INSPECTOR_ENABLE' : 'ANIMATION_INSPECTOR_DISABLE';
+        break;
+      case ToolType.RESPONSIVE_PREVIEW:
+        messageType = enabled ? 'RESPONSIVE_PREVIEW_ENABLE' : 'RESPONSIVE_PREVIEW_DISABLE';
+        break;
+      case ToolType.DESIGN_SYSTEM_VALIDATOR:
+        messageType = enabled ? 'DESIGN_SYSTEM_VALIDATOR_ENABLE' : 'DESIGN_SYSTEM_VALIDATOR_DISABLE';
+        break;
+      case ToolType.NETWORK_ANALYZER:
+        messageType = enabled ? 'NETWORK_ANALYZER_ENABLE' : 'NETWORK_ANALYZER_DISABLE';
+        break;
       default:
         return;
     }
@@ -292,6 +371,13 @@ export const Popup: React.FC = () => {
       [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
       [ToolType.TECH_DETECTOR]: { enabled: false },
       [ToolType.ACCESSIBILITY_AUDIT]: { enabled: false },
+      [ToolType.SITE_REPORT]: { enabled: false },
+      [ToolType.CSS_EDITOR]: { enabled: false },
+      [ToolType.SCREENSHOT_STUDIO]: { enabled: false },
+      [ToolType.ANIMATION_INSPECTOR]: { enabled: false },
+      [ToolType.RESPONSIVE_PREVIEW]: { enabled: false },
+      [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enabled: false },
+      [ToolType.NETWORK_ANALYZER]: { enabled: false },
     };
 
     setToolsState(resetState);
@@ -314,6 +400,12 @@ export const Popup: React.FC = () => {
         'TECH_DETECTOR_DISABLE',
         'ACCESSIBILITY_AUDIT_DISABLE',
         'SITE_REPORT_DISABLE',
+        'CSS_EDITOR_DISABLE',
+        'SCREENSHOT_STUDIO_DISABLE',
+        'ANIMATION_INSPECTOR_DISABLE',
+        'RESPONSIVE_PREVIEW_DISABLE',
+        'DESIGN_SYSTEM_VALIDATOR_DISABLE',
+        'NETWORK_ANALYZER_DISABLE',
       ];
 
       for (const messageType of disableMessages) {

@@ -11,12 +11,18 @@ export enum ToolType {
   PIXEL_RULER = 'pixelRuler',
   RESPONSIVE_BREAKPOINT = 'responsiveBreakpoint',
   CSS_INSPECTOR = 'cssInspector',
+  CSS_EDITOR = 'cssEditor',
   CONTRAST_CHECKER = 'contrastChecker',
   LAYOUT_VISUALIZER = 'layoutVisualizer',
   ZINDEX_VISUALIZER = 'zIndexVisualizer',
   TECH_DETECTOR = 'techDetector',
   ACCESSIBILITY_AUDIT = 'accessibilityAudit',
   SITE_REPORT = 'siteReport',
+  SCREENSHOT_STUDIO = 'screenshotStudio',
+  ANIMATION_INSPECTOR = 'animationInspector',
+  RESPONSIVE_PREVIEW = 'responsivePreview',
+  DESIGN_SYSTEM_VALIDATOR = 'designSystemValidator',
+  NETWORK_ANALYZER = 'networkAnalyzer',
 }
 
 /** Tool ID type - imported from constants to ensure consistency */
@@ -205,6 +211,7 @@ export interface FeatureToggles {
   measureTool: boolean;
   cssScanner: boolean;
   breakpointVisualizer: boolean;
+  networkAnalyzer: boolean;
 }
 
 /** Default feature toggles */
@@ -220,6 +227,7 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   measureTool: true,
   cssScanner: false,
   breakpointVisualizer: false,
+  networkAnalyzer: false,
 };
 
 /** Extension settings */
@@ -383,7 +391,12 @@ export interface PerformanceReportData {
     transferSize: number;
     byType: Record<string, number>;
     slowestResources: Array<{ url: string; type: string; duration: number; size: number }>;
-    renderBlocking: Array<{ url: string; type: 'stylesheet' | 'script'; size: number; blockingTime: number }>;
+    renderBlocking: Array<{
+      url: string;
+      type: 'stylesheet' | 'script';
+      size: number;
+      blockingTime: number;
+    }>;
   };
   memory: MemoryInfo | null;
   imageOptimizations: Array<{

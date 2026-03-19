@@ -12,11 +12,7 @@
  * Generates professional HTML, PDF, and JSON reports
  */
 
-import type {
-  AccessibilityReport,
-  MemoryInfo,
-  PerformanceMetrics,
-} from '../types';
+import type { AccessibilityReport, MemoryInfo, PerformanceMetrics } from '../types';
 
 // ============================================
 // Type Definitions
@@ -413,12 +409,18 @@ export async function generateReport(options: ReportOptions = {}): Promise<SiteR
       bestPractices: 0,
       overall: 0,
     },
-    performance: opts.sections?.performance ? await analyzePerformance() : null as unknown as PerformanceReport,
-    accessibility: opts.sections?.accessibility ? await analyzeAccessibility() : null as unknown as AccessibilityReport,
-    colors: opts.sections?.colors ? analyzeColors() : null as unknown as ColorReport,
-    seo: opts.sections?.seo ? analyzeSEO() : null as unknown as SEOReport,
-    techStack: opts.sections?.techStack ? detectTechStack() : null as unknown as TechStackReport,
-    bestPractices: opts.sections?.bestPractices ? analyzeBestPractices() : null as unknown as BestPracticesReport,
+    performance: opts.sections?.performance
+      ? await analyzePerformance()
+      : (null as unknown as PerformanceReport),
+    accessibility: opts.sections?.accessibility
+      ? await analyzeAccessibility()
+      : (null as unknown as AccessibilityReport),
+    colors: opts.sections?.colors ? analyzeColors() : (null as unknown as ColorReport),
+    seo: opts.sections?.seo ? analyzeSEO() : (null as unknown as SEOReport),
+    techStack: opts.sections?.techStack ? detectTechStack() : (null as unknown as TechStackReport),
+    bestPractices: opts.sections?.bestPractices
+      ? analyzeBestPractices()
+      : (null as unknown as BestPracticesReport),
     recommendations: [],
   };
 
@@ -446,10 +448,12 @@ async function analyzePerformance(): Promise<PerformanceReport> {
   const fcp = paintEntries.find((p) => p.name === 'first-contentful-paint')?.startTime ?? null;
   const lcpEntries = performance.getEntriesByType('largest-contentful-paint') as PerformanceEntry[];
   const lcp = lcpEntries.length > 0 ? lcpEntries[lcpEntries.length - 1].startTime : null;
-  
+
   const layoutShiftEntries = performance.getEntriesByType('layout-shift') as PerformanceEntry[];
   const cls = layoutShiftEntries.reduce((acc, entry) => {
-    return acc + ((entry as LayoutShiftEntry).hadRecentInput ? 0 : (entry as LayoutShiftEntry).value);
+    return (
+      acc + ((entry as LayoutShiftEntry).hadRecentInput ? 0 : (entry as LayoutShiftEntry).value)
+    );
   }, 0);
 
   // Resource analysis
@@ -481,18 +485,20 @@ async function analyzePerformance(): Promise<PerformanceReport> {
 
   // Render blocking resources
   const renderBlocking: RenderBlockingResource[] = [];
-  document.querySelectorAll('link[rel="stylesheet"]:not([media]), script[src]:not([async]):not([defer])').forEach((el) => {
-    const url = el.getAttribute('href') || el.getAttribute('src') || '';
-    const resource = resources.find((r) => r.name.includes(url.split('/').pop() || ''));
-    if (resource && resource.duration > 50) {
-      renderBlocking.push({
-        url: url.split('/').pop() || url,
-        type: el.tagName.toLowerCase() === 'link' ? 'stylesheet' : 'script',
-        size: resource.transferSize,
-        blockingTime: Math.round(resource.duration),
-      });
-    }
-  });
+  document
+    .querySelectorAll('link[rel="stylesheet"]:not([media]), script[src]:not([async]):not([defer])')
+    .forEach((el) => {
+      const url = el.getAttribute('href') || el.getAttribute('src') || '';
+      const resource = resources.find((r) => r.name.includes(url.split('/').pop() || ''));
+      if (resource && resource.duration > 50) {
+        renderBlocking.push({
+          url: url.split('/').pop() || url,
+          type: el.tagName.toLowerCase() === 'link' ? 'stylesheet' : 'script',
+          size: resource.transferSize,
+          blockingTime: Math.round(resource.duration),
+        });
+      }
+    });
 
   // Image optimization
   const imageOptimizations: ImageOptimization[] = [];
@@ -500,13 +506,14 @@ async function analyzePerformance(): Promise<PerformanceReport> {
     const rect = img.getBoundingClientRect();
     const naturalWidth = img.naturalWidth;
     const naturalHeight = img.naturalHeight;
-    
+
     if (naturalWidth > rect.width * 1.5 || naturalHeight > rect.height * 1.5) {
       const recommendations: string[] = [];
       if (naturalWidth > rect.width * 2) recommendations.push('Resize to display size');
-      if (!img.src.endsWith('.webp') && !img.src.endsWith('.avif')) recommendations.push('Use WebP/AVIF format');
+      if (!img.src.endsWith('.webp') && !img.src.endsWith('.avif'))
+        recommendations.push('Use WebP/AVIF format');
       if (img.loading !== 'lazy') recommendations.push('Add lazy loading');
-      
+
       imageOptimizations.push({
         url: img.src.split('/').pop() || 'image',
         currentSize: naturalWidth * naturalHeight * 4,
@@ -516,7 +523,7 @@ async function analyzePerformance(): Promise<PerformanceReport> {
         naturalWidth,
         naturalHeight,
         recommendations,
-        potentialSavings: Math.round((naturalWidth * naturalHeight * 4) * 0.6),
+        potentialSavings: Math.round(naturalWidth * naturalHeight * 4 * 0.6),
       });
     }
   });
@@ -535,8 +542,10 @@ async function analyzePerformance(): Promise<PerformanceReport> {
     navigation: {
       dnsLookup: nav ? Math.round(nav.domainLookupEnd - nav.domainLookupStart) : 0,
       tcpConnection: nav ? Math.round(nav.connectEnd - nav.connectStart) : 0,
-      tlsHandshake: nav && nav.secureConnectionStart > 0 
-        ? Math.round(nav.connectEnd - nav.secureConnectionStart) : 0,
+      tlsHandshake:
+        nav && nav.secureConnectionStart > 0
+          ? Math.round(nav.connectEnd - nav.secureConnectionStart)
+          : 0,
       serverResponse: nav ? Math.round(nav.responseEnd - nav.requestStart) : 0,
       domProcessing: nav ? Math.round(nav.domComplete - nav.responseEnd) : 0,
       resourceLoading: nav ? Math.round(nav.loadEventEnd - nav.domComplete) : 0,
@@ -550,11 +559,13 @@ async function analyzePerformance(): Promise<PerformanceReport> {
       slowestResources,
       renderBlocking,
     },
-    memory: memory ? {
-      usedJSHeapSize: memory.usedJSHeapSize,
-      totalJSHeapSize: memory.totalJSHeapSize,
-      jsHeapSizeLimit: memory.jsHeapSizeLimit,
-    } : null,
+    memory: memory
+      ? {
+          usedJSHeapSize: memory.usedJSHeapSize,
+          totalJSHeapSize: memory.totalJSHeapSize,
+          jsHeapSizeLimit: memory.jsHeapSizeLimit,
+        }
+      : null,
     imageOptimizations: imageOptimizations.slice(0, 10),
   };
 }
@@ -615,23 +626,27 @@ async function analyzeAccessibility(): Promise<AccessibilityReport> {
   });
 
   // Check form labels
-  document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea').forEach((input, idx) => {
-    const id = input.id;
-    const ariaLabel = input.getAttribute('aria-label');
-    const ariaLabelledBy = input.getAttribute('aria-labelledby');
-    const hasLabel = id && document.querySelector(`label[for="${id}"]`);
-    const placeholder = (input as HTMLInputElement).placeholder;
+  document
+    .querySelectorAll(
+      'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea'
+    )
+    .forEach((input, idx) => {
+      const id = input.id;
+      const ariaLabel = input.getAttribute('aria-label');
+      const ariaLabelledBy = input.getAttribute('aria-labelledby');
+      const hasLabel = id && document.querySelector(`label[for="${id}"]`);
+      const placeholder = (input as HTMLInputElement).placeholder;
 
-    if (!hasLabel && !ariaLabel && !ariaLabelledBy && !placeholder) {
-      issues.push({
-        element: input.tagName.toLowerCase(),
-        selector: `${input.tagName.toLowerCase()}:nth-of-type(${idx + 1})`,
-        issue: 'Missing label',
-        severity: 'error',
-        recommendation: 'Add a label element or aria-label attribute',
-      });
-    }
-  });
+      if (!hasLabel && !ariaLabel && !ariaLabelledBy && !placeholder) {
+        issues.push({
+          element: input.tagName.toLowerCase(),
+          selector: `${input.tagName.toLowerCase()}:nth-of-type(${idx + 1})`,
+          issue: 'Missing label',
+          severity: 'error',
+          recommendation: 'Add a label element or aria-label attribute',
+        });
+      }
+    });
 
   // Check heading hierarchy
   const h1s = document.querySelectorAll('h1');
@@ -659,7 +674,7 @@ async function analyzeAccessibility(): Promise<AccessibilityReport> {
     const style = window.getComputedStyle(el);
     const color = style.color;
     const bgColor = style.backgroundColor;
-    
+
     // Simplified contrast check - in real implementation would calculate actual ratios
     if (color.includes('255') && bgColor.includes('255')) {
       contrastIssues.push({
@@ -676,15 +691,75 @@ async function analyzeAccessibility(): Promise<AccessibilityReport> {
 
   // Check ARIA roles
   const validRoles = [
-    'alert', 'alertdialog', 'application', 'article', 'banner', 'button', 'cell', 'checkbox',
-    'columnheader', 'combobox', 'complementary', 'contentinfo', 'definition', 'dialog',
-    'directory', 'document', 'feed', 'figure', 'form', 'grid', 'gridcell', 'group',
-    'heading', 'img', 'link', 'list', 'listbox', 'listitem', 'log', 'main', 'marquee',
-    'math', 'menu', 'menubar', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'navigation',
-    'none', 'note', 'option', 'presentation', 'progressbar', 'radio', 'radiogroup', 'region',
-    'row', 'rowgroup', 'rowheader', 'scrollbar', 'search', 'searchbox', 'separator',
-    'slider', 'spinbutton', 'status', 'switch', 'tab', 'table', 'tablist', 'tabpanel',
-    'term', 'textbox', 'timer', 'toolbar', 'tooltip', 'tree', 'treegrid', 'treeitem'
+    'alert',
+    'alertdialog',
+    'application',
+    'article',
+    'banner',
+    'button',
+    'cell',
+    'checkbox',
+    'columnheader',
+    'combobox',
+    'complementary',
+    'contentinfo',
+    'definition',
+    'dialog',
+    'directory',
+    'document',
+    'feed',
+    'figure',
+    'form',
+    'grid',
+    'gridcell',
+    'group',
+    'heading',
+    'img',
+    'link',
+    'list',
+    'listbox',
+    'listitem',
+    'log',
+    'main',
+    'marquee',
+    'math',
+    'menu',
+    'menubar',
+    'menuitem',
+    'menuitemcheckbox',
+    'menuitemradio',
+    'navigation',
+    'none',
+    'note',
+    'option',
+    'presentation',
+    'progressbar',
+    'radio',
+    'radiogroup',
+    'region',
+    'row',
+    'rowgroup',
+    'rowheader',
+    'scrollbar',
+    'search',
+    'searchbox',
+    'separator',
+    'slider',
+    'spinbutton',
+    'status',
+    'switch',
+    'tab',
+    'table',
+    'tablist',
+    'tabpanel',
+    'term',
+    'textbox',
+    'timer',
+    'toolbar',
+    'tooltip',
+    'tree',
+    'treegrid',
+    'treeitem',
   ];
 
   document.querySelectorAll('[role]').forEach((el) => {
@@ -732,8 +807,16 @@ function analyzeColors(): ColorReport {
   elements.forEach((el) => {
     if (el instanceof HTMLElement) {
       const computed = window.getComputedStyle(el);
-      const colorProps = ['color', 'backgroundColor', 'borderColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'];
-      
+      const colorProps = [
+        'color',
+        'backgroundColor',
+        'borderColor',
+        'borderTopColor',
+        'borderRightColor',
+        'borderBottomColor',
+        'borderLeftColor',
+      ];
+
       colorProps.forEach((prop) => {
         const value = computed.getPropertyValue(prop);
         if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
@@ -844,7 +927,7 @@ function rgbToHsl(rgb: { r: number; g: number; b: number }): { h: number; s: num
  */
 function generateHarmonies(baseColor: string): ColorReport['harmonies'] {
   const hsl = rgbToHsl(hexToRgb(baseColor));
-  
+
   return {
     complementary: [hslToHex((hsl.h + 180) % 360, hsl.s, hsl.l)],
     analogous: [
@@ -889,7 +972,7 @@ function hslToHex(h: number, s: number, l: number): string {
       b: Math.round(255 * f(4)),
     };
   };
-  
+
   const rgb = hslToRgb(h, s, l);
   return rgbToHex(rgb.r, rgb.g, rgb.b);
 }
@@ -908,7 +991,7 @@ function categorizeColors(colors: string[]): ColorReport['categories'] {
 
   colors.forEach((color) => {
     const hsl = rgbToHsl(hexToRgb(color));
-    
+
     if (hsl.s < 10) {
       result.neutral.push(color);
     } else if (hsl.h >= 100 && hsl.h <= 150) {
@@ -938,7 +1021,9 @@ function analyzeSEO(): SEOReport {
   // Meta tags
   const title = document.title;
   const titleLength = title.length;
-  const metaDescription = document.querySelector('meta[name="description"]')?.getAttribute('content');
+  const metaDescription = document
+    .querySelector('meta[name="description"]')
+    ?.getAttribute('content');
   const descriptionLength = metaDescription?.length || 0;
   const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href');
   const robots = document.querySelector('meta[name="robots"]')?.getAttribute('content');
@@ -975,8 +1060,14 @@ function analyzeSEO(): SEOReport {
   }
 
   // Headings
-  const h1s = Array.from(document.querySelectorAll('h1')).map((h) => ({ text: h.textContent || '', selector: 'h1' }));
-  const h2s = Array.from(document.querySelectorAll('h2')).map((h) => ({ text: h.textContent || '', selector: 'h2' }));
+  const h1s = Array.from(document.querySelectorAll('h1')).map((h) => ({
+    text: h.textContent || '',
+    selector: 'h1',
+  }));
+  const h2s = Array.from(document.querySelectorAll('h2')).map((h) => ({
+    text: h.textContent || '',
+    selector: 'h2',
+  }));
 
   if (h1s.length === 0) {
     issues.push({
@@ -1039,15 +1130,28 @@ function analyzeSEO(): SEOReport {
   return {
     score,
     meta: {
-      title: { content: title, length: titleLength, optimal: titleLength >= 30 && titleLength <= 60 },
-      description: { content: metaDescription || null, length: descriptionLength, optimal: descriptionLength >= 120 && descriptionLength <= 158 },
+      title: {
+        content: title,
+        length: titleLength,
+        optimal: titleLength >= 30 && titleLength <= 60,
+      },
+      description: {
+        content: metaDescription || null,
+        length: descriptionLength,
+        optimal: descriptionLength >= 120 && descriptionLength <= 158,
+      },
       canonical: canonical || null,
       robots: robots || null,
       viewport: viewport || null,
       charset: document.characterSet,
       ogTags,
       twitterTags: {}, // Would extract Twitter tags
-      issues: issues.filter((i) => i.message.includes('meta') || i.message.includes('description') || i.message.includes('title')),
+      issues: issues.filter(
+        (i) =>
+          i.message.includes('meta') ||
+          i.message.includes('description') ||
+          i.message.includes('title')
+      ),
     },
     headings: {
       h1: h1s,
@@ -1063,7 +1167,8 @@ function analyzeSEO(): SEOReport {
       internal: internalLinks.length,
       external: externalLinks.length,
       broken: 0, // Would need to check
-      nofollow: Array.from(allLinks).filter((a) => a.getAttribute('rel')?.includes('nofollow')).length,
+      nofollow: Array.from(allLinks).filter((a) => a.getAttribute('rel')?.includes('nofollow'))
+        .length,
       total: allLinks.length,
       issues: issues.filter((i) => i.message.includes('link') || i.message.includes('internal')),
     },
@@ -1138,13 +1243,17 @@ function detectTechStack(): TechStackReport {
   if (document.querySelector('link[href*="font-awesome"]')) fonts.push('Font Awesome');
 
   // Build tools (from meta tags or comments)
-  if (document.querySelector('meta[name="generator"]')?.getAttribute('content')?.includes('Next.js')) {
+  if (
+    document.querySelector('meta[name="generator"]')?.getAttribute('content')?.includes('Next.js')
+  ) {
     buildTools.push('Next.js');
   }
 
   // CMS detection
   let cms: string | null = null;
-  if (document.querySelector('meta[name="generator"]')?.getAttribute('content')?.includes('WordPress')) {
+  if (
+    document.querySelector('meta[name="generator"]')?.getAttribute('content')?.includes('WordPress')
+  ) {
     cms = 'WordPress';
   } else if (win.Shopify) {
     cms = 'Shopify';
@@ -1234,7 +1343,8 @@ function calculateScores(report: SiteReport): SiteReport['scores'] {
   const performance = Math.round(
     (report.performance.webVitals.lcp.score +
       report.performance.webVitals.fcp.score +
-      report.performance.webVitals.cls.score) / 3
+      report.performance.webVitals.cls.score) /
+      3
   );
 
   const accessibility = Math.max(
@@ -1416,12 +1526,19 @@ export function showReportOverlay(report: SiteReport): void {
       <div style="background: rgba(30, 41, 59, 0.5); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(99, 102, 241, 0.2);">
         <h2 style="margin: 0 0 20px; font-size: 20px; color: #c084fc;">🎯 Top Recommendations</h2>
         <div style="display: flex; flex-direction: column; gap: 12px;">
-          ${report.recommendations.slice(0, 5).map((rec) => `
+          ${report.recommendations
+            .slice(0, 5)
+            .map(
+              (rec) => `
             <div style="display: flex; gap: 16px; align-items: flex-start; padding: 16px; background: rgba(15, 23, 42, 0.5); border-radius: 8px;">
               <span style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase;
-                ${rec.priority === 'high' ? 'background: rgba(239, 68, 68, 0.2); color: #ef4444;' : 
-                  rec.priority === 'medium' ? 'background: rgba(234, 179, 8, 0.2); color: #eab308;' : 
-                  'background: rgba(34, 197, 94, 0.2); color: #22c55e;'}">${rec.priority}</span>
+                ${
+                  rec.priority === 'high'
+                    ? 'background: rgba(239, 68, 68, 0.2); color: #ef4444;'
+                    : rec.priority === 'medium'
+                      ? 'background: rgba(234, 179, 8, 0.2); color: #eab308;'
+                      : 'background: rgba(34, 197, 94, 0.2); color: #22c55e;'
+                }">${rec.priority}</span>
               <div style="flex: 1;">
                 <h4 style="margin: 0 0 4px; font-size: 14px; color: #f8fafc;">${rec.title}</h4>
                 <p style="margin: 0 0 4px; font-size: 12px; color: #94a3b8;">${rec.description}</p>
@@ -1429,7 +1546,9 @@ export function showReportOverlay(report: SiteReport): void {
               </div>
               <span style="font-size: 11px; color: #64748b; padding: 2px 8px; background: rgba(99, 102, 241, 0.1); border-radius: 4px;">${rec.effort}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
 
@@ -1487,8 +1606,12 @@ export function showReportOverlay(report: SiteReport): void {
 
   // Event listeners
   overlay.querySelector('#fdh-close-report')?.addEventListener('click', () => overlay.remove());
-  overlay.querySelector('#fdh-export-json')?.addEventListener('click', () => exportReportAsJSON(report));
-  overlay.querySelector('#fdh-export-html')?.addEventListener('click', () => exportReportAsHTML(report));
+  overlay
+    .querySelector('#fdh-export-json')
+    ?.addEventListener('click', () => exportReportAsJSON(report));
+  overlay
+    .querySelector('#fdh-export-html')
+    ?.addEventListener('click', () => exportReportAsHTML(report));
   overlay.querySelector('#fdh-print-report')?.addEventListener('click', () => printReport(report));
 
   // Escape to close
@@ -1519,7 +1642,12 @@ function renderScoreCard(title: string, score: number, icon: string): string {
  * Render vital card
  */
 function renderVitalCard(name: string, metric: MetricScore, description: string): string {
-  const color = metric.rating === 'good' ? '#22c55e' : metric.rating === 'needs-improvement' ? '#eab308' : '#ef4444';
+  const color =
+    metric.rating === 'good'
+      ? '#22c55e'
+      : metric.rating === 'needs-improvement'
+        ? '#eab308'
+        : '#ef4444';
   return `
     <div style="background: rgba(15, 23, 42, 0.5); border-radius: 8px; padding: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1582,7 +1710,7 @@ function exportReportAsHTML(report: SiteReport): void {
 function printReport(report: SiteReport): void {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
-  
+
   printWindow.document.write(generateFullHTMLReport(report));
   printWindow.document.close();
   printWindow.print();
@@ -1666,20 +1794,30 @@ function generateFullHTMLReport(report: SiteReport): string {
     </div>
     
     <div class="grid">
-      ${['Performance', 'Accessibility', 'SEO', 'Best Practices'].map((cat, i) => {
-        const score = [report.scores.performance, report.scores.accessibility, report.scores.seo, report.scores.bestPractices][i];
-        const icons = ['⚡', '♿', '🔍', '✓'];
-        return `<div class="card">
+      ${['Performance', 'Accessibility', 'SEO', 'Best Practices']
+        .map((cat, i) => {
+          const score = [
+            report.scores.performance,
+            report.scores.accessibility,
+            report.scores.seo,
+            report.scores.bestPractices,
+          ][i];
+          const icons = ['⚡', '♿', '🔍', '✓'];
+          return `<div class="card">
           <div class="card-icon">${icons[i]}</div>
           <div class="card-value" style="color: ${getScoreColor(score)}">${score}</div>
           <div class="card-label">${cat}</div>
         </div>`;
-      }).join('')}
+        })
+        .join('')}
     </div>
     
     <div class="section">
       <h2>🎯 Top Recommendations</h2>
-      ${report.recommendations.slice(0, 5).map((rec) => `
+      ${report.recommendations
+        .slice(0, 5)
+        .map(
+          (rec) => `
         <div class="recommendation">
           <span class="priority priority-${rec.priority}">${rec.priority}</span>
           <div class="rec-content">
@@ -1689,18 +1827,31 @@ function generateFullHTMLReport(report: SiteReport): string {
           </div>
           <span class="effort">${rec.effort}</span>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
     
     <div class="section">
       <h2>⚡ Core Web Vitals</h2>
       <div class="vital-grid">
-        ${['lcp', 'fid', 'cls'].map((key) => {
-          const vital = report.performance.webVitals[key as keyof typeof report.performance.webVitals];
-          const names: Record<string, string> = { lcp: 'LCP', fid: 'FID', cls: 'CLS' };
-          const descs: Record<string, string> = { lcp: 'Largest Contentful Paint', fid: 'First Input Delay', cls: 'Cumulative Layout Shift' };
-          const color = vital.rating === 'good' ? '#22c55e' : vital.rating === 'needs-improvement' ? '#eab308' : '#ef4444';
-          return `<div class="vital-card">
+        ${['lcp', 'fid', 'cls']
+          .map((key) => {
+            const vital =
+              report.performance.webVitals[key as keyof typeof report.performance.webVitals];
+            const names: Record<string, string> = { lcp: 'LCP', fid: 'FID', cls: 'CLS' };
+            const descs: Record<string, string> = {
+              lcp: 'Largest Contentful Paint',
+              fid: 'First Input Delay',
+              cls: 'Cumulative Layout Shift',
+            };
+            const color =
+              vital.rating === 'good'
+                ? '#22c55e'
+                : vital.rating === 'needs-improvement'
+                  ? '#eab308'
+                  : '#ef4444';
+            return `<div class="vital-card">
             <div class="vital-header">
               <span class="vital-name">${names[key]}</span>
               <span class="vital-badge" style="background: ${color}20; color: ${color}">${vital.rating}</span>
@@ -1708,7 +1859,8 @@ function generateFullHTMLReport(report: SiteReport): string {
             <div class="vital-value" style="color: ${color}">${vital.value !== null ? Math.round(vital.value) : '—'}${vital.unit}</div>
             <div class="vital-desc">${descs[key]}</div>
           </div>`;
-        }).join('')}
+          })
+          .join('')}
       </div>
     </div>
     

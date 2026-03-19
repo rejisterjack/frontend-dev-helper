@@ -16,7 +16,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 **FrontendDevHelper is the unified, modern replacement.**
 
-- ✅ **13 powerful tools** in one extension
+- ✅ **19 powerful tools** in one extension
 - ✅ **Manifest V3** from day one
 - ✅ **Zero data collection** — everything runs locally
 - ✅ **Open source** and free forever
@@ -47,6 +47,12 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 | **Tech Detector** | 🔍 | Detect frameworks & libraries |
 | **Accessibility Audit** | 🛡️ | WCAG validator + ARIA checker |
 | **Site Report Generator** | 📊 | Comprehensive analysis & reports |
+| **Live CSS Editor** | ✏️ | Real-time CSS editing |
+| **Screenshot Studio** | 📸 | Capture & annotate screenshots |
+| **Animation Inspector** | 🎬 | Debug CSS animations |
+| **Responsive Preview** | 📲 | Multi-device preview |
+| **Design System Validator** | 🎨 | Design token consistency |
+| **Network Analyzer** | 🌐 | Network request monitoring |
 
 ### Premium Features
 

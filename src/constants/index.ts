@@ -36,6 +36,9 @@ export const TOOL_IDS = {
   ZINDEX_VISUALIZER: 'zIndexVisualizer',
   TECH_DETECTOR: 'techDetector',
 
+  // Performance Tools
+  NETWORK_ANALYZER: 'networkAnalyzer',
+
   // Additional Tools (internal/helpers)
   ELEMENT_INSPECTOR: 'elementInspector',
   MEASUREMENT_TOOL: 'measurementTool',
@@ -170,6 +173,16 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     category: 'inspection',
     hasSettings: true,
     defaultEnabled: false,
+  },
+  [TOOL_IDS.NETWORK_ANALYZER]: {
+    id: TOOL_IDS.NETWORK_ANALYZER,
+    name: 'Network Analyzer',
+    description: 'Monitor network requests and analyze performance',
+    icon: 'activity',
+    category: 'performance',
+    hasSettings: true,
+    defaultEnabled: false,
+    shortcut: 'Alt+N',
   },
   // Helper/internal tools
   [TOOL_IDS.ELEMENT_INSPECTOR]: {
@@ -482,6 +495,7 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.LAYOUT_VISUALIZER]: {},
   [TOOL_IDS.ZINDEX_VISUALIZER]: {},
   [TOOL_IDS.TECH_DETECTOR]: {},
+  [TOOL_IDS.NETWORK_ANALYZER]: {},
   [TOOL_IDS.ELEMENT_INSPECTOR]: { showTooltips: true, highlightStyles: true },
   [TOOL_IDS.MEASUREMENT_TOOL]: {},
 };

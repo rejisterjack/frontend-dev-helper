@@ -175,6 +175,185 @@
   left: 0;
 }
 
+/* Screenshot Studio Styles */
+.fdh-screenshot-studio-container {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+.fdh-screenshot-studio-container * {
+  box-sizing: border-box;
+}
+
+.fdh-screenshot-studio-canvas-container {
+  position: relative;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+.fdh-screenshot-studio-canvas {
+  display: block;
+  cursor: crosshair;
+  background: white;
+}
+
+.fdh-screenshot-studio-toolbar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  z-index: 2147483648;
+}
+
+.fdh-screenshot-studio-tool-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #f3f4f6;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fdh-screenshot-studio-tool-btn:hover {
+  background: #4b5563;
+}
+
+.fdh-screenshot-studio-tool-btn.active {
+  background: #374151;
+}
+
+.fdh-screenshot-studio-color-picker {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  background: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  z-index: 2147483648;
+  flex-wrap: wrap;
+  max-width: 280px;
+  justify-content: center;
+}
+
+.fdh-screenshot-studio-color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  padding: 0;
+}
+
+.fdh-screenshot-studio-color-btn:hover {
+  transform: scale(1.2);
+}
+
+.fdh-screenshot-studio-action-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  z-index: 2147483648;
+}
+
+.fdh-screenshot-studio-action-btn {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+.fdh-screenshot-studio-action-btn:hover {
+  background: #2563eb;
+}
+
+.fdh-screenshot-studio-action-cancel {
+  background: #dc2626;
+}
+
+.fdh-screenshot-studio-action-cancel:hover {
+  background: #b91c1c;
+}
+
+.fdh-screenshot-studio-instructions {
+  position: fixed;
+  top: 140px;
+  right: 20px;
+  padding: 16px 20px;
+  background: rgba(31, 41, 55, 0.95);
+  border-radius: 12px;
+  color: #f3f4f6;
+  font-size: 13px;
+  line-height: 1.6;
+  z-index: 2147483648;
+  max-width: 240px;
+  backdrop-filter: blur(8px);
+}
+
+.fdh-screenshot-studio-selection-box {
+  position: absolute;
+  border: 2px dashed #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.fdh-screenshot-studio-resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  pointer-events: auto;
+  z-index: 11;
+}
+
+.fdh-screenshot-studio-resize-handle:hover {
+  transform: scale(1.3);
+}
+
 /* Animations */
 @keyframes fdh-fadeIn {
   from {
@@ -201,7 +380,9 @@
 .fdh-color-picker-overlay,
 .fdh-color-preview,
 .fdh-measurement-line,
-.fdh-measurement-label {
+.fdh-measurement-label,
+.fdh-screenshot-studio-container,
+.fdh-screenshot-studio-container * {
   all: initial;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   box-sizing: border-box;

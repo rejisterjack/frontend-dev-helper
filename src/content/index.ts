@@ -15,18 +15,24 @@
 
 import { MessageType } from '../types/messages';
 import { accessibilityAudit } from './accessibility-audit';
+import { animationInspector } from './animation-inspector';
 import { breakpointOverlay } from './breakpoint-overlay';
 import { colorPicker } from './color-picker';
 import { contrastChecker } from './contrast-checker';
+import { cssEditor } from './css-editor';
 import { cssInspector } from './css-inspector';
+import designSystemValidator from './design-system-validator';
 import { exportManager } from './export-manager';
 import { fontInspector } from './font-inspector';
 import { GridOverlay } from './grid-overlay';
 import { Inspector } from './inspector';
 import { layoutVisualizer } from './layout-visualizer';
 import { MeasureTool } from './measure-tool';
+import { networkAnalyzer } from './network-analyzer';
 import { pesticide } from './pesticide';
 import { pixelRuler } from './pixel-ruler';
+import { responsivePreview } from './responsive-preview';
+import * as screenshotStudio from './screenshot-studio';
 import { siteReportGenerator } from './site-report-generator';
 import { spacingVisualizer } from './spacing';
 import { techDetector } from './tech-detector';
@@ -44,12 +50,14 @@ interface ContentScriptState {
   isColorPickerActive: boolean;
   isMeasureToolActive: boolean;
   isGridVisible: boolean;
+  isScreenshotStudioActive: boolean;
   // Tool states
   domOutlinerEnabled: boolean;
   spacingVisualizerEnabled: boolean;
   fontInspectorEnabled: boolean;
   pixelRulerEnabled: boolean;
   breakpointOverlayEnabled: boolean;
+  responsivePreviewEnabled: boolean;
 }
 
 const state: ContentScriptState = {
@@ -60,11 +68,13 @@ const state: ContentScriptState = {
   isColorPickerActive: false,
   isMeasureToolActive: false,
   isGridVisible: false,
+  isScreenshotStudioActive: false,
   domOutlinerEnabled: false,
   spacingVisualizerEnabled: false,
   fontInspectorEnabled: false,
   pixelRulerEnabled: false,
   breakpointOverlayEnabled: false,
+  responsivePreviewEnabled: false,
 };
 
 // ============================================
@@ -226,6 +236,42 @@ chrome.runtime.onMessage.addListener(
           }
           break;
 
+        // Responsive Preview
+        case 'RESPONSIVE_PREVIEW_TOGGLE':
+          responsivePreview.toggle();
+          state.responsivePreviewEnabled = responsivePreview.getState().enabled;
+          sendResponse({ success: true, active: state.responsivePreviewEnabled });
+          break;
+        case 'RESPONSIVE_PREVIEW_ENABLE':
+          responsivePreview.enable();
+          state.responsivePreviewEnabled = true;
+          sendResponse({ success: true, active: true });
+          break;
+        case 'RESPONSIVE_PREVIEW_DISABLE':
+          responsivePreview.disable();
+          state.responsivePreviewEnabled = false;
+          sendResponse({ success: true, active: false });
+          break;
+        case 'RESPONSIVE_PREVIEW_GET_STATE':
+          sendResponse({ success: true, state: responsivePreview.getState() });
+          break;
+        case 'RESPONSIVE_PREVIEW_SET_SYNC_SCROLL':
+          if (message.payload?.enabled !== undefined) {
+            responsivePreview.setSyncScroll(Boolean(message.payload.enabled));
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing enabled parameter' });
+          }
+          break;
+        case 'RESPONSIVE_PREVIEW_SET_SCALE':
+          if (message.payload?.scale !== undefined) {
+            responsivePreview.setGlobalScale(Number(message.payload.scale));
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing scale parameter' });
+          }
+          break;
+
         // CSS Inspector
         case 'CSS_INSPECTOR_TOGGLE':
           cssInspector.toggle();
@@ -242,6 +288,86 @@ chrome.runtime.onMessage.addListener(
         case 'CSS_INSPECTOR_GET_STATE':
           sendResponse({ success: true, state: cssInspector.getState() });
           break;
+
+        // CSS Live Editor
+        case 'CSS_EDITOR_TOGGLE':
+          cssEditor.toggle();
+          sendResponse({ success: true, active: cssEditor.getState().enabled });
+          break;
+        case 'CSS_EDITOR_ENABLE':
+          cssEditor.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'CSS_EDITOR_DISABLE':
+          cssEditor.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'CSS_EDITOR_GET_STATE':
+          sendResponse({ success: true, state: cssEditor.getState() });
+          break;
+        case 'CSS_EDITOR_GET_CSS':
+          sendResponse({ success: true, css: cssEditor.getModifiedCSS() });
+          break;
+        case 'CSS_EDITOR_RESET':
+          cssEditor.resetAll();
+          sendResponse({ success: true });
+          break;
+
+        // Screenshot Studio
+        case 'SCREENSHOT_STUDIO_TOGGLE':
+          screenshotStudio.toggle();
+          sendResponse({ success: true, active: screenshotStudio.getState().enabled });
+          break;
+        case 'SCREENSHOT_STUDIO_ENABLE':
+          screenshotStudio.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'SCREENSHOT_STUDIO_DISABLE':
+          screenshotStudio.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'SCREENSHOT_STUDIO_GET_STATE':
+          sendResponse({ success: true, state: screenshotStudio.getState() });
+          break;
+
+        // Animation Inspector
+        case 'ANIMATION_INSPECTOR_TOGGLE':
+          animationInspector.toggle();
+          sendResponse({ success: true, active: animationInspector.getState().enabled });
+          break;
+        case 'ANIMATION_INSPECTOR_ENABLE':
+          animationInspector.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'ANIMATION_INSPECTOR_DISABLE':
+          animationInspector.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'ANIMATION_INSPECTOR_GET_STATE':
+          sendResponse({ success: true, state: animationInspector.getState() });
+          break;
+
+        // Design System Validator
+        case 'DESIGN_SYSTEM_VALIDATOR_TOGGLE':
+          designSystemValidator.toggle();
+          sendResponse({ success: true, active: designSystemValidator.getState().enabled });
+          break;
+        case 'DESIGN_SYSTEM_VALIDATOR_ENABLE':
+          designSystemValidator.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'DESIGN_SYSTEM_VALIDATOR_DISABLE':
+          designSystemValidator.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'DESIGN_SYSTEM_VALIDATOR_GET_STATE':
+          sendResponse({ success: true, state: designSystemValidator.getState() });
+          break;
+        case 'DESIGN_SYSTEM_VALIDATOR_VALIDATE': {
+          const report = designSystemValidator.validate();
+          sendResponse({ success: true, report });
+          break;
+        }
 
         // Contrast Checker
         case 'CONTRAST_CHECKER_TOGGLE':
@@ -333,6 +459,27 @@ chrome.runtime.onMessage.addListener(
           break;
         }
 
+        // Network Analyzer
+        case 'NETWORK_ANALYZER_TOGGLE':
+          networkAnalyzer.toggle();
+          sendResponse({ success: true, active: networkAnalyzer.getState().enabled });
+          break;
+        case 'NETWORK_ANALYZER_ENABLE':
+          networkAnalyzer.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'NETWORK_ANALYZER_DISABLE':
+          networkAnalyzer.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'NETWORK_ANALYZER_GET_STATE':
+          sendResponse({ success: true, state: networkAnalyzer.getState() });
+          break;
+        case 'NETWORK_ANALYZER_CLEAR':
+          networkAnalyzer.clear();
+          sendResponse({ success: true });
+          break;
+
         // Site Report Generator
         case 'SITE_REPORT_TOGGLE':
           siteReportGenerator.toggle();
@@ -350,7 +497,8 @@ chrome.runtime.onMessage.addListener(
           sendResponse({ success: true, state: siteReportGenerator.getState() });
           break;
         case 'SITE_REPORT_GENERATE': {
-          siteReportGenerator.generateReport(message.payload || {})
+          siteReportGenerator
+            .generateReport(message.payload || {})
             .then((report) => sendResponse({ success: true, report }))
             .catch((error: Error) => sendResponse({ success: false, error: error.message }));
           return true;
@@ -410,12 +558,18 @@ chrome.runtime.onMessage.addListener(
               pixelRuler: pixelRuler.getState(),
               breakpointOverlay: breakpointOverlay.getState(),
               cssInspector: cssInspector.getState(),
+              cssEditor: cssEditor.getState(),
               contrastChecker: contrastChecker.getState(),
               layoutVisualizer: layoutVisualizer.getState(),
               zIndexVisualizer: zIndexVisualizer.getState(),
               techDetector: techDetector.getState(),
+              networkAnalyzer: networkAnalyzer.getState(),
               accessibilityAudit: accessibilityAudit.getState(),
               siteReportGenerator: siteReportGenerator.getState(),
+              screenshotStudio: screenshotStudio.getState(),
+              animationInspector: animationInspector.getState(),
+              designSystemValidator: designSystemValidator.getState(),
+              responsivePreview: responsivePreview.getState(),
               inspector: { enabled: state.isInspectorActive },
               measureTool: { enabled: state.isMeasureToolActive },
               gridOverlay: { visible: state.isGridVisible },
@@ -806,13 +960,19 @@ document.addEventListener('keydown', (event) => {
     colorPicker.disable();
     pixelRuler.disable();
     breakpointOverlay.disable();
+    cssEditor.disable();
     cssInspector.disable();
     contrastChecker.disable();
     layoutVisualizer.disable();
     zIndexVisualizer.disable();
     techDetector.disable();
+    networkAnalyzer.disable();
     accessibilityAudit.disable();
     siteReportGenerator.disable();
+    screenshotStudio.disable();
+    animationInspector.disable();
+    designSystemValidator.disable();
+    responsivePreview.disable();
 
     // Update state
     state.domOutlinerEnabled = false;
@@ -821,6 +981,7 @@ document.addEventListener('keydown', (event) => {
     state.pixelRulerEnabled = false;
     state.breakpointOverlayEnabled = false;
     state.isColorPickerActive = false;
+    state.isScreenshotStudioActive = false;
 
     // Notify background script
     updateIconBadge();
