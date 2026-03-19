@@ -1,136 +1,172 @@
-# FrontendDevHelper 🛠️
+# 🔬 FrontendDevHelper — Ultimate Frontend Developer Toolkit
 
-A powerful browser extension for frontend developers with essential dev tools, color picker, layout inspector, and more.
+> **One extension. Every visual debugging tool you actually need.**
+> Built for Chrome, Brave & Firefox · Manifest V3 · Open Source
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)
-
-## Features ✨
-
-- 🔍 **Element Inspector** - Hover and click to inspect any element on the page
-- 🎨 **Color Picker** - Pick colors from anywhere with a magnifying glass
-- 📏 **Measure Tool** - Measure distances between elements with precision
-- ⊞ **Grid Overlay** - Toggle customizable grid overlays for alignment
-- 📋 **CSS/HTML Copy** - Copy computed CSS and HTML with one click
-- ⚡ **Keyboard Shortcuts** - Quick access with customizable hotkeys
-
-## Tech Stack 🚀
-
-- **Framework**: React 18
-- **Language**: TypeScript
-- **Build Tool**: Vite with CRXJS
-- **Styling**: Tailwind CSS
-- **Testing**: Vitest
-- **Icons**: React Icons
-
-## Installation 📦
-
-### Development
-
-```bash
-# Clone the repository
-git clone https://github.com/frontend-dev-helper/frontend-dev-helper.git
-cd frontend-dev-helper
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Load extension in Chrome:
-# 1. Open chrome://extensions/
-# 2. Enable "Developer mode"
-# 3. Click "Load unpacked"
-# 4. Select the `dist` folder
-```
-
-### Build for Production
-
-```bash
-# Build the extension
-npm run build
-
-# The `dist` folder will contain the production build
-```
-
-### Testing
-
-```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-## Project Structure 📁
-
-```
-frontend-dev-helper/
-├── public/
-│   ├── manifest.json          # Extension manifest
-│   └── icons/                 # Extension icons
-├── src/
-│   ├── popup/                 # Popup UI
-│   │   ├── index.tsx          # Entry point
-│   │   └── App.tsx            # Main app component
-│   ├── background/            # Service worker
-│   │   └── index.ts           # Background script
-│   ├── content/               # Content scripts
-│   │   ├── index.ts           # Main content script
-│   │   ├── inspector.ts       # Element inspector
-│   │   ├── color-picker.ts    # Color picker tool
-│   │   ├── measure-tool.ts    # Measure tool
-│   │   ├── grid-overlay.ts    # Grid overlay
-│   │   └── styles.css         # Content script styles
-│   ├── types/
-│   │   └── messages.ts        # Message type definitions
-│   ├── hooks/
-│   │   ├── useStorage.ts      # Storage hook
-│   │   └── useTabInfo.ts      # Tab info hook
-│   ├── styles/
-│   │   └── globals.css        # Global styles
-│   └── test/
-│       └── setup.ts           # Test setup
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.js
-└── vitest.config.ts
-```
-
-## Usage 🎮
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+F` | Open popup |
-| `Ctrl+Shift+I` | Toggle inspector |
-
-### Context Menu
-
-Right-click anywhere on a page to access:
-- 🔍 Inspect Element
-- 🎨 Pick Color
-- 📏 Measure Distance
-- 📋 Copy CSS/HTML
-- ⊞ Toggle Grid Overlay
-
-## Contributing 🤝
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License 📄
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/frontend-dev-helper/frontend-dev-helper)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](public/manifest.json)
+[![CI](https://github.com/frontend-dev-helper/frontend-dev-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/frontend-dev-helper/frontend-dev-helper/actions)
 
 ---
 
-Made with ❤️ for frontend developers
+## 🎯 Why FrontendDevHelper?
+
+Frontend developers rely on 8–12 separate browser extensions for visual debugging. Most are built on deprecated Manifest V2 and are now broken on modern browsers.
+
+**FrontendDevHelper is the unified, modern replacement.**
+
+- ✅ **11 powerful tools** in one extension
+- ✅ **Manifest V3** from day one
+- ✅ **Zero data collection** — everything runs locally
+- ✅ **Open source** and free forever
+
+---
+
+## ✨ Features
+
+### Core Tools
+
+| Tool | Icon | Description |
+|------|------|-------------|
+| **DOM Outliner** | 🕸️ | Color-coded element outlines (Pesticide reborn) |
+| **Spacing Visualizer** | 📐 | Margin & padding overlays on click |
+| **Font Inspector** | 🔤 | Typography analysis with source detection |
+| **Color Picker** | 🎨 | EyeDropper + palette extraction |
+| **Pixel Ruler** | 📏 | Precise distance measurement |
+| **Breakpoint Overlay** | 📱 | Viewport size & responsive breakpoints |
+
+### Advanced Tools
+
+| Tool | Icon | Description |
+|------|------|-------------|
+| **CSS Inspector** | 📝 | All computed properties by category |
+| **Contrast Checker** | ♿ | WCAG AA/AAA accessibility compliance |
+| **Flex/Grid Visualizer** | ⊞ | Visualize layout structures |
+| **Z-Index Visualizer** | 📚 | Stacking order & hierarchy |
+| **Tech Detector** | 🔍 | Detect frameworks & libraries |
+
+---
+
+## 🚀 Installation
+
+### From Chrome Web Store
+_Coming soon!_
+
+### Manual Installation (Developer Mode)
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/frontend-dev-helper/frontend-dev-helper.git
+cd frontend-dev-helper
+
+# 2. Install dependencies
+npm install
+
+# 3. Build the extension
+npm run build
+
+# 4. Load in Chrome / Brave
+# → Open chrome://extensions
+# → Enable "Developer mode" (top right toggle)
+# → Click "Load unpacked"
+# → Select the /dist folder
+```
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Alt+P` | Toggle DOM Outliner |
+| `Alt+S` | Toggle Spacing Visualizer |
+| `Alt+F` | Toggle Font Inspector |
+| `Alt+C` | Toggle Color Picker |
+| `Alt+M` | Toggle Pixel Ruler |
+| `Alt+B` | Toggle Breakpoint Overlay |
+| `Ctrl+Shift+F` | Open popup |
+
+---
+
+## 🛠️ Development
+
+```bash
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Run E2E tests
+npm run test:e2e
+
+# Build for production
+npm run build
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+---
+
+## 📁 Project Structure
+
+```
+frontend-dev-helper/
+├── src/
+│   ├── background/        # Service worker
+│   ├── content/           # Content scripts (all tools)
+│   ├── popup/             # React popup UI
+│   ├── utils/             # Color utilities, DOM helpers
+│   └── types/             # TypeScript types
+├── dist/                  # Built extension
+├── tests/                 # Unit & E2E tests
+├── .github/workflows/     # CI/CD
+└── store-assets/          # Store listing assets
+```
+
+---
+
+## 🧪 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Extension | Chrome Manifest V3 |
+| UI | React 18 + TypeScript |
+| Styling | Tailwind CSS |
+| Build | Vite + CRXJS |
+| Testing | Vitest + Playwright |
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+[MIT](LICENSE) © FrontendDevHelper Contributors
+
+---
+
+## 🙏 Acknowledgments
+
+- Inspired by the original [Pesticide](https://github.com/mrmrs/pesticide) extension
+- Built with [Vite](https://vitejs.dev/) and [CRXJS](https://crxjs.dev/)
+- Icons and UI inspired by modern design systems
+
+---
+
+> **Made with ❤️ for the frontend developer community**

@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build extension
+        run: npm run build
+      
+      - name: Create Chrome ZIP
+        run: |
+          cd dist
+          zip -r ../frontend-dev-helper-chrome.zip .
+          cd ..
+      
+      - name: Create Firefox ZIP
+        run: |
+          # Modify manifest for Firefox
+          cd dist
+          cat manifest.json | sed 's/"service_worker": "src\/background\/index.ts"/"scripts": ["src\/background\/index.ts"]/' > manifest-firefox.json
+          mv manifest-firefox.json manifest.json
+          zip -r ../frontend-dev-helper-firefox.zip .
+          cd ..
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            frontend-dev-helper-chrome.zip
+            frontend-dev-helper-firefox.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

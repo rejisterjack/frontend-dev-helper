@@ -219,6 +219,16 @@ export function meetsWCAGAAA(foreground: string, background: string, largeText =
 }
 
 /**
+ * Get WCAG compliance rating
+ * Returns 'AAA' if meets AAA, 'AA' if meets AA, 'FAIL' otherwise
+ */
+export function getWCAGRating(ratio: number): 'AAA' | 'AA' | 'FAIL' {
+  if (ratio >= 7) return 'AAA';
+  if (ratio >= 4.5) return 'AA';
+  return 'FAIL';
+}
+
+/**
  * Format RGB object to CSS string
  */
 export function formatRgb(r: number, g: number, b: number, a = 1): string {

@@ -10,6 +10,11 @@ export enum ToolType {
   COLOR_PICKER = 'colorPicker',
   PIXEL_RULER = 'pixelRuler',
   RESPONSIVE_BREAKPOINT = 'responsiveBreakpoint',
+  CSS_INSPECTOR = 'cssInspector',
+  CONTRAST_CHECKER = 'contrastChecker',
+  LAYOUT_VISUALIZER = 'layoutVisualizer',
+  ZINDEX_VISUALIZER = 'zIndexVisualizer',
+  TECH_DETECTOR = 'techDetector',
 }
 
 /** Tool ID type */
@@ -22,7 +27,12 @@ export type ToolId =
   | 'breakpointOverlay'
   | 'elementInspector'
   | 'gridOverlay'
-  | 'measureTool';
+  | 'measureTool'
+  | 'cssInspector'
+  | 'contrastChecker'
+  | 'layoutVisualizer'
+  | 'zIndexVisualizer'
+  | 'techDetector';
 
 /** State of an individual tool */
 export interface ToolState {

@@ -58,6 +58,46 @@ const TOOLS: ToolMeta[] = [
     hasSettings: true,
     color: '#06b6d4',
   },
+  {
+    type: ToolType.CSS_INSPECTOR,
+    name: 'CSS Inspector',
+    description: 'View all computed CSS properties by category',
+    icon: '📝',
+    hasSettings: true,
+    color: '#10b981',
+  },
+  {
+    type: ToolType.CONTRAST_CHECKER,
+    name: 'Contrast Checker',
+    description: 'Check WCAG AA/AAA color contrast compliance',
+    icon: '♿',
+    hasSettings: true,
+    color: '#84cc16',
+  },
+  {
+    type: ToolType.LAYOUT_VISUALIZER,
+    name: 'Flex/Grid Visualizer',
+    description: 'Visualize flexbox and grid layouts',
+    icon: '⊞',
+    hasSettings: true,
+    color: '#8b5cf6',
+  },
+  {
+    type: ToolType.ZINDEX_VISUALIZER,
+    name: 'Z-Index Visualizer',
+    description: 'See stacking order and z-index hierarchy',
+    icon: '📚',
+    hasSettings: true,
+    color: '#f43f5e',
+  },
+  {
+    type: ToolType.TECH_DETECTOR,
+    name: 'Tech Detector',
+    description: 'Detect frameworks, libraries, and tools',
+    icon: '🔍',
+    hasSettings: true,
+    color: '#0ea5e9',
+  },
 ];
 
 /** Extension version */
@@ -72,6 +112,11 @@ export const Popup: React.FC = () => {
     [ToolType.COLOR_PICKER]: { enabled: false },
     [ToolType.PIXEL_RULER]: { enabled: false },
     [ToolType.RESPONSIVE_BREAKPOINT]: { enabled: false },
+    [ToolType.CSS_INSPECTOR]: { enabled: false },
+    [ToolType.CONTRAST_CHECKER]: { enabled: false },
+    [ToolType.LAYOUT_VISUALIZER]: { enabled: false },
+    [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
+    [ToolType.TECH_DETECTOR]: { enabled: false },
   });
 
   // UI states
@@ -96,6 +141,11 @@ export const Popup: React.FC = () => {
               [ToolType.COLOR_PICKER]: response.states.colorPicker || { enabled: false },
               [ToolType.PIXEL_RULER]: response.states.pixelRuler || { enabled: false },
               [ToolType.RESPONSIVE_BREAKPOINT]: response.states.breakpointOverlay || { enabled: false },
+              [ToolType.CSS_INSPECTOR]: response.states.cssInspector || { enabled: false },
+              [ToolType.CONTRAST_CHECKER]: response.states.contrastChecker || { enabled: false },
+              [ToolType.LAYOUT_VISUALIZER]: response.states.layoutVisualizer || { enabled: false },
+              [ToolType.ZINDEX_VISUALIZER]: response.states.zIndexVisualizer || { enabled: false },
+              [ToolType.TECH_DETECTOR]: response.states.techDetector || { enabled: false },
             });
           }
         }
@@ -154,6 +204,21 @@ export const Popup: React.FC = () => {
       case ToolType.RESPONSIVE_BREAKPOINT:
         messageType = enabled ? 'BREAKPOINT_OVERLAY_ENABLE' : 'BREAKPOINT_OVERLAY_DISABLE';
         break;
+      case ToolType.CSS_INSPECTOR:
+        messageType = enabled ? 'CSS_INSPECTOR_ENABLE' : 'CSS_INSPECTOR_DISABLE';
+        break;
+      case ToolType.CONTRAST_CHECKER:
+        messageType = enabled ? 'CONTRAST_CHECKER_ENABLE' : 'CONTRAST_CHECKER_DISABLE';
+        break;
+      case ToolType.LAYOUT_VISUALIZER:
+        messageType = enabled ? 'LAYOUT_VISUALIZER_ENABLE' : 'LAYOUT_VISUALIZER_DISABLE';
+        break;
+      case ToolType.ZINDEX_VISUALIZER:
+        messageType = enabled ? 'ZINDEX_VISUALIZER_ENABLE' : 'ZINDEX_VISUALIZER_DISABLE';
+        break;
+      case ToolType.TECH_DETECTOR:
+        messageType = enabled ? 'TECH_DETECTOR_ENABLE' : 'TECH_DETECTOR_DISABLE';
+        break;
       default:
         return;
     }
@@ -194,6 +259,11 @@ export const Popup: React.FC = () => {
       [ToolType.COLOR_PICKER]: { enabled: false },
       [ToolType.PIXEL_RULER]: { enabled: false },
       [ToolType.RESPONSIVE_BREAKPOINT]: { enabled: false },
+      [ToolType.CSS_INSPECTOR]: { enabled: false },
+      [ToolType.CONTRAST_CHECKER]: { enabled: false },
+      [ToolType.LAYOUT_VISUALIZER]: { enabled: false },
+      [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
+      [ToolType.TECH_DETECTOR]: { enabled: false },
     };
 
     setToolsState(resetState);
@@ -209,6 +279,11 @@ export const Popup: React.FC = () => {
         'COLOR_PICKER_DISABLE',
         'PIXEL_RULER_DISABLE',
         'BREAKPOINT_OVERLAY_DISABLE',
+        'CSS_INSPECTOR_DISABLE',
+        'CONTRAST_CHECKER_DISABLE',
+        'LAYOUT_VISUALIZER_DISABLE',
+        'ZINDEX_VISUALIZER_DISABLE',
+        'TECH_DETECTOR_DISABLE',
       ];
       
       for (const messageType of disableMessages) {

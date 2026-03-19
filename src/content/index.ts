@@ -20,6 +20,11 @@ import { fontInspector } from './font-inspector';
 import { colorPicker } from './color-picker';
 import { pixelRuler } from './pixel-ruler';
 import { breakpointOverlay } from './breakpoint-overlay';
+import { cssInspector } from './css-inspector';
+import { contrastChecker } from './contrast-checker';
+import { layoutVisualizer } from './layout-visualizer';
+import { zIndexVisualizer } from './zindex-visualizer';
+import { techDetector } from './tech-detector';
 import { Inspector } from './inspector';
 import { MeasureTool } from './measure-tool';
 import { GridOverlay } from './grid-overlay';
@@ -221,6 +226,91 @@ chrome.runtime.onMessage.addListener((
         }
         break;
 
+      // CSS Inspector
+      case 'CSS_INSPECTOR_TOGGLE':
+        cssInspector.toggle();
+        sendResponse({ success: true, active: cssInspector.getState().enabled });
+        break;
+      case 'CSS_INSPECTOR_ENABLE':
+        cssInspector.enable();
+        sendResponse({ success: true, active: true });
+        break;
+      case 'CSS_INSPECTOR_DISABLE':
+        cssInspector.disable();
+        sendResponse({ success: true, active: false });
+        break;
+      case 'CSS_INSPECTOR_GET_STATE':
+        sendResponse({ success: true, state: cssInspector.getState() });
+        break;
+
+      // Contrast Checker
+      case 'CONTRAST_CHECKER_TOGGLE':
+        contrastChecker.toggle();
+        sendResponse({ success: true, active: contrastChecker.getState().enabled });
+        break;
+      case 'CONTRAST_CHECKER_ENABLE':
+        contrastChecker.enable();
+        sendResponse({ success: true, active: true });
+        break;
+      case 'CONTRAST_CHECKER_DISABLE':
+        contrastChecker.disable();
+        sendResponse({ success: true, active: false });
+        break;
+      case 'CONTRAST_CHECKER_GET_STATE':
+        sendResponse({ success: true, state: contrastChecker.getState() });
+        break;
+
+      // Layout Visualizer (Flexbox/Grid)
+      case 'LAYOUT_VISUALIZER_TOGGLE':
+        layoutVisualizer.toggle();
+        sendResponse({ success: true, active: layoutVisualizer.getState().enabled });
+        break;
+      case 'LAYOUT_VISUALIZER_ENABLE':
+        layoutVisualizer.enable();
+        sendResponse({ success: true, active: true });
+        break;
+      case 'LAYOUT_VISUALIZER_DISABLE':
+        layoutVisualizer.disable();
+        sendResponse({ success: true, active: false });
+        break;
+      case 'LAYOUT_VISUALIZER_GET_STATE':
+        sendResponse({ success: true, state: layoutVisualizer.getState() });
+        break;
+
+      // Z-Index Visualizer
+      case 'ZINDEX_VISUALIZER_TOGGLE':
+        zIndexVisualizer.toggle();
+        sendResponse({ success: true, active: zIndexVisualizer.getState().enabled });
+        break;
+      case 'ZINDEX_VISUALIZER_ENABLE':
+        zIndexVisualizer.enable();
+        sendResponse({ success: true, active: true });
+        break;
+      case 'ZINDEX_VISUALIZER_DISABLE':
+        zIndexVisualizer.disable();
+        sendResponse({ success: true, active: false });
+        break;
+      case 'ZINDEX_VISUALIZER_GET_STATE':
+        sendResponse({ success: true, state: zIndexVisualizer.getState() });
+        break;
+
+      // Tech Detector
+      case 'TECH_DETECTOR_TOGGLE':
+        techDetector.toggle();
+        sendResponse({ success: true, active: techDetector.getState().enabled });
+        break;
+      case 'TECH_DETECTOR_ENABLE':
+        techDetector.enable();
+        sendResponse({ success: true, active: true });
+        break;
+      case 'TECH_DETECTOR_DISABLE':
+        techDetector.disable();
+        sendResponse({ success: true, active: false });
+        break;
+      case 'TECH_DETECTOR_GET_STATE':
+        sendResponse({ success: true, state: techDetector.getState() });
+        break;
+
       // Get all states
       case 'GET_ALL_STATES':
         sendResponse({
@@ -232,6 +322,11 @@ chrome.runtime.onMessage.addListener((
             colorPicker: colorPicker.getState(),
             pixelRuler: pixelRuler.getState(),
             breakpointOverlay: breakpointOverlay.getState(),
+            cssInspector: cssInspector.getState(),
+            contrastChecker: contrastChecker.getState(),
+            layoutVisualizer: layoutVisualizer.getState(),
+            zIndexVisualizer: zIndexVisualizer.getState(),
+            techDetector: techDetector.getState(),
             inspector: { enabled: state.isInspectorActive },
             measureTool: { enabled: state.isMeasureToolActive },
             gridOverlay: { visible: state.isGridVisible },
