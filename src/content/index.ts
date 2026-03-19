@@ -702,6 +702,40 @@ function updateIconBadge(): void {
 }
 
 // ============================================
+// Global Escape Handler - Disable All Tools
+// ============================================
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    // Disable all tools
+    pesticide.disable();
+    spacingVisualizer.disable();
+    fontInspector.disable();
+    colorPicker.disable();
+    pixelRuler.disable();
+    breakpointOverlay.disable();
+    cssInspector.disable();
+    contrastChecker.disable();
+    layoutVisualizer.disable();
+    zIndexVisualizer.disable();
+    techDetector.disable();
+
+    // Update state
+    state.domOutlinerEnabled = false;
+    state.spacingVisualizerEnabled = false;
+    state.fontInspectorEnabled = false;
+    state.pixelRulerEnabled = false;
+    state.breakpointOverlayEnabled = false;
+    state.isColorPickerActive = false;
+
+    // Notify background script
+    updateIconBadge();
+
+    showNotification('All tools disabled');
+  }
+});
+
+// ============================================
 // Initialization
 // ============================================
 
