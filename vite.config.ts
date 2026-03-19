@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { crx } from '@crxjs/vite-plugin';
 import { resolve } from 'path';
-import manifest from './public/manifest.json' assert { type: 'json' };
+import manifest from './public/manifest.json' with { type: 'json' };
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({

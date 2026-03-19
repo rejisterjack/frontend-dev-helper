@@ -23,37 +23,54 @@ describe('ExportManager', () => {
     global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
     global.URL.revokeObjectURL = vi.fn();
 
+    // Create body element mock with querySelectorAll
+    const bodyMock = {
+      appendChild: vi.fn(),
+      removeChild: vi.fn(),
+      querySelectorAll: vi.fn(() => []),
+    };
+    
     // Mock document
     Object.defineProperty(global, 'document', {
       value: {
-        createElement: vi.fn((tag: string) => ({
-          tagName: tag.toUpperCase(),
-          style: {},
-          click: vi.fn(),
-          setAttribute: vi.fn(),
-          getContext: vi.fn(() => ({
-            fillRect: vi.fn(),
-            strokeRect: vi.fn(),
-            beginPath: vi.fn(),
-            moveTo: vi.fn(),
-            lineTo: vi.fn(),
-            stroke: vi.fn(),
-            fill: vi.fn(),
-            fillText: vi.fn(),
-            save: vi.fn(),
-            restore: vi.fn(),
-            scale: vi.fn(),
-            translate: vi.fn(),
-            rotate: vi.fn(),
-            drawImage: vi.fn(),
-          })),
-          toDataURL: vi.fn(() => 'data:image/png;base64,mock'),
-        })),
-        body: {
-          appendChild: vi.fn(),
-          removeChild: vi.fn(),
-          querySelectorAll: vi.fn(() => []),
-        },
+        createElement: vi.fn((tag: string) => {
+          const classes = new Set<string>();
+          return {
+            tagName: tag.toUpperCase(),
+            style: {},
+            classList: {
+              add: vi.fn((...c: string[]) => c.forEach(x => classes.add(x))),
+              remove: vi.fn((...c: string[]) => c.forEach(x => classes.delete(x))),
+              contains: vi.fn((c: string) => classes.has(c)),
+              get length() { return classes.size; },
+            [Symbol.iterator]: function* () { yield* classes; },
+              forEach: vi.fn((cb: (value: string) => void) => classes.forEach(cb)),
+            },
+            click: vi.fn(),
+            focus: vi.fn(),
+            select: vi.fn(),
+            setAttribute: vi.fn(),
+            getAttribute: vi.fn(),
+            getContext: vi.fn(() => ({
+              fillRect: vi.fn(),
+              strokeRect: vi.fn(),
+              beginPath: vi.fn(),
+              moveTo: vi.fn(),
+              lineTo: vi.fn(),
+              stroke: vi.fn(),
+              fill: vi.fn(),
+              fillText: vi.fn(),
+              save: vi.fn(),
+              restore: vi.fn(),
+              scale: vi.fn(),
+              translate: vi.fn(),
+              rotate: vi.fn(),
+              drawImage: vi.fn(),
+            })),
+            toDataURL: vi.fn(() => 'data:image/png;base64,mock'),
+          };
+        }),
+        body: bodyMock,
         querySelector: vi.fn(),
         querySelectorAll: vi.fn(() => []),
         title: 'Test Page',
@@ -200,7 +217,7 @@ describe('ExportManager', () => {
     it('should capture screenshot using canvas fallback', async () => {
       const result = await manager.captureScreenshot();
 
-      expect(result).toBe('data:image/png;base64,mock');
+      expect(result).toBe('data:image/png;base64,mock-screenshot');
     });
 
     it('should apply annotations when provided', async () => {
@@ -227,7 +244,7 @@ describe('ExportManager', () => {
         quality: 0.8,
       });
 
-      expect(result).toBe('data:image/png;base64,mock');
+      expect(result).toBe('data:image/png;base64,mock-screenshot');
     });
   });
 
@@ -298,10 +315,21 @@ describe('ExportManager', () => {
     });
 
     it('should add element to captured elements list', () => {
+      const mockClassList = {
+        _classes: [] as string[],
+        length: 0,
+        add: vi.fn(),
+        remove: vi.fn(),
+        contains: vi.fn(() => false),
+        [Symbol.iterator]: function* () { yield* mockClassList._classes; },
+        forEach: vi.fn((cb: (value: string) => void) => mockClassList._classes.forEach(cb)),
+      };
+      
       const mockElement = {
         tagName: 'SPAN',
         id: '',
         className: '',
+        classList: mockClassList,
         getBoundingClientRect: () => ({
           width: 50,
           height: 30,

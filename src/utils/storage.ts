@@ -6,7 +6,7 @@
  */
 
 import type { ToolId } from '@/constants';
-import { DEFAULT_SETTINGS, ERROR_MESSAGES, STORAGE_KEYS, TOOL_IDS } from '@/constants';
+import { DEFAULT_SETTINGS, ERROR_MESSAGES, STORAGE_KEYS, TOOL_IDS, TOOL_METADATA } from '@/constants';
 import type { ToolState, ToolsState } from '@/types';
 
 // ============================================
@@ -445,9 +445,7 @@ export async function updateSettings(settings: Partial<typeof DEFAULT_SETTINGS>)
 /**
  * Get default enabled state for a tool
  */
-async function getDefaultToolEnabled(toolId: ToolId): Promise<boolean> {
-  // Import dynamically to avoid circular dependencies
-  const { TOOL_METADATA } = await import('@/constants');
+function getDefaultToolEnabled(toolId: ToolId): boolean {
   return TOOL_METADATA[toolId]?.defaultEnabled ?? false;
 }
 

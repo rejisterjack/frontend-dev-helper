@@ -5,6 +5,9 @@ import { vi } from 'vitest';
 // Chrome API Mock
 // ============================================
 
+// In-memory storage for tests
+const mockStorageData: Record<string, unknown> = {};
+
 const mockChrome = {
   runtime: {
     sendMessage: vi.fn(),
@@ -27,7 +30,12 @@ const mockChrome = {
     query: vi.fn(),
     get: vi.fn(),
     sendMessage: vi.fn(),
-    captureVisibleTab: vi.fn(),
+    captureVisibleTab: vi.fn((options, callback) => {
+      // Mock successful screenshot capture
+      if (callback) {
+        callback('data:image/png;base64,mock-screenshot');
+      }
+    }),
     onActivated: {
       addListener: vi.fn(),
     },
@@ -37,16 +45,80 @@ const mockChrome = {
   },
   storage: {
     sync: {
-      get: vi.fn(),
-      set: vi.fn(),
-      remove: vi.fn(),
-      clear: vi.fn(),
+      get: vi.fn((keys?: string | string[] | Record<string, unknown>) => {
+        if (keys === null || keys === undefined) {
+          return Promise.resolve({ ...mockStorageData });
+        }
+        if (typeof keys === 'string') {
+          return Promise.resolve({ [keys]: mockStorageData[keys] });
+        }
+        if (Array.isArray(keys)) {
+          const result: Record<string, unknown> = {};
+          for (const key of keys) {
+            if (key in mockStorageData) {
+              result[key] = mockStorageData[key];
+            }
+          }
+          return Promise.resolve(result);
+        }
+        return Promise.resolve({ ...keys, ...mockStorageData });
+      }),
+      set: vi.fn((items: Record<string, unknown>) => {
+        Object.assign(mockStorageData, items);
+        return Promise.resolve();
+      }),
+      remove: vi.fn((keys: string | string[]) => {
+        if (typeof keys === 'string') {
+          delete mockStorageData[keys];
+        } else {
+          for (const key of keys) {
+            delete mockStorageData[key];
+          }
+        }
+        return Promise.resolve();
+      }),
+      clear: vi.fn(() => {
+        Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
+        return Promise.resolve();
+      }),
     },
     local: {
-      get: vi.fn(),
-      set: vi.fn(),
-      remove: vi.fn(),
-      clear: vi.fn(),
+      get: vi.fn((keys?: string | string[] | Record<string, unknown>) => {
+        if (keys === null || keys === undefined) {
+          return Promise.resolve({ ...mockStorageData });
+        }
+        if (typeof keys === 'string') {
+          return Promise.resolve({ [keys]: mockStorageData[keys] });
+        }
+        if (Array.isArray(keys)) {
+          const result: Record<string, unknown> = {};
+          for (const key of keys) {
+            if (key in mockStorageData) {
+              result[key] = mockStorageData[key];
+            }
+          }
+          return Promise.resolve(result);
+        }
+        return Promise.resolve({ ...keys, ...mockStorageData });
+      }),
+      set: vi.fn((items: Record<string, unknown>) => {
+        Object.assign(mockStorageData, items);
+        return Promise.resolve();
+      }),
+      remove: vi.fn((keys: string | string[]) => {
+        if (typeof keys === 'string') {
+          delete mockStorageData[keys];
+        } else {
+          for (const key of keys) {
+            delete mockStorageData[key];
+          }
+        }
+        return Promise.resolve();
+      }),
+      clear: vi.fn(() => {
+        Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
+        return Promise.resolve();
+      }),
     },
   },
   action: {
@@ -109,6 +181,27 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
+// Mock Image
+global.Image = class MockImage {
+  src = '';
+  width = 100;
+  height = 100;
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  
+  constructor() {
+    // Simulate async image loading
+    setTimeout(() => {
+      if (this.onload) {
+        this.onload();
+      }
+    }, 0);
+  }
+} as unknown as typeof Image;
+
+// Note: Don't mock document.createElement globally as it breaks jsdom for React tests
+// Export manager tests have their own DOM mocks
+
 // ============================================
 // Console Mocking (optional)
 // ============================================
@@ -123,4 +216,6 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 
 afterEach(() => {
   vi.clearAllMocks();
+  // Clear mock storage
+  Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
 });
