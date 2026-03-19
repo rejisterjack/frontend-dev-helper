@@ -5,7 +5,8 @@
  */
 
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { DEFAULT_FEATURE_TOGGLES } from '@/types';
 import type { ExtensionSettings, FeatureToggles } from '@/types';
 
 export const Options: React.FC = () => {
@@ -15,37 +16,28 @@ export const Options: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('general');
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const loadData = async (): Promise<void> => {
+  const loadData = useCallback(async (): Promise<void> => {
     try {
-      const [settingsRes, featuresRes] = await Promise.all([
-        chrome.runtime.sendMessage({
-          type: 'GET_SETTINGS',
-          timestamp: Date.now(),
-          id: crypto.randomUUID(),
-        }),
-        chrome.runtime.sendMessage({
-          type: 'GET_FEATURES',
-          timestamp: Date.now(),
-          id: crypto.randomUUID(),
-        }),
-      ]);
+      const settingsRes = await chrome.runtime.sendMessage({
+        type: 'GET_SETTINGS',
+        timestamp: Date.now(),
+        id: crypto.randomUUID(),
+      });
 
-      if (settingsRes.success) {
+      if (settingsRes.success && settingsRes.data) {
         setSettings(settingsRes.data);
-      }
-      if (featuresRes.success) {
-        setFeatures(featuresRes.data);
+        setFeatures(settingsRes.data.features ?? DEFAULT_FEATURE_TOGGLES);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const saveSettings = async (): Promise<void> => {
     if (!settings) return;
