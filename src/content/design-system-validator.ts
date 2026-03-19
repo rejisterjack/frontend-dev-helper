@@ -228,7 +228,7 @@ export const PRESETS: Record<string, DesignSystemTokens> = {
 // State
 // ============================================================================
 
-let state: ValidatorState = {
+const state: ValidatorState = {
   enabled: false,
   highlightingEnabled: true,
   currentPreset: 'tailwind',
@@ -240,7 +240,7 @@ let state: ValidatorState = {
 let shadowHost: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
 let panelElement: HTMLElement | null = null;
-let highlightOverlay: HTMLElement | null = null;
+const highlightOverlay: HTMLElement | null = null;
 
 // ============================================================================
 // Color Utilities

@@ -371,7 +371,7 @@ export interface ReportOptions {
 // ============================================
 
 let isActive = false;
-let reportOverlay: HTMLElement | null = null;
+const reportOverlay: HTMLElement | null = null;
 let currentReport: SiteReport | null = null;
 
 // ============================================

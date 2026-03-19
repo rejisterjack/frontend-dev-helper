@@ -286,7 +286,7 @@ let selectedElement: HTMLElement | null = null;
 let activeCategory = 'Layout';
 let panel: HTMLElement | null = null;
 let highlightOverlay: HTMLElement | null = null;
-let computedStylesTooltip: HTMLElement | null = null;
+const computedStylesTooltip: HTMLElement | null = null;
 const history: CSSEdit[] = [];
 let historyIndex = -1;
 const MAX_HISTORY_SIZE = 50;
@@ -670,7 +670,7 @@ function buildPropertyInput(prop: CSSPropertyDefinition, value: string): string 
   const sanitizedValue = value.replace(/"/g, '&quot;');
 
   switch (prop.type) {
-    case 'color':
+    case 'color': {
       const hexValue = convertRgbToHex(value) || '#000000';
       return `
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -705,6 +705,7 @@ function buildPropertyInput(prop: CSSPropertyDefinition, value: string): string 
           >
         </div>
       `;
+    }
 
     case 'select':
       return `
@@ -755,7 +756,7 @@ function buildPropertyInput(prop: CSSPropertyDefinition, value: string): string 
         >
       `;
 
-    case 'slider':
+    case 'slider': {
       const numValue = parseFloat(value) || 0;
       return `
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -773,6 +774,7 @@ function buildPropertyInput(prop: CSSPropertyDefinition, value: string): string 
           </span>
         </div>
       `;
+    }
 
     default:
       return `

@@ -65,7 +65,7 @@ let originalFetch: typeof fetch | null = null;
 let originalXHR: typeof XMLHttpRequest | null = null;
 let originalSend: typeof XMLHttpRequest.prototype.send | null = null;
 let originalOpen: typeof XMLHttpRequest.prototype.open | null = null;
-let requestStartTimes: Map<string, number> = new Map();
+const requestStartTimes: Map<string, number> = new Map();
 
 // ============================================
 // Resource Type Detection
@@ -859,7 +859,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
+  return `${(bytes / k ** i).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
 }
 
 function getTypeColor(type: ResourceType): string {
