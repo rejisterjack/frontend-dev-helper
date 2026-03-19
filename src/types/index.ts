@@ -15,6 +15,8 @@ export enum ToolType {
   LAYOUT_VISUALIZER = 'layoutVisualizer',
   ZINDEX_VISUALIZER = 'zIndexVisualizer',
   TECH_DETECTOR = 'techDetector',
+  ACCESSIBILITY_AUDIT = 'accessibilityAudit',
+  SITE_REPORT = 'siteReport',
 }
 
 /** Tool ID type - imported from constants to ensure consistency */
@@ -305,11 +307,242 @@ export interface PerformanceMetrics {
   totalTransferSize: number;
 }
 
+/** Web Vitals metrics */
+export interface WebVitals {
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  fcp: number | null;
+  ttfb: number | null;
+  inp: number | null;
+}
+
+/** Resource analysis */
+export interface ResourceAnalysis {
+  totalRequests: number;
+  totalSize: number;
+  transferSize: number;
+  byType?: Record<string, number>;
+  slowestResources?: Array<{ url: string; duration: number; size: number }>;
+}
+
 /** Memory info */
 export interface MemoryInfo {
   usedJSHeapSize: number;
   totalJSHeapSize: number;
   jsHeapSizeLimit: number;
+}
+
+// ============================================
+// Site Report Types
+// ============================================
+
+/** Comprehensive site report */
+export interface SiteReport {
+  id: string;
+  timestamp: number;
+  url: string;
+  title: string;
+  scores: {
+    performance: number;
+    accessibility: number;
+    seo: number;
+    bestPractices: number;
+    overall: number;
+  };
+  performance: PerformanceReportData;
+  accessibility: AccessibilityReport;
+  colors: ColorReportData;
+  seo: SEOReportData;
+  techStack: TechStackInfo;
+  bestPractices: BestPracticesReport;
+  recommendations: SiteReportRecommendation[];
+}
+
+export interface PerformanceReportData {
+  webVitals: {
+    lcp: MetricScore;
+    fid: MetricScore;
+    cls: MetricScore;
+    fcp: MetricScore;
+    ttfb: MetricScore;
+    inp: MetricScore;
+  };
+  navigation: {
+    dnsLookup: number;
+    tcpConnection: number;
+    tlsHandshake: number;
+    serverResponse: number;
+    domProcessing: number;
+    resourceLoading: number;
+    totalLoad: number;
+  };
+  resources: {
+    totalRequests: number;
+    totalSize: number;
+    transferSize: number;
+    byType: Record<string, number>;
+    slowestResources: Array<{ url: string; type: string; duration: number; size: number }>;
+    renderBlocking: Array<{ url: string; type: 'stylesheet' | 'script'; size: number; blockingTime: number }>;
+  };
+  memory: MemoryInfo | null;
+  imageOptimizations: Array<{
+    url: string;
+    currentSize: number;
+    currentFormat: string;
+    displayWidth: number;
+    displayHeight: number;
+    naturalWidth: number;
+    naturalHeight: number;
+    recommendations: string[];
+    potentialSavings: number;
+  }>;
+}
+
+export interface MetricScore {
+  value: number | null;
+  unit: string;
+  score: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+}
+
+export interface ColorReportData {
+  totalColors: number;
+  dominant: Array<{
+    hex: string;
+    rgb: { r: number; g: number; b: number };
+    hsl: { h: number; s: number; l: number };
+    frequency: number;
+  }>;
+  harmonies: {
+    complementary: string[];
+    analogous: string[];
+    triadic: string[];
+    splitComplementary: string[];
+    tetradic: string[];
+    monochromatic: string[];
+  };
+  categories: {
+    primary: string[];
+    secondary: string[];
+    accent: string[];
+    neutral: string[];
+    semantic: {
+      success: string[];
+      warning: string[];
+      error: string[];
+      info: string[];
+    };
+  };
+  contrastIssues: ContrastIssue[];
+}
+
+export interface SEOReportData {
+  score: number;
+  meta: {
+    title: { content: string; length: number; optimal: boolean };
+    description: { content: string | null; length: number; optimal: boolean };
+    canonical: string | null;
+    robots: string | null;
+    viewport: string | null;
+    charset: string;
+    ogTags: Record<string, string>;
+    twitterTags: Record<string, string>;
+    issues: SEOIssue[];
+  };
+  headings: {
+    h1: Array<{ text: string; selector: string }>;
+    h2: Array<{ text: string; selector: string }>;
+    h3: Array<{ text: string; selector: string }>;
+    h4: Array<{ text: string; selector: string }>;
+    h5: Array<{ text: string; selector: string }>;
+    h6: Array<{ text: string; selector: string }>;
+    hierarchyValid: boolean;
+    issues: SEOIssue[];
+  };
+  links: {
+    internal: number;
+    external: number;
+    broken: number;
+    nofollow: number;
+    total: number;
+    issues: SEOIssue[];
+  };
+  images: {
+    total: number;
+    withAlt: number;
+    withoutAlt: number;
+    issues: SEOIssue[];
+  };
+  mobile: {
+    viewportSet: boolean;
+    responsive: boolean;
+    fontSizeReadable: boolean;
+    touchTargetsAppropriate: boolean;
+  };
+  structuredData: {
+    hasJsonLd: boolean;
+    hasMicrodata: boolean;
+    hasRdfa: boolean;
+    schemas: string[];
+  };
+  content: {
+    wordCount: number;
+    readingTime: number;
+    paragraphCount: number;
+    hasInternalLinks: boolean;
+    hasExternalLinks: boolean;
+  };
+}
+
+export interface SEOIssue {
+  type: 'error' | 'warning' | 'info';
+  message: string;
+  element?: string;
+  recommendation: string;
+}
+
+export interface BestPracticesReport {
+  https: boolean;
+  deprecatedAPIs: string[];
+  consoleErrors: number;
+  consoleWarnings: number;
+  deprecatedElements: string[];
+  doctypeCorrect: boolean;
+  charsetSet: boolean;
+  issues: BestPracticeIssue[];
+}
+
+export interface BestPracticeIssue {
+  severity: 'error' | 'warning' | 'info';
+  category: string;
+  message: string;
+  recommendation: string;
+}
+
+export interface SiteReportRecommendation {
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  title: string;
+  description: string;
+  impact: string;
+  effort: 'easy' | 'medium' | 'hard';
+}
+
+export type ReportFormat = 'html' | 'pdf' | 'json' | 'markdown';
+
+export interface ReportOptions {
+  sections?: {
+    performance?: boolean;
+    accessibility?: boolean;
+    colors?: boolean;
+    seo?: boolean;
+    techStack?: boolean;
+    bestPractices?: boolean;
+  };
+  format?: ReportFormat;
+  includeScreenshot?: boolean;
+  filename?: string;
 }
 
 // ============================================

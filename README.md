@@ -16,7 +16,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 **FrontendDevHelper is the unified, modern replacement.**
 
-- ✅ **11 powerful tools** in one extension
+- ✅ **13 powerful tools** in one extension
 - ✅ **Manifest V3** from day one
 - ✅ **Zero data collection** — everything runs locally
 - ✅ **Open source** and free forever
@@ -43,8 +43,17 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 | **CSS Inspector** | 📝 | All computed properties by category |
 | **Contrast Checker** | ♿ | WCAG AA/AAA accessibility compliance |
 | **Flex/Grid Visualizer** | ⊞ | Visualize layout structures |
-| **Z-Index Visualizer** | 📚 | Stacking order & hierarchy |
+| **Z-Index Visualizer** | 📚 | Stacking order with **3D view** |
 | **Tech Detector** | 🔍 | Detect frameworks & libraries |
+| **Accessibility Audit** | 🛡️ | WCAG validator + ARIA checker |
+| **Site Report Generator** | 📊 | Comprehensive analysis & reports |
+
+### Premium Features
+
+- 📊 **Performance Tab** - Core Web Vitals, resource analysis, image optimization hints
+- 📤 **Export & Share** - JSON, PDF, Markdown reports with screenshots
+- 🎨 **Color Palette Extraction** - Complete harmonies and semantic categorization
+- 🥽 **3D Z-Index View** - Interactive stacking visualization
 
 ---
 
@@ -86,6 +95,7 @@ pnpm run build
 | `Alt+M` | Toggle Pixel Ruler |
 | `Alt+B` | Toggle Breakpoint Overlay |
 | `Ctrl+Shift+F` | Open popup |
+| `Esc` | Disable all tools |
 
 ---
 

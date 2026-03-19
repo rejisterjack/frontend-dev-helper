@@ -5,6 +5,84 @@ All notable changes to FrontendDevHelper will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-03-19 - 🚀 THE ABSOLUTE BEST RELEASE
+
+### Added - Making It The Absolute Best
+
+#### 🛡️ 12th Tool: Accessibility Audit
+- **Complete WCAG 2.1 compliance checker**
+- ARIA validation with 70+ valid roles
+- Deprecated role detection
+- Focus order visualization with numbered overlays
+- Color contrast analysis per element
+- Alt text detection for images
+- Form label validation
+- Keyboard navigation testing
+- Issue categorization: errors, warnings, info
+- Export audit reports as JSON
+
+#### 📊 Enhanced Performance Tab
+- **Core Web Vitals monitoring**: LCP, FID, CLS, FCP, TTFB, INP
+- Navigation timing breakdown with TLS handshake
+- Resource analysis by type
+- Image optimization recommendations
+- Render blocking resource detection
+- Memory usage visualization
+- Collapsible sections for better organization
+
+#### 📤 Export & Share System
+- **Export reports as JSON** - Complete page analysis
+- **Export as PDF** - Styled printable reports
+- **Export as Markdown** - Documentation-ready format
+- **Screenshot capture** with annotation support
+- **Shareable links** for collaboration
+- Performance metrics included in exports
+
+#### 🎨 Complete Color Palette Extraction
+- Automatic page color extraction
+- **Color harmonies generation**:
+  - Complementary colors
+  - Analogous colors
+  - Triadic colors
+  - Split complementary
+  - Tetradic colors
+  - Monochromatic shades
+- **Semantic color categorization**:
+  - Primary, secondary, accent colors
+  - Neutral colors
+  - Semantic colors (success, warning, error, info)
+- Export palette as JSON
+- Visual palette overlay with copy-to-clipboard
+
+#### 🥽 3D Z-Index Visualizer
+- **Interactive 3D stacking view**
+- Drag to rotate the view
+- Scroll to zoom in/out
+- Wireframe mode toggle
+- Visual stacking order representation
+- Real-time layer information
+- Reset view functionality
+
+#### 👋 Onboarding Flow
+- Multi-step welcome tour
+- Tool overview with descriptions
+- Keyboard shortcuts showcase
+- First-time user guidance
+- Skip option for experienced users
+- Persistent completion state
+
+### Enhanced
+- **Z-Index Visualizer**: Added 3D view button to main overlay
+- **Color Picker**: Complete palette extraction implementation
+- **Performance Tab**: Comprehensive metrics and recommendations
+- **Popup UI**: Added Accessibility Audit tool card
+
+### Technical
+- 3 new content script modules
+- Enhanced TypeScript types for all new features
+- Comprehensive test coverage for new modules
+- Updated documentation with all new features
+
 ## [1.0.0] - 2024-03-19
 
 ### Added

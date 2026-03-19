@@ -390,3 +390,68 @@ input:not(:checked):hover + .toggle-slider {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ============================================
+   Onboarding Component Styles
+   ============================================ */
+
+/* Custom scrollbar for onboarding content */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Onboarding button styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-primary:focus-visible {
+  box-shadow: 0 0 0 2px #1e293b, 0 0 0 4px #6366f1;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-secondary:focus-visible {
+  box-shadow: 0 0 0 2px #1e293b, 0 0 0 4px #6366f1;
+}
+
+/* Animation for soft bounce */
+@keyframes bounceSoft {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-bounce-soft {
+  animation: bounceSoft 2s ease-in-out infinite;
+}

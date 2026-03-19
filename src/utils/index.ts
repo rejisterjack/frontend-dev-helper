@@ -43,6 +43,13 @@ export function formatDuration(ms: number): string {
 }
 
 /**
+ * Format date to YYYY-MM-DD string
+ */
+export function formatDate(date: Date = new Date()): string {
+  return date.toISOString().split('T')[0];
+}
+
+/**
  * Debounce function
  */
 export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(

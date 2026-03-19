@@ -2,7 +2,7 @@
 
 ## 🏆 Why This Is The Absolute Best
 
-### 11 Professional Tools in One Extension
+### 13 Professional Tools in One Extension
 
 | Tool | What It Does | Keyboard Shortcut |
 |------|--------------|-------------------|
@@ -13,10 +13,12 @@
 | 📏 **Pixel Ruler** | Precise distance measurement | Alt+M |
 | 📱 **Breakpoint Overlay** | Viewport size & responsive breakpoints | Alt+B |
 | 📝 **CSS Inspector** | All computed properties by category | - |
-| ♿ **Contrast Checker** | WCAG AA/AAA accessibility compliance | - |
+| ♿ **Contrast Checker** | WCAG AA/AAA color contrast compliance | - |
 | ⊞ **Layout Visualizer** | Flexbox & Grid visualization | - |
-| 📚 **Z-Index Visualizer** | Stacking order & hierarchy | - |
+| 📚 **Z-Index Visualizer** | Stacking order with **3D view** | - |
 | 🔍 **Tech Detector** | Framework & library detection | - |
+| 🛡️ **Accessibility Audit** | WCAG validator + ARIA checker | - |
+| 📊 **Site Report Generator** | **Comprehensive site analysis** | - |
 
 ---
 
@@ -45,7 +47,10 @@
 - **EyeDropper API** support (Chrome 95+)
 - Canvas-based fallback for Firefox
 - HEX, RGB, HSL formats
-- **Page palette extraction**
+- **Complete page palette extraction** with harmonies
+- Export palette as JSON
+- Color harmonies: complementary, analogous, triadic, tetradic, monochromatic
+- Semantic color categorization
 
 ### Pixel Ruler
 - Click & drag measurement
@@ -90,6 +95,8 @@
 - Stacking context reasons
 - Grouped by z-index value
 - Visual overlay mode
+- **🥽 3D Stack View** - Interactive 3D visualization with drag-to-rotate
+- Drag, zoom, and wireframe modes
 
 ### Tech Detector
 Detects **20+ technologies**:
@@ -99,6 +106,58 @@ Detects **20+ technologies**:
 - **CMS**: WordPress, Shopify, Webflow
 - **Build Tools**: Vite, Webpack
 - **Fonts**: Google Fonts, Font Awesome
+
+### Accessibility Audit 🛡️
+Comprehensive WCAG 2.1 compliance checker:
+- **ARIA Validation**: 70+ valid roles, deprecated role detection
+- **Focus Order Visualization**: Tab order with numbered overlays
+- **Color Contrast Analysis**: WCAG AA/AAA compliance per element
+- **Alt Text Detection**: Missing alt attributes on images
+- **Form Label Validation**: Proper label associations
+- **Keyboard Navigation**: Detect mouse-only interactions
+- **Issue categorization**: Errors, warnings, and info levels
+- **Export audit reports** as JSON
+
+### Site Report Generator 📊
+**The ultimate all-in-one analysis tool:**
+- **Overall Site Score** (0-100) based on 4 key areas
+- **Performance Analysis**:
+  - Core Web Vitals with ratings
+  - Navigation timing breakdown
+  - Resource analysis & optimization
+  - Image optimization opportunities
+  - Memory usage tracking
+- **Accessibility Audit**:
+  - WCAG compliance scoring
+  - All accessibility issues categorized
+  - Contrast ratio analysis
+- **SEO Analysis**:
+  - Meta tags validation
+  - Heading hierarchy check
+  - Image alt text audit
+  - Mobile-friendliness check
+  - Structured data detection
+  - Content analysis (word count, reading time)
+- **Color Palette Analysis**:
+  - Dominant colors extraction
+  - Color harmonies generation
+  - Semantic color categorization
+- **Tech Stack Detection**:
+  - Frameworks, libraries, CMS
+  - Analytics tools
+  - Build tools & fonts
+- **Best Practices Check**:
+  - HTTPS validation
+  - Deprecated APIs/elements
+  - Doctype & charset validation
+- **Smart Recommendations**:
+  - Priority-based suggestions
+  - Impact & effort estimation
+  - Actionable advice
+- **Export Options**:
+  - Beautiful HTML reports
+  - Print-ready PDF
+  - JSON for further analysis
 
 ---
 
@@ -119,6 +178,16 @@ All tools accessible via keyboard:
 - `Alt+M` - Pixel Ruler
 - `Alt+B` - Breakpoint Overlay
 - `Ctrl+Shift+F` - Open popup
+- `Esc` - Disable all tools
+
+### Export & Share
+Generate comprehensive reports:
+- **Export as JSON** - Complete page analysis
+- **Export as PDF** - Styled printable report
+- **Export as Markdown** - Documentation-ready
+- **Screenshot capture** with annotations
+- **Shareable links** for collaboration
+- Performance metrics included
 
 ### Privacy First
 - **Zero data collection**
@@ -148,9 +217,11 @@ All tools accessible via keyboard:
 | CSS Inspector | ✅ 11 categories | ❌ | ⚠️ Limited | ❌ |
 | Contrast Checker | ✅ WCAG AA/AAA | ❌ | ⚠️ Basic | ⚠️ Separate ext |
 | Layout Visualizer | ✅ Flex + Grid | ❌ | ⚠️ Limited | ❌ |
-| Z-Index Visualizer | ✅ Stacking context | ❌ | ❌ | ❌ |
+| Z-Index Visualizer | ✅ Stacking context + 3D view | ❌ | ❌ | ❌ |
 | Tech Detector | ✅ 20+ technologies | ❌ | ❌ | ⚠️ Separate ext |
-| **Total Extensions Needed** | **1** | **3+** | **2+** | **8+** |
+| Accessibility Audit | ✅ WCAG + ARIA validator | ❌ | ❌ | ⚠️ Separate ext |
+| Export & Reports | ✅ JSON/PDF/Markdown | ❌ | ❌ | ❌ |
+| **Total Extensions Needed** | **1** | **5+** | **3+** | **10+** |
 
 ---
 

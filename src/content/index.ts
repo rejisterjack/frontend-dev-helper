@@ -14,10 +14,12 @@
  */
 
 import { MessageType } from '../types/messages';
+import { accessibilityAudit } from './accessibility-audit';
 import { breakpointOverlay } from './breakpoint-overlay';
 import { colorPicker } from './color-picker';
 import { contrastChecker } from './contrast-checker';
 import { cssInspector } from './css-inspector';
+import { exportManager } from './export-manager';
 import { fontInspector } from './font-inspector';
 import { GridOverlay } from './grid-overlay';
 import { Inspector } from './inspector';
@@ -25,6 +27,7 @@ import { layoutVisualizer } from './layout-visualizer';
 import { MeasureTool } from './measure-tool';
 import { pesticide } from './pesticide';
 import { pixelRuler } from './pixel-ruler';
+import { siteReportGenerator } from './site-report-generator';
 import { spacingVisualizer } from './spacing';
 import { techDetector } from './tech-detector';
 import { zIndexVisualizer } from './zindex-visualizer';
@@ -308,6 +311,93 @@ chrome.runtime.onMessage.addListener(
           sendResponse({ success: true, state: techDetector.getState() });
           break;
 
+        // Accessibility Audit
+        case 'ACCESSIBILITY_AUDIT_TOGGLE':
+          accessibilityAudit.toggle();
+          sendResponse({ success: true, active: accessibilityAudit.getState().enabled });
+          break;
+        case 'ACCESSIBILITY_AUDIT_ENABLE':
+          accessibilityAudit.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'ACCESSIBILITY_AUDIT_DISABLE':
+          accessibilityAudit.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'ACCESSIBILITY_AUDIT_GET_STATE':
+          sendResponse({ success: true, state: accessibilityAudit.getState() });
+          break;
+        case 'ACCESSIBILITY_AUDIT_RUN': {
+          const report = accessibilityAudit.runAudit();
+          sendResponse({ success: true, report });
+          break;
+        }
+
+        // Site Report Generator
+        case 'SITE_REPORT_TOGGLE':
+          siteReportGenerator.toggle();
+          sendResponse({ success: true, active: siteReportGenerator.getState().enabled });
+          break;
+        case 'SITE_REPORT_ENABLE':
+          siteReportGenerator.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'SITE_REPORT_DISABLE':
+          siteReportGenerator.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'SITE_REPORT_GET_STATE':
+          sendResponse({ success: true, state: siteReportGenerator.getState() });
+          break;
+        case 'SITE_REPORT_GENERATE': {
+          siteReportGenerator.generateReport(message.payload || {})
+            .then((report) => sendResponse({ success: true, report }))
+            .catch((error: Error) => sendResponse({ success: false, error: error.message }));
+          return true;
+        }
+
+        // Export Manager
+        case 'EXPORT_GENERATE_REPORT':
+          exportManager
+            .generateReport(
+              (message.payload as {
+                elements?: boolean;
+                performance?: boolean;
+                screenshot?: boolean;
+              }) || {}
+            )
+            .then((exportReport) => sendResponse({ success: true, report: exportReport }))
+            .catch((error: Error) => sendResponse({ success: false, error: error.message }));
+          return true; // Async response
+        case 'EXPORT_AS_JSON':
+          try {
+            exportManager.exportAsJSON(
+              message.payload?.data || {},
+              message.payload?.filename as string
+            );
+            sendResponse({ success: true });
+          } catch (error) {
+            sendResponse({ success: false, error: (error as Error).message });
+          }
+          break;
+        case 'EXPORT_AS_PDF':
+          try {
+            exportManager.exportAsPDF(
+              message.payload?.data || {},
+              message.payload?.options as object
+            );
+            sendResponse({ success: true });
+          } catch (error) {
+            sendResponse({ success: false, error: (error as Error).message });
+          }
+          break;
+        case 'EXPORT_CAPTURE_SCREENSHOT':
+          exportManager
+            .captureScreenshot(message.payload as object)
+            .then((dataUrl) => sendResponse({ success: true, dataUrl }))
+            .catch((error: Error) => sendResponse({ success: false, error: error.message }));
+          return true; // Async response
+
         // Get all states
         case 'GET_ALL_STATES':
           sendResponse({
@@ -324,6 +414,8 @@ chrome.runtime.onMessage.addListener(
               layoutVisualizer: layoutVisualizer.getState(),
               zIndexVisualizer: zIndexVisualizer.getState(),
               techDetector: techDetector.getState(),
+              accessibilityAudit: accessibilityAudit.getState(),
+              siteReportGenerator: siteReportGenerator.getState(),
               inspector: { enabled: state.isInspectorActive },
               measureTool: { enabled: state.isMeasureToolActive },
               gridOverlay: { visible: state.isGridVisible },
@@ -719,6 +811,8 @@ document.addEventListener('keydown', (event) => {
     layoutVisualizer.disable();
     zIndexVisualizer.disable();
     techDetector.disable();
+    accessibilityAudit.disable();
+    siteReportGenerator.disable();
 
     // Update state
     state.domOutlinerEnabled = false;

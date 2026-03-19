@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Onboarding } from '../components';
 import { type ToolMeta, type ToolsState, ToolType } from '../types';
 import { ColorLegend } from './components/ColorLegend';
 import { ToolCard } from './components/ToolCard';
@@ -98,6 +99,22 @@ const TOOLS: ToolMeta[] = [
     hasSettings: true,
     color: '#0ea5e9',
   },
+  {
+    type: ToolType.ACCESSIBILITY_AUDIT,
+    name: 'Accessibility Audit',
+    description: 'WCAG compliance checker with ARIA validation',
+    icon: '♿',
+    hasSettings: true,
+    color: '#a855f7',
+  },
+  {
+    type: ToolType.SITE_REPORT,
+    name: 'Site Report Generator',
+    description: 'Comprehensive site analysis with scores & recommendations',
+    icon: '📊',
+    hasSettings: true,
+    color: '#f43f5e',
+  },
 ];
 
 /** Extension version */
@@ -117,6 +134,8 @@ export const Popup: React.FC = () => {
     [ToolType.LAYOUT_VISUALIZER]: { enabled: false },
     [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
     [ToolType.TECH_DETECTOR]: { enabled: false },
+    [ToolType.ACCESSIBILITY_AUDIT]: { enabled: false },
+    [ToolType.SITE_REPORT]: { enabled: false },
   });
 
   // UI states
@@ -148,6 +167,9 @@ export const Popup: React.FC = () => {
               [ToolType.LAYOUT_VISUALIZER]: response.states.layoutVisualizer || { enabled: false },
               [ToolType.ZINDEX_VISUALIZER]: response.states.zIndexVisualizer || { enabled: false },
               [ToolType.TECH_DETECTOR]: response.states.techDetector || { enabled: false },
+              [ToolType.ACCESSIBILITY_AUDIT]: response.states.accessibilityAudit || {
+                enabled: false,
+              },
             });
           }
         }
@@ -221,6 +243,12 @@ export const Popup: React.FC = () => {
       case ToolType.TECH_DETECTOR:
         messageType = enabled ? 'TECH_DETECTOR_ENABLE' : 'TECH_DETECTOR_DISABLE';
         break;
+      case ToolType.ACCESSIBILITY_AUDIT:
+        messageType = enabled ? 'ACCESSIBILITY_AUDIT_ENABLE' : 'ACCESSIBILITY_AUDIT_DISABLE';
+        break;
+      case ToolType.SITE_REPORT:
+        messageType = enabled ? 'SITE_REPORT_ENABLE' : 'SITE_REPORT_DISABLE';
+        break;
       default:
         return;
     }
@@ -263,6 +291,7 @@ export const Popup: React.FC = () => {
       [ToolType.LAYOUT_VISUALIZER]: { enabled: false },
       [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
       [ToolType.TECH_DETECTOR]: { enabled: false },
+      [ToolType.ACCESSIBILITY_AUDIT]: { enabled: false },
     };
 
     setToolsState(resetState);
@@ -283,6 +312,8 @@ export const Popup: React.FC = () => {
         'LAYOUT_VISUALIZER_DISABLE',
         'ZINDEX_VISUALIZER_DISABLE',
         'TECH_DETECTOR_DISABLE',
+        'ACCESSIBILITY_AUDIT_DISABLE',
+        'SITE_REPORT_DISABLE',
       ];
 
       for (const messageType of disableMessages) {
@@ -325,46 +356,50 @@ export const Popup: React.FC = () => {
   }
 
   return (
-    <div className="w-[380px] bg-slate-900 text-slate-100 flex flex-col min-h-[200px] max-h-[600px]">
-      {/* Header */}
-      <header className="popup-header px-4 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Logo */}
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-              />
-            </svg>
+    <>
+      {/* Onboarding Flow - shows on first install */}
+      <Onboarding onComplete={() => console.log('Onboarding completed')} />
+
+      <div className="w-[380px] bg-slate-900 text-slate-100 flex flex-col min-h-[200px] max-h-[600px]">
+        {/* Header */}
+        <header className="popup-header px-4 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <h1 className="font-bold text-sm logo-text">FrontendDevHelper</h1>
+              <p className="text-[10px] text-slate-400">
+                {activeToolsCount > 0 ? (
+                  <span className="text-emerald-400">
+                    {activeToolsCount} tool{activeToolsCount !== 1 ? 's' : ''} active
+                  </span>
+                ) : (
+                  'All tools disabled'
+                )}
+              </p>
+            </div>
           </div>
 
-          <div>
-            <h1 className="font-bold text-sm logo-text">FrontendDevHelper</h1>
-            <p className="text-[10px] text-slate-400">
-              {activeToolsCount > 0 ? (
-                <span className="text-emerald-400">
-                  {activeToolsCount} tool{activeToolsCount !== 1 ? 's' : ''} active
-                </span>
-              ) : (
-                'All tools disabled'
-              )}
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={handleResetAll}
-            className={`
+          {/* Quick Actions */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleResetAll}
+              className={`
               btn-icon text-xs px-2 w-auto gap-1
               ${
                 showResetConfirm
@@ -372,122 +407,124 @@ export const Popup: React.FC = () => {
                   : 'text-slate-400 hover:text-slate-200'
               }
             `}
-            title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
-          >
-            {showResetConfirm ? (
-              <>
-                <span>⚠️</span>
-                <span>Confirm</span>
-              </>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
+            >
+              {showResetConfirm ? (
+                <>
+                  <span>⚠️</span>
+                  <span>Confirm</span>
+                </>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-3 space-y-2">
+          {/* Tool Cards */}
+          {TOOLS.map((tool, index) => (
+            <React.Fragment key={tool.type}>
+              <ToolCard
+                type={tool.type}
+                name={tool.name}
+                description={tool.description}
+                icon={tool.icon}
+                enabled={toolsState[tool.type].enabled}
+                hasSettings={tool.hasSettings}
+                color={tool.color}
+                onToggle={(enabled) => handleToggleTool(tool.type, enabled)}
+                onSettingsClick={() => handleOpenSettings(tool.type)}
+                animationDelay={`stagger-${index + 1}`}
+              />
+
+              {/* Show color legend below DOM Outliner when enabled */}
+              {tool.type === ToolType.DOM_OUTLINER && toolsState[tool.type].enabled && (
+                <div className="animate-fade-in stagger-1">
+                  <ColorLegend />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+
+          {/* Empty State (when no tools match search) */}
+          {TOOLS.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              <p className="text-sm">No tools found</p>
+            </div>
+          )}
+
+          {/* Pro Tips Section */}
+          <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+            <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+              <span>💡</span>
+              Pro Tip
+            </h4>
+            <p className="text-[11px] text-slate-400">
+              Use{' '}
+              <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd> to
+              open the popup,{' '}
+              <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Esc</kbd> to disable
+              all tools.
+            </p>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="popup-footer px-3 py-2 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-slate-500">v{EXTENSION_VERSION}</span>
+            <span className="text-slate-600">•</span>
+            <a
+              href="https://github.com/rejisterjack/frontend-dev-helper"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
+            >
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  fillRule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  clipRule="evenodd"
                 />
               </svg>
-            )}
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-3 space-y-2">
-        {/* Tool Cards */}
-        {TOOLS.map((tool, index) => (
-          <React.Fragment key={tool.type}>
-            <ToolCard
-              type={tool.type}
-              name={tool.name}
-              description={tool.description}
-              icon={tool.icon}
-              enabled={toolsState[tool.type].enabled}
-              hasSettings={tool.hasSettings}
-              color={tool.color}
-              onToggle={(enabled) => handleToggleTool(tool.type, enabled)}
-              onSettingsClick={() => handleOpenSettings(tool.type)}
-              animationDelay={`stagger-${index + 1}`}
-            />
-
-            {/* Show color legend below DOM Outliner when enabled */}
-            {tool.type === ToolType.DOM_OUTLINER && toolsState[tool.type].enabled && (
-              <div className="animate-fade-in stagger-1">
-                <ColorLegend />
-              </div>
-            )}
-          </React.Fragment>
-        ))}
-
-        {/* Empty State (when no tools match search) */}
-        {TOOLS.length === 0 && (
-          <div className="text-center py-8 text-slate-500">
-            <p className="text-sm">No tools found</p>
+              GitHub
+            </a>
           </div>
-        )}
 
-        {/* Pro Tips Section */}
-        <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-          <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-            <span>💡</span>
-            Pro Tip
-          </h4>
-          <p className="text-[11px] text-slate-400">
-            Use <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd>{' '}
-            to open the popup,{' '}
-            <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Esc</kbd> to disable
-            all tools.
-          </p>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="popup-footer px-3 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-500">v{EXTENSION_VERSION}</span>
-          <span className="text-slate-600">•</span>
-          <a
-            href="https://github.com/rejisterjack/frontend-dev-helper"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
-          >
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                fillRule="evenodd"
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                clipRule="evenodd"
-              />
-            </svg>
-            GitHub
-          </a>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <a
-            href="#"
-            className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              const url = chrome.runtime.getURL('options.html');
-              chrome.tabs.create({ url });
-            }}
-          >
-            Settings
-          </a>
-          <span className="text-slate-600">•</span>
-          <a
-            href="https://github.com/rejisterjack/frontend-dev-helper#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            Help
-          </a>
-        </div>
-      </footer>
-    </div>
+          <div className="flex items-center gap-2">
+            <a
+              href="#"
+              className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                const url = chrome.runtime.getURL('options.html');
+                chrome.tabs.create({ url });
+              }}
+            >
+              Settings
+            </a>
+            <span className="text-slate-600">•</span>
+            <a
+              href="https://github.com/rejisterjack/frontend-dev-helper#readme"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              Help
+            </a>
+          </div>
+        </footer>
+      </div>
+    </>
   );
 };
 

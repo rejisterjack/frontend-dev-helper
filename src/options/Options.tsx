@@ -6,8 +6,8 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_FEATURE_TOGGLES } from '@/types';
 import type { ExtensionSettings, FeatureToggles } from '@/types';
+import { DEFAULT_FEATURE_TOGGLES } from '@/types';
 
 export const Options: React.FC = () => {
   const [settings, setSettings] = useState<ExtensionSettings | null>(null);
