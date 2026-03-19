@@ -1,0 +1,290 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   FrontendDevHelper - Global Styles
+   ============================================ */
+
+/* Base layer - Reset and base styles */
+@layer base {
+  /* Custom scrollbar for popup */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+  }
+
+  /* Selection styles */
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+  }
+
+  /* Focus visible styles */
+  :focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* Remove default button styles */
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font: inherit;
+  }
+
+  /* Screen reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Components layer - Reusable component styles */
+@layer components {
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150;
+  }
+
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply btn text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors;
+  }
+
+  .input-error {
+    @apply input border-red-500 focus:ring-red-500 focus:border-red-500;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md hover:border-gray-300 transition-shadow;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full;
+  }
+
+  .badge-blue {
+    @apply badge bg-blue-100 text-blue-800;
+  }
+
+  .badge-green {
+    @apply badge bg-green-100 text-green-800;
+  }
+
+  .badge-yellow {
+    @apply badge bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-red {
+    @apply badge bg-red-100 text-red-800;
+  }
+
+  .badge-gray {
+    @apply badge bg-gray-100 text-gray-800;
+  }
+
+  /* Tool section styles */
+  .tool-section {
+    @apply p-4 border-b border-gray-100 last:border-b-0;
+  }
+
+  .tool-section-title {
+    @apply text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3;
+  }
+}
+
+/* Utilities layer - Custom utility classes */
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.2s ease-out;
+  }
+
+  /* Border utilities */
+  .border-dashed-thick {
+    border-style: dashed;
+    border-width: 2px;
+  }
+
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Grid utilities */
+  .grid-cols-auto {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  }
+
+  /* Flex utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  /* Transition utilities */
+  .transition-fast {
+    @apply transition-all duration-150;
+  }
+
+  .transition-normal {
+    @apply transition-all duration-200;
+  }
+
+  .transition-slow {
+    @apply transition-all duration-300;
+  }
+
+  /* Opacity utilities */
+  .opacity-hover {
+    @apply opacity-70 hover:opacity-100 transition-opacity;
+  }
+
+  /* Scale utilities */
+  .scale-hover {
+    @apply hover:scale-105 transition-transform;
+  }
+
+  /* Color picker specific */
+  .color-swatch {
+    @apply w-8 h-8 rounded-md border border-gray-200 shadow-sm cursor-pointer hover:scale-110 transition-transform;
+  }
+
+  /* Layout overlay styles for content script */
+  .fdh-overlay {
+    @apply fixed inset-0 pointer-events-none z-[2147483646];
+  }
+
+  .fdh-grid-overlay {
+    @apply fdh-overlay;
+    background-image: 
+      linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Inspector highlight */
+  .fdh-inspector-highlight {
+    @apply fixed pointer-events-none z-[2147483647] border-2 border-blue-500 bg-blue-500/10 rounded-sm;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Tooltip for inspector */
+  .fdh-inspector-tooltip {
+    @apply fixed z-[2147483647] px-2 py-1 bg-gray-900 text-white text-xs font-mono rounded shadow-lg pointer-events-none;
+  }
+}
+
+/* ============================================
+   Keyframe Animations
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Content Script Specific Styles
+   ============================================ */
+
+#frontend-dev-helper-root {
+  all: initial;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Ensure content script elements are on top */
+[data-fdh-element] {
+  z-index: 2147483647 !important;
+}

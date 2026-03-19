@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-dev-border;
+  }
+
+  body {
+    @apply bg-dev-bg text-dev-text antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded bg-dev-border;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-dev-muted;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-primary-500/30 text-dev-text;
+  }
+}
+
+@layer components {
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700;
+  }
+
+  .btn-secondary {
+    @apply btn bg-dev-surface text-dev-text hover:bg-dev-border;
+  }
+
+  .btn-ghost {
+    @apply btn text-dev-muted hover:bg-dev-surface hover:text-dev-text;
+  }
+
+  /* Card */
+  .card {
+    @apply rounded-lg border border-dev-border bg-dev-surface p-4;
+  }
+
+  /* Input */
+  .input {
+    @apply rounded-lg border border-dev-border bg-dev-bg px-3 py-2 text-sm text-dev-text placeholder-dev-muted focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+  }
+
+  /* Label */
+  .label {
+    @apply text-sm font-medium text-dev-text;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-default {
+    @apply badge bg-dev-surface text-dev-text;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-600/20 text-primary-400;
+  }
+
+  .badge-success {
+    @apply badge bg-dev-success/20 text-dev-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-dev-warning/20 text-dev-warning;
+  }
+
+  .badge-error {
+    @apply badge bg-dev-error/20 text-dev-error;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-dev-bg;
+  }
+
+  /* Truncate */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-dev-surface/80 backdrop-blur-lg;
+  }
+
+  /* Code block */
+  .code-block {
+    @apply rounded-lg bg-dev-surface p-4 font-mono text-sm;
+  }
+
+  /* Syntax highlighting colors */
+  .syntax-keyword {
+    @apply text-syntax-keyword;
+  }
+
+  .syntax-string {
+    @apply text-syntax-string;
+  }
+
+  .syntax-number {
+    @apply text-syntax-number;
+  }
+
+  .syntax-function {
+    @apply text-syntax-function;
+  }
+
+  .syntax-comment {
+    @apply text-syntax-comment;
+  }
+
+  .syntax-variable {
+    @apply text-syntax-variable;
+  }
+
+  .syntax-operator {
+    @apply text-syntax-operator;
+  }
+}

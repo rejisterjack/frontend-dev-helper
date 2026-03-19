@@ -1,0 +1,253 @@
+/**
+ * Content Script Styles
+ * 
+ * These styles are injected into the page along with the content script.
+ * They provide styling for the various tools (inspector, color picker, etc.)
+ */
+
+/* ============================================
+   Inspector Styles
+   ============================================ */
+
+.fdh-inspector-highlight {
+  position: absolute !important;
+  pointer-events: none !important;
+  z-index: 2147483646 !important;
+  border: 2px solid #3b82f6 !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-radius: 2px !important;
+  transition: all 0.1s ease-out !important;
+  box-shadow: 
+    0 0 0 1px rgba(59, 130, 246, 0.5),
+    0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fdh-inspector-tooltip {
+  position: absolute !important;
+  z-index: 2147483647 !important;
+  background: #1f2937 !important;
+  color: #ffffff !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 11px !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ============================================
+   Color Picker Styles
+   ============================================ */
+
+.fdh-color-magnifier {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 50% !important;
+  border: 3px solid #3b82f6 !important;
+  background: #ffffff !important;
+  pointer-events: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  overflow: hidden !important;
+}
+
+.fdh-color-preview {
+  position: absolute !important;
+  bottom: 8px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: #ffffff !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+}
+
+.fdh-color-preview-bar {
+  position: fixed !important;
+  bottom: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 20px !important;
+  background: #1f2937 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 12px !important;
+  color: #ffffff !important;
+}
+
+/* ============================================
+   Measure Tool Styles
+   ============================================ */
+
+.fdh-measure-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  cursor: crosshair !important;
+}
+
+.fdh-measure-line {
+  position: absolute !important;
+  height: 2px !important;
+  background: #3b82f6 !important;
+  transform-origin: left center !important;
+  pointer-events: none !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+.fdh-measure-line::before,
+.fdh-measure-line::after {
+  content: '' !important;
+  position: absolute !important;
+  width: 8px !important;
+  height: 8px !important;
+  background: #3b82f6 !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fdh-measure-line::before {
+  left: -4px !important;
+}
+
+.fdh-measure-line::after {
+  right: -4px !important;
+}
+
+.fdh-measure-label {
+  position: absolute !important;
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ============================================
+   Grid Overlay Styles
+   ============================================ */
+
+.fdh-grid-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483645 !important;
+  pointer-events: none !important;
+}
+
+.fdh-grid-lines {
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+.fdh-grid-rulers {
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+/* ============================================
+   Notification Styles
+   ============================================ */
+
+.fdh-notification {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  background: #1f2937 !important;
+  color: #ffffff !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  z-index: 2147483647 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  animation: fdh-slide-in 0.3s ease-out !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  max-width: 300px !important;
+}
+
+.fdh-notification.fdh-notification-error {
+  background: #ef4444 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.fdh-notification.fdh-notification-success {
+  background: #10b981 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.fdh-notification.fdh-notification-warning {
+  background: #f59e0b !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fdh-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fdh-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fdh-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.fdh-hidden {
+  display: none !important;
+}
+
+.fdh-invisible {
+  visibility: hidden !important;
+}
+
+.fdh-no-events {
+  pointer-events: none !important;
+}
+
+.fdh-all-events {
+  pointer-events: all !important;
+}
