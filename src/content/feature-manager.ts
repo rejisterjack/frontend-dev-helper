@@ -5,6 +5,7 @@
  */
 
 import type { FeatureToggles } from '@/types';
+import { logger } from '@/utils/logger';
 
 type FeatureHandler = {
   enable: () => void;
@@ -27,7 +28,7 @@ export class FeatureManager {
     // Register feature handlers
     this.registerFeatureHandlers();
 
-    console.log('[FeatureManager] Initialized with features:', this.state);
+    logger.info('[FeatureManager] Initialized with features:', this.state);
   }
 
   /**
@@ -159,56 +160,56 @@ export class FeatureManager {
         },
       });
     } catch (error) {
-      console.error('[FeatureManager] Failed to save feature states:', error);
+      logger.error('[FeatureManager] Failed to save feature states:', error);
     }
   }
 
   // Feature Implementation Methods
 
   private enableElementInspector(): void {
-    console.log('[FeatureManager] Element inspector enabled');
+    logger.info('[FeatureManager] Element inspector enabled');
     // Implementation handled by ElementInspector class
   }
 
   private disableElementInspector(): void {
-    console.log('[FeatureManager] Element inspector disabled');
+    logger.info('[FeatureManager] Element inspector disabled');
   }
 
   private enableCSSScanner(): void {
-    console.log('[FeatureManager] CSS scanner enabled');
+    logger.info('[FeatureManager] CSS scanner enabled');
     // Implementation
   }
 
   private disableCSSScanner(): void {
-    console.log('[FeatureManager] CSS scanner disabled');
+    logger.info('[FeatureManager] CSS scanner disabled');
   }
 
   private enableBreakpointVisualizer(): void {
-    console.log('[FeatureManager] Breakpoint visualizer enabled');
+    logger.info('[FeatureManager] Breakpoint visualizer enabled');
     this.showBreakpointOverlay();
   }
 
   private disableBreakpointVisualizer(): void {
-    console.log('[FeatureManager] Breakpoint visualizer disabled');
+    logger.info('[FeatureManager] Breakpoint visualizer disabled');
     this.hideBreakpointOverlay();
   }
 
   private enableColorPicker(): void {
-    console.log('[FeatureManager] Color picker enabled');
+    logger.info('[FeatureManager] Color picker enabled');
     // Implementation
   }
 
   private disableColorPicker(): void {
-    console.log('[FeatureManager] Color picker disabled');
+    logger.info('[FeatureManager] Color picker disabled');
   }
 
   private enableFontInspector(): void {
-    console.log('[FeatureManager] Font inspector enabled');
+    logger.info('[FeatureManager] Font inspector enabled');
     this.highlightFonts();
   }
 
   private disableFontInspector(): void {
-    console.log('[FeatureManager] Font inspector disabled');
+    logger.info('[FeatureManager] Font inspector disabled');
     this.removeFontHighlights();
   }
 

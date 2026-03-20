@@ -3,6 +3,8 @@
  * Shows margin and padding overlays when clicking on elements
  */
 
+import { logger } from '@/utils/logger';
+
 interface SpacingInfo {
   margin: {
     top: number;
@@ -50,7 +52,7 @@ class SpacingVisualizer {
    * Initialize the spacing visualizer
    */
   init(): void {
-    console.log('[SpacingVisualizer] Initialized');
+    logger.info('[SpacingVisualizer] Initialized');
   }
 
   /**
@@ -375,7 +377,7 @@ class SpacingVisualizer {
     this.overlay = this.createOverlay();
     this.positionOverlays(element, spacing);
 
-    console.log('[SpacingVisualizer] Showing overlay for', element.tagName);
+    logger.info('[SpacingVisualizer] Showing overlay for', element.tagName);
   }
 
   /**
@@ -473,7 +475,7 @@ class SpacingVisualizer {
 
     this.isEnabled = true;
     this.setupListeners();
-    console.log('[SpacingVisualizer] Enabled');
+    logger.info('[SpacingVisualizer] Enabled');
   }
 
   /**
@@ -485,7 +487,7 @@ class SpacingVisualizer {
     this.isEnabled = false;
     this.removeListeners();
     this.removeOverlay();
-    console.log('[SpacingVisualizer] Disabled');
+    logger.info('[SpacingVisualizer] Disabled');
   }
 
   /**

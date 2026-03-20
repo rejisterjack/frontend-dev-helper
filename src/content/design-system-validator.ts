@@ -289,7 +289,6 @@ const state: ValidatorState = {
 let shadowHost: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
 let panelElement: HTMLElement | null = null;
-const _highlightOverlay: HTMLElement | null = null;
 
 // ============================================================================
 // Color Utilities
@@ -686,7 +685,6 @@ function calculateStats(violations: Violation[], totalElements: number): Validat
   const totalViolations = violations.length;
   const estimatedValid = Math.max(0, totalChecks - totalViolations);
 
-  const _perTypeViolations = Math.floor(totalViolations / 5);
   const perTypeValid = Math.floor(estimatedValid / 5);
 
   for (const type of Object.keys(stats) as Array<keyof typeof stats>) {

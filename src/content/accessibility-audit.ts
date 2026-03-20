@@ -11,6 +11,7 @@
  */
 
 import { getContrastRatio, parseColor } from '../utils/color';
+import { logger } from '../utils/logger';
 
 // ============================================
 // TypeScript Interfaces
@@ -1577,7 +1578,7 @@ export function enable(): void {
   keyHandler = handleKeyDown;
   document.addEventListener('keydown', keyHandler);
 
-  console.log('[AccessibilityAudit] Enabled');
+  logger.log('[AccessibilityAudit] Enabled');
 }
 
 /**
@@ -1602,7 +1603,7 @@ export function disable(): void {
     overlayPanel = null;
   }
 
-  console.log('[AccessibilityAudit] Disabled');
+  logger.log('[AccessibilityAudit] Disabled');
 }
 
 /**

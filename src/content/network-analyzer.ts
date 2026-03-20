@@ -7,6 +7,7 @@
  */
 
 import { Z_INDEX } from '../constants';
+import { logger } from '../utils/logger';
 
 // ============================================
 // Types
@@ -1153,7 +1154,7 @@ export function enable(): void {
     processResourceEntry(entry);
   }
 
-  console.log('[NetworkAnalyzer] Enabled');
+  logger.log('[NetworkAnalyzer] Enabled');
 }
 
 /**
@@ -1184,7 +1185,7 @@ export function disable(): void {
     performanceObserver = null;
   }
 
-  console.log('[NetworkAnalyzer] Disabled');
+  logger.log('[NetworkAnalyzer] Disabled');
 }
 
 /**

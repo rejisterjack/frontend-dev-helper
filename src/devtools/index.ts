@@ -4,25 +4,27 @@
  * Creates the DevTools panel for the extension.
  */
 
+import { logger } from '@/utils/logger';
+
 // Create the DevTools panel
 chrome.devtools.panels.create('FrontendDevHelper', 'icons/icon-32.png', 'panel.html', (panel) => {
-  console.log('[FrontendDevHelper] DevTools panel created');
+  logger.info('[FrontendDevHelper] DevTools panel created');
 
   // Panel shown/hidden events
   panel.onShown.addListener((window) => {
-    console.log('[FrontendDevHelper] Panel shown');
+    logger.info('[FrontendDevHelper] Panel shown');
     // Notify the panel it's now visible
     (window as Window).postMessage({ type: 'PANEL_SHOWN', timestamp: Date.now() }, '*');
   });
 
   panel.onHidden.addListener(() => {
-    console.log('[FrontendDevHelper] Panel hidden');
+    logger.info('[FrontendDevHelper] Panel hidden');
   });
 });
 
 // Create a sidebar in the Elements panel
 chrome.devtools.panels.elements.createSidebarPane('FrontendDevHelper', (sidebar) => {
-  console.log('[FrontendDevHelper] Elements sidebar created');
+  logger.info('[FrontendDevHelper] Elements sidebar created');
 
   // Update sidebar content when selection changes
   const updateSidebar = (): void => {

@@ -6,6 +6,7 @@
  */
 
 import type { ExtensionStorage, StorageArea } from '@/types';
+import { logger } from '../utils/logger';
 
 export class StorageManager {
   private cache: Map<string, unknown> = new Map();
@@ -39,7 +40,7 @@ export class StorageManager {
 
       return value;
     } catch (error) {
-      console.error(`[StorageManager] Failed to get ${key}:`, error);
+      logger.error(`[StorageManager] Failed to get ${key}:`, error);
       return null;
     }
   }
@@ -62,7 +63,7 @@ export class StorageManager {
       await chrome.storage[area].set({ [key]: storageItem });
       this.cache.set(key, storageItem);
     } catch (error) {
-      console.error(`[StorageManager] Failed to set ${key}:`, error);
+      logger.error(`[StorageManager] Failed to set ${key}:`, error);
       throw error;
     }
   }
@@ -75,7 +76,7 @@ export class StorageManager {
       await chrome.storage[area].remove(key);
       this.cache.delete(key);
     } catch (error) {
-      console.error(`[StorageManager] Failed to remove ${key}:`, error);
+      logger.error(`[StorageManager] Failed to remove ${key}:`, error);
       throw error;
     }
   }
@@ -88,7 +89,7 @@ export class StorageManager {
       await chrome.storage[area].clear();
       this.cache.clear();
     } catch (error) {
-      console.error('[StorageManager] Failed to clear storage:', error);
+      logger.error('[StorageManager] Failed to clear storage:', error);
       throw error;
     }
   }
@@ -104,7 +105,7 @@ export class StorageManager {
       const result = await chrome.storage[area].get(keys);
       return result as Pick<ExtensionStorage, K>;
     } catch (error) {
-      console.error('[StorageManager] Failed to get multiple keys:', error);
+      logger.error('[StorageManager] Failed to get multiple keys:', error);
       throw error;
     }
   }
@@ -128,7 +129,7 @@ export class StorageManager {
 
       await chrome.storage[area].set(storageItems);
     } catch (error) {
-      console.error('[StorageManager] Failed to set multiple items:', error);
+      logger.error('[StorageManager] Failed to set multiple items:', error);
       throw error;
     }
   }

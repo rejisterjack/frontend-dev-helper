@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Animation Inspector
  *
@@ -1157,7 +1159,7 @@ export function enable(): void {
   // Add key listener
   document.addEventListener('keydown', handleKeyDown);
 
-  console.log('[AnimationInspector] Enabled, found', animations.length, 'animations');
+  logger.log('[AnimationInspector] Enabled, found', animations.length, 'animations');
 }
 
 /**
@@ -1195,7 +1197,7 @@ export function disable(): void {
   // Remove key listener
   document.removeEventListener('keydown', handleKeyDown);
 
-  console.log('[AnimationInspector] Disabled');
+  logger.log('[AnimationInspector] Disabled');
 }
 
 /**

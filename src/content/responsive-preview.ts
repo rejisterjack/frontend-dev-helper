@@ -65,7 +65,6 @@ const Z_INDEX_BASE = 2147483600;
 
 class ResponsivePreview {
   private overlay: HTMLElement | null = null;
-  private container: HTMLElement | null = null;
   private toolbar: HTMLElement | null = null;
   private viewsContainer: HTMLElement | null = null;
   private isActive = false;
@@ -123,7 +122,6 @@ class ResponsivePreview {
     this.detachEventListeners();
     this.overlay?.remove();
     this.overlay = null;
-    this.container = null;
     this.toolbar = null;
     this.viewsContainer = null;
 
@@ -304,7 +302,6 @@ class ResponsivePreview {
     });
 
     this.overlay.innerHTML = this.getOverlayHTML();
-    this.container = this.overlay.querySelector(`#${CONTAINER_ID}`);
     this.toolbar = this.overlay.querySelector('[data-toolbar]');
     this.viewsContainer = this.overlay.querySelector('[data-views-container]');
   }

@@ -5,6 +5,7 @@
  */
 
 import type { ContextMenuConfig } from '@/types';
+import { logger } from '../utils/logger';
 
 export class ContextMenuManager {
   private menuItems: ContextMenuConfig[] = [
@@ -80,7 +81,7 @@ export class ContextMenuManager {
       }
     }
 
-    console.log('[ContextMenuManager] Context menus created');
+    logger.log('[ContextMenuManager] Context menus created');
   }
 
   /**
@@ -92,7 +93,7 @@ export class ContextMenuManager {
   ): Promise<void> {
     if (!tab?.id) return;
 
-    console.log('[ContextMenuManager] Menu clicked:', info.menuItemId);
+    logger.log('[ContextMenuManager] Menu clicked:', info.menuItemId);
 
     switch (info.menuItemId) {
       case 'inspect-element':
@@ -138,7 +139,7 @@ export class ContextMenuManager {
     try {
       await chrome.tabs.sendMessage(tabId, message);
     } catch (error) {
-      console.error('[ContextMenuManager] Failed to send message to tab:', error);
+      logger.error('[ContextMenuManager] Failed to send message to tab:', error);
     }
   }
 

@@ -6,6 +6,7 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { logger } from '@/utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -29,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('FrontendDevHelper Error:', error, errorInfo);
+    logger.error('FrontendDevHelper Error:', error, errorInfo);
     this.setState({ error, errorInfo });
   }
 

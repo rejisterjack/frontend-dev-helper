@@ -3,6 +3,8 @@
  * Provides conversion functions between color formats and analysis utilities
  */
 
+import { logger } from '@/utils/logger';
+
 export type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl';
 
 export interface RGB {
@@ -410,7 +412,7 @@ export async function copyColorToClipboard(
     await navigator.clipboard.writeText(formatted);
     return true;
   } catch (error) {
-    console.error('Failed to copy color:', error);
+    logger.error('Failed to copy color:', error);
     return false;
   }
 }

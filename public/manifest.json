@@ -103,5 +103,7 @@
   },
   "optional_permissions": [
     "debugger"
-  ]
+  ],
+  "minimum_chrome_version": "91",
+  "update_url": "https://clients2.google.com/service/update2/crx"
 }

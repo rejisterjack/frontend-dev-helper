@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Font Inspector Content Script for FrontendDevHelper
  * Displays font information tooltip on text element hover
@@ -455,7 +457,7 @@ function createFontTooltip(): HTMLElement {
             copyBtn.style.background = '#3b82f6';
           }, 1500);
         } catch (err) {
-          console.error('Failed to copy:', err);
+          logger.error('Failed to copy:', err);
         }
       }
     });

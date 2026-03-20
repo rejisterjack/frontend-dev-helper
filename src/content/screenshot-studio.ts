@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Screenshot Studio Module
  *
@@ -110,6 +112,7 @@ const DEFAULT_COLOR = '#ef4444';
 const STROKE_WIDTH = 3;
 const BLUR_RADIUS = 8;
 const HANDLE_SIZE = 8;
+const STORAGE_KEY = 'fdh_screenshot_studio_state';
 
 // ============================================
 // Screenshot Studio Class
@@ -176,16 +179,33 @@ export class ScreenshotStudio {
     if (this.state.enabled) return;
 
     this.state.enabled = true;
-    await this.startCapture();
+
+    // Try to restore previous state
+    const savedState = await this.restoreState();
+    if (savedState?.screenshotDataUrl) {
+      // Restore previous session
+      this.state.annotations = savedState.annotations || [];
+      this.state.screenshotDataUrl = savedState.screenshotDataUrl;
+      this.state.currentTool = savedState.currentTool || 'select';
+      this.state.currentColor = savedState.currentColor || DEFAULT_COLOR;
+      await this.startCaptureWithExistingScreenshot();
+    } else {
+      // Start fresh capture
+      await this.startCapture();
+    }
   }
 
   /**
    * Disable the screenshot studio
    */
-  disable(): void {
+  async disable(): Promise<void> {
     if (!this.state.enabled) return;
 
     this.state.enabled = false;
+
+    // Save state before cleaning up
+    await this.saveState();
+
     this.cleanup();
   }
 
@@ -197,6 +217,70 @@ export class ScreenshotStudio {
       this.disable();
     } else {
       await this.enable();
+    }
+  }
+
+  /**
+   * Save current state to chrome.storage.local
+   */
+  private async saveState(): Promise<void> {
+    try {
+      const stateToSave = {
+        annotations: this.state.annotations,
+        screenshotDataUrl: this.state.screenshotDataUrl,
+        currentTool: this.state.currentTool,
+        currentColor: this.state.currentColor,
+        timestamp: Date.now(),
+      };
+      await chrome.storage.local.set({ [STORAGE_KEY]: stateToSave });
+      logger.log('[ScreenshotStudio] State saved to storage');
+    } catch (error) {
+      logger.error('[ScreenshotStudio] Failed to save state:', error);
+    }
+  }
+
+  /**
+   * Restore state from chrome.storage.local
+   */
+  private async restoreState(): Promise<{
+    annotations: Annotation[];
+    screenshotDataUrl: string | null;
+    currentTool: AnnotationTool;
+    currentColor: string;
+  } | null> {
+    try {
+      const result = await chrome.storage.local.get(STORAGE_KEY);
+      const savedState = result[STORAGE_KEY];
+
+      if (!savedState) {
+        return null;
+      }
+
+      // Check if state is not too old (24 hours)
+      const maxAge = 24 * 60 * 60 * 1000;
+      if (Date.now() - savedState.timestamp > maxAge) {
+        logger.log('[ScreenshotStudio] Saved state expired, clearing');
+        await chrome.storage.local.remove(STORAGE_KEY);
+        return null;
+      }
+
+      logger.log('[ScreenshotStudio] State restored from storage');
+      return savedState;
+    } catch (error) {
+      logger.error('[ScreenshotStudio] Failed to restore state:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear saved state from storage
+   */
+  private async clearSavedState(): Promise<void> {
+    try {
+      await chrome.storage.local.remove(STORAGE_KEY);
+      logger.log('[ScreenshotStudio] Saved state cleared');
+    } catch (error) {
+      logger.error('[ScreenshotStudio] Failed to clear saved state:', error);
     }
   }
 
@@ -215,7 +299,7 @@ export class ScreenshotStudio {
 
       return dataUrl;
     } catch (error) {
-      console.error('[ScreenshotStudio] Capture failed:', error);
+      logger.error('[ScreenshotStudio] Capture failed:', error);
       throw error;
     }
   }
@@ -269,9 +353,50 @@ export class ScreenshotStudio {
       this.state.isCapturing = false;
       this.state.isEditing = true;
     } catch (error) {
-      console.error('[ScreenshotStudio] Failed to start capture:', error);
+      logger.error('[ScreenshotStudio] Failed to start capture:', error);
       this.cleanup();
       throw error;
+    }
+  }
+
+  /**
+   * Start capture with existing screenshot (restore from storage)
+   */
+  private async startCaptureWithExistingScreenshot(): Promise<void> {
+    this.state.isCapturing = true;
+
+    try {
+      // Use existing screenshot
+      const dataUrl = this.state.screenshotDataUrl;
+      if (!dataUrl) {
+        throw new Error('No screenshot data URL available');
+      }
+
+      // Setup the UI
+      this.createContainer();
+      this.createCanvas();
+      await this.loadScreenshot(dataUrl);
+      this.createToolbar();
+      this.createColorPicker();
+      this.createActionBar();
+      this.createInstructions();
+      this.attachEventListeners();
+
+      // Restore annotations
+      this.render();
+
+      this.state.isCapturing = false;
+      this.state.isEditing = true;
+
+      logger.log(
+        '[ScreenshotStudio] Restored previous session with',
+        this.state.annotations.length,
+        'annotations'
+      );
+    } catch (error) {
+      logger.error('[ScreenshotStudio] Failed to restore capture:', error);
+      // Fall back to fresh capture
+      await this.startCapture();
     }
   }
 
@@ -721,8 +846,16 @@ export class ScreenshotStudio {
     `;
     this.actionBar.appendChild(divider);
 
-    // Cancel button
-    const cancelBtn = this.createActionButton('Cancel', '✕', () => this.disable(), true);
+    // Cancel button - clears saved state to discard the screenshot
+    const cancelBtn = this.createActionButton(
+      'Cancel',
+      '✕',
+      () => {
+        this.clearSavedState();
+        this.disable();
+      },
+      true
+    );
     this.actionBar.appendChild(cancelBtn);
 
     this.container.appendChild(this.actionBar);
@@ -1412,7 +1545,7 @@ export class ScreenshotStudio {
 
       this.showNotification('Screenshot copied to clipboard!');
     } catch (error) {
-      console.error('[ScreenshotStudio] Failed to copy:', error);
+      logger.error('[ScreenshotStudio] Failed to copy:', error);
       this.showNotification('Failed to copy to clipboard', 'error');
     }
   }

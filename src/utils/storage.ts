@@ -14,6 +14,7 @@ import {
   TOOL_METADATA,
 } from '@/constants';
 import type { ToolState, ToolsState } from '@/types';
+import { logger } from '@/utils/logger';
 
 // ============================================
 // Types
@@ -87,7 +88,7 @@ export async function getToolState(toolId: ToolId, tabId?: number): Promise<Tool
     const defaultEnabled = getDefaultToolEnabled(toolId);
     return { enabled: defaultEnabled, settings: {} };
   } catch (error) {
-    console.error(`[Storage] Failed to get tool state for ${toolId}:`, error);
+    logger.error(`[Storage] Failed to get tool state for ${toolId}:`, error);
     return null;
   }
 }
@@ -130,7 +131,7 @@ export async function setToolState(
     // Notify of state change
     await notifyToolStateChanged(toolId, state, tabId);
   } catch (error) {
-    console.error(`[Storage] Failed to set tool state for ${toolId}:`, error);
+    logger.error(`[Storage] Failed to set tool state for ${toolId}:`, error);
     throw new Error(ERROR_MESSAGES.STORAGE_SET_FAILED);
   }
 }
@@ -183,7 +184,7 @@ export async function getAllToolStates(tabId?: number): Promise<ToolsState> {
 
     return allStates as ToolsState;
   } catch (error) {
-    console.error('[Storage] Failed to get all tool states:', error);
+    logger.error('[Storage] Failed to get all tool states:', error);
     throw new Error(ERROR_MESSAGES.STORAGE_GET_FAILED);
   }
 }
@@ -224,7 +225,7 @@ export async function clearAllStates(
     const legacyKeys = Object.values(TOOL_IDS).map((id) => `fdh_${id}_state`);
     await chrome.storage.local.remove(legacyKeys);
   } catch (error) {
-    console.error('[Storage] Failed to clear all states:', error);
+    logger.error('[Storage] Failed to clear all states:', error);
     throw new Error(ERROR_MESSAGES.STORAGE_CLEAR_FAILED);
   }
 }
@@ -312,7 +313,7 @@ export async function copyGlobalStatesToTab(tabId: number): Promise<void> {
 
     await chrome.storage.local.set({ [storageKey]: storage });
   } catch (error) {
-    console.error(`[Storage] Failed to copy global states to tab ${tabId}:`, error);
+    logger.error(`[Storage] Failed to copy global states to tab ${tabId}:`, error);
     throw error;
   }
 }
@@ -424,7 +425,7 @@ export async function getSettings(): Promise<typeof DEFAULT_SETTINGS> {
     await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: DEFAULT_SETTINGS });
     return DEFAULT_SETTINGS;
   } catch (error) {
-    console.error('[Storage] Failed to get settings:', error);
+    logger.error('[Storage] Failed to get settings:', error);
     return DEFAULT_SETTINGS;
   }
 }
@@ -439,7 +440,7 @@ export async function updateSettings(settings: Partial<typeof DEFAULT_SETTINGS>)
     const updated = { ...current, ...settings };
     await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: updated });
   } catch (error) {
-    console.error('[Storage] Failed to update settings:', error);
+    logger.error('[Storage] Failed to update settings:', error);
     throw new Error(ERROR_MESSAGES.STORAGE_SET_FAILED);
   }
 }

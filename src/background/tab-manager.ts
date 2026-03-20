@@ -4,6 +4,8 @@
  * Manages tab lifecycle events and communication with content scripts.
  */
 
+import { logger } from '../utils/logger';
+
 export class TabManager {
   private activeTabs: Set<number> = new Set();
 
@@ -56,7 +58,7 @@ export class TabManager {
    * Handle tab activation
    */
   private async handleTabActivated(tabId: number): Promise<void> {
-    console.log('[TabManager] Tab activated:', tabId);
+    logger.log('[TabManager] Tab activated:', tabId);
 
     // Notify the tab it's now active
     try {
@@ -80,14 +82,14 @@ export class TabManager {
     tab: chrome.tabs.Tab
   ): void {
     if (changeInfo.status === 'complete' && tab.url) {
-      console.log('[TabManager] Tab loaded:', tabId, tab.url);
+      logger.log('[TabManager] Tab loaded:', tabId, tab.url);
 
       // Notify content script that page has loaded
       this.notifyTabLoaded(tabId, tab.url);
     }
 
     if (changeInfo.url) {
-      console.log('[TabManager] URL changed:', tabId, changeInfo.url);
+      logger.log('[TabManager] URL changed:', tabId, changeInfo.url);
 
       // Notify of URL change
       this.notifyUrlChanged(tabId, changeInfo.url);
@@ -98,7 +100,7 @@ export class TabManager {
    * Handle tab removal
    */
   private handleTabRemoved(tabId: number): void {
-    console.log('[TabManager] Tab removed:', tabId);
+    logger.log('[TabManager] Tab removed:', tabId);
     this.activeTabs.delete(tabId);
   }
 

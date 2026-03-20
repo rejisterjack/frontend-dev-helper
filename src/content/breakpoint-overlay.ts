@@ -6,6 +6,7 @@
  */
 
 import { createOverlay, throttle } from '@/utils/dom';
+import { logger } from '../utils/logger';
 
 // Tailwind CSS breakpoints
 const TAILWIND_BREAKPOINTS = {
@@ -523,7 +524,7 @@ export class BreakpointOverlay {
       window.moveTo(left, top);
     } catch {
       // If direct resize fails, try opening a new window (for popup windows)
-      console.log('[BreakpointOverlay] Window resize not available in this context');
+      logger.log('[BreakpointOverlay] Window resize not available in this context');
     }
 
     // Send message to background script to attempt resize via extension API

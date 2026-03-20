@@ -10,6 +10,7 @@
 
 import type { MemoryInfo, PerformanceMetrics } from '../types';
 import { formatBytes, generateId } from '../utils/index.js';
+import { logger } from '../utils/logger';
 
 // ============================================
 // Type Definitions
@@ -371,8 +372,6 @@ export class ExportManager {
     return new Promise((resolve) => {
       // Get all visible elements
       const elements = Array.from(document.body.querySelectorAll('*'));
-      const _scrollX = window.scrollX;
-      const _scrollY = window.scrollY;
 
       // Draw a simplified representation
       ctx.fillStyle = '#f3f4f6';
@@ -719,9 +718,6 @@ export class ExportManager {
     if (typeof performance === 'undefined') return null;
 
     const timing = performance.timing;
-    const _navigation = performance.getEntriesByType('navigation')[0] as
-      | PerformanceNavigationTiming
-      | undefined;
 
     return {
       loadTime: timing.loadEventEnd - timing.navigationStart,
@@ -1265,7 +1261,7 @@ export class ExportManager {
    * Handle errors
    */
   private handleError(message: string, error: unknown): never {
-    console.error(`[ExportManager] ${message}:`, error);
+    logger.error(`[ExportManager] ${message}:`, error);
     throw new ExportError(message, 'EXPORT_ERROR', error instanceof Error ? error.message : error);
   }
 }

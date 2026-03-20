@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Flexbox & Grid Visualizer
  *
@@ -549,7 +551,7 @@ export function enable(): void {
   `;
   document.head.appendChild(style);
 
-  console.log('[LayoutVisualizer] Enabled');
+  logger.log('[LayoutVisualizer] Enabled');
 }
 
 /**
@@ -578,7 +580,7 @@ export function disable(): void {
   const style = document.getElementById('fdh-layout-styles');
   if (style) style.remove();
 
-  console.log('[LayoutVisualizer] Disabled');
+  logger.log('[LayoutVisualizer] Disabled');
 }
 
 /**

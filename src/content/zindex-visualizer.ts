@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Z-Index Visualizer
  *
@@ -699,7 +701,7 @@ export function enable(): void {
   keyHandler = handleKeyDown;
   document.addEventListener('keydown', keyHandler);
 
-  console.log('[ZIndexVisualizer] Enabled');
+  logger.log('[ZIndexVisualizer] Enabled');
 }
 
 /**
@@ -721,7 +723,7 @@ export function disable(): void {
     overlay = null;
   }
 
-  console.log('[ZIndexVisualizer] Disabled');
+  logger.log('[ZIndexVisualizer] Disabled');
 }
 
 /**

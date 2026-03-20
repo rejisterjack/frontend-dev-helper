@@ -5,6 +5,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import type { ExtensionSettings } from '@/types';
+import { logger } from '@/utils/logger';
 
 interface SettingsTabProps {
   settings: ExtensionSettings | null;
@@ -41,7 +42,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      logger.error('Failed to save settings:', error);
     } finally {
       setSaving(false);
     }

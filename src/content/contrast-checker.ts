@@ -6,6 +6,7 @@
  */
 
 import { getContrastRatio, hexToRgb } from '../utils/color';
+import { logger } from '../utils/logger';
 
 interface ContrastResult {
   ratio: number;
@@ -522,7 +523,7 @@ export function enable(): void {
   document.addEventListener('keydown', keyHandler);
   document.addEventListener('mousemove', mouseMoveHandler, { passive: true });
 
-  console.log('[ContrastChecker] Enabled');
+  logger.log('[ContrastChecker] Enabled');
 }
 
 /**
@@ -550,7 +551,7 @@ export function disable(): void {
     overlay = null;
   }
 
-  console.log('[ContrastChecker] Disabled');
+  logger.log('[ContrastChecker] Disabled');
 }
 
 /**

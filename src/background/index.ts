@@ -10,13 +10,14 @@
  */
 
 import { type MessagePayload, MessageType } from '../types/messages';
+import { logger } from '../utils/logger';
 
 // ============================================
 // Extension Installation & Update
 // ============================================
 
 chrome.runtime.onInstalled.addListener((details) => {
-  console.log('[FrontendDevHelper] Extension installed/updated:', details.reason);
+  logger.log('[FrontendDevHelper] Extension installed/updated:', details.reason);
 
   // Set default settings on first install
   if (details.reason === 'install') {
@@ -160,7 +161,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 chrome.commands.onCommand.addListener((command, tab) => {
   if (!tab?.id) return;
 
-  console.log('[Background] Command received:', command);
+  logger.log('[Background] Command received:', command);
 
   const commandMap: Record<string, string> = {
     'toggle-pesticide': 'PESTICIDE_TOGGLE',
@@ -174,7 +175,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
   const messageType = commandMap[command];
   if (messageType) {
     chrome.tabs.sendMessage(tab.id, { type: messageType }).catch((err) => {
-      console.error('[Background] Failed to send command:', err);
+      logger.error('[Background] Failed to send command:', err);
     });
   }
 });
@@ -184,7 +185,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
 // ============================================
 
 chrome.runtime.onMessage.addListener((message: MessagePayload, sender, sendResponse) => {
-  console.log('[Background] Received message:', message, 'from:', sender);
+  logger.log('[Background] Received message:', message, 'from:', sender);
 
   (async () => {
     try {
@@ -258,7 +259,7 @@ chrome.runtime.onMessage.addListener((message: MessagePayload, sender, sendRespo
           sendResponse({ success: false, error: 'Unknown message type' });
       }
     } catch (error) {
-      console.error('[Background] Error handling message:', error);
+      logger.error('[Background] Error handling message:', error);
       sendResponse({
         success: false,
         error: (error as Error).message,
@@ -275,7 +276,7 @@ chrome.runtime.onMessage.addListener((message: MessagePayload, sender, sendRespo
 // ============================================
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  console.log('[Background] Command received:', command);
+  logger.log('[Background] Command received:', command);
 
   if (!tab?.id) return;
 
@@ -309,7 +310,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url?.startsWith('http')) {
     // Content script will auto-inject via manifest, but we can do additional setup here
-    console.log('[Background] Tab updated:', tabId, tab.url);
+    logger.log('[Background] Tab updated:', tabId, tab.url);
   }
 });
 
@@ -334,9 +335,9 @@ async function injectContentScript(tabId: number): Promise<void> {
       target: { tabId },
       files: ['src/content/index.ts'],
     });
-    console.log('[Background] Content script injected into tab:', tabId);
+    logger.log('[Background] Content script injected into tab:', tabId);
   } catch (error) {
-    console.error('[Background] Failed to inject content script:', error);
+    logger.error('[Background] Failed to inject content script:', error);
     throw error;
   }
 }
@@ -356,4 +357,4 @@ export function updateBadge(text: string, color?: string): void {
 const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20000);
 keepAlive();
 
-console.log('[FrontendDevHelper] Background service worker initialized');
+logger.log('[FrontendDevHelper] Background service worker initialized');

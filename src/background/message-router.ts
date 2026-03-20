@@ -6,6 +6,7 @@
  */
 
 import type { ExtensionMessage, MessageResponse } from '@/types';
+import { logger } from '../utils/logger';
 
 export class MessageRouter {
   private handlers: Map<string, (message: ExtensionMessage) => Promise<unknown>> = new Map();
@@ -18,7 +19,7 @@ export class MessageRouter {
    * Initialize the message router
    */
   initialize(): void {
-    console.log('[MessageRouter] Initialized');
+    logger.log('[MessageRouter] Initialized');
   }
 
   /**
@@ -32,7 +33,7 @@ export class MessageRouter {
     // Async handling requires returning true
     (async () => {
       try {
-        console.log(
+        logger.log(
           '[MessageRouter] Received message:',
           message.type,
           'from',
@@ -58,7 +59,7 @@ export class MessageRouter {
           id: message.id,
         });
       } catch (error) {
-        console.error('[MessageRouter] Error handling message:', error);
+        logger.error('[MessageRouter] Error handling message:', error);
 
         sendResponse({
           success: false,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { logger } from '../utils/logger';
 import { Popup } from './Popup';
 
 // ============================================
@@ -19,5 +20,5 @@ if (container) {
     </React.StrictMode>
   );
 } else {
-  console.error('Popup root element not found');
+  logger.error('Popup root element not found');
 }

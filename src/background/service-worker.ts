@@ -34,6 +34,7 @@ import {
   setToolState,
   toggleToolState,
 } from '@/utils/storage';
+import { logger } from '../utils/logger';
 
 // ============================================
 // Constants
@@ -98,7 +99,7 @@ const state: ServiceWorkerState = {
  * Initialize the service worker
  */
 async function initialize(): Promise<void> {
-  console.log(`[${EXTENSION_NAME}] Service Worker initializing v${EXTENSION_VERSION}`);
+  logger.log(`[${EXTENSION_NAME}] Service Worker initializing v${EXTENSION_VERSION}`);
 
   try {
     // Set up lifecycle listeners
@@ -121,9 +122,9 @@ async function initialize(): Promise<void> {
     await updateBadge();
 
     state.initialized = true;
-    console.log(`[${EXTENSION_NAME}] Service Worker initialized successfully`);
+    logger.log(`[${EXTENSION_NAME}] Service Worker initialized successfully`);
   } catch (error) {
-    console.error(`[${EXTENSION_NAME}] Failed to initialize:`, error);
+    logger.error(`[${EXTENSION_NAME}] Failed to initialize:`, error);
   }
 }
 
@@ -136,7 +137,7 @@ function setupInstallListeners(): void {
   });
 
   chrome.runtime.onStartup.addListener(() => {
-    console.log(`[${EXTENSION_NAME}] Browser startup`);
+    logger.log(`[${EXTENSION_NAME}] Browser startup`);
   });
 }
 
@@ -145,7 +146,7 @@ function setupInstallListeners(): void {
  */
 async function handleInstalled(details: chrome.runtime.InstalledDetails): Promise<void> {
   if (details.reason === 'install') {
-    console.log(`[${EXTENSION_NAME}] Extension installed`);
+    logger.log(`[${EXTENSION_NAME}] Extension installed`);
 
     // Initialize default settings
     await initializeDefaultSettings();
@@ -161,14 +162,14 @@ async function handleInstalled(details: chrome.runtime.InstalledDetails): Promis
       'Click the extension icon to start debugging!'
     );
   } else if (details.reason === 'update') {
-    console.log(
+    logger.log(
       `[${EXTENSION_NAME}] Updated from ${details.previousVersion} to ${EXTENSION_VERSION}`
     );
 
     // Handle version-specific migrations
     await handleVersionMigration(details.previousVersion);
   } else if (details.reason === 'chrome_update') {
-    console.log(`[${EXTENSION_NAME}] Chrome updated`);
+    logger.log(`[${EXTENSION_NAME}] Chrome updated`);
   }
 }
 
@@ -177,7 +178,7 @@ async function handleInstalled(details: chrome.runtime.InstalledDetails): Promis
  */
 async function handleVersionMigration(previousVersion: string | undefined): Promise<void> {
   // Future migrations go here
-  console.log(`[${EXTENSION_NAME}] Migrating from version ${previousVersion}`);
+  logger.log(`[${EXTENSION_NAME}] Migrating from version ${previousVersion}`);
 }
 
 /**
@@ -190,7 +191,7 @@ async function initializeDefaultSettings(): Promise<void> {
     await chrome.storage.local.set({
       [STORAGE_KEYS.SETTINGS]: DEFAULT_SETTINGS,
     });
-    console.log(`[${EXTENSION_NAME}] Default settings initialized`);
+    logger.log(`[${EXTENSION_NAME}] Default settings initialized`);
   }
 }
 
@@ -279,7 +280,7 @@ async function initializeContextMenus(): Promise<void> {
   // Set up click handler
   chrome.contextMenus.onClicked.addListener(handleContextMenuClick);
 
-  console.log(`[${EXTENSION_NAME}] Context menus initialized`);
+  logger.log(`[${EXTENSION_NAME}] Context menus initialized`);
 }
 
 /**
@@ -291,7 +292,7 @@ async function handleContextMenuClick(
 ): Promise<void> {
   if (!tab?.id) return;
 
-  console.log(`[${EXTENSION_NAME}] Context menu clicked:`, info.menuItemId);
+  logger.log(`[${EXTENSION_NAME}] Context menu clicked:`, info.menuItemId);
 
   switch (info.menuItemId) {
     case CONTEXT_MENU_ITEMS.INSPECT_ELEMENT:
@@ -363,7 +364,7 @@ async function handleMessage(
 ): Promise<unknown> {
   const { type, payload } = message;
 
-  console.log(`[${EXTENSION_NAME}] Received message:`, type, 'from tab:', sender.tab?.id);
+  logger.log(`[${EXTENSION_NAME}] Received message:`, type, 'from tab:', sender.tab?.id);
 
   switch (type) {
     // Tool management
@@ -518,7 +519,7 @@ function setupCommandListeners(): void {
  * Handle keyboard shortcut commands
  */
 async function handleCommand(command: string, tab?: chrome.tabs.Tab): Promise<void> {
-  console.log(`[${EXTENSION_NAME}] Command received:`, command);
+  logger.log(`[${EXTENSION_NAME}] Command received:`, command);
 
   // Check if it's a tool toggle command
   const toolId = COMMAND_TO_TOOL_ID[command];
@@ -534,7 +535,7 @@ async function handleCommand(command: string, tab?: chrome.tabs.Tab): Promise<vo
       break;
 
     default:
-      console.warn(`[${EXTENSION_NAME}] Unknown command:`, command);
+      logger.warn(`[${EXTENSION_NAME}] Unknown command:`, command);
   }
 }
 
@@ -575,7 +576,7 @@ async function initializeActiveTabs(): Promise<void> {
  * Handle tab activation
  */
 async function handleTabActivated(tabId: number): Promise<void> {
-  console.log(`[${EXTENSION_NAME}] Tab activated:`, tabId);
+  logger.log(`[${EXTENSION_NAME}] Tab activated:`, tabId);
 
   // Update badge for the new active tab
   await updateBadge(tabId);
@@ -601,7 +602,7 @@ async function handleTabUpdated(
   tab: chrome.tabs.Tab
 ): Promise<void> {
   if (changeInfo.status === 'complete' && tab.url) {
-    console.log(`[${EXTENSION_NAME}] Tab loaded:`, tabId, tab.url);
+    logger.log(`[${EXTENSION_NAME}] Tab loaded:`, tabId, tab.url);
 
     // Add to active tabs
     state.activeTabs.add(tabId);
@@ -619,7 +620,7 @@ async function handleTabUpdated(
   }
 
   if (changeInfo.url) {
-    console.log(`[${EXTENSION_NAME}] URL changed:`, tabId, changeInfo.url);
+    logger.log(`[${EXTENSION_NAME}] URL changed:`, tabId, changeInfo.url);
 
     // Clear tab-specific states when URL changes
     await clearTabStates(tabId);
@@ -641,7 +642,7 @@ async function handleTabUpdated(
  * Handle tab removal
  */
 async function handleTabRemoved(tabId: number): Promise<void> {
-  console.log(`[${EXTENSION_NAME}] Tab removed:`, tabId);
+  logger.log(`[${EXTENSION_NAME}] Tab removed:`, tabId);
 
   state.activeTabs.delete(tabId);
 
@@ -776,7 +777,7 @@ async function updateBadge(tabId?: number): Promise<void> {
         : EXTENSION_NAME;
     await chrome.action.setTitle({ title, tabId });
   } catch (error) {
-    console.error(`[${EXTENSION_NAME}] Failed to update badge:`, error);
+    logger.error(`[${EXTENSION_NAME}] Failed to update badge:`, error);
   }
 }
 
@@ -796,7 +797,7 @@ async function showNotification(title: string, message: string): Promise<void> {
       message,
     });
   } catch (error) {
-    console.error(`[${EXTENSION_NAME}] Failed to show notification:`, error);
+    logger.error(`[${EXTENSION_NAME}] Failed to show notification:`, error);
   }
 }
 
@@ -853,10 +854,10 @@ async function cleanupOldStorage(): Promise<void> {
 
     if (keysToRemove.length > 0) {
       await chrome.storage.local.remove(keysToRemove);
-      console.log(`[${EXTENSION_NAME}] Cleaned up old storage:`, keysToRemove);
+      logger.log(`[${EXTENSION_NAME}] Cleaned up old storage:`, keysToRemove);
     }
   } catch (error) {
-    console.error(`[${EXTENSION_NAME}] Failed to cleanup storage:`, error);
+    logger.error(`[${EXTENSION_NAME}] Failed to cleanup storage:`, error);
   }
 }
 
@@ -873,10 +874,10 @@ chrome.runtime.onInstalled.addListener(() => {
  * Keep the service worker alive
  */
 chrome.runtime.onConnect.addListener((port) => {
-  console.log(`[${EXTENSION_NAME}] Port connected:`, port.name);
+  logger.log(`[${EXTENSION_NAME}] Port connected:`, port.name);
 
   port.onDisconnect.addListener(() => {
-    console.log(`[${EXTENSION_NAME}] Port disconnected:`, port.name);
+    logger.log(`[${EXTENSION_NAME}] Port disconnected:`, port.name);
   });
 });
 

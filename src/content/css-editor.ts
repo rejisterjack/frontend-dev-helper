@@ -10,6 +10,7 @@
  */
 
 import { parseColor } from '../utils/color';
+import { logger } from '../utils/logger';
 
 // ============================================
 // Types and Interfaces
@@ -286,7 +287,6 @@ let selectedElement: HTMLElement | null = null;
 let activeCategory = 'Layout';
 let panel: HTMLElement | null = null;
 let highlightOverlay: HTMLElement | null = null;
-const _computedStylesTooltip: HTMLElement | null = null;
 const history: CSSEdit[] = [];
 let historyIndex = -1;
 const MAX_HISTORY_SIZE = 50;
@@ -388,7 +388,9 @@ function createHighlightOverlay(): void {
     display: none;
     box-shadow: 0 0 0 4px ${hexToRgba(options.highlightColor, 0.1)};
   `;
-  document.body.appendChild(highlightOverlay);
+  if (document.body) {
+    document.body.appendChild(highlightOverlay);
+  }
 }
 
 function removeHighlightOverlay(): void {
@@ -443,7 +445,9 @@ function createPanel(): HTMLElement {
     flex-direction: column;
   `;
 
-  document.body.appendChild(el);
+  if (document.body) {
+    document.body.appendChild(el);
+  }
   return el;
 }
 
@@ -1165,10 +1169,10 @@ function isExtensionElement(element: HTMLElement): boolean {
 function convertRgbToHex(cssColor: string): string | null {
   const parsed = parseColor(cssColor);
   if (!parsed) return null;
-  return localRgbToHex(parsed.r, parsed.g, parsed.b);
+  return rgbToHex(parsed.r, parsed.g, parsed.b);
 }
 
-function _rgbToHex(r: number, g: number, b: number): string {
+function rgbToHex(r: number, g: number, b: number): string {
   return (
     '#' +
     [r, g, b]
@@ -1209,7 +1213,11 @@ function showNotification(message: string): void {
     animation: fdh-slide-up 0.3s ease-out;
   `;
   notification.textContent = message;
-  document.body.appendChild(notification);
+  if (document.body) {
+    document.body.appendChild(notification);
+  } else {
+    return;
+  }
 
   setTimeout(() => {
     notification.style.animation = 'fdh-fade-out 0.3s ease-out';
@@ -1256,7 +1264,7 @@ export function enable(opts?: CSSEditorOptions): void {
   window.addEventListener('resize', resizeHandler);
 
   document.body.style.cursor = 'crosshair';
-  console.log('[CSS Editor] Enabled');
+  logger.log('[CSS Editor] Enabled');
 }
 
 export function disable(): void {
@@ -1287,7 +1295,7 @@ export function disable(): void {
   removeHighlightOverlay();
 
   document.body.style.cursor = '';
-  console.log('[CSS Editor] Disabled');
+  logger.log('[CSS Editor] Disabled');
 }
 
 export function toggle(): void {

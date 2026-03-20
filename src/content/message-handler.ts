@@ -5,6 +5,7 @@
  */
 
 import type { ExtensionMessage, MessageResponse } from '@/types';
+import { logger } from '@/utils/logger';
 
 interface HandlerDependencies {
   featureManager: import('./feature-manager').FeatureManager;
@@ -27,7 +28,7 @@ export class MessageHandler {
       return true; // Async response
     });
 
-    console.log('[MessageHandler] Message handling initialized');
+    logger.info('[MessageHandler] Message handling initialized');
   }
 
   /**
@@ -39,7 +40,7 @@ export class MessageHandler {
     sendResponse: (response: MessageResponse) => void
   ): Promise<void> {
     try {
-      console.log('[MessageHandler] Received:', message.type);
+      logger.info('[MessageHandler] Received:', message.type);
 
       switch (message.type) {
         case 'PING':
@@ -153,7 +154,7 @@ export class MessageHandler {
           });
       }
     } catch (error) {
-      console.error('[MessageHandler] Error:', error);
+      logger.error('[MessageHandler] Error:', error);
       sendResponse({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -265,7 +266,7 @@ export class MessageHandler {
 
       return styles;
     } catch (error) {
-      console.error('[MessageHandler] Failed to get computed styles:', error);
+      logger.error('[MessageHandler] Failed to get computed styles:', error);
       return null;
     }
   }
@@ -301,7 +302,7 @@ export class MessageHandler {
     try {
       await navigator.clipboard.writeText(text);
     } catch (error) {
-      console.error('[MessageHandler] Failed to copy to clipboard:', error);
+      logger.error('[MessageHandler] Failed to copy to clipboard:', error);
       throw error;
     }
   }

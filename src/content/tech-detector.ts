@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Tech Stack Detector
  *
@@ -535,7 +537,7 @@ export function enable(): void {
 
   document.addEventListener('keydown', handleKeyDown);
 
-  console.log('[TechDetector] Enabled');
+  logger.log('[TechDetector] Enabled');
 }
 
 /**
@@ -552,7 +554,7 @@ export function disable(): void {
     panel = null;
   }
 
-  console.log('[TechDetector] Disabled');
+  logger.log('[TechDetector] Disabled');
 }
 
 /**

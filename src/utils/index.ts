@@ -285,3 +285,6 @@ export function hashString(str: string): number {
   }
   return Math.abs(hash);
 }
+
+// Re-export logger
+export { logger } from './logger';

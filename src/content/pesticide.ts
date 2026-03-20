@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Pesticide Reborn - DOM Outliner
  * Injects color-coded CSS outlines on all elements for visual debugging
@@ -71,7 +73,7 @@ class Pesticide {
         this.enable();
       }
     } catch (error) {
-      console.error('[Pesticide] Failed to initialize:', error);
+      logger.error('[Pesticide] Failed to initialize:', error);
     }
   }
 
@@ -279,7 +281,7 @@ class Pesticide {
       };
       await chrome.storage.session.set({ [STORAGE_KEY]: state });
     } catch (error) {
-      console.error('[Pesticide] Failed to save state:', error);
+      logger.error('[Pesticide] Failed to save state:', error);
     }
   }
 
@@ -295,7 +297,7 @@ class Pesticide {
     this.setupHoverListeners();
     this.saveState();
 
-    console.log('[Pesticide] Enabled');
+    logger.log('[Pesticide] Enabled');
   }
 
   /**
@@ -310,7 +312,7 @@ class Pesticide {
     this.removeTooltip();
     this.saveState();
 
-    console.log('[Pesticide] Disabled');
+    logger.log('[Pesticide] Disabled');
   }
 
   /**

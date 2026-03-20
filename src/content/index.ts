@@ -14,6 +14,7 @@
  */
 
 import { MessageType } from '../types/messages';
+import { logger } from '../utils/logger';
 import { accessibilityAudit } from './accessibility-audit';
 import { animationInspector } from './animation-inspector';
 import { breakpointOverlay } from './breakpoint-overlay';
@@ -83,7 +84,7 @@ const state: ContentScriptState = {
 
 chrome.runtime.onMessage.addListener(
   (message: { type: string; payload?: Record<string, unknown> }, _sender, sendResponse) => {
-    console.log('[Content] Received message:', message);
+    logger.log('[Content] Received message:', message);
 
     try {
       switch (message.type) {
@@ -625,7 +626,7 @@ chrome.runtime.onMessage.addListener(
           sendResponse({ success: false, error: 'Unknown message type' });
       }
     } catch (error) {
-      console.error('[Content] Error handling message:', error);
+      logger.error('[Content] Error handling message:', error);
       sendResponse({ success: false, error: (error as Error).message });
     }
 
@@ -888,7 +889,7 @@ async function copyToClipboard(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
   } catch (error) {
-    console.error('[Content] Failed to copy:', error);
+    logger.error('[Content] Failed to copy:', error);
     // Fallback: create temporary textarea
     const textarea = document.createElement('textarea');
     textarea.value = text;
@@ -994,7 +995,7 @@ document.addEventListener('keydown', (event) => {
 // Initialization
 // ============================================
 
-console.log('[FrontendDevHelper] Content script loaded');
+logger.log('[FrontendDevHelper] Content script loaded');
 
 // Add animation styles
 const style = document.createElement('style');

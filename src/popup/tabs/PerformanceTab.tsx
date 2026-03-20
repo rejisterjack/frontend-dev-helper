@@ -13,6 +13,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MemoryInfo, ResourceAnalysis, WebVitals } from '@/types';
+import { logger } from '@/utils/logger';
 
 interface PerformanceData {
   timestamp: number;
@@ -101,7 +102,7 @@ export const PerformanceTab: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Failed to load metrics:', error);
+      logger.error('Failed to load metrics:', error);
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export const PerformanceTab: React.FC = () => {
       try {
         observerRef.current = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            console.log('[Performance]', entry.name, entry.value);
+            logger.log('[Performance]', entry.name, entry.value);
           }
         });
         observerRef.current.observe({ entryTypes: ['web-vitals'] });
@@ -127,7 +128,7 @@ export const PerformanceTab: React.FC = () => {
       try {
         longTaskObserverRef.current = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            console.log('[Long Task]', entry.duration, 'ms');
+            logger.log('[Long Task]', entry.duration, 'ms');
           }
         });
         longTaskObserverRef.current.observe({ entryTypes: ['longtask'] });

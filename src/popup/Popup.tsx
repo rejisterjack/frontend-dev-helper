@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Onboarding } from '../components';
 import { type ToolMeta, type ToolsState, ToolType } from '../types';
+import { logger } from '../utils/logger';
 import { ColorLegend } from './components/ColorLegend';
 import { ToolCard } from './components/ToolCard';
 import './popup.css';
@@ -242,7 +243,7 @@ export const Popup: React.FC = () => {
         }
         setIsLoading(false);
       } catch (err) {
-        console.error('Failed to load state:', err);
+        logger.error('Failed to load state:', err);
         // Fallback to localStorage if content script not available
         const stored = localStorage.getItem('frontendDevHelperState');
         if (stored) {
@@ -343,7 +344,7 @@ export const Popup: React.FC = () => {
     try {
       await chrome.tabs.sendMessage(tab.id, { type: messageType });
     } catch (err) {
-      console.error('Failed to send message:', err);
+      logger.error('Failed to send message:', err);
     }
   }, []);
 
@@ -420,7 +421,7 @@ export const Popup: React.FC = () => {
         try {
           await chrome.tabs.sendMessage(tab.id, { type: messageType });
         } catch (err) {
-          console.error(`Failed to send ${messageType}:`, err);
+          logger.error(`Failed to send ${messageType}:`, err);
         }
       }
     }
@@ -458,7 +459,7 @@ export const Popup: React.FC = () => {
   return (
     <>
       {/* Onboarding Flow - shows on first install */}
-      <Onboarding onComplete={() => console.log('Onboarding completed')} />
+      <Onboarding onComplete={() => logger.log('Onboarding completed')} />
 
       <div className="w-[380px] bg-slate-900 text-slate-100 flex flex-col min-h-[200px] max-h-[600px]">
         {/* Header */}

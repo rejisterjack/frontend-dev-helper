@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { logger } from '@/utils/logger';
 
 interface StorageOptions<T> {
   defaultValue: T;
@@ -24,7 +25,7 @@ export function useStorage<T>(key: string, options: StorageOptions<T>) {
         const result = await storage.get(key);
         setValue(result[key] ?? defaultValue);
       } catch (error) {
-        console.error('Failed to load from storage:', error);
+        logger.error('Failed to load from storage:', error);
       } finally {
         setIsLoading(false);
       }
@@ -56,7 +57,7 @@ export function useStorage<T>(key: string, options: StorageOptions<T>) {
         await storage.set({ [key]: valueToStore });
         setValue(valueToStore);
       } catch (error) {
-        console.error('Failed to save to storage:', error);
+        logger.error('Failed to save to storage:', error);
       }
     },
     [key, value, storageArea]

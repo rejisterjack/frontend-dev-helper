@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { AsyncState } from '@/types';
+import { logger } from '@/utils/logger';
 
 /**
  * Hook for managing async operations with loading and error states
@@ -76,7 +77,7 @@ export function useLocalStorage<T>(
         setStoredValue(valueToStore);
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error);
+        logger.error(`Error setting localStorage key "${key}":`, error);
       }
     },
     [key, storedValue]
@@ -267,7 +268,7 @@ export function useClipboard(timeout = 2000): {
         setCopied(true);
         setTimeout(() => setCopied(false), timeout);
       } catch (error) {
-        console.error('Failed to copy:', error);
+        logger.error('Failed to copy:', error);
       }
     },
     [timeout]

@@ -13,6 +13,7 @@
  */
 
 import type { AccessibilityReport, MemoryInfo } from '../types';
+import { logger } from '../utils/logger';
 
 // ============================================
 // Type Definitions
@@ -37,17 +38,17 @@ export interface SiteReport {
     overall: number;
   };
   /** Performance analysis */
-  performance: PerformanceReport;
+  performance: PerformanceReport | null;
   /** Accessibility analysis */
-  accessibility: AccessibilityReport;
+  accessibility: AccessibilityReport | null;
   /** Color analysis */
-  colors: ColorReport;
+  colors: ColorReport | null;
   /** SEO analysis */
-  seo: SEOReport;
+  seo: SEOReport | null;
   /** Tech stack detection */
-  techStack: TechStackReport;
+  techStack: TechStackReport | null;
   /** Best practices */
-  bestPractices: BestPracticesReport;
+  bestPractices: BestPracticesReport | null;
   /** Recommendations summary */
   recommendations: Recommendation[];
 }
@@ -371,7 +372,6 @@ export interface ReportOptions {
 // ============================================
 
 let isActive = false;
-const _reportOverlay: HTMLElement | null = null;
 let currentReport: SiteReport | null = null;
 
 // ============================================
@@ -409,18 +409,12 @@ export async function generateReport(options: ReportOptions = {}): Promise<SiteR
       bestPractices: 0,
       overall: 0,
     },
-    performance: opts.sections?.performance
-      ? await analyzePerformance()
-      : (null as unknown as PerformanceReport),
-    accessibility: opts.sections?.accessibility
-      ? await analyzeAccessibility()
-      : (null as unknown as AccessibilityReport),
-    colors: opts.sections?.colors ? analyzeColors() : (null as unknown as ColorReport),
-    seo: opts.sections?.seo ? analyzeSEO() : (null as unknown as SEOReport),
-    techStack: opts.sections?.techStack ? detectTechStack() : (null as unknown as TechStackReport),
-    bestPractices: opts.sections?.bestPractices
-      ? analyzeBestPractices()
-      : (null as unknown as BestPracticesReport),
+    performance: opts.sections?.performance ? await analyzePerformance() : null,
+    accessibility: opts.sections?.accessibility ? await analyzeAccessibility() : null,
+    colors: opts.sections?.colors ? analyzeColors() : null,
+    seo: opts.sections?.seo ? analyzeSEO() : null,
+    techStack: opts.sections?.techStack ? detectTechStack() : null,
+    bestPractices: opts.sections?.bestPractices ? analyzeBestPractices() : null,
     recommendations: [],
   };
 
@@ -1912,13 +1906,13 @@ export async function enable(): Promise<void> {
   if (isActive) return;
   isActive = true;
 
-  console.log('[SiteReportGenerator] Enabling...');
+  logger.log('[SiteReportGenerator] Enabling...');
 
   try {
     const report = await generateReport();
     showReportOverlay(report);
   } catch (error) {
-    console.error('[SiteReportGenerator] Failed to generate report:', error);
+    logger.error('[SiteReportGenerator] Failed to generate report:', error);
   }
 }
 
@@ -1932,7 +1926,7 @@ export function disable(): void {
   const overlay = document.getElementById('fdh-site-report');
   if (overlay) overlay.remove();
 
-  console.log('[SiteReportGenerator] Disabled');
+  logger.log('[SiteReportGenerator] Disabled');
 }
 
 /**

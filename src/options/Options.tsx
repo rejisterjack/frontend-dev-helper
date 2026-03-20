@@ -8,6 +8,7 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import type { ExtensionSettings, FeatureToggles } from '@/types';
 import { DEFAULT_FEATURE_TOGGLES } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const Options: React.FC = () => {
   const [settings, setSettings] = useState<ExtensionSettings | null>(null);
@@ -29,7 +30,7 @@ export const Options: React.FC = () => {
         setFeatures(settingsRes.data.features ?? DEFAULT_FEATURE_TOGGLES);
       }
     } catch (error) {
-      console.error('Failed to load data:', error);
+      logger.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,7 @@ export const Options: React.FC = () => {
         id: crypto.randomUUID(),
       });
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      logger.error('Failed to save settings:', error);
     } finally {
       setSaving(false);
     }

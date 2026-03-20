@@ -6,6 +6,7 @@
  */
 
 import { getContrastRatio, getWCAGRating } from '../utils/color';
+import { logger } from '../utils/logger';
 
 interface CSSProperty {
   name: string;
@@ -662,7 +663,7 @@ export function enable(): void {
   document.addEventListener('keydown', keyDownHandler);
 
   document.body.style.cursor = 'crosshair';
-  console.log('[CSSInspector] Enabled');
+  logger.log('[CSSInspector] Enabled');
 }
 
 /**
@@ -688,7 +689,7 @@ export function disable(): void {
   }
 
   document.body.style.cursor = '';
-  console.log('[CSSInspector] Disabled');
+  logger.log('[CSSInspector] Disabled');
 }
 
 /**
