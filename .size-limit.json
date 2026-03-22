@@ -1,0 +1,27 @@
+[
+  {
+    "path": "dist/assets/*.js",
+    "limit": "600 KB",
+    "name": "All JS assets"
+  },
+  {
+    "path": "dist/assets/*.css",
+    "limit": "100 KB",
+    "name": "All CSS assets"
+  },
+  {
+    "path": "dist/assets/service-worker.ts.js",
+    "limit": "50 KB",
+    "name": "Service Worker"
+  },
+  {
+    "path": "dist/assets/index.ts.js",
+    "limit": "600 KB",
+    "name": "Content Script"
+  },
+  {
+    "path": "dist/assets/popup.js",
+    "limit": "150 KB",
+    "name": "Popup"
+  }
+]

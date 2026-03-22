@@ -14,7 +14,9 @@ chrome.devtools.panels.create('FrontendDevHelper', 'icons/icon-32.png', 'panel.h
   panel.onShown.addListener((window) => {
     logger.info('[FrontendDevHelper] Panel shown');
     // Notify the panel it's now visible
-    (window as Window).postMessage({ type: 'PANEL_SHOWN', timestamp: Date.now() }, '*');
+    // Use extension origin for security instead of wildcard
+    const extensionOrigin = chrome.runtime.getURL('');
+    (window as Window).postMessage({ type: 'PANEL_SHOWN', timestamp: Date.now() }, extensionOrigin);
   });
 
   panel.onHidden.addListener(() => {

@@ -47,10 +47,13 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
   }
 
   // Check for WebFont loader (async Google Fonts)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const win = window as unknown as Record<string, unknown>;
+  interface WebFontLoader {
+    WebFont?: unknown;
+    WebFontConfig?: { google?: { families?: string[] } };
+  }
+  const win = window as unknown as WebFontLoader;
   if (win.WebFont) {
-    const webFontConfig = win.WebFontConfig as { google?: { families?: string[] } } | undefined;
+    const webFontConfig = win.WebFontConfig;
     if (
       webFontConfig?.google?.families?.some((f: string) =>
         f.toLowerCase().includes(cleanFamily.toLowerCase())

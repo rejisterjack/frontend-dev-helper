@@ -7,6 +7,7 @@
 
 import { getContrastRatio, hexToRgb } from '../utils/color';
 import { logger } from '../utils/logger';
+import { escapeHtml, sanitizeColor } from '@/utils/sanitize';
 
 interface ContrastResult {
   ratio: number;
@@ -110,10 +111,10 @@ function buildOverlayContent(): string {
           cursor: pointer;
           border: 3px solid ${pickerMode === 'foreground' ? '#6366f1' : 'transparent'};
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-          background: ${foregroundColor};
+          background: ${sanitizeColor(foregroundColor) || '#000000'};
           transition: transform 0.2s, border-color 0.2s;
         "></div>
-        <input type="text" class="fdh-color-input fdh-fg-input" value="${foregroundColor}" style="
+        <input type="text" class="fdh-color-input fdh-fg-input" value="${escapeHtml(foregroundColor)}" style="
           width: 100%;
           background: rgba(30, 41, 59, 0.8);
           border: 1px solid rgba(99, 102, 241, 0.3);
@@ -149,10 +150,10 @@ function buildOverlayContent(): string {
           cursor: pointer;
           border: 3px solid ${pickerMode === 'background' ? '#6366f1' : 'transparent'};
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-          background: ${backgroundColor};
+          background: ${sanitizeColor(backgroundColor) || '#ffffff'};
           transition: transform 0.2s, border-color 0.2s;
         "></div>
-        <input type="text" class="fdh-color-input fdh-bg-input" value="${backgroundColor}" style="
+        <input type="text" class="fdh-color-input fdh-bg-input" value="${escapeHtml(backgroundColor)}" style="
           width: 100%;
           background: rgba(30, 41, 59, 0.8);
           border: 1px solid rgba(99, 102, 241, 0.3);

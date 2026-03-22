@@ -89,6 +89,13 @@ export class MessageRouter {
   }
 
   /**
+   * Get a registered handler
+   */
+  getHandler(type: string): ((message: ExtensionMessage) => Promise<unknown>) | undefined {
+    return this.handlers.get(type);
+  }
+
+  /**
    * Register default message handlers
    */
   private registerDefaultHandlers(): void {

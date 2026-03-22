@@ -48,24 +48,26 @@ function createToolHandlers(
   },
   stateKey: keyof ContentScriptState
 ): Record<string, ContentHandler> {
+  // Type-safe state mutator helper
+  const setState = (state: ContentScriptState, key: keyof ContentScriptState, value: boolean): void => {
+    (state as Record<keyof ContentScriptState, boolean>)[key] = value;
+  };
+
   return {
     [`${toolName}_ENABLE`]: (_payload, state, sendResponse) => {
       tool.enable();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (state as unknown as Record<keyof ContentScriptState, boolean>)[stateKey] = true;
+      setState(state, stateKey, true);
       sendResponse({ success: true, active: true });
     },
     [`${toolName}_DISABLE`]: (_payload, state, sendResponse) => {
       tool.disable();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (state as unknown as Record<keyof ContentScriptState, boolean>)[stateKey] = false;
+      setState(state, stateKey, false);
       sendResponse({ success: true, active: false });
     },
     [`${toolName}_TOGGLE`]: (_payload, state, sendResponse) => {
       tool.toggle();
       const newState = tool.getState();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (state as unknown as Record<keyof ContentScriptState, boolean>)[stateKey] = newState.enabled;
+      setState(state, stateKey, newState.enabled);
       sendResponse({ success: true, active: newState.enabled });
     },
     [`${toolName}_GET_STATE`]: (_payload, _state, sendResponse) => {

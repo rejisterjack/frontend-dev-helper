@@ -17,6 +17,7 @@ import type { BaselineScreenshot, VisualRegressionState, VisualRegressionTest } 
 import { logger } from '@/utils/logger';
 import { baselineManager } from './visual-regression/baseline-manager';
 import { diffEngine } from './visual-regression/diff-engine';
+import { visualRegressionExportSchema } from '@/schemas/visual-regression';
 
 // ============================================
 // Constants
@@ -410,8 +411,17 @@ export async function exportAllData(): Promise<void> {
  */
 export async function importData(file: File): Promise<void> {
   const text = await file.text();
-  const data = JSON.parse(text);
-  await baselineManager.importData(data);
+  const parsed = JSON.parse(text);
+  
+  // Validate with Zod schema for security
+  const result = visualRegressionExportSchema.safeParse(parsed);
+  if (!result.success) {
+    logger.error('[VisualRegression] Invalid import data:', result.error);
+    updateStatus('Import failed: Invalid data format');
+    throw new Error('Invalid import data format');
+  }
+  
+  await baselineManager.importData(result.data.data);
   await refreshState();
   updateStatus('Data imported');
 }

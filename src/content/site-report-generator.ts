@@ -14,6 +14,7 @@
 
 import type { AccessibilityReport, MemoryInfo } from '../types';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // ============================================
 // Type Definitions
@@ -1527,8 +1528,8 @@ export function showReportOverlay(report: SiteReport): void {
           <h1 style="margin: 0 0 8px; font-size: 32px; background: linear-gradient(135deg, #6366f1, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
             📊 Site Report
           </h1>
-          <p style="margin: 0; color: #64748b;">${report.title}</p>
-          <p style="margin: 4px 0 0; font-size: 12px; color: #475569;">${report.url}</p>
+          <p style="margin: 0; color: #64748b;">${escapeHtml(report.title)}</p>
+          <p style="margin: 4px 0 0; font-size: 12px; color: #475569;">${escapeHtml(report.url)}</p>
         </div>
         <button id="fdh-close-report" style="
           background: transparent;
@@ -1753,9 +1754,21 @@ function printReport(report: SiteReport): void {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
 
-  printWindow.document.write(generateFullHTMLReport(report));
+  // Use DOM manipulation instead of document.write() for security
+  const html = generateFullHTMLReport(report);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  
+  // Copy parsed content to new window
+  printWindow.document.open();
+  printWindow.document.write('<!DOCTYPE html>');
   printWindow.document.close();
-  printWindow.print();
+  
+  // Safe DOM-based population
+  printWindow.document.documentElement.innerHTML = doc.documentElement.innerHTML;
+  
+  // Wait for styles to load then print
+  setTimeout(() => printWindow.print(), 100);
 }
 
 /**
@@ -1767,7 +1780,7 @@ function generateFullHTMLReport(report: SiteReport): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site Report - ${report.title}</title>
+  <title>Site Report - ${escapeHtml(report.title)}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -1825,8 +1838,8 @@ function generateFullHTMLReport(report: SiteReport): string {
 <body>
   <div class="container">
     <h1>📊 Site Report</h1>
-    <p class="subtitle">${report.title}</p>
-    <p class="url">${report.url}</p>
+    <p class="subtitle">${escapeHtml(report.title)}</p>
+    <p class="url">${escapeHtml(report.url)}</p>
     
     <div class="score-circle">
       <div class="score-inner">

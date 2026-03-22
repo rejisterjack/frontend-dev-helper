@@ -4,6 +4,8 @@
  * Provides color picking functionality from the page.
  */
 
+import { escapeHtml } from '@/utils/sanitize';
+
 export interface ColorPickerOptions {
   onColorSelect?: (color: string, format: 'hex' | 'rgb' | 'hsl') => void;
   defaultFormat?: 'hex' | 'rgb' | 'hsl';
@@ -618,19 +620,21 @@ export class ColorPicker {
         <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
           Found ${palette.totalColors} unique colors
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;" class="color-palette-grid" data-palette-type="dominant">
           ${palette.dominant
             .map(
-              (color) => `
+              (color) => {
+                const safeColor = escapeHtml(color);
+                return `
             <div style="
               width: 40px;
               height: 40px;
-              background: ${color};
+              background: ${safeColor};
               border-radius: 8px;
               border: 2px solid rgba(255,255,255,0.1);
               cursor: pointer;
               position: relative;
-            " title="${color}" onclick="navigator.clipboard.writeText('${color}')">
+            " title="${safeColor}" data-color="${safeColor}" class="color-swatch">
               <span style="
                 position: absolute;
                 bottom: -18px;
@@ -639,10 +643,10 @@ export class ColorPicker {
                 font-size: 9px;
                 color: #94a3b8;
                 white-space: nowrap;
-              ">${color}</span>
+              ">${safeColor}</span>
             </div>
-          `
-            )
+          `;
+              })
             .join('')}
         </div>
       </div>
@@ -722,6 +726,18 @@ export class ColorPicker {
 
     // Event listeners
     overlay.querySelector('#fdh-close-palette')?.addEventListener('click', () => overlay.remove());
+    
+    // Event delegation for color swatches (security: prevents XSS via inline onclick)
+    overlay.addEventListener('click', (e) => {
+      const swatch = (e.target as HTMLElement).closest('.color-swatch');
+      if (swatch) {
+        const color = swatch.getAttribute('data-color');
+        if (color) {
+          navigator.clipboard.writeText(color);
+          this.showNotification(`Copied ${color} to clipboard!`);
+        }
+      }
+    });
     overlay.querySelector('#fdh-copy-palette')?.addEventListener('click', () => {
       const colors = palette.dominant.join('\n');
       navigator.clipboard.writeText(colors);
@@ -750,23 +766,25 @@ export class ColorPicker {
 
   private renderHarmonySection(title: string, colors: string[]): string {
     if (colors.length === 0) return '';
+    const safeTitle = escapeHtml(title);
     return `
       <div style="margin-bottom: 16px;">
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">${title}</div>
-        <div style="display: flex; gap: 6px;">
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">${safeTitle}</div>
+        <div style="display: flex; gap: 6px;" class="color-harmony-row">
           ${colors
-            .map(
-              (color) => `
+            .map((color) => {
+              const safeColor = escapeHtml(color);
+              return `
             <div style="
               width: 32px;
               height: 32px;
-              background: ${color};
+              background: ${safeColor};
               border-radius: 6px;
               border: 2px solid rgba(255,255,255,0.1);
               cursor: pointer;
-            " title="${color}" onclick="navigator.clipboard.writeText('${color}')"></div>
-          `
-            )
+            " title="${safeColor}" data-color="${safeColor}" class="color-swatch"></div>
+          `;
+            })
             .join('')}
         </div>
       </div>

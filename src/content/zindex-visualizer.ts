@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 /**
  * Z-Index Visualizer
@@ -216,15 +217,16 @@ function buildOverlayContent(): string {
                 .slice(0, 5)
                 .map((item) => {
                   const tag = item.element.tagName.toLowerCase();
-                  const id = item.element.id ? `#${item.element.id}` : '';
+                  const id = item.element.id ? `#${escapeHtml(item.element.id)}` : '';
                   const classes = Array.from(item.element.classList)
                     .filter((c) => !c.startsWith('fdh-'))
                     .slice(0, 2)
-                    .map((c) => `.${c}`)
+                    .map((c) => `.${escapeHtml(c)}`)
                     .join('');
+                  const safeReason = item.reason ? escapeHtml(item.reason) : '';
 
                   return `
-                  <div class="fdh-zindex-item" data-element-id="${item.element.dataset.fdhId || ''}" style="
+                  <div class="fdh-zindex-item" data-element-id="${escapeHtml(item.element.dataset.fdhId || '')}" style="
                     padding: 6px 8px;
                     margin-bottom: 4px;
                     background: rgba(15, 23, 42, 0.4);
@@ -237,7 +239,7 @@ function buildOverlayContent(): string {
                       <code style="color: #c084fc;">${tag}${id}${classes}</code>
                       ${item.isStackingContext ? `<span style="font-size: 10px; color: #fbbf24; background: rgba(251, 191, 36, 0.1); padding: 2px 6px; border-radius: 4px;">context</span>` : ''}
                     </div>
-                    ${item.reason ? `<div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">${item.reason}</div>` : ''}
+                    ${safeReason ? `<div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">${safeReason}</div>` : ''}
                   </div>
                 `;
                 })

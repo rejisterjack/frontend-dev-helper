@@ -7,11 +7,15 @@
 import type { ExtensionMessage, MessageResponse } from '@/types';
 import { logger } from '@/utils/logger';
 
+interface ElementInspector {
+  activate: () => void;
+  deactivate: () => void;
+  isActive: () => boolean;
+}
+
 interface HandlerDependencies {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   featureManager: import('./feature-manager').FeatureManager;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  elementInspector: any;
+  elementInspector: ElementInspector;
 }
 
 export class MessageHandler {
@@ -173,8 +177,7 @@ export class MessageHandler {
    */
   private async handleToggleFeature(message: ExtensionMessage): Promise<void> {
     const { feature, enabled } = message.payload as {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      feature: any;
+      feature: string;
       enabled: boolean;
     };
 
