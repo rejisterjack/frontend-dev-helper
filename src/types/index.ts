@@ -23,6 +23,15 @@ export enum ToolType {
   RESPONSIVE_PREVIEW = 'responsivePreview',
   DESIGN_SYSTEM_VALIDATOR = 'designSystemValidator',
   NETWORK_ANALYZER = 'networkAnalyzer',
+  // New tools for "Best of the Best"
+  COMMAND_PALETTE = 'commandPalette',
+  STORAGE_INSPECTOR = 'storageInspector',
+  FOCUS_DEBUGGER = 'focusDebugger',
+  FORM_DEBUGGER = 'formDebugger',
+  COMPONENT_TREE = 'componentTree',
+  FLAME_GRAPH = 'flameGraph',
+  VISUAL_REGRESSION = 'visualRegression',
+  AI_SUGGESTIONS = 'aiSuggestions',
 }
 
 /** Tool ID type - imported from constants to ensure consistency */
@@ -570,4 +579,352 @@ export interface ContextMenuConfig {
   parentId?: string;
   enabled?: boolean;
   onclick?: (info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab) => void;
+}
+
+// ============================================
+// Command Palette Types
+// ============================================
+
+/** Command palette item */
+export interface Command {
+  id: string;
+  title: string;
+  description?: string;
+  shortcut?: string;
+  icon?: string;
+  category: 'tool' | 'action' | 'setting' | 'navigation';
+  keywords: string[];
+  execute: () => void | Promise<void>;
+  disabled?: boolean;
+}
+
+/** Command palette state */
+export interface CommandPaletteState {
+  isOpen: boolean;
+  searchQuery: string;
+  selectedIndex: number;
+  recentCommands: string[];
+  filteredCommands: Command[];
+}
+
+// ============================================
+// Storage Inspector Types
+// ============================================
+
+/** Storage item for LocalStorage/SessionStorage */
+export interface StorageItem {
+  key: string;
+  value: string;
+  size: number;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
+  area?: StorageArea;
+}
+
+/** IndexedDB database info */
+export interface IndexedDBDatabase {
+  name: string;
+  version: number;
+  objectStores: IndexedDBObjectStore[];
+}
+
+/** IndexedDB object store info */
+export interface IndexedDBObjectStore {
+  name: string;
+  keyPath: string | string[] | null;
+  autoIncrement: boolean;
+  indexes: IndexedDBIndex[];
+  count: number;
+}
+
+/** IndexedDB index info */
+export interface IndexedDBIndex {
+  name: string;
+  keyPath: string | string[];
+  unique: boolean;
+  multiEntry: boolean;
+}
+
+/** Cookie info */
+export interface CookieInfo {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  expires?: number;
+  secure: boolean;
+  httpOnly: boolean;
+  sameSite?: chrome.cookies.SameSiteStatus;
+}
+
+/** Cache storage entry */
+export interface CacheEntry {
+  url: string;
+  size: number;
+  headers: Record<string, string>;
+}
+
+/** Complete storage snapshot */
+export interface StorageSnapshot {
+  localStorage: StorageItem[];
+  sessionStorage: StorageItem[];
+  indexedDB: IndexedDBDatabase[];
+  cookies: CookieInfo[];
+  cacheStorage: { [cacheName: string]: CacheEntry[] };
+}
+
+// ============================================
+// AI Suggestion Types
+// ============================================
+
+/** AI suggestion category */
+export type AISuggestionCategory = 'accessibility' | 'performance' | 'seo' | 'best-practice' | 'security';
+
+/** AI suggestion priority */
+export type AISuggestionPriority = 'critical' | 'high' | 'medium' | 'low';
+
+/** AI suggestion item */
+export interface AISuggestion {
+  id: string;
+  category: AISuggestionCategory;
+  priority: AISuggestionPriority;
+  title: string;
+  description: string;
+  element?: string;
+  selector?: string;
+  impact: string;
+  effort: 'easy' | 'medium' | 'hard';
+  confidence: number;
+  autoFixable: boolean;
+  fix?: () => boolean | Promise<boolean>;
+}
+
+/** AI analysis result */
+export interface AIAnalysisResult {
+  timestamp: number;
+  url: string;
+  suggestions: AISuggestion[];
+  summary: {
+    total: number;
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    autoFixable: number;
+    byCategory: Record<AISuggestionCategory, number>;
+  };
+}
+
+// ============================================
+// Component Tree Types
+// ============================================
+
+/** Detected framework */
+export type FrameworkType = 'react' | 'vue' | 'angular' | 'svelte' | 'unknown';
+
+/** Component tree node */
+export interface ComponentNode {
+  id: string;
+  name: string;
+  type: 'component' | 'element' | 'text' | 'fragment';
+  framework: FrameworkType;
+  props?: Record<string, unknown>;
+  state?: Record<string, unknown>;
+  children: ComponentNode[];
+  depth: number;
+  domElement?: HTMLElement;
+  isExpanded?: boolean;
+  hasChildren: boolean;
+}
+
+/** Component tree state */
+export interface ComponentTreeState {
+  framework: FrameworkType;
+  root: ComponentNode | null;
+  selectedNode: ComponentNode | null;
+  expandedNodes: Set<string>;
+  filter: string;
+}
+
+// ============================================
+// Performance Flame Graph Types
+// ============================================
+
+/** Performance entry for flame graph */
+export interface FlameGraphEntry {
+  id: string;
+  name: string;
+  startTime: number;
+  duration: number;
+  endTime: number;
+  children: FlameGraphEntry[];
+  parent?: FlameGraphEntry;
+  depth: number;
+  type: 'script' | 'layout' | 'paint' | 'composite' | 'other';
+  source?: string;
+  line?: number;
+}
+
+/** Performance profile */
+export interface PerformanceProfile {
+  timestamp: number;
+  url: string;
+  entries: FlameGraphEntry[];
+  summary: {
+    totalDuration: number;
+    scriptTime: number;
+    layoutTime: number;
+    paintTime: number;
+    longTasks: number;
+  };
+}
+
+// ============================================
+// Focus Debugger Types
+// ============================================
+
+/** Focusable element info */
+export interface FocusableElement {
+  element: HTMLElement;
+  selector: string;
+  tabIndex: number;
+  tabOrder: number;
+  isVisible: boolean;
+  isDisabled: boolean;
+  ariaLabel?: string;
+}
+
+/** Focus history entry */
+export interface FocusHistoryEntry {
+  timestamp: number;
+  element: string;
+  selector: string;
+  trigger: 'keyboard' | 'mouse' | 'script';
+}
+
+/** Focus debugger state */
+export interface FocusDebuggerState {
+  enabled: boolean;
+  showOverlay: boolean;
+  focusableElements: FocusableElement[];
+  focusHistory: FocusHistoryEntry[];
+  trapDetected: boolean;
+  trapElements: HTMLElement[];
+}
+
+// ============================================
+// Form Debugger Types
+// ============================================
+
+/** Form field info */
+export interface FormField {
+  element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  selector: string;
+  name: string;
+  type: string;
+  value: string;
+  isValid: boolean;
+  validationMessage: string;
+  isRequired: boolean;
+  hasLabel: boolean;
+  labelText?: string;
+  hasError: boolean;
+  autofill?: string;
+}
+
+/** Form info */
+export interface FormInfo {
+  element: HTMLFormElement;
+  selector: string;
+  name?: string;
+  action: string;
+  method: string;
+  fields: FormField[];
+  isValid: boolean;
+  hasSubmitHandler: boolean;
+  autofillEnabled: boolean;
+  accessibilityIssues: string[];
+}
+
+/** Form debugger state */
+export interface FormDebuggerState {
+  enabled: boolean;
+  forms: FormInfo[];
+  selectedForm: FormInfo | null;
+  highlightIssues: boolean;
+}
+
+// ============================================
+// Visual Regression Types
+// ============================================
+
+/** Baseline screenshot */
+export interface BaselineScreenshot {
+  id: string;
+  url: string;
+  pathname: string;
+  timestamp: number;
+  screenshot: string;
+  viewport: { width: number; height: number };
+  devicePixelRatio: number;
+}
+
+/** Diff result */
+export interface DiffResult {
+  match: boolean;
+  diffPercentage: number;
+  pixelsDifferent: number;
+  totalPixels: number;
+  diffImage?: string;
+  threshold: number;
+}
+
+/** Visual regression test */
+export interface VisualRegressionTest {
+  id: string;
+  url: string;
+  baselineId: string;
+  timestamp: number;
+  result: DiffResult;
+  status: 'pending' | 'passed' | 'failed' | 'approved';
+}
+
+/** Visual regression settings */
+export interface VisualRegressionSettings {
+  threshold: number;
+  ignoreDynamicContent: boolean;
+  ignoreRegions: Array<{ x: number; y: number; width: number; height: number }>;
+}
+
+/** Visual regression state */
+export interface VisualRegressionState {
+  baselines: BaselineScreenshot[];
+  tests: VisualRegressionTest[];
+  selectedBaseline?: string;
+  threshold: number;
+  ignoreRegions: Array<{ x: number; y: number; width: number; height: number }>;
+}
+
+/** Visual regression message response types */
+export interface VisualRegressionStateResponse {
+  state: VisualRegressionState;
+}
+
+export interface VisualRegressionBaselineResponse {
+  baseline: BaselineScreenshot;
+}
+
+export interface VisualRegressionTestResponse {
+  test: VisualRegressionTest;
+}
+
+export interface VisualRegressionExportResponse {
+  data: {
+    baselines: BaselineScreenshot[];
+    tests: VisualRegressionTest[];
+    exportedAt: number;
+  };
+}
+
+export interface VisualRegressionImportResponse {
+  success: boolean;
 }

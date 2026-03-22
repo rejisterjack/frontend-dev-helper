@@ -42,6 +42,16 @@ export const TOOL_IDS = {
   // Additional Tools (internal/helpers)
   ELEMENT_INSPECTOR: 'elementInspector',
   MEASUREMENT_TOOL: 'measurementTool',
+
+  // New "Best of the Best" Tools
+  COMMAND_PALETTE: 'commandPalette',
+  STORAGE_INSPECTOR: 'storageInspector',
+  FOCUS_DEBUGGER: 'focusDebugger',
+  FORM_DEBUGGER: 'formDebugger',
+  COMPONENT_TREE: 'componentTree',
+  FLAME_GRAPH: 'flameGraph',
+  VISUAL_REGRESSION: 'visualRegression',
+  AI_SUGGESTIONS: 'aiSuggestions',
 } as const;
 
 /**
@@ -203,6 +213,81 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     category: 'utility',
     hasSettings: false,
     defaultEnabled: false,
+  },
+
+  // New "Best of the Best" Tools
+  [TOOL_IDS.COMMAND_PALETTE]: {
+    id: TOOL_IDS.COMMAND_PALETTE,
+    name: 'Command Palette',
+    description: 'Quick access to all tools via keyboard',
+    icon: 'command',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: true,
+    shortcut: 'Ctrl+Shift+P',
+  },
+  [TOOL_IDS.STORAGE_INSPECTOR]: {
+    id: TOOL_IDS.STORAGE_INSPECTOR,
+    name: 'Storage Inspector',
+    description: 'Inspect LocalStorage, IndexedDB, Cookies, and Cache',
+    icon: 'database',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.FOCUS_DEBUGGER]: {
+    id: TOOL_IDS.FOCUS_DEBUGGER,
+    name: 'Focus Debugger',
+    description: 'Visualize focus order and detect focus traps',
+    icon: 'crosshair',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.FORM_DEBUGGER]: {
+    id: TOOL_IDS.FORM_DEBUGGER,
+    name: 'Form Debugger',
+    description: 'Debug form validation, autofill, and accessibility',
+    icon: 'file-text',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.COMPONENT_TREE]: {
+    id: TOOL_IDS.COMPONENT_TREE,
+    name: 'Component Tree',
+    description: 'Visualize React, Vue, Angular, Svelte component hierarchy',
+    icon: 'git-branch',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.FLAME_GRAPH]: {
+    id: TOOL_IDS.FLAME_GRAPH,
+    name: 'Performance Flame Graph',
+    description: 'Visualize JavaScript execution and performance bottlenecks',
+    icon: 'activity',
+    category: 'performance',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.VISUAL_REGRESSION]: {
+    id: TOOL_IDS.VISUAL_REGRESSION,
+    name: 'Visual Regression',
+    description: 'Capture baselines and compare screenshots for visual testing',
+    icon: 'eye',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.AI_SUGGESTIONS]: {
+    id: TOOL_IDS.AI_SUGGESTIONS,
+    name: 'AI Suggestions',
+    description: 'Smart analysis with one-click fixes for common issues',
+    icon: 'sparkles',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: true,
   },
 };
 
@@ -402,6 +487,49 @@ export const KEYBOARD_SHORTCUTS = {
     command: 'context_pick_color',
     description: 'Pick Color',
   },
+
+  // New "Best of the Best" Shortcuts
+  OPEN_COMMAND_PALETTE: {
+    key: 'Ctrl+Shift+P',
+    macKey: 'Command+Shift+P',
+    command: 'open_command_palette',
+    description: 'Open Command Palette',
+  },
+  TOGGLE_STORAGE_INSPECTOR: {
+    key: '',
+    command: 'toggle_storage_inspector',
+    description: 'Toggle Storage Inspector',
+  },
+  TOGGLE_FOCUS_DEBUGGER: {
+    key: '',
+    command: 'toggle_focus_debugger',
+    description: 'Toggle Focus Debugger',
+  },
+  TOGGLE_FORM_DEBUGGER: {
+    key: '',
+    command: 'toggle_form_debugger',
+    description: 'Toggle Form Debugger',
+  },
+  TOGGLE_COMPONENT_TREE: {
+    key: '',
+    command: 'toggle_component_tree',
+    description: 'Toggle Component Tree',
+  },
+  TOGGLE_FLAME_GRAPH: {
+    key: '',
+    command: 'toggle_flame_graph',
+    description: 'Toggle Performance Flame Graph',
+  },
+  TOGGLE_VISUAL_REGRESSION: {
+    key: '',
+    command: 'toggle_visual_regression',
+    description: 'Toggle Visual Regression',
+  },
+  TOGGLE_AI_SUGGESTIONS: {
+    key: '',
+    command: 'toggle_ai_suggestions',
+    description: 'Toggle AI Suggestions',
+  },
 } as const;
 
 /**
@@ -498,6 +626,15 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.NETWORK_ANALYZER]: {},
   [TOOL_IDS.ELEMENT_INSPECTOR]: { showTooltips: true, highlightStyles: true },
   [TOOL_IDS.MEASUREMENT_TOOL]: {},
+  // New "Best of the Best" Tools
+  [TOOL_IDS.COMMAND_PALETTE]: {},
+  [TOOL_IDS.STORAGE_INSPECTOR]: {},
+  [TOOL_IDS.FOCUS_DEBUGGER]: {},
+  [TOOL_IDS.FORM_DEBUGGER]: {},
+  [TOOL_IDS.COMPONENT_TREE]: {},
+  [TOOL_IDS.FLAME_GRAPH]: {},
+  [TOOL_IDS.VISUAL_REGRESSION]: {},
+  [TOOL_IDS.AI_SUGGESTIONS]: {},
 };
 
 /**
@@ -514,6 +651,7 @@ export const DEFAULT_SETTINGS = {
     toggleInspector: 'Ctrl+Shift+I',
     openPopup: 'Ctrl+Shift+F',
     takeScreenshot: 'Ctrl+Shift+S',
+    openCommandPalette: 'Ctrl+Shift+P',
   },
   tools: Object.fromEntries(
     Object.entries(TOOL_METADATA).map(([id, meta]) => [
@@ -524,6 +662,27 @@ export const DEFAULT_SETTINGS = {
       },
     ])
   ),
+  // New feature settings
+  ai: {
+    enabled: true,
+    autoAnalyze: false,
+    categories: {
+      accessibility: true,
+      performance: true,
+      seo: true,
+      bestPractice: true,
+      security: true,
+    },
+  },
+  visualRegression: {
+    threshold: 0.1,
+    ignoreDynamicContent: true,
+    ignoreRegions: [],
+  },
+  storageInspector: {
+    autoRefresh: true,
+    refreshInterval: 5000,
+  },
 };
 
 // ============================================

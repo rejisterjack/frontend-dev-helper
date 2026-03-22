@@ -16,15 +16,21 @@
 import { MessageType } from '../types/messages';
 import { logger } from '../utils/logger';
 import { accessibilityAudit } from './accessibility-audit';
+import { aiSuggestions } from './ai-suggestions';
 import { animationInspector } from './animation-inspector';
 import { breakpointOverlay } from './breakpoint-overlay';
 import { colorPicker } from './color-picker';
+import { commandPalette } from './command-palette';
+import { componentTree } from './component-tree';
 import { contrastChecker } from './contrast-checker';
 import { cssEditor } from './css-editor';
 import { cssInspector } from './css-inspector';
 import designSystemValidator from './design-system-validator';
 import { exportManager } from './export-manager';
+import { flameGraph } from './flame-graph';
+import { focusDebugger } from './focus-debugger';
 import { fontInspector } from './font-inspector';
+import { formDebugger } from './form-debugger';
 import { GridOverlay } from './grid-overlay';
 import { Inspector } from './inspector';
 import { layoutVisualizer } from './layout-visualizer';
@@ -36,7 +42,9 @@ import { responsivePreview } from './responsive-preview';
 import * as screenshotStudio from './screenshot-studio';
 import { siteReportGenerator } from './site-report-generator';
 import { spacingVisualizer } from './spacing';
+import { storageInspector } from './storage-inspector';
 import { techDetector } from './tech-detector';
+import { visualRegression } from './visual-regression';
 import { zIndexVisualizer } from './zindex-visualizer';
 
 // ============================================
@@ -273,6 +281,47 @@ chrome.runtime.onMessage.addListener(
           }
           break;
 
+        // Performance Flame Graph
+        case 'FLAME_GRAPH_TOGGLE':
+          flameGraph.toggle();
+          sendResponse({ success: true, active: flameGraph.getState().enabled });
+          break;
+        case 'FLAME_GRAPH_ENABLE':
+          flameGraph.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'FLAME_GRAPH_DISABLE':
+          flameGraph.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'FLAME_GRAPH_GET_STATE':
+          sendResponse({ success: true, state: flameGraph.getState() });
+          break;
+        case 'FLAME_GRAPH_REFRESH':
+          flameGraph.refresh();
+          sendResponse({ success: true });
+          break;
+        case 'FLAME_GRAPH_START_PROFILING':
+          flameGraph.startProfiling();
+          sendResponse({ success: true });
+          break;
+        case 'FLAME_GRAPH_STOP_PROFILING':
+          flameGraph.stopProfiling();
+          sendResponse({ success: true });
+          break;
+        case 'FLAME_GRAPH_SET_THRESHOLD':
+          if (message.payload?.threshold !== undefined) {
+            flameGraph.setFilterThreshold(Number(message.payload.threshold));
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing threshold parameter' });
+          }
+          break;
+        case 'FLAME_GRAPH_EXPORT':
+          flameGraph.exportProfile();
+          sendResponse({ success: true });
+          break;
+
         // CSS Inspector
         case 'CSS_INSPECTOR_TOGGLE':
           cssInspector.toggle();
@@ -505,6 +554,60 @@ chrome.runtime.onMessage.addListener(
           return true;
         }
 
+        // Focus Debugger
+        case 'FOCUS_DEBUGGER_TOGGLE':
+          focusDebugger.toggle();
+          sendResponse({ success: true, active: focusDebugger.getState().enabled });
+          break;
+        case 'FOCUS_DEBUGGER_ENABLE':
+          focusDebugger.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'FOCUS_DEBUGGER_DISABLE':
+          focusDebugger.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'FOCUS_DEBUGGER_GET_STATE':
+          sendResponse({ success: true, state: focusDebugger.getState() });
+          break;
+        case 'FOCUS_DEBUGGER_REFRESH':
+          focusDebugger.refresh();
+          sendResponse({ success: true });
+          break;
+        case 'FOCUS_DEBUGGER_CLEAR_HISTORY':
+          focusDebugger.clearHistory();
+          sendResponse({ success: true });
+          break;
+
+        // Form Debugger
+        case 'FORM_DEBUGGER_TOGGLE':
+          formDebugger.toggle();
+          sendResponse({ success: true, active: formDebugger.getState().enabled });
+          break;
+        case 'FORM_DEBUGGER_ENABLE':
+          formDebugger.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'FORM_DEBUGGER_DISABLE':
+          formDebugger.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'FORM_DEBUGGER_GET_STATE':
+          sendResponse({ success: true, state: formDebugger.getState() });
+          break;
+        case 'FORM_DEBUGGER_REFRESH':
+          formDebugger.refresh();
+          sendResponse({ success: true });
+          break;
+        case 'FORM_DEBUGGER_SET_HIGHLIGHT':
+          if (message.payload?.enabled !== undefined) {
+            formDebugger.setHighlightIssues(Boolean(message.payload.enabled));
+            sendResponse({ success: true });
+          } else {
+            sendResponse({ success: false, error: 'Missing enabled parameter' });
+          }
+          break;
+
         // Export Manager
         case 'EXPORT_GENERATE_REPORT':
           exportManager
@@ -547,6 +650,62 @@ chrome.runtime.onMessage.addListener(
             .catch((error: Error) => sendResponse({ success: false, error: error.message }));
           return true; // Async response
 
+        // Command Palette
+        case 'COMMAND_PALETTE_ENABLE':
+          commandPalette.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'COMMAND_PALETTE_DISABLE':
+          commandPalette.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'COMMAND_PALETTE_TOGGLE':
+          commandPalette.toggle();
+          sendResponse({ success: true, state: commandPalette.getState() });
+          break;
+
+        // Storage Inspector
+        case 'STORAGE_INSPECTOR_ENABLE':
+          storageInspector.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'STORAGE_INSPECTOR_DISABLE':
+          storageInspector.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'STORAGE_INSPECTOR_TOGGLE':
+          storageInspector.toggle();
+          sendResponse({ success: true, state: storageInspector.getState() });
+          break;
+
+        // Component Tree
+        case 'COMPONENT_TREE_ENABLE':
+          componentTree.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'COMPONENT_TREE_DISABLE':
+          componentTree.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'COMPONENT_TREE_TOGGLE':
+          componentTree.toggle();
+          sendResponse({ success: true, state: componentTree.getState() });
+          break;
+
+        // Visual Regression
+        case 'VISUAL_REGRESSION_ENABLE':
+          visualRegression.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'VISUAL_REGRESSION_DISABLE':
+          visualRegression.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'VISUAL_REGRESSION_TOGGLE':
+          visualRegression.toggle();
+          sendResponse({ success: true, state: visualRegression.getState() });
+          break;
+
         // Get all states
         case 'GET_ALL_STATES':
           sendResponse({
@@ -571,6 +730,14 @@ chrome.runtime.onMessage.addListener(
               animationInspector: animationInspector.getState(),
               designSystemValidator: designSystemValidator.getState(),
               responsivePreview: responsivePreview.getState(),
+              flameGraph: flameGraph.getState(),
+              focusDebugger: focusDebugger.getState(),
+              formDebugger: formDebugger.getState(),
+              commandPalette: commandPalette.getState(),
+              storageInspector: storageInspector.getState(),
+              componentTree: componentTree.getState(),
+              visualRegression: visualRegression.getState(),
+              aiSuggestions: aiSuggestions.getState(),
               inspector: { enabled: state.isInspectorActive },
               measureTool: { enabled: state.isMeasureToolActive },
               gridOverlay: { visible: state.isGridVisible },
@@ -974,6 +1141,9 @@ document.addEventListener('keydown', (event) => {
     animationInspector.disable();
     designSystemValidator.disable();
     responsivePreview.disable();
+    flameGraph.disable();
+    focusDebugger.disable();
+    formDebugger.disable();
 
     // Update state
     state.domOutlinerEnabled = false;

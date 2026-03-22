@@ -5,6 +5,7 @@
  */
 
 import type { FeatureToggles } from '@/types';
+import { DEFAULT_FEATURE_TOGGLES } from '@/types';
 import { logger } from '@/utils/logger';
 
 type FeatureHandler = {

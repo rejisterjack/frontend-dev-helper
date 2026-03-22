@@ -164,6 +164,71 @@ const TOOLS: ToolMeta[] = [
     hasSettings: true,
     color: '#22c55e',
   },
+  // New "Best of the Best" Tools
+  {
+    type: ToolType.COMMAND_PALETTE,
+    name: 'Command Palette',
+    description: 'Quick access to all tools via keyboard (Ctrl+Shift+P)',
+    icon: '⌨️',
+    hasSettings: true,
+    color: '#6366f1',
+  },
+  {
+    type: ToolType.STORAGE_INSPECTOR,
+    name: 'Storage Inspector',
+    description: 'Inspect LocalStorage, IndexedDB, Cookies, and Cache',
+    icon: '💾',
+    hasSettings: true,
+    color: '#0891b2',
+  },
+  {
+    type: ToolType.FOCUS_DEBUGGER,
+    name: 'Focus Debugger',
+    description: 'Visualize focus order and detect focus traps',
+    icon: '🎯',
+    hasSettings: true,
+    color: '#ea580c',
+  },
+  {
+    type: ToolType.FORM_DEBUGGER,
+    name: 'Form Debugger',
+    description: 'Debug form validation, autofill, and accessibility',
+    icon: '📝',
+    hasSettings: true,
+    color: '#7c3aed',
+  },
+  {
+    type: ToolType.COMPONENT_TREE,
+    name: 'Component Tree',
+    description: 'Visualize React, Vue, Angular, Svelte components',
+    icon: '🌳',
+    hasSettings: true,
+    color: '#16a34a',
+  },
+  {
+    type: ToolType.FLAME_GRAPH,
+    name: 'Performance Flame Graph',
+    description: 'Visualize JavaScript execution performance',
+    icon: '🔥',
+    hasSettings: true,
+    color: '#dc2626',
+  },
+  {
+    type: ToolType.VISUAL_REGRESSION,
+    name: 'Visual Regression',
+    description: 'Capture baselines and compare screenshots',
+    icon: '👁️',
+    hasSettings: true,
+    color: '#db2777',
+  },
+  {
+    type: ToolType.AI_SUGGESTIONS,
+    name: 'AI Suggestions',
+    description: 'Smart analysis with one-click fixes',
+    icon: '✨',
+    hasSettings: true,
+    color: '#f59e0b',
+  },
 ];
 
 /** Extension version */
@@ -191,6 +256,15 @@ export const Popup: React.FC = () => {
     [ToolType.RESPONSIVE_PREVIEW]: { enabled: false },
     [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enabled: false },
     [ToolType.NETWORK_ANALYZER]: { enabled: false },
+    // New "Best of the Best" Tools
+    [ToolType.COMMAND_PALETTE]: { enabled: true },
+    [ToolType.STORAGE_INSPECTOR]: { enabled: false },
+    [ToolType.FOCUS_DEBUGGER]: { enabled: false },
+    [ToolType.FORM_DEBUGGER]: { enabled: false },
+    [ToolType.COMPONENT_TREE]: { enabled: false },
+    [ToolType.FLAME_GRAPH]: { enabled: false },
+    [ToolType.VISUAL_REGRESSION]: { enabled: false },
+    [ToolType.AI_SUGGESTIONS]: { enabled: true },
   });
 
   // UI states
@@ -238,6 +312,15 @@ export const Popup: React.FC = () => {
                 enabled: false,
               },
               [ToolType.NETWORK_ANALYZER]: response.states.networkAnalyzer || { enabled: false },
+              // New "Best of the Best" Tools
+              [ToolType.COMMAND_PALETTE]: response.states.commandPalette || { enabled: true },
+              [ToolType.STORAGE_INSPECTOR]: response.states.storageInspector || { enabled: false },
+              [ToolType.FOCUS_DEBUGGER]: response.states.focusDebugger || { enabled: false },
+              [ToolType.FORM_DEBUGGER]: response.states.formDebugger || { enabled: false },
+              [ToolType.COMPONENT_TREE]: response.states.componentTree || { enabled: false },
+              [ToolType.FLAME_GRAPH]: response.states.flameGraph || { enabled: false },
+              [ToolType.VISUAL_REGRESSION]: response.states.visualRegression || { enabled: false },
+              [ToolType.AI_SUGGESTIONS]: response.states.aiSuggestions || { enabled: true },
             });
           }
         }
@@ -337,6 +420,31 @@ export const Popup: React.FC = () => {
       case ToolType.NETWORK_ANALYZER:
         messageType = enabled ? 'NETWORK_ANALYZER_ENABLE' : 'NETWORK_ANALYZER_DISABLE';
         break;
+      // New "Best of the Best" Tools
+      case ToolType.COMMAND_PALETTE:
+        messageType = enabled ? 'COMMAND_PALETTE_ENABLE' : 'COMMAND_PALETTE_DISABLE';
+        break;
+      case ToolType.STORAGE_INSPECTOR:
+        messageType = enabled ? 'STORAGE_INSPECTOR_ENABLE' : 'STORAGE_INSPECTOR_DISABLE';
+        break;
+      case ToolType.FOCUS_DEBUGGER:
+        messageType = enabled ? 'FOCUS_DEBUGGER_ENABLE' : 'FOCUS_DEBUGGER_DISABLE';
+        break;
+      case ToolType.FORM_DEBUGGER:
+        messageType = enabled ? 'FORM_DEBUGGER_ENABLE' : 'FORM_DEBUGGER_DISABLE';
+        break;
+      case ToolType.COMPONENT_TREE:
+        messageType = enabled ? 'COMPONENT_TREE_ENABLE' : 'COMPONENT_TREE_DISABLE';
+        break;
+      case ToolType.FLAME_GRAPH:
+        messageType = enabled ? 'FLAME_GRAPH_ENABLE' : 'FLAME_GRAPH_DISABLE';
+        break;
+      case ToolType.VISUAL_REGRESSION:
+        messageType = enabled ? 'VISUAL_REGRESSION_ENABLE' : 'VISUAL_REGRESSION_DISABLE';
+        break;
+      case ToolType.AI_SUGGESTIONS:
+        messageType = enabled ? 'AI_SUGGESTIONS_ENABLE' : 'AI_SUGGESTIONS_DISABLE';
+        break;
       default:
         return;
     }
@@ -373,6 +481,15 @@ export const Popup: React.FC = () => {
       [ToolType.FONT_INSPECTOR]: { enabled: false },
       [ToolType.COLOR_PICKER]: { enabled: false },
       [ToolType.PIXEL_RULER]: { enabled: false },
+      // New "Best of the Best" Tools - reset to defaults
+      [ToolType.COMMAND_PALETTE]: { enabled: true },
+      [ToolType.STORAGE_INSPECTOR]: { enabled: false },
+      [ToolType.FOCUS_DEBUGGER]: { enabled: false },
+      [ToolType.FORM_DEBUGGER]: { enabled: false },
+      [ToolType.COMPONENT_TREE]: { enabled: false },
+      [ToolType.FLAME_GRAPH]: { enabled: false },
+      [ToolType.VISUAL_REGRESSION]: { enabled: false },
+      [ToolType.AI_SUGGESTIONS]: { enabled: true },
       [ToolType.RESPONSIVE_BREAKPOINT]: { enabled: false },
       [ToolType.CSS_INSPECTOR]: { enabled: false },
       [ToolType.CONTRAST_CHECKER]: { enabled: false },
@@ -415,6 +532,15 @@ export const Popup: React.FC = () => {
         'RESPONSIVE_PREVIEW_DISABLE',
         'DESIGN_SYSTEM_VALIDATOR_DISABLE',
         'NETWORK_ANALYZER_DISABLE',
+        // New "Best of the Best" Tools
+        'COMMAND_PALETTE_DISABLE',
+        'STORAGE_INSPECTOR_DISABLE',
+        'FOCUS_DEBUGGER_DISABLE',
+        'FORM_DEBUGGER_DISABLE',
+        'COMPONENT_TREE_DISABLE',
+        'FLAME_GRAPH_DISABLE',
+        'VISUAL_REGRESSION_DISABLE',
+        'AI_SUGGESTIONS_DISABLE',
       ];
 
       for (const messageType of disableMessages) {
