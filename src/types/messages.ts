@@ -1,14 +1,26 @@
 /**
  * Message Types for FrontendDevHelper
  *
- * Defines all possible message types that can be sent between
- * background script, content script, and popup.
+ * @deprecated This file is being phased out in favor of src/constants/index.ts MESSAGE_TYPES.
+ * Please import MESSAGE_TYPES from @/constants instead for new code.
  */
 
+import { MESSAGE_TYPES } from '@/constants';
+
 // ============================================
-// Message Type Enum
+// Re-export from constants (single source of truth)
 // ============================================
 
+export { MESSAGE_TYPES };
+
+// ============================================
+// Deprecated Message Type Enum
+// ============================================
+
+/**
+ * @deprecated Use MESSAGE_TYPES from @/constants instead.
+ * This enum is kept for backward compatibility only.
+ */
 export enum MessageType {
   // Tool toggles
   TOGGLE_INSPECTOR = 'TOGGLE_INSPECTOR',
@@ -83,7 +95,7 @@ export enum MessageType {
 // ============================================
 
 export interface MessagePayload {
-  type: MessageType;
+  type: MessageType | (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES];
   payload?: unknown;
 }
 

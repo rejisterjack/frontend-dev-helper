@@ -679,10 +679,10 @@ function getTypeIcon(type: ComponentNode['type']): string {
 function getNodeTooltip(node: ComponentNode): string {
   let tooltip = `${node.type}: ${node.name}`;
   if (node.props && Object.keys(node.props).length > 0) {
-    tooltip += '\nProps: ' + Object.keys(node.props).join(', ');
+    tooltip += `\nProps: ${Object.keys(node.props).join(', ')}`;
   }
   if (node.state && Object.keys(node.state).length > 0) {
-    tooltip += '\nState: ' + Object.keys(node.state).join(', ');
+    tooltip += `\nState: ${Object.keys(node.state).join(', ')}`;
   }
   return tooltip;
 }

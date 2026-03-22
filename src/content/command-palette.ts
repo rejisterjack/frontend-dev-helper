@@ -250,13 +250,14 @@ function handlePaletteKeyDown(e: KeyboardEvent): void {
       selectedIndex = Math.max(selectedIndex - 1, 0);
       updateSelection();
       break;
-    case 'Enter':
+    case 'Enter': {
       e.preventDefault();
       const command = filteredCommands[selectedIndex];
       if (command) {
         executeCommand(command.id);
       }
       break;
+    }
     case 'Escape':
       e.preventDefault();
       closePalette();
@@ -346,7 +347,7 @@ function renderCommands(commands: ReturnType<typeof getAllCommands>): void {
       if (id) executeCommand(id);
     });
     item.addEventListener('mouseenter', () => {
-      selectedIndex = parseInt(item.getAttribute('data-index') || '0');
+      selectedIndex = Number.parseInt(item.getAttribute('data-index') || '0', 10);
       updateSelection();
     });
   });

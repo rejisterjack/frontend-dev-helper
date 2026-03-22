@@ -6,7 +6,8 @@
  * component hierarchies from React, Vue, Angular, and Svelte.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentNode, ComponentTreeState, FrameworkType } from '@/types';
 import { logger } from '@/utils/logger';
 
@@ -115,8 +116,16 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           transition-colors hover:bg-slate-800
           ${isSelected ? 'bg-indigo-600 text-white' : 'text-slate-300'}
         `}
-        style={{ paddingLeft: `${indent + 16}px` }}
         onClick={handleSelect}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSelect();
+          }
+        }}
+        role="button"
+        style={{ paddingLeft: `${indent + 16}px` }}
+        tabIndex={0}
       >
         {/* Toggle button */}
         <button
@@ -196,15 +205,16 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   if (!query) return text;
 
   const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'));
-  return parts.map((part, i) =>
-    part.toLowerCase() === query.toLowerCase() ? (
-      <mark key={i} className="rounded bg-yellow-500/30 px-0.5 text-inherit">
+  return parts.map((part, i) => {
+    const key = `${text}-${part}-${i}`;
+    return part.toLowerCase() === query.toLowerCase() ? (
+      <mark key={key} className="rounded bg-yellow-500/30 px-0.5 text-inherit">
         {part}
       </mark>
     ) : (
-      part
-    )
-  );
+      <span key={key}>{part}</span>
+    );
+  });
 }
 
 function escapeRegExp(string: string): string {
@@ -411,8 +421,14 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
     <div className="fixed inset-0 z-[2147483646] flex items-start justify-end p-5">
       {/* Backdrop */}
       <div
+        aria-hidden="true"
         className="absolute inset-0 bg-black/20"
         onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            onClose();
+          }
+        }}
       />
 
       {/* Panel */}

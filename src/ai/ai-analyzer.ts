@@ -29,6 +29,15 @@ const ANALYSIS_CONFIG = {
     maxDepth: 32,
     maxInlineStyles: 50,
   },
+  // Sampling settings for large DOMs
+  sampling: {
+    // Maximum elements to check per query (for performance)
+    maxElementsPerQuery: 200,
+    // Sample every Nth element when DOM is large
+    sampleRate: 1, // 1 = check all, 2 = check every 2nd, etc.
+    // Enable sampling for DOMs larger than this
+    enableSamplingThreshold: 1000,
+  },
 };
 
 // ============================================
@@ -44,9 +53,9 @@ export async function runAIAnalysis(): Promise<AIAnalysisResult> {
 
   const suggestions: AISuggestion[] = [];
 
-  // Run all analyzers
-  suggestions.push(...analyzeAccessibility());
-  suggestions.push(...analyzePerformance());
+  // Run all analyzers (sequentially to avoid blocking)
+  suggestions.push(...(await analyzeAccessibility()));
+  suggestions.push(...(await analyzePerformance()));
   suggestions.push(...analyzeSEO());
   suggestions.push(...analyzeBestPractices());
   suggestions.push(...analyzeSecurity());
@@ -69,17 +78,27 @@ export async function runAIAnalysis(): Promise<AIAnalysisResult> {
 // Accessibility Analysis
 // ============================================
 
-function analyzeAccessibility(): AISuggestion[] {
+export async function analyzeAccessibility(): Promise<AISuggestion[]> {
   const suggestions: AISuggestion[] = [];
+  
+  // Check for very large DOMs and warn
+  const domSize = document.querySelectorAll('*').length;
+  const isLargeDom = domSize > ANALYSIS_CONFIG.sampling.enableSamplingThreshold;
+  
+  if (isLargeDom) {
+    logger.log(`[AIAnalyzer] Large DOM detected (${domSize} nodes), using sampling for accessibility analysis`);
+  }
 
-  // Check images without alt text
-  document.querySelectorAll('img:not([alt]):not([aria-hidden="true"])').forEach((img, index) => {
+  // Check images without alt text (with sampling for large DOMs)
+  const imagesWithoutAlt = getSampledElements('img:not([alt]):not([aria-hidden="true"])');
+  for (let i = 0; i < imagesWithoutAlt.length; i++) {
+    const img = imagesWithoutAlt[i];
     suggestions.push({
-      id: `a11y-alt-${index}`,
+      id: `a11y-alt-${i}`,
       category: 'accessibility',
       priority: 'high',
       title: 'Image missing alt text',
-      description: `Image ${index + 1} is missing alternative text. Screen readers cannot describe this image to visually impaired users.`,
+      description: `Image ${i + 1} is missing alternative text. Screen readers cannot describe this image to visually impaired users.`,
       element: 'img',
       selector: generateSelector(img),
       impact: 'Critical for screen reader users',
@@ -91,10 +110,17 @@ function analyzeAccessibility(): AISuggestion[] {
         return true;
       },
     });
-  });
+  }
+  
+  // Yield control after heavy operation
+  if (imagesWithoutAlt.length > 50) {
+    await yieldControl();
+  }
 
-  // Check form inputs without labels
-  document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea').forEach((input, index) => {
+  // Check form inputs without labels (with sampling)
+  const formInputs = getSampledElements('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea');
+  for (let i = 0; i < formInputs.length; i++) {
+    const input = formInputs[i];
     const hasLabel = input.id && document.querySelector(`label[for="${input.id}"]`);
     const hasAriaLabel = input.hasAttribute('aria-label');
     const hasAriaLabelledBy = input.hasAttribute('aria-labelledby');
@@ -102,7 +128,7 @@ function analyzeAccessibility(): AISuggestion[] {
 
     if (!hasLabel && !hasAriaLabel && !hasAriaLabelledBy && !hasPlaceholder) {
       suggestions.push({
-        id: `a11y-label-${index}`,
+        id: `a11y-label-${i}`,
         category: 'accessibility',
         priority: 'high',
         title: 'Form input missing label',
@@ -115,7 +141,7 @@ function analyzeAccessibility(): AISuggestion[] {
         autoFixable: false,
       });
     }
-  });
+  }
 
   // Check for missing page title
   if (!document.title || document.title.trim().length === 0) {
@@ -179,58 +205,72 @@ function analyzeAccessibility(): AISuggestion[] {
     });
   }
 
-  // Check for low contrast text
-  document.querySelectorAll('p, span, a, button, h1, h2, h3, h4, h5, h6, li').forEach((el, index) => {
-    const style = window.getComputedStyle(el);
-    const color = style.color;
-    const bgColor = style.backgroundColor;
+  // Yield control before expensive contrast checks
+  await yieldControl();
 
-    // Simple check for very low contrast (white on white, black on black)
-    if (color === bgColor || (color.includes('255') && bgColor.includes('255')) || (color.includes('0, 0, 0') && bgColor.includes('0, 0, 0'))) {
-      suggestions.push({
-        id: `a11y-contrast-${index}`,
-        category: 'accessibility',
-        priority: 'high',
-        title: 'Low contrast text',
-        description: 'Text color and background color are too similar, making content difficult to read.',
-        element: el.tagName.toLowerCase(),
-        selector: generateSelector(el),
-        impact: 'Makes text unreadable for many users',
-        effort: 'easy',
-        confidence: 0.7,
-        autoFixable: false,
-      });
-    }
-  });
+  // Check for low contrast text (with sampling for large DOMs)
+  // Skip detailed contrast analysis for very large DOMs
+  if (!shouldSkipDetailedAnalysis()) {
+    const textElements = getSampledElements('p, span, a, button, h1, h2, h3, h4, h5, h6, li');
+    for (let i = 0; i < textElements.length; i++) {
+      const el = textElements[i];
+      const style = window.getComputedStyle(el);
+      const color = style.color;
+      const bgColor = style.backgroundColor;
 
-  // Check for focusable elements without focus styles
-  document.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])').forEach((el, index) => {
-    const style = window.getComputedStyle(el);
-    const outline = style.outline;
-    
-    if (outline === 'none' || outline === '0px') {
-      // Check if there's a custom focus style defined
-      const hasCustomFocus = el.matches(':focus') || el.matches(':focus-visible');
-      if (!hasCustomFocus) {
+      // Simple check for very low contrast (white on white, black on black)
+      if (color === bgColor || (color.includes('255') && bgColor.includes('255')) || (color.includes('0, 0, 0') && bgColor.includes('0, 0, 0'))) {
         suggestions.push({
-          id: `a11y-focus-${index}`,
+          id: `a11y-contrast-${i}`,
           category: 'accessibility',
-          priority: 'medium',
-          title: 'Missing focus indicator',
-          description: 'Interactive element has no visible focus indicator, making keyboard navigation difficult.',
+          priority: 'high',
+          title: 'Low contrast text',
+          description: 'Text color and background color are too similar, making content difficult to read.',
           element: el.tagName.toLowerCase(),
           selector: generateSelector(el),
-          impact: 'Keyboard users cannot see which element is focused',
+          impact: 'Makes text unreadable for many users',
           effort: 'easy',
-          confidence: 0.6,
+          confidence: 0.7,
           autoFixable: false,
         });
       }
     }
-  });
+  }
 
-  // Check for empty links
-  document.querySelectorAll('a').forEach((link, index) => {
+  // Yield control before focusable elements check
+  await yieldControl();
+
+  // Check for focusable elements without focus styles (with sampling)
+  const focusableElements = getSampledElements('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  // Limit focus checks to prevent performance issues
+  const focusElementsToCheck = focusableElements.slice(0, 100);
+  
+  for (let i = 0; i < focusElementsToCheck.length; i++) {
+    const el = focusElementsToCheck[i];
+    const style = window.getComputedStyle(el);
+    const outline = style.outline;
+    
+    if (outline === 'none' || outline === '0px') {
+      suggestions.push({
+        id: `a11y-focus-${i}`,
+        category: 'accessibility',
+        priority: 'medium',
+        title: 'Missing focus indicator',
+        description: 'Interactive element has no visible focus indicator, making keyboard navigation difficult.',
+        element: el.tagName.toLowerCase(),
+        selector: generateSelector(el),
+        impact: 'Keyboard users cannot see which element is focused',
+        effort: 'easy',
+        confidence: 0.6,
+        autoFixable: false,
+      });
+    }
+  }
+
+  // Check for empty links (with sampling)
+  const links = getSampledElements('a');
+  for (let i = 0; i < links.length; i++) {
+    const link = links[i];
     const text = link.textContent?.trim();
     const hasAriaLabel = link.hasAttribute('aria-label');
     const hasTitle = link.hasAttribute('title');
@@ -238,7 +278,7 @@ function analyzeAccessibility(): AISuggestion[] {
 
     if (!text && !hasAriaLabel && !hasTitle && !hasImg) {
       suggestions.push({
-        id: `a11y-empty-link-${index}`,
+        id: `a11y-empty-link-${i}`,
         category: 'accessibility',
         priority: 'high',
         title: 'Empty link',
@@ -251,7 +291,7 @@ function analyzeAccessibility(): AISuggestion[] {
         autoFixable: false,
       });
     }
-  });
+  }
 
   return suggestions;
 }
@@ -260,7 +300,7 @@ function analyzeAccessibility(): AISuggestion[] {
 // Performance Analysis
 // ============================================
 
-function analyzePerformance(): AISuggestion[] {
+export async function analyzePerformance(): Promise<AISuggestion[]> {
   const suggestions: AISuggestion[] = [];
 
   // Check DOM size
@@ -301,12 +341,15 @@ function analyzePerformance(): AISuggestion[] {
     });
   }
 
-  // Check for unoptimized images
-  document.querySelectorAll('img').forEach((img, index) => {
+  // Check for unoptimized images (with sampling for large DOMs)
+  const images = getSampledElements('img');
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i] as HTMLImageElement;
+    
     if (img.naturalWidth > ANALYSIS_CONFIG.imageThresholds.maxDimensions ||
         img.naturalHeight > ANALYSIS_CONFIG.imageThresholds.maxDimensions) {
       suggestions.push({
-        id: `perf-image-large-${index}`,
+        id: `perf-image-large-${i}`,
         category: 'performance',
         priority: 'medium',
         title: 'Oversized image',
@@ -320,32 +363,34 @@ function analyzePerformance(): AISuggestion[] {
       });
     }
 
-    // Check for images without lazy loading
-    const rect = img.getBoundingClientRect();
-    if (rect.top > window.innerHeight && !img.loading && !img.hasAttribute('loading')) {
-      suggestions.push({
-        id: `perf-image-lazy-${index}`,
-        category: 'performance',
-        priority: 'medium',
-        title: 'Image missing lazy loading',
-        description: 'Off-screen image should use loading="lazy" for better performance.',
-        element: 'img',
-        selector: generateSelector(img),
-        impact: 'Unnecessary initial page load time',
-        effort: 'easy',
-        confidence: 0.85,
-        autoFixable: true,
-        fix: () => {
-          img.loading = 'lazy';
-          return true;
-        },
-      });
+    // Check for images without lazy loading (limit to visible viewport check)
+    if (i < 50) { // Only check first 50 images for lazy loading
+      const rect = img.getBoundingClientRect();
+      if (rect.top > window.innerHeight && !img.loading && !img.hasAttribute('loading')) {
+        suggestions.push({
+          id: `perf-image-lazy-${i}`,
+          category: 'performance',
+          priority: 'medium',
+          title: 'Image missing lazy loading',
+          description: 'Off-screen image should use loading="lazy" for better performance.',
+          element: 'img',
+          selector: generateSelector(img),
+          impact: 'Unnecessary initial page load time',
+          effort: 'easy',
+          confidence: 0.85,
+          autoFixable: true,
+          fix: () => {
+            img.loading = 'lazy';
+            return true;
+          },
+        });
+      }
     }
 
     // Check for missing dimensions
     if (!img.width && !img.height && !img.style.width && !img.style.height) {
       suggestions.push({
-        id: `perf-image-dims-${index}`,
+        id: `perf-image-dims-${i}`,
         category: 'performance',
         priority: 'low',
         title: 'Image missing dimensions',
@@ -358,7 +403,7 @@ function analyzePerformance(): AISuggestion[] {
         autoFixable: false,
       });
     }
-  });
+  }
 
   // Check for render-blocking resources
   const stylesheets = document.querySelectorAll('link[rel="stylesheet"]:not([async])');
@@ -376,9 +421,13 @@ function analyzePerformance(): AISuggestion[] {
     });
   }
 
-  // Check for inline styles
-  const inlineStyles = document.querySelectorAll('[style]');
-  if (inlineStyles.length > ANALYSIS_CONFIG.performanceThresholds.maxInlineStyles) {
+  // Check for inline styles (with sampling for large DOMs)
+  const inlineStyles = getSampledElements('[style]');
+  // Scale threshold based on sampling
+  const sampleRate = Math.max(1, Math.ceil(domSize / ANALYSIS_CONFIG.sampling.maxElementsPerQuery));
+  const adjustedThreshold = ANALYSIS_CONFIG.performanceThresholds.maxInlineStyles * sampleRate;
+  
+  if (inlineStyles.length > adjustedThreshold) {
     suggestions.push({
       id: 'perf-inline-styles',
       category: 'performance',
@@ -399,7 +448,7 @@ function analyzePerformance(): AISuggestion[] {
 // SEO Analysis
 // ============================================
 
-function analyzeSEO(): AISuggestion[] {
+export function analyzeSEO(): AISuggestion[] {
   const suggestions: AISuggestion[] = [];
 
   // Check meta description
@@ -538,7 +587,7 @@ function analyzeSEO(): AISuggestion[] {
 // Best Practices Analysis
 // ============================================
 
-function analyzeBestPractices(): AISuggestion[] {
+export function analyzeBestPractices(): AISuggestion[] {
   const suggestions: AISuggestion[] = [];
 
   // Check for doctype
@@ -581,12 +630,14 @@ function analyzeBestPractices(): AISuggestion[] {
   // Check for console statements in production
   // This is informational only since we can't detect console usage easily
 
-  // Check for target="_blank" without rel="noopener"
-  document.querySelectorAll('a[target="_blank"]').forEach((link, index) => {
+  // Check for target="_blank" without rel="noopener" (with sampling)
+  const externalLinks = getSampledElements('a[target="_blank"]');
+  for (let i = 0; i < externalLinks.length; i++) {
+    const link = externalLinks[i];
     const rel = link.getAttribute('rel') || '';
     if (!rel.includes('noopener') && !rel.includes('noreferrer')) {
       suggestions.push({
-        id: `bp-opener-${index}`,
+        id: `bp-opener-${i}`,
         category: 'best-practice',
         priority: 'high',
         title: 'Unsafe external link',
@@ -603,13 +654,15 @@ function analyzeBestPractices(): AISuggestion[] {
         },
       });
     }
-  });
+  }
 
-  // Check for mixed content (HTTP resources on HTTPS page)
+  // Check for mixed content (HTTP resources on HTTPS page) - with sampling
   if (window.location.protocol === 'https:') {
-    document.querySelectorAll('img[src^="http:"], script[src^="http:"], link[href^="http:"]').forEach((el, index) => {
+    const mixedContentElements = getSampledElements('img[src^="http:"], script[src^="http:"], link[href^="http:"]');
+    for (let i = 0; i < mixedContentElements.length; i++) {
+      const el = mixedContentElements[i];
       suggestions.push({
-        id: `bp-mixed-content-${index}`,
+        id: `bp-mixed-content-${i}`,
         category: 'best-practice',
         priority: 'high',
         title: 'Mixed content',
@@ -621,11 +674,11 @@ function analyzeBestPractices(): AISuggestion[] {
         confidence: 0.95,
         autoFixable: false,
       });
-    });
+    }
   }
 
-  // Check for deprecated elements
-  const deprecatedElements = document.querySelectorAll('center, font, marquee, blink, big, strike, tt');
+  // Check for deprecated elements (with sampling)
+  const deprecatedElements = getSampledElements('center, font, marquee, blink, big, strike, tt');
   if (deprecatedElements.length > 0) {
     suggestions.push({
       id: 'bp-deprecated',
@@ -647,7 +700,7 @@ function analyzeBestPractices(): AISuggestion[] {
 // Security Analysis
 // ============================================
 
-function analyzeSecurity(): AISuggestion[] {
+export function analyzeSecurity(): AISuggestion[] {
   const suggestions: AISuggestion[] = [];
 
   // Check for HTTPS
@@ -686,6 +739,57 @@ function analyzeSecurity(): AISuggestion[] {
   });
 
   return suggestions;
+}
+
+// ============================================
+// DOM Sampling & Batching Utilities
+// ============================================
+
+/**
+ * Get a sampled list of elements for analysis
+ * For large DOMs, samples every Nth element to maintain performance
+ */
+function getSampledElements(selector: string): Element[] {
+  const allElements = document.querySelectorAll(selector);
+  const totalCount = allElements.length;
+  
+  // If DOM is small enough, return all elements
+  if (totalCount <= ANALYSIS_CONFIG.sampling.maxElementsPerQuery) {
+    return Array.from(allElements);
+  }
+  
+  // Calculate sample rate based on DOM size
+  const sampleRate = Math.ceil(totalCount / ANALYSIS_CONFIG.sampling.maxElementsPerQuery);
+  
+  logger.log(`[AIAnalyzer] Sampling ${selector}: ${totalCount} elements, sampling every ${sampleRate}th`);
+  
+  const sampled: Element[] = [];
+  for (let i = 0; i < totalCount; i += sampleRate) {
+    sampled.push(allElements[i]);
+  }
+  
+  return sampled;
+}
+
+/**
+ * Yield control to the browser to prevent blocking
+ */
+function yieldControl(): Promise<void> {
+  return new Promise((resolve) => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => resolve(), { timeout: 50 });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+/**
+ * Check if we should skip analysis for very large DOMs
+ */
+function shouldSkipDetailedAnalysis(): boolean {
+  const domSize = document.querySelectorAll('*').length;
+  return domSize > ANALYSIS_CONFIG.sampling.enableSamplingThreshold * 5;
 }
 
 // ============================================
@@ -751,6 +855,7 @@ function generateSelector(el: Element): string {
 // Export
 // ============================================
 
+// Namespaced export for convenience
 export const aiAnalyzer = {
   runAIAnalysis,
   analyzeAccessibility,
@@ -759,3 +864,6 @@ export const aiAnalyzer = {
   analyzeBestPractices,
   analyzeSecurity,
 };
+
+// Default export
+export default aiAnalyzer;

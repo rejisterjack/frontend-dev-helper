@@ -416,10 +416,17 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
 
   return (
     <div
+      aria-modal="true"
       className="fixed inset-0 z-[2147483647] flex items-start justify-center bg-black/50 p-4 pt-[10vh]"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
+      role="dialog"
     >
       <div className="w-full max-w-4xl overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10">
         {/* Header */}
@@ -774,10 +781,11 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
             <div className="space-y-6">
               {/* Threshold */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-white">
+                <label htmlFor="threshold-slider" className="mb-2 block text-sm font-medium text-white">
                   Difference Threshold: {threshold}%
                 </label>
                 <input
+                  id="threshold-slider"
                   type="range"
                   min="0"
                   max="10"
@@ -794,7 +802,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               {/* Ignore Regions */}
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <label className="text-sm font-medium text-white">Ignore Regions</label>
+                  <span className="text-sm font-medium text-white">Ignore Regions</span>
                   <button
                     onClick={() =>
                       addIgnoreRegion({
@@ -814,9 +822,9 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   <p className="text-sm text-slate-500">No ignore regions defined</p>
                 ) : (
                   <div className="space-y-2">
-                    {ignoreRegions.map((region, index) => (
+                    {ignoreRegions.map((region) => (
                       <div
-                        key={index}
+                        key={`${region.x}-${region.y}-${region.width}-${region.height}`}
                         className="flex items-center gap-3 rounded-lg bg-slate-800 p-3"
                       >
                         <div className="flex-1 text-sm text-slate-300">

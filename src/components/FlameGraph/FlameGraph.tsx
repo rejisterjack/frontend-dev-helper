@@ -6,7 +6,8 @@
  * JavaScript execution and performance bottlenecks.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FlameGraphEntry, PerformanceProfile } from '@/types';
 
 // ============================================
@@ -535,7 +536,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
                 min="0"
                 max="50"
                 value={filter.minDuration}
-                onChange={(e) => setFilter(prev => ({ ...prev, minDuration: parseInt(e.target.value) }))}
+                onChange={(e) => setFilter(prev => ({ ...prev, minDuration: Number.parseInt(e.target.value, 10) }))}
                 className="w-24"
               />
               <span className="text-xs text-slate-400 w-12">{filter.minDuration}ms</span>
@@ -760,7 +761,7 @@ function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: num
     truncated = truncated.slice(0, -1);
   }
   if (truncated.length < text.length) {
-    truncated = truncated.slice(0, -3) + '...';
+    truncated = `${truncated.slice(0, -3)}...`;
   }
   return truncated || text.slice(0, 1);
 }

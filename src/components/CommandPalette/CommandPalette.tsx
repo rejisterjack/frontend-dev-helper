@@ -5,7 +5,8 @@
  * Features fuzzy search, keyboard navigation, recent commands, and categorized results.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Command } from '@/types';
 import { logger } from '@/utils/logger';
 import {
@@ -60,13 +61,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
           e.preventDefault();
           setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
           break;
-        case 'Enter':
+        case 'Enter': {
           e.preventDefault();
           const command = filteredCommands[selectedIndex];
           if (command) {
             handleExecuteCommand(command);
           }
           break;
+        }
         case 'Escape':
           e.preventDefault();
           onClose();
@@ -161,14 +163,22 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
   return (
     <div
+      aria-modal="true"
       className="fixed inset-0 z-[2147483647] flex items-start justify-center bg-black/50 p-4 pt-[15vh]"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
+      role="dialog"
     >
       <div
         className="w-full max-w-2xl overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10"
         onKeyDown={handleKeyDown}
+        role="application"
       >
         {/* Search Input */}
         <div className="flex items-center border-b border-slate-700 px-4 py-3">

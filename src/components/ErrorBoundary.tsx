@@ -10,6 +10,12 @@ import { logger } from '@/utils/logger';
 
 interface Props {
   children: ReactNode;
+  /** Optional custom fallback component */
+  fallback?: ReactNode;
+  /** Called when an error is caught */
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  /** Reset error state when this prop changes */
+  resetKeys?: Array<string | number>;
 }
 
 interface State {
@@ -32,6 +38,19 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('FrontendDevHelper Error:', error, errorInfo);
     this.setState({ error, errorInfo });
+    this.props.onError?.(error, errorInfo);
+  }
+
+  public componentDidUpdate(prevProps: Props) {
+    // Reset error state when resetKeys change
+    if (this.state.hasError && this.props.resetKeys) {
+      const hasResetKeyChanged = this.props.resetKeys.some(
+        (key, idx) => key !== prevProps.resetKeys?.[idx]
+      );
+      if (hasResetKeyChanged) {
+        this.handleReset();
+      }
+    }
   }
 
   private handleReload = () => {
@@ -44,6 +63,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      // Use custom fallback if provided
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      // Default error UI
       return (
         <div
           style={{

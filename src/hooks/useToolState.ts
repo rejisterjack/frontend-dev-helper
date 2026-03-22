@@ -104,12 +104,50 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
   // Load initial state
   useEffect(() => {
     mountedRef.current = true;
+    
+    // Define loadState inside useEffect to avoid dependency issues
+    const loadState = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await chrome.storage.local.get('fdh_tool_states');
+        const storage = result.fdh_tool_states as
+          | {
+              global?: Record<ToolId, ToolState>;
+              tabs?: Record<number, Record<ToolId, ToolState>>;
+            }
+          | undefined;
+
+        let loadedState: ToolState | undefined;
+
+        if (tabId !== undefined && storage?.tabs?.[tabId]?.[toolId]) {
+          loadedState = storage.tabs[tabId][toolId];
+        } else if (storage?.global?.[toolId]) {
+          loadedState = storage.global[toolId];
+        }
+
+        if (mountedRef.current) {
+          setLocalState(loadedState ?? DEFAULT_TOOL_STATE);
+        }
+      } catch (err) {
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
+      } finally {
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
     loadState();
 
     return () => {
       mountedRef.current = false;
     };
-  }, [loadState]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolId, tabId]); // Intentionally omit loadState to prevent infinite loop
 
   // Listen for storage changes
   useEffect(() => {
@@ -141,42 +179,6 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, [toolId, tabId]);
-
-  // Load state from storage
-  const loadState = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as
-        | {
-            global?: Record<ToolId, ToolState>;
-            tabs?: Record<number, Record<ToolId, ToolState>>;
-          }
-        | undefined;
-
-      let loadedState: ToolState | undefined;
-
-      if (tabId !== undefined && storage?.tabs?.[tabId]?.[toolId]) {
-        loadedState = storage.tabs[tabId][toolId];
-      } else if (storage?.global?.[toolId]) {
-        loadedState = storage.global[toolId];
-      }
-
-      if (mountedRef.current) {
-        setLocalState(loadedState ?? DEFAULT_TOOL_STATE);
-      }
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
   }, [toolId, tabId]);
 
   // Save state to storage
@@ -311,78 +313,107 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
   // Load initial states
   useEffect(() => {
     mountedRef.current = true;
+    
+    // Define refresh inside useEffect to avoid dependency issues
+    const refresh = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Import TOOL_IDS dynamically to avoid issues during SSR
+        const { TOOL_IDS } = await import('@/constants');
+        const result = await chrome.storage.local.get('fdh_tool_states');
+        const storage = result.fdh_tool_states as
+          | {
+              global?: Record<ToolId, ToolState>;
+              tabs?: Record<number, Record<ToolId, ToolState>>;
+            }
+          | undefined;
+
+        const allStates: Partial<Record<ToolId, ToolState>> = {};
+
+        // Get all tool IDs
+        const allToolIds = Object.values(TOOL_IDS);
+
+        // Start with defaults
+        for (const id of allToolIds) {
+          allStates[id] = DEFAULT_TOOL_STATE;
+        }
+
+        // Apply global states
+        if (storage?.global) {
+          for (const [id, state] of Object.entries(storage.global)) {
+            allStates[id as ToolId] = state;
+          }
+        }
+
+        // Apply tab-specific states if provided
+        if (tabId !== undefined && storage?.tabs?.[tabId]) {
+          for (const [id, state] of Object.entries(storage.tabs[tabId])) {
+            allStates[id as ToolId] = state;
+          }
+        }
+
+        if (mountedRef.current) {
+          setStates(allStates as ToolsState);
+        }
+      } catch (err) {
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
+      } finally {
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
     refresh();
 
     return () => {
       mountedRef.current = false;
     };
-  }, [refresh]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabId]); // Intentionally omit refresh to prevent infinite loop
 
-  // Listen for storage changes
   useEffect(() => {
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>) => {
       const toolStatesChange = changes.fdh_tool_states;
       if (toolStatesChange && mountedRef.current) {
-        refresh();
+        // Trigger a re-render by updating states directly
+        const newValue = toolStatesChange.newValue as
+          | {
+              global?: Record<ToolId, ToolState>;
+              tabs?: Record<number, Record<ToolId, ToolState>>;
+            }
+          | undefined;
+        
+        if (newValue) {
+          setStates((prevStates) => {
+            const updatedStates = { ...prevStates };
+            
+            // Apply global states
+            if (newValue.global) {
+              for (const [id, state] of Object.entries(newValue.global)) {
+                updatedStates[id as ToolId] = state;
+              }
+            }
+            
+            // Apply tab-specific states if provided
+            if (tabId !== undefined && newValue.tabs?.[tabId]) {
+              for (const [id, state] of Object.entries(newValue.tabs[tabId])) {
+                updatedStates[id as ToolId] = state;
+              }
+            }
+            
+            return updatedStates;
+          });
+        }
       }
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, [refresh]);
-
-  // Refresh states from storage
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Import TOOL_IDS dynamically to avoid issues during SSR
-      const { TOOL_IDS } = await import('@/constants');
-      const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as
-        | {
-            global?: Record<ToolId, ToolState>;
-            tabs?: Record<number, Record<ToolId, ToolState>>;
-          }
-        | undefined;
-
-      const allStates: Partial<Record<ToolId, ToolState>> = {};
-
-      // Get all tool IDs
-      const allToolIds = Object.values(TOOL_IDS);
-
-      // Start with defaults
-      for (const id of allToolIds) {
-        allStates[id] = DEFAULT_TOOL_STATE;
-      }
-
-      // Apply global states
-      if (storage?.global) {
-        for (const [id, state] of Object.entries(storage.global)) {
-          allStates[id as ToolId] = state;
-        }
-      }
-
-      // Apply tab-specific states if provided
-      if (tabId !== undefined && storage?.tabs?.[tabId]) {
-        for (const [id, state] of Object.entries(storage.tabs[tabId])) {
-          allStates[id as ToolId] = state;
-        }
-      }
-
-      if (mountedRef.current) {
-        setStates(allStates as ToolsState);
-      }
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
   }, [tabId]);
 
   // Save a single tool state
@@ -493,6 +524,54 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
     const allToolIds = Object.values(TOOL_IDS);
     await disableMultiple(allToolIds);
   }, [disableMultiple]);
+
+  // Manual refresh function
+  const refresh = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { TOOL_IDS } = await import('@/constants');
+      const result = await chrome.storage.local.get('fdh_tool_states');
+      const storage = result.fdh_tool_states as
+        | {
+            global?: Record<ToolId, ToolState>;
+            tabs?: Record<number, Record<ToolId, ToolState>>;
+          }
+        | undefined;
+
+      const allStates: Partial<Record<ToolId, ToolState>> = {};
+      const allToolIds = Object.values(TOOL_IDS);
+
+      for (const id of allToolIds) {
+        allStates[id] = DEFAULT_TOOL_STATE;
+      }
+
+      if (storage?.global) {
+        for (const [id, state] of Object.entries(storage.global)) {
+          allStates[id as ToolId] = state;
+        }
+      }
+
+      if (tabId !== undefined && storage?.tabs?.[tabId]) {
+        for (const [id, state] of Object.entries(storage.tabs[tabId])) {
+          allStates[id as ToolId] = state;
+        }
+      }
+
+      if (mountedRef.current) {
+        setStates(allStates as ToolsState);
+      }
+    } catch (err) {
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
+    } finally {
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [tabId]);
 
   return {
     states,

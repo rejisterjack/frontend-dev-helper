@@ -42,7 +42,7 @@ let dragStart = { x: 0, y: 0 };
 let _selectedEntry: FlameGraphEntry | null = null;
 void _selectedEntry; // Mark as intentionally used
 let filterThreshold = 1; // Minimum duration in ms to show
-let visibleTypes: Set<FlameGraphEntry['type']> = new Set(['script', 'layout', 'paint', 'composite', 'other']);
+const visibleTypes: Set<FlameGraphEntry['type']> = new Set(['script', 'layout', 'paint', 'composite', 'other']);
 
 // ============================================
 // Public API
@@ -607,7 +607,7 @@ function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: num
     truncated = truncated.slice(0, -1);
   }
   if (truncated.length < text.length) {
-    truncated = truncated.slice(0, -2) + '...';
+    truncated = `${truncated.slice(0, -2)}...`;
   }
   return truncated;
 }

@@ -835,7 +835,7 @@ function updateSettingsUI(): void {
   const regionsContainer = shadowRoot?.querySelector(`#${PREFIX}-ignore-regions`);
   if (regionsContainer) {
     if (currentState.ignoreRegions.length === 0) {
-      regionsContainer.innerHTML = '<span class="${PREFIX}-empty-small">No ignore regions</span>';
+      regionsContainer.innerHTML = `<span class="${PREFIX}-empty-small">No ignore regions</span>`;
     } else {
       regionsContainer.innerHTML = currentState.ignoreRegions
         .map(
@@ -1365,7 +1365,7 @@ async function html2canvas(
             ctx.fillStyle = computed.color;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
-            ctx.fillText(text, drawX + parseInt(computed.paddingLeft || '0'), drawY + parseInt(computed.paddingTop || '0'));
+            ctx.fillText(text, drawX + Number.parseInt(computed.paddingLeft || '0', 10), drawY + Number.parseInt(computed.paddingTop || '0', 10));
           }
         }
       }

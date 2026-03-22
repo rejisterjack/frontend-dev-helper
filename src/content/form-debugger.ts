@@ -696,7 +696,7 @@ function renderOverview(): string {
           <div class="${PREFIX}-form-meta">
             <span>${form.fields.length} fields</span>
             <span>${form.fields.filter(f => f.isRequired).length} required</span>
-            ${form.autofillEnabled ? '<span class="${PREFIX}-badge-autofill">Autofill</span>' : ''}
+            ${form.autofillEnabled ? `<span class="${PREFIX}-badge-autofill">Autofill</span>` : ''}
             ${form.accessibilityIssues.length > 0 ? `<span class="${PREFIX}-badge-warning">${form.accessibilityIssues.length} issues</span>` : ''}
           </div>
           ${form.fields.some(f => f.hasError) ? `
@@ -729,13 +729,13 @@ function renderFields(): string {
           <div class="${PREFIX}-field-header">
             <span class="${PREFIX}-field-name">${escapeHtml(field.name || 'unnamed')}</span>
             <span class="${PREFIX}-field-type">${field.type}</span>
-            ${field.isRequired ? '<span class="${PREFIX}-badge-required">Required</span>' : ''}
+            ${field.isRequired ? `<span class="${PREFIX}-badge-required">Required</span>` : ''}
             ${field.autofill ? `<span class="${PREFIX}-badge-autofill" title="${field.autofill}">🔄</span>` : ''}
           </div>
           ${field.labelText ? `<div class="${PREFIX}-field-label">${escapeHtml(field.labelText)}</div>` : ''}
           <div class="${PREFIX}-field-meta">
             <span class="${PREFIX}-field-selector">${escapeHtml(field.selector)}</span>
-            ${!field.hasLabel ? '<span class="${PREFIX}-badge-warning">No Label</span>' : ''}
+            ${!field.hasLabel ? `<span class="${PREFIX}-badge-warning">No Label</span>` : ''}
           </div>
           ${field.value ? `<div class="${PREFIX}-field-value">Value: ${escapeHtml(truncate(field.value, 30))}</div>` : ''}
         </div>
@@ -956,7 +956,7 @@ function escapeHtml(text: string): string {
 
 function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
-  return str.substring(0, maxLength) + '...';
+  return `${str.substring(0, maxLength)}...`;
 }
 
 function updateStatus(message: string): void {

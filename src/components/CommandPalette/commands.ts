@@ -246,6 +246,16 @@ export function getAllCommands(): Command[] {
     // Tools - New "Best of the Best"
     // ============================================
     {
+      id: 'toggle-command-palette',
+      title: 'Toggle Command Palette',
+      description: 'Quick access to all tools via keyboard',
+      shortcut: 'Ctrl+Shift+P',
+      icon: '⌨️',
+      category: 'tool',
+      keywords: ['command', 'palette', 'search', 'quick', 'access', 'keyboard'],
+      execute: () => toggleTool(ToolType.COMMAND_PALETTE),
+    },
+    {
       id: 'toggle-storage-inspector',
       title: 'Toggle Storage Inspector',
       description: 'Inspect LocalStorage, IndexedDB, Cookies, and Cache',

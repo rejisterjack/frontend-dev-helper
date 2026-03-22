@@ -5,7 +5,8 @@
  * Shows real-time suggestions as you browse with categorization and filtering.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AIAnalysisResult, AISuggestion, AISuggestionCategory } from '@/types';
 import { logger } from '@/utils/logger';
 import { runAIAnalysis } from '@/ai/ai-analyzer';

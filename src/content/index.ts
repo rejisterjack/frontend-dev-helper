@@ -13,7 +13,7 @@
  * - Grid overlay
  */
 
-import { MessageType } from '../types/messages';
+import { MESSAGE_TYPES } from '@/constants';
 import { logger } from '../utils/logger';
 import { accessibilityAudit } from './accessibility-audit';
 import { aiSuggestions } from './ai-suggestions';
@@ -787,37 +787,37 @@ chrome.runtime.onMessage.addListener(
           break;
 
         // Legacy message types
-        case MessageType.TOGGLE_INSPECTOR:
+        case MESSAGE_TYPES.TOGGLE_INSPECTOR:
           toggleInspector();
           sendResponse({ success: true, active: state.isInspectorActive });
           break;
 
-        case MessageType.PICK_COLOR:
+        case MESSAGE_TYPES.PICK_COLOR:
           toggleColorPicker();
           sendResponse({ success: true, active: state.isColorPickerActive });
           break;
 
-        case MessageType.MEASURE_DISTANCE:
+        case MESSAGE_TYPES.MEASURE_DISTANCE:
           toggleMeasureTool();
           sendResponse({ success: true, active: state.isMeasureToolActive });
           break;
 
-        case MessageType.TOGGLE_GRID:
+        case MESSAGE_TYPES.TOGGLE_GRID:
           toggleGridOverlay();
           sendResponse({ success: true, visible: state.isGridVisible });
           break;
 
-        case MessageType.COPY_CSS:
+        case MESSAGE_TYPES.COPY_CSS:
           copyComputedCSS();
           sendResponse({ success: true });
           break;
 
-        case MessageType.COPY_HTML:
+        case MESSAGE_TYPES.COPY_HTML:
           copyHTML();
           sendResponse({ success: true });
           break;
 
-        case MessageType.GET_ELEMENT_INFO:
+        case MESSAGE_TYPES.GET_ELEMENT_INFO:
           if (message.payload?.selector) {
             const info = getElementInfo(message.payload.selector);
             sendResponse({ success: true, data: info });
@@ -826,7 +826,7 @@ chrome.runtime.onMessage.addListener(
           }
           break;
 
-        case MessageType.PING:
+        case MESSAGE_TYPES.PING:
           sendResponse({ success: true, data: 'pong' });
           break;
 
@@ -956,7 +956,7 @@ function handleElementSelect(element: HTMLElement): void {
 
   // Send to background/popup
   chrome.runtime.sendMessage({
-    type: MessageType.ELEMENT_SELECTED,
+    type: MESSAGE_TYPES.ELEMENT_SELECTED,
     payload: info,
   });
 
@@ -971,7 +971,7 @@ function handleElementSelect(element: HTMLElement): void {
 function handleElementHover(element: HTMLElement): void {
   // Optional: Send hover info to popup for real-time display
   chrome.runtime.sendMessage({
-    type: MessageType.ELEMENT_HOVER,
+    type: MESSAGE_TYPES.ELEMENT_HOVER,
     payload: { tagName: element.tagName, className: element.className },
   });
 }
@@ -1151,7 +1151,7 @@ function updateIconBadge(): void {
   ].filter(Boolean).length;
 
   chrome.runtime.sendMessage({
-    type: MessageType.UPDATE_BADGE,
+    type: MESSAGE_TYPES.UPDATE_BADGE,
     payload: { count: activeTools },
   });
 }

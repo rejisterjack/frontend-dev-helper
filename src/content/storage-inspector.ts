@@ -505,7 +505,7 @@ async function renderCurrentTab(): Promise<void> {
   const content = shadowRoot.querySelector(`#${PREFIX}-content`);
   if (!content) return;
 
-  content.innerHTML = '<div class="${PREFIX}-loading">Loading...</div>';
+  content.innerHTML = `<div class="${PREFIX}-loading">Loading...</div>`;
 
   try {
     switch (currentTab) {
@@ -632,8 +632,8 @@ function renderCookies(cookies: CookieInfo[]): string {
         <div class="${PREFIX}-cookie">
           <div class="${PREFIX}-cookie-header">
             <span class="${PREFIX}-cookie-name">${escapeHtml(cookie.name)}</span>
-            ${cookie.secure ? '<span class="${PREFIX}-badge-secure">Secure</span>' : ''}
-            ${cookie.httpOnly ? '<span class="${PREFIX}-badge-httponly">HttpOnly</span>' : ''}
+            ${cookie.secure ? `<span class="${PREFIX}-badge-secure">Secure</span>` : ''}
+            ${cookie.httpOnly ? `<span class="${PREFIX}-badge-httponly">HttpOnly</span>` : ''}
           </div>
           <div class="${PREFIX}-cookie-value">${escapeHtml(truncate(cookie.value, 100))}</div>
           <div class="${PREFIX}-cookie-meta">
@@ -702,7 +702,7 @@ function inferType(value: string): StorageItem['type'] {
     return typeof parsed as StorageItem['type'];
   } catch {
     if (value === 'true' || value === 'false') return 'boolean';
-    if (!isNaN(Number(value)) && value !== '') return 'number';
+    if (!Number.isNaN(Number(value)) && value !== '') return 'number';
     return 'string';
   }
 }
@@ -717,7 +717,7 @@ function formatBytes(bytes: number): string {
 
 function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
-  return str.substring(0, maxLength) + '...';
+  return `${str.substring(0, maxLength)}...`;
 }
 
 function escapeHtml(text: string): string {
