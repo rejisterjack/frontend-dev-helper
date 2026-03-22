@@ -245,27 +245,66 @@ const TOOL_MESSAGE_MAP: Record<ToolType, { enable: string; disable: string }> = 
   [ToolType.FONT_INSPECTOR]: { enable: 'FONT_INSPECTOR_ENABLE', disable: 'FONT_INSPECTOR_DISABLE' },
   [ToolType.COLOR_PICKER]: { enable: 'COLOR_PICKER_ENABLE', disable: 'COLOR_PICKER_DISABLE' },
   [ToolType.PIXEL_RULER]: { enable: 'PIXEL_RULER_ENABLE', disable: 'PIXEL_RULER_DISABLE' },
-  [ToolType.RESPONSIVE_BREAKPOINT]: { enable: 'BREAKPOINT_OVERLAY_ENABLE', disable: 'BREAKPOINT_OVERLAY_DISABLE' },
+  [ToolType.RESPONSIVE_BREAKPOINT]: {
+    enable: 'BREAKPOINT_OVERLAY_ENABLE',
+    disable: 'BREAKPOINT_OVERLAY_DISABLE',
+  },
   [ToolType.CSS_INSPECTOR]: { enable: 'CSS_INSPECTOR_ENABLE', disable: 'CSS_INSPECTOR_DISABLE' },
-  [ToolType.CONTRAST_CHECKER]: { enable: 'CONTRAST_CHECKER_ENABLE', disable: 'CONTRAST_CHECKER_DISABLE' },
-  [ToolType.LAYOUT_VISUALIZER]: { enable: 'LAYOUT_VISUALIZER_ENABLE', disable: 'LAYOUT_VISUALIZER_DISABLE' },
-  [ToolType.ZINDEX_VISUALIZER]: { enable: 'ZINDEX_VISUALIZER_ENABLE', disable: 'ZINDEX_VISUALIZER_DISABLE' },
+  [ToolType.CONTRAST_CHECKER]: {
+    enable: 'CONTRAST_CHECKER_ENABLE',
+    disable: 'CONTRAST_CHECKER_DISABLE',
+  },
+  [ToolType.LAYOUT_VISUALIZER]: {
+    enable: 'LAYOUT_VISUALIZER_ENABLE',
+    disable: 'LAYOUT_VISUALIZER_DISABLE',
+  },
+  [ToolType.ZINDEX_VISUALIZER]: {
+    enable: 'ZINDEX_VISUALIZER_ENABLE',
+    disable: 'ZINDEX_VISUALIZER_DISABLE',
+  },
   [ToolType.TECH_DETECTOR]: { enable: 'TECH_DETECTOR_ENABLE', disable: 'TECH_DETECTOR_DISABLE' },
-  [ToolType.ACCESSIBILITY_AUDIT]: { enable: 'ACCESSIBILITY_AUDIT_ENABLE', disable: 'ACCESSIBILITY_AUDIT_DISABLE' },
+  [ToolType.ACCESSIBILITY_AUDIT]: {
+    enable: 'ACCESSIBILITY_AUDIT_ENABLE',
+    disable: 'ACCESSIBILITY_AUDIT_DISABLE',
+  },
   [ToolType.SITE_REPORT]: { enable: 'SITE_REPORT_ENABLE', disable: 'SITE_REPORT_DISABLE' },
   [ToolType.CSS_EDITOR]: { enable: 'CSS_EDITOR_ENABLE', disable: 'CSS_EDITOR_DISABLE' },
-  [ToolType.SCREENSHOT_STUDIO]: { enable: 'SCREENSHOT_STUDIO_ENABLE', disable: 'SCREENSHOT_STUDIO_DISABLE' },
-  [ToolType.ANIMATION_INSPECTOR]: { enable: 'ANIMATION_INSPECTOR_ENABLE', disable: 'ANIMATION_INSPECTOR_DISABLE' },
-  [ToolType.RESPONSIVE_PREVIEW]: { enable: 'RESPONSIVE_PREVIEW_ENABLE', disable: 'RESPONSIVE_PREVIEW_DISABLE' },
-  [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enable: 'DESIGN_SYSTEM_VALIDATOR_ENABLE', disable: 'DESIGN_SYSTEM_VALIDATOR_DISABLE' },
-  [ToolType.NETWORK_ANALYZER]: { enable: 'NETWORK_ANALYZER_ENABLE', disable: 'NETWORK_ANALYZER_DISABLE' },
-  [ToolType.COMMAND_PALETTE]: { enable: 'COMMAND_PALETTE_ENABLE', disable: 'COMMAND_PALETTE_DISABLE' },
-  [ToolType.STORAGE_INSPECTOR]: { enable: 'STORAGE_INSPECTOR_ENABLE', disable: 'STORAGE_INSPECTOR_DISABLE' },
+  [ToolType.SCREENSHOT_STUDIO]: {
+    enable: 'SCREENSHOT_STUDIO_ENABLE',
+    disable: 'SCREENSHOT_STUDIO_DISABLE',
+  },
+  [ToolType.ANIMATION_INSPECTOR]: {
+    enable: 'ANIMATION_INSPECTOR_ENABLE',
+    disable: 'ANIMATION_INSPECTOR_DISABLE',
+  },
+  [ToolType.RESPONSIVE_PREVIEW]: {
+    enable: 'RESPONSIVE_PREVIEW_ENABLE',
+    disable: 'RESPONSIVE_PREVIEW_DISABLE',
+  },
+  [ToolType.DESIGN_SYSTEM_VALIDATOR]: {
+    enable: 'DESIGN_SYSTEM_VALIDATOR_ENABLE',
+    disable: 'DESIGN_SYSTEM_VALIDATOR_DISABLE',
+  },
+  [ToolType.NETWORK_ANALYZER]: {
+    enable: 'NETWORK_ANALYZER_ENABLE',
+    disable: 'NETWORK_ANALYZER_DISABLE',
+  },
+  [ToolType.COMMAND_PALETTE]: {
+    enable: 'COMMAND_PALETTE_ENABLE',
+    disable: 'COMMAND_PALETTE_DISABLE',
+  },
+  [ToolType.STORAGE_INSPECTOR]: {
+    enable: 'STORAGE_INSPECTOR_ENABLE',
+    disable: 'STORAGE_INSPECTOR_DISABLE',
+  },
   [ToolType.FOCUS_DEBUGGER]: { enable: 'FOCUS_DEBUGGER_ENABLE', disable: 'FOCUS_DEBUGGER_DISABLE' },
   [ToolType.FORM_DEBUGGER]: { enable: 'FORM_DEBUGGER_ENABLE', disable: 'FORM_DEBUGGER_DISABLE' },
   [ToolType.COMPONENT_TREE]: { enable: 'COMPONENT_TREE_ENABLE', disable: 'COMPONENT_TREE_DISABLE' },
   [ToolType.FLAME_GRAPH]: { enable: 'FLAME_GRAPH_ENABLE', disable: 'FLAME_GRAPH_DISABLE' },
-  [ToolType.VISUAL_REGRESSION]: { enable: 'VISUAL_REGRESSION_ENABLE', disable: 'VISUAL_REGRESSION_DISABLE' },
+  [ToolType.VISUAL_REGRESSION]: {
+    enable: 'VISUAL_REGRESSION_ENABLE',
+    disable: 'VISUAL_REGRESSION_DISABLE',
+  },
   [ToolType.AI_SUGGESTIONS]: { enable: 'AI_SUGGESTIONS_ENABLE', disable: 'AI_SUGGESTIONS_DISABLE' },
 };
 
@@ -304,7 +343,6 @@ export const Popup: React.FC = () => {
 
   // UI states
   const [isLoading, setIsLoading] = useState(true);
-  const [error] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Panel state for React component integration
@@ -400,7 +438,7 @@ export const Popup: React.FC = () => {
 
     const messages = TOOL_MESSAGE_MAP[tool];
     if (!messages) return;
-    
+
     const messageType = enabled ? messages.enable : messages.disable;
     try {
       await chrome.tabs.sendMessage(tab.id, { type: messageType });
@@ -530,22 +568,6 @@ export const Popup: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="w-[380px] min-h-[200px] bg-slate-900 p-4">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-center">
-          <p className="text-red-400 text-sm">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Onboarding Flow - shows on first install */}
@@ -636,7 +658,12 @@ export const Popup: React.FC = () => {
                 onSettingsClick={() => handleOpenSettings(tool.type)}
                 onView={
                   // Only 4 tools have React panel components
-                  [ToolType.AI_SUGGESTIONS, ToolType.VISUAL_REGRESSION, ToolType.FLAME_GRAPH, ToolType.COMPONENT_TREE].includes(tool.type)
+                  [
+                    ToolType.AI_SUGGESTIONS,
+                    ToolType.VISUAL_REGRESSION,
+                    ToolType.FLAME_GRAPH,
+                    ToolType.COMPONENT_TREE,
+                  ].includes(tool.type)
                     ? () => handleOpenPanel(tool.type)
                     : undefined
                 }
@@ -726,7 +753,11 @@ export const Popup: React.FC = () => {
           <AISuggestions isOpen={true} onClose={() => setOpenPanel(null)} />
         )}
         {openPanel === ToolType.VISUAL_REGRESSION && (
-          <VisualRegression isOpen={true} onClose={() => setOpenPanel(null)} currentUrl={currentTabUrl} />
+          <VisualRegression
+            isOpen={true}
+            onClose={() => setOpenPanel(null)}
+            currentUrl={currentTabUrl}
+          />
         )}
         {openPanel === ToolType.FLAME_GRAPH && (
           <FlameGraph isOpen={true} onClose={() => setOpenPanel(null)} />

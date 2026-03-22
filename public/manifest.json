@@ -37,8 +37,7 @@
     "storage",
     "scripting",
     "tabs",
-    "clipboardWrite",
-    "notifications"
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
