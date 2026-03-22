@@ -3,10 +3,29 @@
 > **One extension. Every visual debugging tool you actually need.**
 > Built for Chrome, Brave & Firefox · Manifest V3 · Open Source
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/rejisterjack/frontend-dev-helper)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/rejisterjack/frontend-dev-helper)
+[![Tools](https://img.shields.io/badge/tools-27-success.svg)](FEATURES.md)
+[![Code Size](https://img.shields.io/badge/code-25k%20lines-informational.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](public/manifest.json)
 [![CI](https://github.com/rejisterjack/frontend-dev-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/rejisterjack/frontend-dev-helper/actions)
+
+---
+
+## 🎉 What's New in v1.2.0
+
+### 🏆 "Best of the Best" Release - 8 New Professional Tools!
+
+- **⌨️ Command Palette** - VS Code-style quick access (Ctrl+Shift+P)
+- **💾 Storage Inspector** - Debug LocalStorage, IndexedDB, Cookies, Cache
+- **✨ AI Suggestions** - Smart analysis with 50+ detection patterns & auto-fixes
+- **🌳 Component Tree** - Visualize React, Vue, Angular, Svelte components
+- **🔥 Performance Flame Graph** - Profile JavaScript execution
+- **🎯 Focus Debugger** - Visualize focus order & detect traps
+- **📝 Form Debugger** - Analyze form validation & autofill
+- **👁️ Visual Regression** - Screenshot comparison testing
+
+[📖 Read the full changelog](CHANGELOG.md)
 
 ---
 
@@ -16,10 +35,11 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 **FrontendDevHelper is the unified, modern replacement.**
 
-- ✅ **27 powerful tools** in one extension
+- ✅ **27 powerful tools** in one extension (more than any competitor!)
 - ✅ **Manifest V3** from day one
 - ✅ **Zero data collection** — everything runs locally
 - ✅ **Open source** and free forever
+- ✅ **AI-powered** smart suggestions with auto-fixes
 
 ---
 
