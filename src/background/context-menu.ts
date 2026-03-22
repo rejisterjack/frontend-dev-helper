@@ -5,6 +5,7 @@
  */
 
 import type { ContextMenuConfig } from '@/types';
+import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
 
 export class ContextMenuManager {
@@ -100,7 +101,7 @@ export class ContextMenuManager {
         await this.sendMessageToTab(tab.id, {
           type: 'INIT',
           timestamp: Date.now(),
-          id: crypto.randomUUID(),
+          id: generateMessageId(),
         });
         break;
 
@@ -108,7 +109,7 @@ export class ContextMenuManager {
         await this.sendMessageToTab(tab.id, {
           type: 'COPY_CSS',
           timestamp: Date.now(),
-          id: crypto.randomUUID(),
+          id: generateMessageId(),
         });
         break;
 
@@ -117,7 +118,7 @@ export class ContextMenuManager {
           type: 'TOGGLE_FEATURE',
           payload: { feature: 'elementInspector', enabled: true },
           timestamp: Date.now(),
-          id: crypto.randomUUID(),
+          id: generateMessageId(),
         });
         break;
 
@@ -126,7 +127,7 @@ export class ContextMenuManager {
           type: 'TOGGLE_FEATURE',
           payload: { feature: 'cssScanner', enabled: true },
           timestamp: Date.now(),
-          id: crypto.randomUUID(),
+          id: generateMessageId(),
         });
         break;
     }

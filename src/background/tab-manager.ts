@@ -4,6 +4,7 @@
  * Manages tab lifecycle events and communication with content scripts.
  */
 
+import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
 
 export class TabManager {
@@ -66,7 +67,7 @@ export class TabManager {
         type: 'TAB_CHANGED',
         payload: { active: true },
         timestamp: Date.now(),
-        id: crypto.randomUUID(),
+        id: generateMessageId(),
       });
     } catch {
       // Tab may not have content script
@@ -125,7 +126,7 @@ export class TabManager {
         type: 'INIT',
         payload: { url },
         timestamp: Date.now(),
-        id: crypto.randomUUID(),
+        id: generateMessageId(),
       });
     } catch {
       // Content script may not be injected yet
@@ -141,7 +142,7 @@ export class TabManager {
         type: 'URL_CHANGED',
         payload: { url },
         timestamp: Date.now(),
-        id: crypto.randomUUID(),
+        id: generateMessageId(),
       });
     } catch {
       // Content script may not be available

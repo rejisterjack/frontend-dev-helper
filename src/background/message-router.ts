@@ -6,6 +6,7 @@
  */
 
 import type { ExtensionMessage, MessageResponse } from '@/types';
+import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
 
 export class MessageRouter {
@@ -135,7 +136,7 @@ export class MessageRouter {
               type: 'TOGGLE_FEATURE',
               payload: { feature, enabled },
               timestamp: Date.now(),
-              id: crypto.randomUUID(),
+              id: generateMessageId(),
             });
           } catch {
             // Tab may not have content script injected
