@@ -64,7 +64,9 @@ export async function runAIAnalysis(): Promise<AIAnalysisResult> {
   const summary = calculateSummary(suggestions);
 
   const duration = performance.now() - startTime;
-  logger.log(`[AIAnalyzer] Analysis complete in ${duration.toFixed(2)}ms. Found ${suggestions.length} suggestions.`);
+  logger.log(
+    `[AIAnalyzer] Analysis complete in ${duration.toFixed(2)}ms. Found ${suggestions.length} suggestions.`
+  );
 
   return {
     timestamp: Date.now(),
@@ -80,13 +82,15 @@ export async function runAIAnalysis(): Promise<AIAnalysisResult> {
 
 export async function analyzeAccessibility(): Promise<AISuggestion[]> {
   const suggestions: AISuggestion[] = [];
-  
+
   // Check for very large DOMs and warn
   const domSize = document.querySelectorAll('*').length;
   const isLargeDom = domSize > ANALYSIS_CONFIG.sampling.enableSamplingThreshold;
-  
+
   if (isLargeDom) {
-    logger.log(`[AIAnalyzer] Large DOM detected (${domSize} nodes), using sampling for accessibility analysis`);
+    logger.log(
+      `[AIAnalyzer] Large DOM detected (${domSize} nodes), using sampling for accessibility analysis`
+    );
   }
 
   // Check images without alt text (with sampling for large DOMs)
@@ -111,14 +115,16 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
       },
     });
   }
-  
+
   // Yield control after heavy operation
   if (imagesWithoutAlt.length > 50) {
     await yieldControl();
   }
 
   // Check form inputs without labels (with sampling)
-  const formInputs = getSampledElements('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea');
+  const formInputs = getSampledElements(
+    'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea'
+  );
   for (let i = 0; i < formInputs.length; i++) {
     const input = formInputs[i];
     const hasLabel = input.id && document.querySelector(`label[for="${input.id}"]`);
@@ -165,7 +171,8 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
       category: 'accessibility',
       priority: 'medium',
       title: 'HTML missing lang attribute',
-      description: 'The html element should have a lang attribute to specify the page language for screen readers.',
+      description:
+        'The html element should have a lang attribute to specify the page language for screen readers.',
       impact: 'Helps screen readers pronounce content correctly',
       effort: 'easy',
       confidence: 0.95,
@@ -185,7 +192,8 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
       category: 'accessibility',
       priority: 'high',
       title: 'Missing H1 heading',
-      description: 'The page has no H1 heading. Every page should have exactly one H1 that describes the main content.',
+      description:
+        'The page has no H1 heading. Every page should have exactly one H1 that describes the main content.',
       impact: 'Critical for navigation and SEO',
       effort: 'medium',
       confidence: 0.9,
@@ -218,14 +226,15 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
       const color = style.color;
       const bgColor = style.backgroundColor;
 
-      // Simple check for very low contrast (white on white, black on black)
-      if (color === bgColor || (color.includes('255') && bgColor.includes('255')) || (color.includes('0, 0, 0') && bgColor.includes('0, 0, 0'))) {
+      // Check for very low contrast using proper color parsing
+      if (hasVeryLowContrast(color, bgColor)) {
         suggestions.push({
           id: `a11y-contrast-${i}`,
           category: 'accessibility',
           priority: 'high',
           title: 'Low contrast text',
-          description: 'Text color and background color are too similar, making content difficult to read.',
+          description:
+            'Text color and background color are too similar, making content difficult to read.',
           element: el.tagName.toLowerCase(),
           selector: generateSelector(el),
           impact: 'Makes text unreadable for many users',
@@ -241,22 +250,25 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
   await yieldControl();
 
   // Check for focusable elements without focus styles (with sampling)
-  const focusableElements = getSampledElements('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const focusableElements = getSampledElements(
+    'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
   // Limit focus checks to prevent performance issues
   const focusElementsToCheck = focusableElements.slice(0, 100);
-  
+
   for (let i = 0; i < focusElementsToCheck.length; i++) {
     const el = focusElementsToCheck[i];
     const style = window.getComputedStyle(el);
     const outline = style.outline;
-    
+
     if (outline === 'none' || outline === '0px') {
       suggestions.push({
         id: `a11y-focus-${i}`,
         category: 'accessibility',
         priority: 'medium',
         title: 'Missing focus indicator',
-        description: 'Interactive element has no visible focus indicator, making keyboard navigation difficult.',
+        description:
+          'Interactive element has no visible focus indicator, making keyboard navigation difficult.',
         element: el.tagName.toLowerCase(),
         selector: generateSelector(el),
         impact: 'Keyboard users cannot see which element is focused',
@@ -282,7 +294,8 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
         category: 'accessibility',
         priority: 'high',
         title: 'Empty link',
-        description: 'Link has no text content or accessible label. Screen readers cannot describe this link.',
+        description:
+          'Link has no text content or accessible label. Screen readers cannot describe this link.',
         element: 'a',
         selector: generateSelector(link),
         impact: 'Screen reader users cannot understand link purpose',
@@ -323,7 +336,7 @@ export async function analyzePerformance(): Promise<AISuggestion[]> {
   let maxDepth = 0;
   const getDepth = (el: Element, depth: number): void => {
     maxDepth = Math.max(maxDepth, depth);
-    Array.from(el.children).forEach(child => getDepth(child, depth + 1));
+    Array.from(el.children).forEach((child) => getDepth(child, depth + 1));
   };
   getDepth(document.body, 1);
 
@@ -345,9 +358,11 @@ export async function analyzePerformance(): Promise<AISuggestion[]> {
   const images = getSampledElements('img');
   for (let i = 0; i < images.length; i++) {
     const img = images[i] as HTMLImageElement;
-    
-    if (img.naturalWidth > ANALYSIS_CONFIG.imageThresholds.maxDimensions ||
-        img.naturalHeight > ANALYSIS_CONFIG.imageThresholds.maxDimensions) {
+
+    if (
+      img.naturalWidth > ANALYSIS_CONFIG.imageThresholds.maxDimensions ||
+      img.naturalHeight > ANALYSIS_CONFIG.imageThresholds.maxDimensions
+    ) {
       suggestions.push({
         id: `perf-image-large-${i}`,
         category: 'performance',
@@ -364,7 +379,8 @@ export async function analyzePerformance(): Promise<AISuggestion[]> {
     }
 
     // Check for images without lazy loading (limit to visible viewport check)
-    if (i < 50) { // Only check first 50 images for lazy loading
+    if (i < 50) {
+      // Only check first 50 images for lazy loading
       const rect = img.getBoundingClientRect();
       if (rect.top > window.innerHeight && !img.loading && !img.hasAttribute('loading')) {
         suggestions.push({
@@ -394,7 +410,8 @@ export async function analyzePerformance(): Promise<AISuggestion[]> {
         category: 'performance',
         priority: 'low',
         title: 'Image missing dimensions',
-        description: 'Image should have explicit width and height attributes to prevent layout shift.',
+        description:
+          'Image should have explicit width and height attributes to prevent layout shift.',
         element: 'img',
         selector: generateSelector(img),
         impact: 'Cumulative Layout Shift (CLS)',
@@ -426,7 +443,7 @@ export async function analyzePerformance(): Promise<AISuggestion[]> {
   // Scale threshold based on sampling
   const sampleRate = Math.max(1, Math.ceil(domSize / ANALYSIS_CONFIG.sampling.maxElementsPerQuery));
   const adjustedThreshold = ANALYSIS_CONFIG.performanceThresholds.maxInlineStyles * sampleRate;
-  
+
   if (inlineStyles.length > adjustedThreshold) {
     suggestions.push({
       id: 'perf-inline-styles',
@@ -641,7 +658,8 @@ export function analyzeBestPractices(): AISuggestion[] {
         category: 'best-practice',
         priority: 'high',
         title: 'Unsafe external link',
-        description: 'Links with target="_blank" should include rel="noopener noreferrer" for security.',
+        description:
+          'Links with target="_blank" should include rel="noopener noreferrer" for security.',
         element: 'a',
         selector: generateSelector(link),
         impact: 'Security vulnerability (tabnabbing)',
@@ -658,7 +676,9 @@ export function analyzeBestPractices(): AISuggestion[] {
 
   // Check for mixed content (HTTP resources on HTTPS page) - with sampling
   if (window.location.protocol === 'https:') {
-    const mixedContentElements = getSampledElements('img[src^="http:"], script[src^="http:"], link[href^="http:"]');
+    const mixedContentElements = getSampledElements(
+      'img[src^="http:"], script[src^="http:"], link[href^="http:"]'
+    );
     for (let i = 0; i < mixedContentElements.length; i++) {
       const el = mixedContentElements[i];
       suggestions.push({
@@ -727,7 +747,8 @@ export function analyzeSecurity(): AISuggestion[] {
         category: 'security',
         priority: 'medium',
         title: 'Password field missing autocomplete',
-        description: 'Password fields should use autocomplete="current-password" or "new-password".',
+        description:
+          'Password fields should use autocomplete="current-password" or "new-password".',
         element: 'input',
         selector: generateSelector(input),
         impact: 'Password managers may not work correctly',
@@ -742,6 +763,78 @@ export function analyzeSecurity(): AISuggestion[] {
 }
 
 // ============================================
+// Color Utilities
+// ============================================
+
+/**
+ * Parse RGB color string to RGB values
+ * Supports: rgb(r, g, b), rgba(r, g, b, a)
+ * Returns null if parsing fails
+ */
+function parseRGB(color: string): { r: number; g: number; b: number } | null {
+  // Match rgb(r, g, b) or rgba(r, g, b, a)
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (!match) return null;
+  return {
+    r: Number.parseInt(match[1], 10),
+    g: Number.parseInt(match[2], 10),
+    b: Number.parseInt(match[3], 10),
+  };
+}
+
+/**
+ * Calculate relative luminance of a color
+ * Based on WCAG 2.0 formula
+ */
+function getLuminance(r: number, g: number, b: number): number {
+  // Convert to sRGB
+  const rsRGB = r / 255;
+  const gsRGB = g / 255;
+  const bsRGB = b / 255;
+
+  // Apply gamma correction
+  const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : ((rsRGB + 0.055) / 1.055) ** 2.4;
+  const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : ((gsRGB + 0.055) / 1.055) ** 2.4;
+  const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : ((bsRGB + 0.055) / 1.055) ** 2.4;
+
+  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+}
+
+/**
+ * Calculate contrast ratio between two colors
+ * Returns ratio (1-21) or null if colors can't be parsed
+ */
+function getContrastRatio(color1: string, color2: string): number | null {
+  const rgb1 = parseRGB(color1);
+  const rgb2 = parseRGB(color2);
+
+  if (!rgb1 || !rgb2) return null;
+
+  const lum1 = getLuminance(rgb1.r, rgb1.g, rgb1.b);
+  const lum2 = getLuminance(rgb2.r, rgb2.g, rgb2.b);
+
+  const lighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * Check if colors are effectively the same (very low contrast)
+ */
+function hasVeryLowContrast(color: string, bgColor: string): boolean {
+  // Direct string comparison for exact matches
+  if (color === bgColor) return true;
+
+  // Check contrast ratio
+  const ratio = getContrastRatio(color, bgColor);
+  if (ratio === null) return false;
+
+  // Ratio of 1.05 or less means essentially same color
+  return ratio <= 1.05;
+}
+
+// ============================================
 // DOM Sampling & Batching Utilities
 // ============================================
 
@@ -752,22 +845,24 @@ export function analyzeSecurity(): AISuggestion[] {
 function getSampledElements(selector: string): Element[] {
   const allElements = document.querySelectorAll(selector);
   const totalCount = allElements.length;
-  
+
   // If DOM is small enough, return all elements
   if (totalCount <= ANALYSIS_CONFIG.sampling.maxElementsPerQuery) {
     return Array.from(allElements);
   }
-  
+
   // Calculate sample rate based on DOM size
   const sampleRate = Math.ceil(totalCount / ANALYSIS_CONFIG.sampling.maxElementsPerQuery);
-  
-  logger.log(`[AIAnalyzer] Sampling ${selector}: ${totalCount} elements, sampling every ${sampleRate}th`);
-  
+
+  logger.log(
+    `[AIAnalyzer] Sampling ${selector}: ${totalCount} elements, sampling every ${sampleRate}th`
+  );
+
   const sampled: Element[] = [];
   for (let i = 0; i < totalCount; i += sampleRate) {
     sampled.push(allElements[i]);
   }
-  
+
   return sampled;
 }
 

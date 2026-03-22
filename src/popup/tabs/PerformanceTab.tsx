@@ -92,13 +92,40 @@ export const PerformanceTab: React.FC = () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab.id) {
+        // Get performance metrics via executeScript (has access to performance API)
         const results = await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           func: getPageMetrics,
         });
 
+        // Get DOM-based performance data via messaging (more reliable)
+        const domData = await chrome.tabs
+          .sendMessage(tab.id, {
+            type: 'GET_PERFORMANCE_DOM_DATA',
+          })
+          .catch(() => ({ imageOptimizations: [], renderBlocking: [] }));
+
         if (results[0]?.result) {
-          setMetrics(results[0].result as PerformanceData);
+          const metrics = results[0].result as PerformanceData;
+          // Merge DOM data from content script
+          setMetrics({
+            ...metrics,
+            imageOptimizations: domData.imageOptimizations || [],
+            renderBlocking: (domData.renderBlocking || []).map(
+              (r: { url: string; type: string }) => {
+                // Find matching resource timing
+                const resource = metrics.resources.slowestResources.find((res) =>
+                  res.url.includes(r.url.split('/').pop() || '')
+                );
+                return {
+                  url: r.url,
+                  type: r.type as 'stylesheet' | 'script',
+                  size: resource?.size || 0,
+                  blockingTime: resource?.duration || 0,
+                };
+              }
+            ),
+          });
         }
       }
     } catch (error) {
@@ -463,7 +490,10 @@ export const PerformanceTab: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="text-lg">🖼️</span>
               <span className="text-sm font-medium text-dev-text">Image Optimization</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full text-dev-warning" style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)' }}>
+              <span
+                className="text-[10px] px-1.5 py-0.5 rounded-full text-dev-warning"
+                style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)' }}
+              >
                 {imageOptimizations.length} issues
               </span>
             </div>
@@ -721,7 +751,12 @@ const MemoryBar: React.FC<{
 };
 
 // Helper function injected into page context
-function getPageMetrics(): PerformanceData {
+// NOTE: This runs via executeScript and has access to the page's performance API
+// DOM-dependent data (images, render blocking) is fetched separately via messaging
+function getPageMetrics(): Omit<PerformanceData, 'imageOptimizations' | 'renderBlocking'> & {
+  imageOptimizations: [];
+  renderBlocking: [];
+} {
   const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
   const resources = performance.getEntriesByType('resource');
   const paintEntries = performance.getEntriesByType('paint');
@@ -786,60 +821,6 @@ function getPageMetrics(): PerformanceData {
   // Get memory info
   const memory = (performance as { memory?: MemoryInfo }).memory;
 
-  // Analyze images for optimization opportunities
-  const imageOptimizations: ImageOptimization[] = [];
-  document.querySelectorAll('img').forEach((img) => {
-    const rect = img.getBoundingClientRect();
-    const naturalWidth = img.naturalWidth;
-    const naturalHeight = img.naturalHeight;
-    const displayWidth = rect.width;
-    const displayHeight = rect.height;
-
-    if (naturalWidth > displayWidth * 1.5 || naturalHeight > displayHeight * 1.5) {
-      const src = img.src;
-      const currentFormat = src.split('.').pop()?.toLowerCase() || 'unknown';
-      const recommendations: string[] = [];
-
-      if (naturalWidth > displayWidth * 2) {
-        recommendations.push('Resize to display size');
-      }
-      if (currentFormat === 'png' && !src.includes('data:')) {
-        recommendations.push('Use WebP/AVIF');
-      }
-      if (!img.loading || img.loading !== 'lazy') {
-        recommendations.push('Add lazy loading');
-      }
-
-      if (recommendations.length > 0) {
-        imageOptimizations.push({
-          element: img.tagName.toLowerCase(),
-          src: src.substring(0, 100),
-          currentSize: naturalWidth * naturalHeight * 4, // Approximate
-          currentFormat,
-          recommendations,
-          potentialSavings: Math.round(naturalWidth * naturalHeight * 4 * 0.6),
-        });
-      }
-    }
-  });
-
-  // Detect render blocking resources
-  const renderBlocking: RenderBlockingResource[] = [];
-  document
-    .querySelectorAll('link[rel="stylesheet"]:not([media]), script[src]:not([async]):not([defer])')
-    .forEach((el) => {
-      const url = el.getAttribute('href') || el.getAttribute('src') || '';
-      const resource = resources.find((r) => r.name.includes(url.split('/').pop() || ''));
-      if (resource && resource.duration > 50) {
-        renderBlocking.push({
-          url: url.substring(0, 100),
-          type: el.tagName.toLowerCase() === 'link' ? 'stylesheet' : 'script',
-          size: resource.transferSize,
-          blockingTime: resource.duration,
-        });
-      }
-    });
-
   return {
     timestamp: Date.now(),
     webVitals: {
@@ -865,8 +846,8 @@ function getPageMetrics(): PerformanceData {
           jsHeapSizeLimit: memory.jsHeapSizeLimit,
         }
       : undefined,
-    imageOptimizations: imageOptimizations.slice(0, 10),
-    renderBlocking: renderBlocking.slice(0, 5),
+    imageOptimizations: [], // Fetched separately via messaging
+    renderBlocking: [], // Fetched separately via messaging
     longTasks: [],
   };
 }

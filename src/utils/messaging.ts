@@ -369,90 +369,14 @@ export async function sendMessageToBackground<T = unknown>(
 // Message Handlers
 // ============================================
 
-/**
- * Type for message handler functions
- */
+// NOTE: The main MessageRouter class is defined in background/message-router.ts
+// Use that implementation for routing messages in the background script.
+
+/** Type for message handler functions */
 export type MessageHandler<T = unknown> = (
   message: ExtensionMessage,
   sender?: chrome.runtime.MessageSender
 ) => Promise<T> | T;
-
-/**
- * Message router for handling incoming messages
- */
-export class MessageRouter {
-  private handlers = new Map<string, MessageHandler>();
-
-  /**
-   * Register a handler for a specific message type
-   * @param type - Message type to handle
-   * @param handler - Handler function
-   */
-  on<T>(type: string, handler: MessageHandler<T>): void {
-    this.handlers.set(type, handler as MessageHandler);
-  }
-
-  /**
-   * Remove a handler for a specific message type
-   * @param type - Message type to remove
-   */
-  off(type: string): void {
-    this.handlers.delete(type);
-  }
-
-  /**
-   * Handle an incoming message
-   * @param message - Received message
-   * @param sender - Message sender info
-   * @param sendResponse - Response callback
-   * @returns True if handled asynchronously
-   */
-  handle(
-    message: ExtensionMessage,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: MessageResponse) => void
-  ): boolean {
-    const handler = this.handlers.get(message.type);
-
-    if (!handler) {
-      sendResponse({
-        success: false,
-        error: `No handler registered for message type: ${message.type}`,
-        id: message.id,
-      });
-      return false;
-    }
-
-    // Handle asynchronously
-    Promise.resolve()
-      .then(() => handler(message, sender))
-      .then((data) => {
-        sendResponse({
-          success: true,
-          data,
-          id: message.id,
-        });
-      })
-      .catch((error) => {
-        sendResponse({
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-          id: message.id,
-        });
-      });
-
-    return true; // Keep message channel open for async
-  }
-
-  /**
-   * Set up the message listener
-   */
-  listen(): void {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      return this.handle(message as ExtensionMessage, sender, sendResponse);
-    });
-  }
-}
 
 // ============================================
 // Pre-built Message Creators

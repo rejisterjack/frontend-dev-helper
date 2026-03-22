@@ -8,35 +8,34 @@
 
 import type { ContentHandler, ContentScriptState } from '@/types';
 import { logger } from '@/utils/logger';
-
+import { accessibilityAudit } from '../accessibility-audit';
+import { aiSuggestions } from '../ai-suggestions';
+import { animationInspector } from '../animation-inspector';
+import { breakpointOverlay } from '../breakpoint-overlay';
+import { colorPicker } from '../color-picker';
+import { commandPalette } from '../command-palette';
+import { componentTree } from '../component-tree';
+import { contrastChecker } from '../contrast-checker';
+import { cssEditor } from '../css-editor';
+import { cssInspector } from '../css-inspector';
+import designSystemValidator from '../design-system-validator';
+import { flameGraph } from '../flame-graph';
+import { focusDebugger } from '../focus-debugger';
+import { fontInspector } from '../font-inspector';
+import { formDebugger } from '../form-debugger';
+import { layoutVisualizer } from '../layout-visualizer';
+import { networkAnalyzer } from '../network-analyzer';
 // Import tool modules
 import { pesticide } from '../pesticide';
-import { spacingVisualizer } from '../spacing';
-import { fontInspector } from '../font-inspector';
-import { colorPicker } from '../color-picker';
 import { pixelRuler } from '../pixel-ruler';
-import { breakpointOverlay } from '../breakpoint-overlay';
 import { responsivePreview } from '../responsive-preview';
-import { flameGraph } from '../flame-graph';
-import { cssInspector } from '../css-inspector';
-import { cssEditor } from '../css-editor';
 import * as screenshotStudio from '../screenshot-studio';
-import { animationInspector } from '../animation-inspector';
-import designSystemValidator from '../design-system-validator';
-import { contrastChecker } from '../contrast-checker';
-import { layoutVisualizer } from '../layout-visualizer';
-import { zIndexVisualizer } from '../zindex-visualizer';
-import { techDetector } from '../tech-detector';
-import { accessibilityAudit } from '../accessibility-audit';
-import { networkAnalyzer } from '../network-analyzer';
 import { siteReportGenerator } from '../site-report-generator';
-import { focusDebugger } from '../focus-debugger';
-import { formDebugger } from '../form-debugger';
-import { commandPalette } from '../command-palette';
+import { spacingVisualizer } from '../spacing';
 import { storageInspector } from '../storage-inspector';
-import { componentTree } from '../component-tree';
+import { techDetector } from '../tech-detector';
 import { visualRegression } from '../visual-regression';
-import { aiSuggestions } from '../ai-suggestions';
+import { zIndexVisualizer } from '../zindex-visualizer';
 
 /** Helper to create standard tool handlers */
 function createToolHandlers(
@@ -52,18 +51,21 @@ function createToolHandlers(
   return {
     [`${toolName}_ENABLE`]: (_payload, state, sendResponse) => {
       tool.enable();
-      (state as Record<string, boolean>)[stateKey] = true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (state as unknown as Record<keyof ContentScriptState, boolean>)[stateKey] = true;
       sendResponse({ success: true, active: true });
     },
     [`${toolName}_DISABLE`]: (_payload, state, sendResponse) => {
       tool.disable();
-      (state as Record<string, boolean>)[stateKey] = false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (state as unknown as Record<keyof ContentScriptState, boolean>)[stateKey] = false;
       sendResponse({ success: true, active: false });
     },
     [`${toolName}_TOGGLE`]: (_payload, state, sendResponse) => {
       tool.toggle();
       const newState = tool.getState();
-      (state as Record<string, boolean>)[stateKey] = newState.enabled;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (state as unknown as Record<keyof ContentScriptState, boolean>)[stateKey] = newState.enabled;
       sendResponse({ success: true, active: newState.enabled });
     },
     [`${toolName}_GET_STATE`]: (_payload, _state, sendResponse) => {
@@ -190,7 +192,11 @@ export const registry: Record<string, ContentHandler> = {
   ...createToolHandlers('ANIMATION_INSPECTOR', animationInspector, 'isAnimationInspectorActive'),
 
   // Design System Validator
-  ...createToolHandlers('DESIGN_SYSTEM_VALIDATOR', designSystemValidator, 'isDesignSystemValidatorActive'),
+  ...createToolHandlers(
+    'DESIGN_SYSTEM_VALIDATOR',
+    designSystemValidator,
+    'isDesignSystemValidatorActive'
+  ),
   DESIGN_SYSTEM_VALIDATOR_VALIDATE: (_payload, _state, sendResponse) => {
     const report = designSystemValidator.validate();
     sendResponse({ success: true, report });
@@ -225,7 +231,8 @@ export const registry: Record<string, ContentHandler> = {
   // Site Report Generator
   ...createToolHandlers('SITE_REPORT', siteReportGenerator, 'isSiteReportActive'),
   SITE_REPORT_GENERATE: (payload, _state, sendResponse) => {
-    siteReportGenerator.generateReport(payload || {})
+    siteReportGenerator
+      .generateReport(payload || {})
       .then((report) => sendResponse({ success: true, report }))
       .catch((error: Error) => sendResponse({ success: false, error: error.message }));
     return true; // Async
@@ -261,7 +268,10 @@ export const registry: Record<string, ContentHandler> = {
   EXPORT_GENERATE_REPORT: (payload, _state, sendResponse) => {
     // Dynamic import to avoid circular dependencies
     import('../export-manager').then(({ exportManager }) => {
-      exportManager.generateReport((payload as { elements?: boolean; performance?: boolean; screenshot?: boolean }) || {})
+      exportManager
+        .generateReport(
+          (payload as { elements?: boolean; performance?: boolean; screenshot?: boolean }) || {}
+        )
         .then((report) => sendResponse({ success: true, report }))
         .catch((error: Error) => sendResponse({ success: false, error: error.message }));
     });
@@ -365,6 +375,76 @@ export const registry: Record<string, ContentHandler> = {
         measureTool: { enabled: state.isMeasureToolActive },
         gridOverlay: { visible: state.isGridVisible },
       },
+    });
+  },
+
+  // Performance DOM data collection
+  GET_PERFORMANCE_DOM_DATA: (_payload, _state, sendResponse) => {
+    const imageOptimizations: Array<{
+      element: string;
+      src: string;
+      currentSize: number;
+      currentFormat: string;
+      recommendations: string[];
+      potentialSavings: number;
+    }> = [];
+
+    document.querySelectorAll('img').forEach((img) => {
+      const rect = img.getBoundingClientRect();
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+      const displayWidth = rect.width;
+      const displayHeight = rect.height;
+
+      if (naturalWidth > displayWidth * 1.5 || naturalHeight > displayHeight * 1.5) {
+        const src = img.src;
+        const currentFormat = src.split('.').pop()?.toLowerCase() || 'unknown';
+        const recommendations: string[] = [];
+
+        if (naturalWidth > displayWidth * 2) {
+          recommendations.push('Resize to display size');
+        }
+        if (currentFormat === 'png' && !src.includes('data:')) {
+          recommendations.push('Use WebP/AVIF');
+        }
+        if (!img.loading || img.loading !== 'lazy') {
+          recommendations.push('Add lazy loading');
+        }
+
+        if (recommendations.length > 0) {
+          imageOptimizations.push({
+            element: img.tagName.toLowerCase(),
+            src: src.substring(0, 100),
+            currentSize: naturalWidth * naturalHeight * 4,
+            currentFormat,
+            recommendations,
+            potentialSavings: Math.round(naturalWidth * naturalHeight * 4 * 0.6),
+          });
+        }
+      }
+    });
+
+    const renderBlocking: Array<{
+      url: string;
+      type: 'stylesheet' | 'script';
+    }> = [];
+
+    document
+      .querySelectorAll(
+        'link[rel="stylesheet"]:not([media]), script[src]:not([async]):not([defer])'
+      )
+      .forEach((el) => {
+        const url = el.getAttribute('href') || el.getAttribute('src') || '';
+        renderBlocking.push({
+          url: url.substring(0, 100),
+          type: el.tagName.toLowerCase() === 'link' ? 'stylesheet' : 'script',
+        });
+      });
+
+    sendResponse({
+      success: true,
+      imageOptimizations: imageOptimizations.slice(0, 10),
+      renderBlocking: renderBlocking.slice(0, 5),
     });
   },
 };

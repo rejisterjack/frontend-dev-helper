@@ -629,8 +629,8 @@ export interface CommandPaletteState {
 // Storage Inspector Types
 // ============================================
 
-/** Storage item for LocalStorage/SessionStorage */
-export interface StorageItem {
+/** Storage item for LocalStorage/SessionStorage (Storage Inspector tool) */
+export interface StorageInspectorItem {
   key: string;
   value: string;
   size: number;
@@ -683,8 +683,8 @@ export interface CacheEntry {
 
 /** Complete storage snapshot */
 export interface StorageSnapshot {
-  localStorage: StorageItem[];
-  sessionStorage: StorageItem[];
+  localStorage: StorageInspectorItem[];
+  sessionStorage: StorageInspectorItem[];
   indexedDB: IndexedDBDatabase[];
   cookies: CookieInfo[];
   cacheStorage: { [cacheName: string]: CacheEntry[] };
@@ -695,7 +695,12 @@ export interface StorageSnapshot {
 // ============================================
 
 /** AI suggestion category */
-export type AISuggestionCategory = 'accessibility' | 'performance' | 'seo' | 'best-practice' | 'security';
+export type AISuggestionCategory =
+  | 'accessibility'
+  | 'performance'
+  | 'seo'
+  | 'best-practice'
+  | 'security';
 
 /** AI suggestion priority */
 export type AISuggestionPriority = 'critical' | 'high' | 'medium' | 'low';
@@ -967,14 +972,38 @@ export interface ContentScriptState {
   pixelRulerEnabled: boolean;
   breakpointOverlayEnabled: boolean;
   responsivePreviewEnabled: boolean;
+  // Additional tool states for handler registry
+  isCssInspectorActive: boolean;
+  isCssEditorActive: boolean;
+  isContrastCheckerActive: boolean;
+  isLayoutVisualizerActive: boolean;
+  isZIndexVisualizerActive: boolean;
+  isTechDetectorActive: boolean;
+  isAccessibilityAuditActive: boolean;
+  isNetworkAnalyzerActive: boolean;
+  isSiteReportActive: boolean;
+  isAnimationInspectorActive: boolean;
+  isDesignSystemValidatorActive: boolean;
+  isFlameGraphActive: boolean;
+  isFocusDebuggerActive: boolean;
+  isFormDebuggerActive: boolean;
+  isCommandPaletteActive: boolean;
+  isStorageInspectorActive: boolean;
+  isComponentTreeActive: boolean;
+  isVisualRegressionActive: boolean;
+  isAiSuggestionsActive: boolean;
 }
 
-/** Content handler function type */
+/**
+ * Content handler function type
+ * @returns true if async (to keep message channel open), undefined/false if sync
+ */
 export type ContentHandler = (
   payload: Record<string, unknown> | undefined,
   state: ContentScriptState,
   sendResponse: (response: Record<string, unknown>) => void
-) => boolean | undefined; // return true only if async
+  // biome-ignore lint/suspicious/noConfusingVoidType: void needed for sync handlers
+) => boolean | undefined | void;
 
 /** Handler registry type */
 export type HandlerRegistry = Record<string, ContentHandler>;

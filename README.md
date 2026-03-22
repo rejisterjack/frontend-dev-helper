@@ -4,8 +4,8 @@
 > Built for Chrome, Brave & Firefox · Manifest V3 · Open Source
 
 [![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/rejisterjack/frontend-dev-helper)
-[![Tools](https://img.shields.io/badge/tools-27-success.svg)](FEATURES.md)
-[![Code Size](https://img.shields.io/badge/code-25k%20lines-informational.svg)](#)
+[![Tools](https://img.shields.io/badge/tools-24-success.svg)](FEATURES.md)
+[![Code Size](https://img.shields.io/badge/code-50k%20lines-informational.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](public/manifest.json)
 [![CI](https://github.com/rejisterjack/frontend-dev-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/rejisterjack/frontend-dev-helper/actions)
@@ -35,7 +35,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 **FrontendDevHelper is the unified, modern replacement.**
 
-- ✅ **27 powerful tools** in one extension (more than any competitor!)
+- ✅ **24 powerful tools** in one extension (more than any competitor!)
 - ✅ **Manifest V3** from day one
 - ✅ **Zero data collection** — everything runs locally
 - ✅ **Open source** and free forever

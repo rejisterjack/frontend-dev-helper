@@ -5,6 +5,7 @@
  * (popup, content script, devtools panel, background).
  */
 
+import { STORAGE_KEYS } from '@/constants';
 import type { ExtensionMessage, MessageResponse } from '@/types';
 import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
@@ -98,27 +99,23 @@ export class MessageRouter {
 
     // Get settings handler
     this.registerHandler('GET_SETTINGS', async () => {
-      const result = await chrome.storage.local.get('settings');
-      return result.settings?.value ?? null;
+      const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+      return result[STORAGE_KEYS.SETTINGS] ?? null;
     });
 
     // Update settings handler
     this.registerHandler('UPDATE_SETTINGS', async (message) => {
       const { payload } = message;
       await chrome.storage.local.set({
-        settings: {
-          value: payload,
-          timestamp: Date.now(),
-          version: 1,
-        },
+        [STORAGE_KEYS.SETTINGS]: payload,
       });
       return { success: true };
     });
 
-    // Get features handler
+    // Get features handler (deprecated - use GET_SETTINGS)
     this.registerHandler('GET_FEATURES', async () => {
-      const result = await chrome.storage.local.get('features');
-      return result.features?.value ?? {};
+      const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+      return result[STORAGE_KEYS.TOOL_STATES] ?? {};
     });
 
     // Toggle feature handler

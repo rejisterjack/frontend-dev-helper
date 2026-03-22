@@ -35,29 +35,18 @@ import {
   toggleToolState,
 } from '@/utils/storage';
 import { logger } from '../utils/logger';
+import { ContextMenuManager } from './context-menu';
 import { MessageRouter } from './message-router';
 
 // ============================================
 // Constants
 // ============================================
 
-const EXTENSION_VERSION = '1.2.0';
+const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 const EXTENSION_NAME = 'FrontendDevHelper';
 
-// Context menu item IDs
-const CONTEXT_MENU_ITEMS = {
-  INSPECT_ELEMENT: 'fdh-inspect-element',
-  MEASURE_DISTANCE: 'fdh-measure-distance',
-  PICK_COLOR: 'fdh-pick-color',
-  SEPARATOR_1: 'fdh-separator-1',
-  TOOLS_PARENT: 'fdh-tools-parent',
-  TOGGLE_DOM_OUTLINER: 'fdh-toggle-dom-outliner',
-  TOGGLE_SPACING: 'fdh-toggle-spacing',
-  TOGGLE_FONT: 'fdh-toggle-font',
-  TOGGLE_COLOR_PICKER: 'fdh-toggle-color-picker',
-  TOGGLE_RULER: 'fdh-toggle-ruler',
-  TOGGLE_BREAKPOINT: 'fdh-toggle-breakpoint',
-} as const;
+// Context menu manager instance
+let contextMenuManager: ContextMenuManager | null = null;
 
 // Command to tool ID mapping (matches generated manifest.json command names)
 const COMMAND_TO_TOOL_ID: Record<string, ToolId> = {
@@ -93,8 +82,9 @@ const state: ServiceWorkerState = {
   initialized: false,
 };
 
-// Initialize message router
+// Initialize message router and context menu manager
 const messageRouter = new MessageRouter();
+contextMenuManager = new ContextMenuManager();
 
 // ============================================
 // Lifecycle Events
@@ -118,7 +108,7 @@ async function initialize(): Promise<void> {
     setupStorageListeners();
 
     // Initialize context menus
-    await initializeContextMenus();
+    contextMenuManager?.initialize();
 
     // Migrate storage if needed
     await migrateStorage();
@@ -200,144 +190,6 @@ async function initializeDefaultSettings(): Promise<void> {
       [STORAGE_KEYS.SETTINGS]: DEFAULT_SETTINGS,
     });
     logger.log(`[${EXTENSION_NAME}] Default settings initialized`);
-  }
-}
-
-// ============================================
-// Context Menu
-// ============================================
-
-/**
- * Initialize context menus
- */
-async function initializeContextMenus(): Promise<void> {
-  // Remove existing menus
-  await new Promise<void>((resolve) => {
-    chrome.contextMenus.removeAll(() => resolve());
-  });
-
-  // Create main context menu items
-  const menuItems: chrome.contextMenus.CreateProperties[] = [
-    {
-      id: CONTEXT_MENU_ITEMS.INSPECT_ELEMENT,
-      title: 'Inspect Element with FrontendDevHelper',
-      contexts: ['page', 'selection', 'link', 'image', 'video', 'audio'],
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.MEASURE_DISTANCE,
-      title: 'Measure Distance',
-      contexts: ['page'],
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.PICK_COLOR,
-      title: 'Pick Color',
-      contexts: ['page', 'image', 'video'],
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.SEPARATOR_1,
-      type: 'separator',
-      contexts: ['page'],
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-      title: 'FrontendDevHelper Tools',
-      contexts: ['page'],
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOGGLE_DOM_OUTLINER,
-      title: 'Toggle DOM Outliner',
-      contexts: ['page'],
-      parentId: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOGGLE_SPACING,
-      title: 'Toggle Spacing Visualizer',
-      contexts: ['page'],
-      parentId: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOGGLE_FONT,
-      title: 'Toggle Font Inspector',
-      contexts: ['page'],
-      parentId: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOGGLE_COLOR_PICKER,
-      title: 'Toggle Color Picker',
-      contexts: ['page'],
-      parentId: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOGGLE_RULER,
-      title: 'Toggle Pixel Ruler',
-      contexts: ['page'],
-      parentId: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-    },
-    {
-      id: CONTEXT_MENU_ITEMS.TOGGLE_BREAKPOINT,
-      title: 'Toggle Breakpoint Overlay',
-      contexts: ['page'],
-      parentId: CONTEXT_MENU_ITEMS.TOOLS_PARENT,
-    },
-  ];
-
-  for (const item of menuItems) {
-    chrome.contextMenus.create(item);
-  }
-
-  // Set up click handler
-  chrome.contextMenus.onClicked.addListener(handleContextMenuClick);
-
-  logger.log(`[${EXTENSION_NAME}] Context menus initialized`);
-}
-
-/**
- * Handle context menu clicks
- */
-async function handleContextMenuClick(
-  info: chrome.contextMenus.OnClickData,
-  tab?: chrome.tabs.Tab
-): Promise<void> {
-  if (!tab?.id) return;
-
-  logger.log(`[${EXTENSION_NAME}] Context menu clicked:`, info.menuItemId);
-
-  switch (info.menuItemId) {
-    case CONTEXT_MENU_ITEMS.INSPECT_ELEMENT:
-      await activateToolOnTab(TOOL_IDS.ELEMENT_INSPECTOR, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.MEASURE_DISTANCE:
-      await activateToolOnTab(TOOL_IDS.MEASUREMENT_TOOL, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.PICK_COLOR:
-      await activateToolOnTab(TOOL_IDS.COLOR_PICKER, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.TOGGLE_DOM_OUTLINER:
-      await toggleToolOnTab(TOOL_IDS.DOM_OUTLINER, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.TOGGLE_SPACING:
-      await toggleToolOnTab(TOOL_IDS.SPACING_VISUALIZER, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.TOGGLE_FONT:
-      await toggleToolOnTab(TOOL_IDS.FONT_INSPECTOR, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.TOGGLE_COLOR_PICKER:
-      await toggleToolOnTab(TOOL_IDS.COLOR_PICKER, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.TOGGLE_RULER:
-      await toggleToolOnTab(TOOL_IDS.PIXEL_RULER, tab.id);
-      break;
-
-    case CONTEXT_MENU_ITEMS.TOGGLE_BREAKPOINT:
-      await toggleToolOnTab(TOOL_IDS.RESPONSIVE_BREAKPOINT, tab.id);
-      break;
   }
 }
 
@@ -881,11 +733,4 @@ chrome.runtime.onConnect.addListener((port) => {
 initialize();
 
 // Export for testing
-export {
-  activateToolOnTab,
-  getActiveToolIds,
-  handleCommand,
-  state,
-  toggleToolOnTab,
-  updateBadge,
-};
+export { activateToolOnTab, getActiveToolIds, handleCommand, state, toggleToolOnTab, updateBadge };
