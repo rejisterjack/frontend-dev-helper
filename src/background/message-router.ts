@@ -9,6 +9,42 @@ import { STORAGE_KEYS } from '@/constants';
 import type { ExtensionMessage, MessageResponse } from '@/types';
 import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
+import { z } from 'zod';
+
+// Message validation schemas
+const messageTypeSchema = z.enum([
+  'PING', 'GET_SETTINGS', 'UPDATE_SETTINGS', 'GET_FEATURES', 'TOGGLE_FEATURE',
+  'GET_TOOL_STATE', 'SET_TOOL_STATE', 'TOGGLE_TOOL', 'GET_ALL_TOOL_STATES',
+  'SITE_REPORT_GENERATE', 'EXPORT_GENERATE_REPORT', 'PESTICIDE_ENABLE',
+  'PESTICIDE_DISABLE', 'PESTICIDE_TOGGLE', 'COLOR_PICKER_ENABLE',
+  'COLOR_PICKER_DISABLE', 'MEASURE_TOOL_ENABLE', 'MEASURE_TOOL_DISABLE',
+  'GRID_OVERLAY_ENABLE', 'GRID_OVERLAY_DISABLE', 'BREAKPOINT_ANALYZER_ENABLE',
+  'CONSOLE_PLUS_ENABLE', 'CONSOLE_PLUS_DISABLE', 'STORAGE_INSPECTOR_ENABLE',
+  'STORAGE_INSPECTOR_DISABLE', 'API_TESTER_ENABLE', 'API_TESTER_DISABLE',
+  'FORM_VALIDATOR_ENABLE', 'FORM_VALIDATOR_DISABLE', 'ACCESSIBILITY_CHECKER_ENABLE',
+  'ACCESSIBILITY_CHECKER_DISABLE', 'SEO_ANALYZER_ENABLE', 'SEO_ANALYZER_DISABLE',
+  'SCREENSHOT_TOOL_ENABLE', 'SCREENSHOT_TOOL_DISABLE', 'DESIGN_MODE_ENABLE',
+  'DESIGN_MODE_DISABLE', 'VISUAL_REGRESSION_ENABLE', 'VISUAL_REGRESSION_DISABLE',
+  'AI_SUGGESTIONS_ENABLE', 'AI_SUGGESTIONS_DISABLE'
+]);
+
+const baseMessageSchema = z.object({
+  type: z.string(),
+  id: z.string().optional(),
+  timestamp: z.number().optional(),
+  payload: z.unknown().optional(),
+});
+
+const toggleFeaturePayloadSchema = z.object({
+  feature: z.string().min(1).max(100),
+  enabled: z.boolean(),
+});
+
+const toolStatePayloadSchema = z.object({
+  toolId: z.string().min(1).max(100),
+  enabled: z.boolean(),
+  settings: z.record(z.unknown()).optional(),
+});
 
 export class MessageRouter {
   private handlers: Map<string, (message: ExtensionMessage) => Promise<unknown>> = new Map();
@@ -32,6 +68,15 @@ export class MessageRouter {
     sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse) => void
   ): boolean {
+    // Validate message format
+    if (!this.validateMessage(message)) {
+      sendResponse({
+        success: false,
+        error: 'Invalid message format',
+      });
+      return true;
+    }
+
     // Async handling requires returning true
     (async () => {
       try {
@@ -96,6 +141,30 @@ export class MessageRouter {
   }
 
   /**
+   * Validate incoming message structure
+   */
+  private validateMessage(message: unknown): message is ExtensionMessage {
+    const result = baseMessageSchema.safeParse(message);
+    if (!result.success) {
+      logger.error('[MessageRouter] Invalid message format:', result.error);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validate message payload against schema
+   */
+  private validatePayload<T>(schema: z.ZodSchema<T>, payload: unknown): T | null {
+    const result = schema.safeParse(payload);
+    if (!result.success) {
+      logger.error('[MessageRouter] Invalid payload:', result.error);
+      return null;
+    }
+    return result.data;
+  }
+
+  /**
    * Register default message handlers
    */
   private registerDefaultHandlers(): void {
@@ -127,8 +196,11 @@ export class MessageRouter {
 
     // Toggle feature handler
     this.registerHandler('TOGGLE_FEATURE', async (message) => {
-      const { payload } = message;
-      const { feature, enabled } = payload as { feature: string; enabled: boolean };
+      const validatedPayload = this.validatePayload(toggleFeaturePayloadSchema, message.payload);
+      if (!validatedPayload) {
+        throw new Error('Invalid TOGGLE_FEATURE payload');
+      }
+      const { feature, enabled } = validatedPayload;
 
       // Broadcast to content scripts
       const tabs = await chrome.tabs.query({});

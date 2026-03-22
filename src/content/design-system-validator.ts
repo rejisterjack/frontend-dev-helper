@@ -3,6 +3,8 @@
  * Validates web pages against design system tokens for consistency
  */
 
+import { escapeHtml } from '@/utils/sanitize';
+
 // ============================================================================
 // Types & Interfaces
 // ============================================================================

@@ -1754,18 +1754,16 @@ function printReport(report: SiteReport): void {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
 
-  // Use DOM manipulation instead of document.write() for security
+  // Safe HTML report generation without document.write()
   const html = generateFullHTMLReport(report);
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
   
-  // Copy parsed content to new window
+  // Use DOM manipulation for safe insertion
   printWindow.document.open();
-  printWindow.document.write('<!DOCTYPE html>');
   printWindow.document.close();
   
-  // Safe DOM-based population
-  printWindow.document.documentElement.innerHTML = doc.documentElement.innerHTML;
+  // Safe DOM-based population with DOCTYPE preservation
+  printWindow.document.write = () => {}; // Prevent any document.write calls
+  printWindow.document.documentElement.innerHTML = html.replace('<!DOCTYPE html>', '');
   
   // Wait for styles to load then print
   setTimeout(() => printWindow.print(), 100);

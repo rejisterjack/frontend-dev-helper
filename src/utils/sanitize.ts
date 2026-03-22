@@ -89,18 +89,19 @@ export function sanitizeId(id: string): string {
 }
 
 /**
- * Set HTML content safely by escaping all text content
- * Use this instead of element.innerHTML = html when data is dynamic
- */
-export function setSafeHTML(element: HTMLElement, html: string): void {
-  element.innerHTML = html;
-}
-
-/**
  * Create a text node safely (preferred over innerHTML for text content)
+ * Automatically escapes HTML entities
  */
 export function createTextNode(text: string): Text {
   return document.createTextNode(text);
+}
+
+/**
+ * Set text content safely - automatically escapes HTML
+ * Use this instead of innerHTML when inserting plain text
+ */
+export function setTextContent(element: HTMLElement, text: string): void {
+  element.textContent = text;
 }
 
 /**

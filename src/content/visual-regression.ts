@@ -15,6 +15,7 @@
 
 import type { BaselineScreenshot, VisualRegressionState, VisualRegressionTest } from '@/types';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 import { baselineManager } from './visual-regression/baseline-manager';
 import { diffEngine } from './visual-regression/diff-engine';
 import { visualRegressionExportSchema } from '@/schemas/visual-regression';
