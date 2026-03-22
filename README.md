@@ -16,7 +16,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 **FrontendDevHelper is the unified, modern replacement.**
 
-- ✅ **19 powerful tools** in one extension
+- ✅ **27 powerful tools** in one extension
 - ✅ **Manifest V3** from day one
 - ✅ **Zero data collection** — everything runs locally
 - ✅ **Open source** and free forever
@@ -53,6 +53,19 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 | **Responsive Preview** | 📲 | Multi-device preview |
 | **Design System Validator** | 🎨 | Design token consistency |
 | **Network Analyzer** | 🌐 | Network request monitoring |
+
+### 🆕 "Best of the Best" Tools
+
+| Tool | Icon | Description |
+|------|------|-------------|
+| **Command Palette** | ⌨️ | Quick access to all tools via keyboard (Ctrl+Shift+P) |
+| **Storage Inspector** | 💾 | Inspect LocalStorage, IndexedDB, Cookies, Cache |
+| **AI Suggestions** | ✨ | Smart analysis with one-click auto-fixes |
+| **Component Tree** | 🌳 | Visualize React, Vue, Angular, Svelte hierarchy |
+| **Performance Flame Graph** | 🔥 | Visualize JavaScript execution & bottlenecks |
+| **Focus Debugger** | 🎯 | Visualize focus order & detect focus traps |
+| **Form Debugger** | 📝 | Debug form validation, autofill & accessibility |
+| **Visual Regression** | 👁️ | Capture baselines & compare screenshots |
 
 ### Premium Features
 
@@ -108,6 +121,7 @@ pnpm run build
 | `Alt+M` | Toggle Pixel Ruler |
 | `Alt+B` | Toggle Breakpoint Overlay |
 | `Ctrl+Shift+F` | Open popup |
+| `Ctrl+Shift+P` | Open Command Palette |
 | `Esc` | Disable all tools |
 
 ---

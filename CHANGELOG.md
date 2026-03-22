@@ -5,7 +5,87 @@ All notable changes to FrontendDevHelper will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2024-03-19 - 🚀 THE ABSOLUTE BEST RELEASE
+## [1.2.0] - 2024-03-22 - 🏆 THE BEST OF THE BEST RELEASE
+
+### Added - 8 New Professional Tools
+
+#### ⌨️ Command Palette
+- **VS Code-style command palette** (Ctrl+Shift+P)
+- Fuzzy search across all 27 tools
+- Recent commands history
+- Categorized results (Tools, Actions, Settings, Navigation)
+- Full keyboard navigation support
+
+#### 💾 Storage Inspector
+- **Complete storage debugging** in one place
+- LocalStorage viewer/editor with JSON validation
+- SessionStorage real-time inspection
+- IndexedDB database browser (stores, records, indexes)
+- Cookie manager with secure/httpOnly flags
+- Cache Storage (Service Worker) inspection
+- Storage quota tracking
+- Export complete storage snapshot as JSON
+
+#### ✨ AI Suggestions
+- **Smart analysis with 50+ detection patterns**
+- 6 categories: Accessibility, Performance, SEO, Best Practices, Security
+- One-click auto-fixes for common issues
+- Confidence scoring for each suggestion
+- Real-time analysis as you browse
+- Export suggestions as TODO list
+
+#### 🌳 Component Tree
+- **Framework component hierarchy visualization**
+- Auto-detection: React, Vue, Angular, Svelte
+- Props and state inspection
+- Component highlighting on click
+- Real-time tree updates
+- Framework-specific icons and colors
+
+#### 🔥 Performance Flame Graph
+- **JavaScript execution profiling**
+- Long task detection (>50ms)
+- Visual execution timeline
+- Zoom and pan navigation
+- Filter by type: script, layout, paint, composite
+- Export profiles as JSON
+
+#### 🎯 Focus Debugger
+- **Visualize focus order** with numbered overlays
+- Detect focus traps and navigation issues
+- Track focus history (last 50 events)
+- Tab index analysis
+- Highlight current focused element
+- Validate keyboard-only navigation
+
+#### 📝 Form Debugger
+- **Comprehensive form analysis**
+- All forms overview with validation status
+- Field analysis (types, constraints, values)
+- Label detection (explicit, implicit, ARIA)
+- Autofill detection
+- Real-time validation messages
+- Accessibility issue highlighting
+
+#### 👁️ Visual Regression
+- **Screenshot comparison testing**
+- Baseline capture and management
+- Pixel-perfect diff with color overlay
+- Configurable threshold (default 0.1%)
+- Ignore regions for dynamic content
+- Approval workflow (accept/reject changes)
+- Batch testing support
+
+### Technical
+- 8 new content script modules (~10,000 lines)
+- 6 new React components
+- 4 framework detectors (React, Vue, Angular, Svelte)
+- AI analysis engine with quick-fix system
+- Comprehensive type definitions for all new features
+
+---
+
+## [1.1.0] - 2024-03-19 - 🚀 MAJOR FEATURE RELEASE
 
 ### Added - Making It The Absolute Best
 

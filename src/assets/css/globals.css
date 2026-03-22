@@ -90,15 +90,18 @@
   }
 
   .badge-success {
-    @apply badge bg-dev-success/20 text-dev-success;
+    @apply badge text-dev-success;
+    background-color: rgba(34, 197, 94, 0.2);
   }
 
   .badge-warning {
-    @apply badge bg-dev-warning/20 text-dev-warning;
+    @apply badge text-dev-warning;
+    background-color: rgba(245, 158, 11, 0.2);
   }
 
   .badge-error {
-    @apply badge bg-dev-error/20 text-dev-error;
+    @apply badge text-dev-error;
+    background-color: rgba(239, 68, 68, 0.2);
   }
 }
 

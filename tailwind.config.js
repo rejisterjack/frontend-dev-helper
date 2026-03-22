@@ -46,6 +46,8 @@ export default {
           border: '#334155',
           text: '#f1f5f9',
           muted: '#94a3b8',
+          success: '#22c55e',
+          warning: '#f59e0b',
           error: '#ef4444',
         },
       },

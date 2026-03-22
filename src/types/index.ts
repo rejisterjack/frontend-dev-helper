@@ -221,6 +221,15 @@ export interface FeatureToggles {
   cssScanner: boolean;
   breakpointVisualizer: boolean;
   networkAnalyzer: boolean;
+  // New "Best of the Best" Tools
+  commandPalette: boolean;
+  storageInspector: boolean;
+  focusDebugger: boolean;
+  formDebugger: boolean;
+  componentTree: boolean;
+  flameGraph: boolean;
+  visualRegression: boolean;
+  aiSuggestions: boolean;
 }
 
 /** Default feature toggles */
@@ -237,6 +246,15 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   cssScanner: false,
   breakpointVisualizer: false,
   networkAnalyzer: false,
+  // New "Best of the Best" Tools
+  commandPalette: true,
+  storageInspector: false,
+  focusDebugger: false,
+  formDebugger: false,
+  componentTree: false,
+  flameGraph: false,
+  visualRegression: false,
+  aiSuggestions: true,
 };
 
 /** Extension settings */

@@ -463,7 +463,7 @@ export const PerformanceTab: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="text-lg">🖼️</span>
               <span className="text-sm font-medium text-dev-text">Image Optimization</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-dev-warning/20 text-dev-warning">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full text-dev-warning" style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)' }}>
                 {imageOptimizations.length} issues
               </span>
             </div>
