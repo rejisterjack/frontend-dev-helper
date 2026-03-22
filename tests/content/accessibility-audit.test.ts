@@ -43,9 +43,9 @@ describe('Accessibility Audit', () => {
         return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
       };
 
-      // White on yellow has poor contrast
-      expect(el.style.color).toBe('#ffffff');
-      expect(el.style.backgroundColor).toBe('#ffff00');
+      // White on yellow has poor contrast — jsdom normalizes hex to rgb()
+      expect(el.style.color).toBe('rgb(255, 255, 255)');
+      expect(el.style.backgroundColor).toBe('rgb(255, 255, 0)');
     });
 
     it('should detect missing ARIA landmarks', () => {

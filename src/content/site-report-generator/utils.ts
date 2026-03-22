@@ -139,8 +139,4 @@ export function getScoreColor(score: number): string {
   return '#ef4444';
 }
 
-export function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+export { escapeHtml } from '@/utils/sanitize';

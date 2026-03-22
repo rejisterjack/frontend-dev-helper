@@ -366,6 +366,44 @@ export async function sendMessageToBackground<T = unknown>(
 }
 
 // ============================================
+// Convenience Aliases
+// ============================================
+
+/**
+ * Send a message to the background service worker.
+ * Throws if the response has `success: false`.
+ *
+ * Uses the MV3 Promise-based chrome.runtime.sendMessage API.
+ */
+export async function sendMessage<T = unknown>(
+  message: BaseMessage
+): Promise<MessageResponse<T>> {
+  const response = (await chrome.runtime.sendMessage(message)) as MessageResponse<T>;
+  if (!response?.success) {
+    throw new Error(response?.error ?? 'Message failed');
+  }
+  return response;
+}
+
+/**
+ * Send a message to the currently active tab.
+ * Automatically queries for the active tab and enriches the message with a timestamp.
+ *
+ * Throws if no active tab is found or if the tab has no ID.
+ */
+export async function sendMessageToActiveTabSimple<T = unknown>(
+  message: BaseMessage
+): Promise<MessageResponse<T>> {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (!activeTab) throw new Error('No active tab found');
+  if (!activeTab.id) throw new Error('Tab has no ID');
+
+  const enriched = { ...message, timestamp: Date.now() };
+  return (await chrome.tabs.sendMessage(activeTab.id, enriched)) as MessageResponse<T>;
+}
+
+// ============================================
 // Message Handlers
 // ============================================
 
@@ -377,6 +415,54 @@ export type MessageHandler<T = unknown> = (
   message: ExtensionMessage,
   sender?: chrome.runtime.MessageSender
 ) => Promise<T> | T;
+
+/**
+ * Create a chrome.runtime.onMessage listener from a map of typed handlers.
+ *
+ * Each handler key is a message type string. The returned function can be
+ * passed directly to `chrome.runtime.onMessage.addListener`.
+ *
+ * @param handlers - Map of message type → async handler function
+ * @returns Listener function (returns `true` to keep the channel open for async handlers)
+ *
+ * @example
+ * ```typescript
+ * chrome.runtime.onMessage.addListener(createMessageHandler({
+ *   PING: async () => ({ pong: true }),
+ *   GET_SETTINGS: async (msg) => getSettings(msg.payload),
+ * }));
+ * ```
+ */
+export function createMessageHandler(
+  handlers: Record<string, (message: BaseMessage, sender: chrome.runtime.MessageSender) => Promise<unknown> | unknown>
+): (
+  message: BaseMessage,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response: unknown) => void
+) => boolean {
+  return (message, sender, sendResponse) => {
+    const handler = handlers[message.type];
+
+    if (!handler) {
+      sendResponse({ success: false, error: `Unknown message type: ${message.type}` });
+      return false;
+    }
+
+    (async () => {
+      try {
+        const result = await handler(message, sender);
+        sendResponse(result);
+      } catch (error) {
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    })();
+
+    return true; // Keep channel open for async response
+  };
+}
 
 // ============================================
 // Pre-built Message Creators

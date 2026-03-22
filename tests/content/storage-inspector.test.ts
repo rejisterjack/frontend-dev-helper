@@ -31,7 +31,7 @@ describe('Storage Inspector', () => {
       localStorage.setItem(key, value);
       
       const size = key.length + value.length;
-      expect(size).toBe(15);
+      expect(size).toBe(16); // 'testKey'(7) + 'testValue'(9) = 16
     });
 
     it('should parse JSON values', () => {

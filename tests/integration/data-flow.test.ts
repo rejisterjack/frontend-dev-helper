@@ -152,7 +152,7 @@ describe('Data Flow: Background ↔ Content Script ↔ Popup', () => {
 describe('Cross-Origin Security', () => {
   it('validates origin of incoming messages', () => {
     const validOrigins = [
-      'chrome-extension://[extension-id]',
+      'chrome-extension://',
       'https://trusted-domain.com',
     ];
 

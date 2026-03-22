@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { escapeHtml, sanitizeColor } from '@/utils/sanitize';
 
 describe('innerHTML Security Patterns', () => {
   let element: HTMLElement;
@@ -35,12 +36,6 @@ describe('innerHTML Security Patterns', () => {
 
     it('should escape dynamic attribute values', () => {
       const userInput = '" onclick="alert(1)" data-x="';
-      const escapeHtml = (text: string): string => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      };
-      
       const escaped = escapeHtml(userInput);
       // The quotes should be escaped, preventing attribute breakout
       expect(escaped).toContain('&quot;');
@@ -150,18 +145,9 @@ describe('Extension Content Script Security', () => {
 
     it('should sanitize color values in color picker', () => {
       const maliciousColor = '#ff0000" onmouseover="alert(1)" style="';
-      
-      const sanitizeColor = (color: string): string | null => {
-        if (typeof color !== 'string') return null;
-        const s = new Option().style;
-        s.color = color;
-        return s.color ? color.replace(/["';{}<>]/g, '') : null;
-      };
-      
+      // sanitizeColor rejects invalid CSS colors (returns null) — that is safe
       const sanitized = sanitizeColor(maliciousColor);
-      expect(sanitized).toBeTruthy();
-      expect(sanitized!).not.toContain('"');
-      expect(sanitized!).not.toContain('onmouseover');
+      expect(sanitized).toBeNull();
     });
   });
 

@@ -1,5 +1,4 @@
 import { logger } from '../utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
 
 /**
  * Font Inspector Content Script for FrontendDevHelper
@@ -22,6 +21,14 @@ interface InspectorState {
   isActive: boolean;
   currentElement: HTMLElement | null;
 }
+
+interface OriginalOutlineStyles {
+  outline: string;
+  outlineOffset: string;
+}
+
+/** WeakMap to store original outline styles without polluting DOM element properties */
+const originalOutlineStyles = new WeakMap<HTMLElement, OriginalOutlineStyles>();
 
 const state: InspectorState = {
   isActive: false,
@@ -94,7 +101,6 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
         if (rule instanceof CSSFontFaceRule) {
           const ruleFamily = rule.style.fontFamily?.replace(/['"]/g, '').trim();
           if (ruleFamily?.toLowerCase() === cleanFamily.toLowerCase()) {
-            // biome-ignore lint/suspicious/noExplicitAny: CSSFontFaceRule style has src property
             const src = (rule.style as unknown as Record<string, string>).src;
             if (src) {
               const urlMatch = src.match(/url\(["']?([^"')]+)["']?\)/);
@@ -579,9 +585,11 @@ function highlightElement(element: HTMLElement): void {
   removeHighlight();
   highlightedElement = element;
 
-  // Store original outline
-  (element as any).__fdhOriginalOutline = element.style.outline;
-  (element as any).__fdhOriginalOutlineOffset = element.style.outlineOffset;
+  // Store original outline styles in WeakMap to avoid polluting the DOM element
+  originalOutlineStyles.set(element, {
+    outline: element.style.outline,
+    outlineOffset: element.style.outlineOffset,
+  });
 
   element.style.outline = '2px solid #3b82f6';
   element.style.outlineOffset = '2px';
@@ -592,9 +600,10 @@ function highlightElement(element: HTMLElement): void {
  */
 function removeHighlight(): void {
   if (highlightedElement) {
-    highlightedElement.style.outline = (highlightedElement as any).__fdhOriginalOutline || '';
-    highlightedElement.style.outlineOffset =
-      (highlightedElement as any).__fdhOriginalOutlineOffset || '';
+    const original = originalOutlineStyles.get(highlightedElement);
+    highlightedElement.style.outline = original?.outline ?? '';
+    highlightedElement.style.outlineOffset = original?.outlineOffset ?? '';
+    originalOutlineStyles.delete(highlightedElement);
     highlightedElement = null;
   }
 }

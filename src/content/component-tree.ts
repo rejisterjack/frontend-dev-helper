@@ -14,6 +14,7 @@
 
 import type { ComponentNode, ComponentTreeState, FrameworkType } from '@/types';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // Import framework detectors
 import {
@@ -704,11 +705,6 @@ function updateStatus(message: string): void {
   }
 }
 
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
 
 // ============================================
 // Auto Refresh

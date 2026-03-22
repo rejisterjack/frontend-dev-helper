@@ -10,7 +10,7 @@ const mockStorageData: Record<string, unknown> = {};
 
 const mockChrome = {
   runtime: {
-    sendMessage: vi.fn(),
+    sendMessage: vi.fn().mockResolvedValue({ success: true }),
     onMessage: {
       addListener: vi.fn(),
       removeListener: vi.fn(),
@@ -44,6 +44,11 @@ const mockChrome = {
     },
   },
   storage: {
+    onChanged: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      hasListener: vi.fn(() => false),
+    },
     sync: {
       get: vi.fn((keys?: string | string[] | Record<string, unknown>) => {
         if (keys === null || keys === undefined) {
@@ -198,6 +203,129 @@ global.Image = class MockImage {
     }, 0);
   }
 } as unknown as typeof Image;
+
+// ============================================
+// Canvas API Mock
+// ============================================
+
+// jsdom does not implement the Canvas 2D rendering context.
+// We provide a minimal mock so canvas-dependent tests can run.
+const createMockContext = (): CanvasRenderingContext2D => {
+  const imageDataStore = new Map<string, Uint8ClampedArray>();
+  let fillStyle = '#000000';
+
+  const ctx = {
+    fillStyle: '#000000',
+    strokeStyle: '#000000',
+    lineWidth: 1,
+    globalAlpha: 1,
+    canvas: null as unknown as HTMLCanvasElement,
+    fillRect: vi.fn((x: number, y: number, w: number, h: number) => {
+      // Store fill color for getImageData to read back
+      const key = `${x},${y},${w},${h}`;
+      const color = fillStyle;
+      const hexToRgba = (hex: string): [number, number, number, number] => {
+        const cleaned = hex.replace('#', '');
+        if (cleaned.length === 3) {
+          return [
+            parseInt(cleaned[0] + cleaned[0], 16),
+            parseInt(cleaned[1] + cleaned[1], 16),
+            parseInt(cleaned[2] + cleaned[2], 16),
+            255,
+          ];
+        }
+        return [
+          parseInt(cleaned.slice(0, 2), 16),
+          parseInt(cleaned.slice(2, 4), 16),
+          parseInt(cleaned.slice(4, 6), 16),
+          255,
+        ];
+      };
+      const rgba = hexToRgba(color);
+      const data = new Uint8ClampedArray(w * h * 4);
+      for (let i = 0; i < w * h; i++) {
+        data[i * 4] = rgba[0];
+        data[i * 4 + 1] = rgba[1];
+        data[i * 4 + 2] = rgba[2];
+        data[i * 4 + 3] = rgba[3];
+      }
+      imageDataStore.set(key, data);
+    }),
+    clearRect: vi.fn(),
+    strokeRect: vi.fn(),
+    beginPath: vi.fn(),
+    closePath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    fill: vi.fn(),
+    arc: vi.fn(),
+    drawImage: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    scale: vi.fn(),
+    translate: vi.fn(),
+    rotate: vi.fn(),
+    setTransform: vi.fn(),
+    putImageData: vi.fn(),
+    getImageData: vi.fn((x: number, y: number, w: number, h: number): ImageData => {
+      // Look for stored fill data, return it or return zeros
+      for (const [key, data] of imageDataStore.entries()) {
+        const [kx, ky, kw, kh] = key.split(',').map(Number);
+        if (x >= kx && y >= ky && x < kx + kw && y < ky + kh) {
+          const slice = new Uint8ClampedArray(w * h * 4);
+          for (let i = 0; i < w * h; i++) {
+            const srcIdx = ((y - ky) * kw + (x - kx)) * 4;
+            slice[i * 4] = data[srcIdx];
+            slice[i * 4 + 1] = data[srcIdx + 1];
+            slice[i * 4 + 2] = data[srcIdx + 2];
+            slice[i * 4 + 3] = data[srcIdx + 3];
+          }
+          return { data: slice, width: w, height: h, colorSpace: 'srgb' } as ImageData;
+        }
+      }
+      return { data: new Uint8ClampedArray(w * h * 4), width: w, height: h, colorSpace: 'srgb' } as ImageData;
+    }),
+    createImageData: vi.fn((w: number, h: number): ImageData => ({
+      data: new Uint8ClampedArray(w * h * 4),
+      width: w,
+      height: h,
+      colorSpace: 'srgb',
+    } as ImageData)),
+    measureText: vi.fn(() => ({ width: 0, actualBoundingBoxAscent: 0, actualBoundingBoxDescent: 0 } as TextMetrics)),
+    fillText: vi.fn(),
+    strokeText: vi.fn(),
+    clip: vi.fn(),
+    createLinearGradient: vi.fn(() => ({
+      addColorStop: vi.fn(),
+    })),
+    createRadialGradient: vi.fn(() => ({
+      addColorStop: vi.fn(),
+    })),
+  } as unknown as CanvasRenderingContext2D;
+
+  // Make fillStyle update the tracked local var
+  Object.defineProperty(ctx, 'fillStyle', {
+    get: () => fillStyle,
+    set: (v: string) => { fillStyle = v; },
+  });
+
+  return ctx;
+};
+
+// Patch HTMLCanvasElement.prototype.toDataURL (jsdom returns null)
+HTMLCanvasElement.prototype.toDataURL = (type = 'image/png') => `data:${type};base64,mock`;
+
+// Patch HTMLCanvasElement.prototype.getContext to return our mock
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = function (contextType: string, ...args: unknown[]) {
+  if (contextType === '2d') {
+    const ctx = createMockContext();
+    Object.defineProperty(ctx, 'canvas', { value: this, writable: false });
+    return ctx as unknown as RenderingContext;
+  }
+  return (originalGetContext as (type: string, ...a: unknown[]) => RenderingContext | null).call(this, contextType, ...args);
+} as typeof HTMLCanvasElement.prototype.getContext;
 
 // Note: Don't mock document.createElement globally as it breaks jsdom for React tests
 // Export manager tests have their own DOM mocks

@@ -45,8 +45,16 @@ describe('Tech Detector', () => {
     });
 
     it('should detect from generator meta tag', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'generator';
+      meta.content = 'WordPress 6.0';
+      document.head.appendChild(meta);
+
       const generator = document.querySelector('meta[name="generator"]')?.getAttribute('content');
       expect(typeof generator).toBe('string');
+      expect(generator).toContain('WordPress');
+
+      meta.remove();
     });
   });
 });

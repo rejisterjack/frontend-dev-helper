@@ -2,6 +2,7 @@
  * UI Component Creation (toolbar, color picker, instructions, action bar)
  */
 
+import { escapeHtml } from '@/utils/sanitize';
 import { COLORS, PREFIX, RESIZE_CURSORS, TOOL_CURSORS } from './constants';
 import type { AnnotationTool } from './types';
 
@@ -418,7 +419,7 @@ function createActionButton(
 ): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.className = `${PREFIX}-action-btn ${PREFIX}-action-${label.toLowerCase()}`;
-  btn.innerHTML = `<span style="margin-right: 6px;">${icon}</span>${label}`;
+  btn.innerHTML = `<span style="margin-right: 6px;">${escapeHtml(icon)}</span>${escapeHtml(label)}`;
   btn.style.cssText = `
     display: flex;
     align-items: center;

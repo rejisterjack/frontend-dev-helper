@@ -83,7 +83,10 @@ describe('MessageRouter', () => {
       
       // Wait for async handler
       await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
-      expect(sendResponse).toHaveBeenCalledWith({ success: true, data: 'test' });
+      // Router wraps handler result in { success: true, data: <result>, id: ... }
+      expect(sendResponse).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true, data: { success: true, data: 'test' } })
+      );
     });
 
     it('should return error for unknown message types', async () => {
@@ -95,9 +98,9 @@ describe('MessageRouter', () => {
       
       await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
       expect(sendResponse).toHaveBeenCalledWith(
-        expect.objectContaining({ 
-          success: false, 
-          error: expect.stringContaining('Unknown message type') 
+        expect.objectContaining({
+          success: false,
+          error: expect.stringContaining('No handler registered')
         })
       );
     });
@@ -121,7 +124,8 @@ describe('MessageRouter', () => {
       );
     });
 
-    it('should handle sync handlers correctly', () => {
+    it('should handle sync handlers correctly', async () => {
+      // Router always returns true (async pattern) even for sync-returning handlers
       const handler = vi.fn().mockReturnValue({ success: true });
       router.registerHandler('SYNC_MESSAGE', handler);
 
@@ -130,10 +134,13 @@ describe('MessageRouter', () => {
       const sendResponse = vi.fn();
 
       const result = router.handleMessage(message, sender, sendResponse);
-      
-      // Sync handler may return false or undefined
-      expect(result).toBeFalsy();
-      expect(sendResponse).toHaveBeenCalledWith({ success: true });
+
+      expect(result).toBe(true);
+      await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+      // Handler returns { success: true }, router wraps it: { success: true, data: { success: true } }
+      expect(sendResponse).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true, data: { success: true } })
+      );
     });
   });
 

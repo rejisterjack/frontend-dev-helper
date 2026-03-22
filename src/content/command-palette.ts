@@ -7,6 +7,7 @@
 
 import { executeCommandById, getAllCommands } from '@/components/CommandPalette/commands';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // ============================================
 // State
@@ -364,15 +365,6 @@ async function executeCommand(id: string): Promise<void> {
   }
 }
 
-// ============================================
-// Utilities
-// ============================================
-
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
 
 function getStyles(): string {
   return `

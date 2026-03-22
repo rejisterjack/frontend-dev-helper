@@ -16,6 +16,7 @@
 import { visualRegressionExportSchema } from '@/schemas/visual-regression';
 import type { BaselineScreenshot, VisualRegressionState, VisualRegressionTest } from '@/types';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 import { baselineManager } from './baseline-manager';
 import { captureFullPageScreenshot, captureViewportScreenshot, generateId } from './capture';
 import { exportDiffImage as exportDiffImageInternal, runComparison } from './comparison';
@@ -673,7 +674,7 @@ function updateSettingsUI(): void {
   const regionsContainer = shadowRoot?.querySelector(`#${PREFIX}-ignore-regions`);
   if (regionsContainer) {
     if (currentState.ignoreRegions.length === 0) {
-      regionsContainer.innerHTML = `<span class="${PREFIX}-empty-small">No ignore regions</span>`;
+      regionsContainer.innerHTML = `<span class="${escapeHtml(PREFIX)}-empty-small">No ignore regions</span>`;
     } else {
       regionsContainer.innerHTML = currentState.ignoreRegions
         .map((region, index) => renderIgnoreRegionItem(index, region))

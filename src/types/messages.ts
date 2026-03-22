@@ -1,101 +1,27 @@
 /**
  * Message Types for FrontendDevHelper
  *
- * @deprecated This file is being phased out in favor of src/constants/index.ts MESSAGE_TYPES.
- * Please import MESSAGE_TYPES from @/constants instead for new code.
+ * Single source of truth is MESSAGE_TYPES in src/constants/index.ts.
+ * This file re-exports it and provides typed payload interfaces.
  */
 
 import { MESSAGE_TYPES } from '@/constants';
 
 // ============================================
-// Re-export from constants (single source of truth)
+// Re-export (single source of truth)
 // ============================================
 
 export { MESSAGE_TYPES };
 
-// ============================================
-// Deprecated Message Type Enum
-// ============================================
-
-/**
- * @deprecated Use MESSAGE_TYPES from @/constants instead.
- * This enum is kept for backward compatibility only.
- */
-export enum MessageType {
-  // Tool toggles
-  TOGGLE_INSPECTOR = 'TOGGLE_INSPECTOR',
-  TOGGLE_GRID = 'TOGGLE_GRID',
-  PICK_COLOR = 'PICK_COLOR',
-  MEASURE_DISTANCE = 'MEASURE_DISTANCE',
-
-  // Element operations
-  GET_ELEMENT_INFO = 'GET_ELEMENT_INFO',
-  ELEMENT_SELECTED = 'ELEMENT_SELECTED',
-  ELEMENT_HOVER = 'ELEMENT_HOVER',
-  COPY_CSS = 'COPY_CSS',
-  COPY_HTML = 'COPY_HTML',
-
-  // Settings & storage
-  GET_SETTINGS = 'GET_SETTINGS',
-  SET_SETTINGS = 'SET_SETTINGS',
-
-  // Tab operations
-  GET_TAB_INFO = 'GET_TAB_INFO',
-  TAB_CHANGED = 'TAB_CHANGED',
-  INJECT_CONTENT_SCRIPT = 'INJECT_CONTENT_SCRIPT',
-
-  // System
-  PING = 'PING',
-  COPY_TO_CLIPBOARD = 'COPY_TO_CLIPBOARD',
-  CAPTURE_SCREENSHOT = 'CAPTURE_SCREENSHOT',
-  UPDATE_BADGE = 'UPDATE_BADGE',
-
-  // Command Palette
-  OPEN_COMMAND_PALETTE = 'OPEN_COMMAND_PALETTE',
-  CLOSE_COMMAND_PALETTE = 'CLOSE_COMMAND_PALETTE',
-  EXECUTE_COMMAND = 'EXECUTE_COMMAND',
-
-  // Storage Inspector
-  GET_STORAGE_DATA = 'GET_STORAGE_DATA',
-  SET_STORAGE_ITEM = 'SET_STORAGE_ITEM',
-  DELETE_STORAGE_ITEM = 'DELETE_STORAGE_ITEM',
-  CLEAR_STORAGE = 'CLEAR_STORAGE',
-
-  // AI Suggestions
-  RUN_AI_ANALYSIS = 'RUN_AI_ANALYSIS',
-  GET_AI_SUGGESTIONS = 'GET_AI_SUGGESTIONS',
-  APPLY_AI_FIX = 'APPLY_AI_FIX',
-
-  // Component Tree
-  GET_COMPONENT_TREE = 'GET_COMPONENT_TREE',
-  SELECT_COMPONENT = 'SELECT_COMPONENT',
-  HIGHLIGHT_COMPONENT = 'HIGHLIGHT_COMPONENT',
-
-  // Performance
-  START_PROFILING = 'START_PROFILING',
-  STOP_PROFILING = 'STOP_PROFILING',
-  GET_PERFORMANCE_DATA = 'GET_PERFORMANCE_DATA',
-
-  // Focus Debugger
-  GET_FOCUSABLE_ELEMENTS = 'GET_FOCUSABLE_ELEMENTS',
-  TRACE_FOCUS = 'TRACE_FOCUS',
-
-  // Form Debugger
-  GET_FORM_DATA = 'GET_FORM_DATA',
-  VALIDATE_FORM = 'VALIDATE_FORM',
-
-  // Visual Regression
-  CAPTURE_BASELINE = 'CAPTURE_BASELINE',
-  COMPARE_SCREENSHOTS = 'COMPARE_SCREENSHOTS',
-  GET_BASELINES = 'GET_BASELINES',
-}
+/** Union of all valid message type string values */
+export type MessageTypeValue = (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES];
 
 // ============================================
 // Message Payload Interface
 // ============================================
 
 export interface MessagePayload {
-  type: MessageType | (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES];
+  type: MessageTypeValue;
   payload?: unknown;
 }
 

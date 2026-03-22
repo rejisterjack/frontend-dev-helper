@@ -13,6 +13,7 @@
 
 import type { FlameGraphEntry, PerformanceProfile } from '@/types';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 import { performanceProfiler } from './profilers/performance-profiler';
 
 // ============================================
@@ -798,15 +799,6 @@ function hideDetails(): void {
   details?.classList.add(`${PREFIX}-hidden`);
 }
 
-// ============================================
-// Utilities
-// ============================================
-
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
 
 // ============================================
 // Styles

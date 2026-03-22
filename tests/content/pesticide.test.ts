@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { escapeHtml } from '@/utils/sanitize';
 
 // Mock DOM environment
 describe('Pesticide Tool', () => {
@@ -135,16 +136,11 @@ describe('Pesticide Tool', () => {
       el.id = 'test" onclick="alert(1)"';
       container.appendChild(el);
 
-      // Escape the ID for use in selectors
-      const escapeHtml = (text: string): string => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      };
-
       const safeId = escapeHtml(el.id);
-      expect(safeId).not.toContain('onclick');
+      // escapeHtml escapes quotes so the id cannot break out of an attribute context
       expect(safeId).toContain('&quot;');
+      // The raw " chars are escaped — no unescaped quote that could break an attribute
+      expect(safeId).not.toContain('"');
 
       el.remove();
     });

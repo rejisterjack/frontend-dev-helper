@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sendMessage, sendMessageToTab, createMessageHandler } from '@/utils/messaging';
+import { sendMessage, sendMessageToActiveTabSimple, createMessageHandler } from '@/utils/messaging';
 
 // Mock chrome APIs
 const mockSendMessage = vi.fn();
@@ -16,6 +16,7 @@ const mockSendMessageToTab = vi.fn();
 global.chrome = {
   runtime: {
     sendMessage: mockSendMessage,
+    lastError: null,
   },
   tabs: {
     query: mockQuery,
@@ -46,57 +47,59 @@ describe('Messaging Utilities', () => {
       await expect(sendMessage({ type: 'TEST' })).rejects.toThrow('Failed');
     });
 
-    it('should throw error when sendMessage fails', async () => {
+    it('should throw error when sendMessage rejects', async () => {
       mockSendMessage.mockRejectedValueOnce(new Error('Connection lost'));
 
       await expect(sendMessage({ type: 'TEST' })).rejects.toThrow('Connection lost');
     });
 
-    it('should include timestamp in message', async () => {
+    it('should pass the message as-is (no auto-enrichment)', async () => {
       mockSendMessage.mockResolvedValueOnce({ success: true });
 
       await sendMessage({ type: 'TEST' });
 
       const sentMessage = mockSendMessage.mock.calls[0][0];
-      expect(sentMessage.timestamp).toBeDefined();
-      expect(typeof sentMessage.timestamp).toBe('number');
+      expect(sentMessage.type).toBe('TEST');
     });
   });
 
-  describe('sendMessageToTab', () => {
-    it('should send message to active tab', async () => {
+  describe('sendMessageToActiveTabSimple', () => {
+    it('should send message to active tab with timestamp', async () => {
       mockQuery.mockResolvedValueOnce([{ id: 123 }]);
       mockSendMessageToTab.mockResolvedValueOnce({ success: true });
 
-      const result = await sendMessageToTab({ type: 'TEST' });
+      const result = await sendMessageToActiveTabSimple({ type: 'TEST' });
 
       expect(mockQuery).toHaveBeenCalledWith({ active: true, currentWindow: true });
-      expect(mockSendMessageToTab).toHaveBeenCalledWith(123, { type: 'TEST', timestamp: expect.any(Number) });
+      expect(mockSendMessageToTab).toHaveBeenCalledWith(
+        123,
+        { type: 'TEST', timestamp: expect.any(Number) }
+      );
       expect(result).toEqual({ success: true });
     });
 
-    it('should throw error when no active tab', async () => {
+    it('should throw when no active tab exists', async () => {
       mockQuery.mockResolvedValueOnce([]);
 
-      await expect(sendMessageToTab({ type: 'TEST' })).rejects.toThrow('No active tab found');
+      await expect(sendMessageToActiveTabSimple({ type: 'TEST' })).rejects.toThrow('No active tab found');
     });
 
-    it('should throw error when tab has no id', async () => {
+    it('should throw when active tab has no id', async () => {
       mockQuery.mockResolvedValueOnce([{}]);
 
-      await expect(sendMessageToTab({ type: 'TEST' })).rejects.toThrow('Tab has no ID');
+      await expect(sendMessageToActiveTabSimple({ type: 'TEST' })).rejects.toThrow('Tab has no ID');
     });
 
-    it('should throw error when message to tab fails', async () => {
+    it('should propagate tab send errors', async () => {
       mockQuery.mockResolvedValueOnce([{ id: 123 }]);
       mockSendMessageToTab.mockRejectedValueOnce(new Error('Tab error'));
 
-      await expect(sendMessageToTab({ type: 'TEST' })).rejects.toThrow('Tab error');
+      await expect(sendMessageToActiveTabSimple({ type: 'TEST' })).rejects.toThrow('Tab error');
     });
   });
 
   describe('createMessageHandler', () => {
-    it('should create handler that routes messages correctly', async () => {
+    it('should route messages to the matching handler', async () => {
       const handlers = {
         MSG_1: vi.fn().mockResolvedValue({ result: 'msg1' }),
         MSG_2: vi.fn().mockResolvedValue({ result: 'msg2' }),
@@ -105,30 +108,27 @@ describe('Messaging Utilities', () => {
       const messageHandler = createMessageHandler(handlers);
       const sendResponse = vi.fn();
 
-      const result = messageHandler({ type: 'MSG_1' }, {}, sendResponse);
+      const result = messageHandler({ type: 'MSG_1' }, {} as chrome.runtime.MessageSender, sendResponse);
 
-      expect(result).toBe(true); // Async handler
+      expect(result).toBe(true); // Async — channel stays open
       await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
       expect(sendResponse).toHaveBeenCalledWith({ result: 'msg1' });
     });
 
-    it('should handle unknown message types', async () => {
-      const handlers = {
-        KNOWN: vi.fn(),
-      };
-
-      const messageHandler = createMessageHandler(handlers);
+    it('should respond with error for unknown message types', () => {
+      const messageHandler = createMessageHandler({ KNOWN: vi.fn() });
       const sendResponse = vi.fn();
 
-      messageHandler({ type: 'UNKNOWN' }, {}, sendResponse);
+      const result = messageHandler({ type: 'UNKNOWN' }, {} as chrome.runtime.MessageSender, sendResponse);
 
+      expect(result).toBe(false);
       expect(sendResponse).toHaveBeenCalledWith({
         success: false,
         error: 'Unknown message type: UNKNOWN',
       });
     });
 
-    it('should handle handler errors', async () => {
+    it('should catch handler errors and respond with failure', async () => {
       const handlers = {
         FAILING: vi.fn().mockRejectedValue(new Error('Handler failed')),
       };
@@ -136,7 +136,7 @@ describe('Messaging Utilities', () => {
       const messageHandler = createMessageHandler(handlers);
       const sendResponse = vi.fn();
 
-      messageHandler({ type: 'FAILING' }, {}, sendResponse);
+      messageHandler({ type: 'FAILING' }, {} as chrome.runtime.MessageSender, sendResponse);
 
       await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
       expect(sendResponse).toHaveBeenCalledWith({
