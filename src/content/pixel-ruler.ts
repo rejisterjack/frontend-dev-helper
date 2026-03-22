@@ -6,6 +6,7 @@
  */
 
 import { createOverlay, createTooltip, positionTooltip } from '@/utils/dom';
+import { escapeHtml } from '@/utils/sanitize';
 
 type MeasurementMode = 'horizontal' | 'vertical' | 'element';
 type MeasurementType = 'drag' | 'element';

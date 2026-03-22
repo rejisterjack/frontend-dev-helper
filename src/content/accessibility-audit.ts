@@ -12,6 +12,7 @@
 
 import { getContrastRatio, parseColor } from '../utils/color';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // ============================================
 // TypeScript Interfaces

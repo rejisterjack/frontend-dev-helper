@@ -6,6 +6,7 @@
  */
 
 import { createOverlay } from '@/utils/dom';
+import { escapeHtml } from '@/utils/sanitize';
 
 // Device preset definitions
 interface DevicePreset {

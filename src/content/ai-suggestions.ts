@@ -7,6 +7,7 @@
 import { runAIAnalysis } from '@/ai/ai-analyzer';
 import type { AIAnalysisResult } from '@/types';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // ============================================
 // State

@@ -7,6 +7,7 @@
 
 import { getContrastRatio, getWCAGRating } from '../utils/color';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 interface CSSProperty {
   name: string;

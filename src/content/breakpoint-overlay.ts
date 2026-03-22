@@ -7,6 +7,7 @@
 
 import { createOverlay, throttle } from '@/utils/dom';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // Tailwind CSS breakpoints
 const TAILWIND_BREAKPOINTS = {

@@ -8,6 +8,7 @@
 
 import { Z_INDEX } from '../constants';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 // ============================================
 // Types
