@@ -9,13 +9,9 @@
  * - Configuring settings
  */
 
-import type {
-  BaselineScreenshot,
-  VisualRegressionState,
-  VisualRegressionTest,
-} from '@/types';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { BaselineScreenshot, VisualRegressionState, VisualRegressionTest } from '@/types';
 import { logger } from '@/utils/logger';
 
 // ============================================
@@ -93,9 +89,9 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
   const loadData = useCallback(async () => {
     try {
       // Load from IndexedDB via message to content script
-      const response = await sendMessageToContentScript({
+      const response = (await sendMessageToContentScript({
         type: 'VISUAL_REGRESSION_GET_STATE',
-      }) as MessageResponse;
+      })) as MessageResponse;
 
       if (response?.state) {
         setBaselines(response.state.baselines || []);
@@ -120,10 +116,10 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
     async (options: { fullPage?: boolean; name?: string } = {}) => {
       setIsCapturing(true);
       try {
-        const response = await sendMessageToContentScript({
+        const response = (await sendMessageToContentScript({
           type: 'VISUAL_REGRESSION_CAPTURE_BASELINE',
           options,
-        }) as MessageResponse;
+        })) as MessageResponse;
 
         if (response?.baseline) {
           setBaselines((prev) => [response.baseline!, ...prev]);
@@ -139,25 +135,28 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
     []
   );
 
-  const deleteBaseline = useCallback(async (id: string) => {
-    if (!confirm('Are you sure you want to delete this baseline?')) return;
+  const deleteBaseline = useCallback(
+    async (id: string) => {
+      if (!confirm('Are you sure you want to delete this baseline?')) return;
 
-    try {
-      await sendMessageToContentScript({
-        type: 'VISUAL_REGRESSION_DELETE_BASELINE',
-        id,
-      });
+      try {
+        await sendMessageToContentScript({
+          type: 'VISUAL_REGRESSION_DELETE_BASELINE',
+          id,
+        });
 
-      setBaselines((prev) => prev.filter((b) => b.id !== id));
-      setTests((prev) => prev.filter((t) => t.baselineId !== id));
+        setBaselines((prev) => prev.filter((b) => b.id !== id));
+        setTests((prev) => prev.filter((t) => t.baselineId !== id));
 
-      if (selectedBaselineId === id) {
-        setSelectedBaselineId(null);
+        if (selectedBaselineId === id) {
+          setSelectedBaselineId(null);
+        }
+      } catch (error) {
+        logger.error('[VisualRegression] Failed to delete baseline:', error);
       }
-    } catch (error) {
-      logger.error('[VisualRegression] Failed to delete baseline:', error);
-    }
-  }, [selectedBaselineId]);
+    },
+    [selectedBaselineId]
+  );
 
   // ============================================
   // Test Operations
@@ -170,14 +169,14 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
 
       setIsComparing(true);
       try {
-        const response = await sendMessageToContentScript({
+        const response = (await sendMessageToContentScript({
           type: 'VISUAL_REGRESSION_RUN_TEST',
           baselineId,
           options: {
             threshold,
             ignoreRegions,
           },
-        }) as MessageResponse;
+        })) as MessageResponse;
 
         if (response?.test) {
           setTests((prev) => [response.test!, ...prev]);
@@ -267,23 +266,26 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
     }
   }, []);
 
-  const deleteTest = useCallback(async (testId: string) => {
-    if (!confirm('Are you sure you want to delete this test?')) return;
+  const deleteTest = useCallback(
+    async (testId: string) => {
+      if (!confirm('Are you sure you want to delete this test?')) return;
 
-    try {
-      await sendMessageToContentScript({
-        type: 'VISUAL_REGRESSION_DELETE_TEST',
-        testId,
-      });
+      try {
+        await sendMessageToContentScript({
+          type: 'VISUAL_REGRESSION_DELETE_TEST',
+          testId,
+        });
 
-      setTests((prev) => prev.filter((t) => t.id !== testId));
-      if (comparisonResult?.test.id === testId) {
-        setComparisonResult(null);
+        setTests((prev) => prev.filter((t) => t.id !== testId));
+        if (comparisonResult?.test.id === testId) {
+          setComparisonResult(null);
+        }
+      } catch (error) {
+        logger.error('[VisualRegression] Failed to delete test:', error);
       }
-    } catch (error) {
-      logger.error('[VisualRegression] Failed to delete test:', error);
-    }
-  }, [comparisonResult]);
+    },
+    [comparisonResult]
+  );
 
   // ============================================
   // Settings
@@ -329,9 +331,9 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
 
   const exportData = useCallback(async () => {
     try {
-      const response = await sendMessageToContentScript({
+      const response = (await sendMessageToContentScript({
         type: 'VISUAL_REGRESSION_EXPORT',
-      }) as MessageResponse;
+      })) as MessageResponse;
 
       if (response?.data) {
         const dataStr = JSON.stringify(response.data, null, 2);
@@ -351,25 +353,28 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
     }
   }, []);
 
-  const importData = useCallback(async (file: File) => {
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
+  const importData = useCallback(
+    async (file: File) => {
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
 
-      const response = await sendMessageToContentScript({
-        type: 'VISUAL_REGRESSION_IMPORT',
-        data,
-      }) as MessageResponse;
+        const response = (await sendMessageToContentScript({
+          type: 'VISUAL_REGRESSION_IMPORT',
+          data,
+        })) as MessageResponse;
 
-      if (response?.success) {
-        await loadData();
-        logger.log('[VisualRegression] Data imported');
+        if (response?.success) {
+          await loadData();
+          logger.log('[VisualRegression] Data imported');
+        }
+      } catch (error) {
+        logger.error('[VisualRegression] Import failed:', error);
+        alert('Failed to import data. Please check the file format.');
       }
-    } catch (error) {
-      logger.error('[VisualRegression] Import failed:', error);
-      alert('Failed to import data. Please check the file format.');
-    }
-  }, [loadData]);
+    },
+    [loadData]
+  );
 
   const exportDiffImage = useCallback((test: VisualRegressionTest) => {
     if (!test.result.diffImage) return;
@@ -455,7 +460,12 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -473,9 +483,10 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               onClick={() => setActiveTab(tab.id)}
               className={`
                 flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors
-                ${activeTab === tab.id
-                  ? 'border-b-2 border-indigo-500 text-white'
-                  : 'text-slate-400 hover:text-slate-200'
+                ${
+                  activeTab === tab.id
+                    ? 'border-b-2 border-indigo-500 text-white'
+                    : 'text-slate-400 hover:text-slate-200'
                 }
               `}
             >
@@ -511,9 +522,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                       Capturing...
                     </>
                   ) : (
-                    <>
-                      📷 Capture Viewport
-                    </>
+                    <>📷 Capture Viewport</>
                   )}
                 </button>
                 <button
@@ -545,9 +554,10 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                       key={baseline.id}
                       className={`
                         group rounded-lg border-2 bg-slate-800 p-3 transition-all
-                        ${selectedBaselineId === baseline.id
-                          ? 'border-indigo-500 bg-indigo-500/10'
-                          : 'border-slate-700 hover:border-slate-600'
+                        ${
+                          selectedBaselineId === baseline.id
+                            ? 'border-indigo-500 bg-indigo-500/10'
+                            : 'border-slate-700 hover:border-slate-600'
                         }
                       `}
                     >
@@ -561,9 +571,11 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
-                            onClick={() => setSelectedBaselineId(
-                              selectedBaselineId === baseline.id ? null : baseline.id
-                            )}
+                            onClick={() =>
+                              setSelectedBaselineId(
+                                selectedBaselineId === baseline.id ? null : baseline.id
+                              )
+                            }
                             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
                           >
                             {selectedBaselineId === baseline.id ? 'Deselect' : 'Select'}
@@ -654,9 +666,11 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                     <span
                       className={`
                         rounded-full px-3 py-1 text-sm font-medium
-                        ${comparisonResult.test.status === 'passed' || comparisonResult.test.status === 'approved'
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-red-500/20 text-red-400'
+                        ${
+                          comparisonResult.test.status === 'passed' ||
+                          comparisonResult.test.status === 'approved'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
                         }
                       `}
                     >
@@ -696,9 +710,10 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                       key={test.id}
                       className={`
                         rounded-lg border-l-4 bg-slate-800 p-4
-                        ${test.status === 'passed' || test.status === 'approved'
-                          ? 'border-green-500'
-                          : 'border-red-500'
+                        ${
+                          test.status === 'passed' || test.status === 'approved'
+                            ? 'border-green-500'
+                            : 'border-red-500'
                         }
                       `}
                     >
@@ -708,9 +723,10 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                             <span
                               className={`
                                 rounded-full px-2 py-0.5 text-xs font-medium
-                                ${test.status === 'passed' || test.status === 'approved'
-                                  ? 'bg-green-500/20 text-green-400'
-                                  : 'bg-red-500/20 text-red-400'
+                                ${
+                                  test.status === 'passed' || test.status === 'approved'
+                                    ? 'bg-green-500/20 text-green-400'
+                                    : 'bg-red-500/20 text-red-400'
                                 }
                               `}
                             >
@@ -781,7 +797,10 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
             <div className="space-y-6">
               {/* Threshold */}
               <div>
-                <label htmlFor="threshold-slider" className="mb-2 block text-sm font-medium text-white">
+                <label
+                  htmlFor="threshold-slider"
+                  className="mb-2 block text-sm font-medium text-white"
+                >
                   Difference Threshold: {threshold}%
                 </label>
                 <input
@@ -822,7 +841,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   <p className="text-sm text-slate-500">No ignore regions defined</p>
                 ) : (
                   <div className="space-y-2">
-                    {ignoreRegions.map((region) => (
+                    {ignoreRegions.map((region, idx) => (
                       <div
                         key={`${region.x}-${region.y}-${region.width}-${region.height}`}
                         className="flex items-center gap-3 rounded-lg bg-slate-800 p-3"
@@ -831,11 +850,21 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                           x: {region.x}, y: {region.y}, {region.width}×{region.height}
                         </div>
                         <button
-                          onClick={() => removeIgnoreRegion(index)}
+                          onClick={() => removeIgnoreRegion(idx)}
                           className="rounded bg-slate-700 p-1.5 text-slate-400 hover:bg-red-600 hover:text-white"
                         >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -881,9 +910,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
             <span>•</span>
             <span>{urlTests.length} tests</span>
           </div>
-          <div className="text-xs text-slate-500">
-            FrontendDevHelper Visual Regression
-          </div>
+          <div className="text-xs text-slate-500">FrontendDevHelper Visual Regression</div>
         </div>
       </div>
 

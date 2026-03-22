@@ -239,7 +239,7 @@ describe('Storage Utils', () => {
     });
 
     it('should merge stored settings with defaults', async () => {
-      await updateSettings({ theme: 'light' });
+      await updateSettings({ theme: 'light' as 'dark' });
       const settings = await getSettings();
       expect(settings.theme).toBe('light');
     });

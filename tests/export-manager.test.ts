@@ -315,14 +315,15 @@ describe('ExportManager', () => {
     });
 
     it('should add element to captured elements list', () => {
+      const mockClasses: string[] = [];
       const mockClassList = {
-        _classes: [] as string[],
+        _classes: mockClasses,
         length: 0,
         add: vi.fn(),
         remove: vi.fn(),
         contains: vi.fn(() => false),
-        [Symbol.iterator]: function* () { yield* mockClassList._classes; },
-        forEach: vi.fn((cb: (value: string) => void) => mockClassList._classes.forEach(cb)),
+        [Symbol.iterator]: function* () { yield* mockClasses; },
+        forEach: vi.fn((cb: (value: string) => void) => mockClasses.forEach(cb)),
       };
       
       const mockElement = {
@@ -380,6 +381,7 @@ describe('ExportManager', () => {
           title: 'Test',
           viewport: { width: 1920, height: 1080 },
           userAgent: 'Test',
+          timestamp: Date.now(),
         },
         elements: [],
         performance: null,
@@ -405,6 +407,7 @@ describe('ExportManager', () => {
           title: 'Test',
           viewport: { width: 1920, height: 1080 },
           userAgent: 'Test',
+          timestamp: Date.now(),
         },
         elements: [],
         performance: null,

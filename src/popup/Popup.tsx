@@ -339,7 +339,7 @@ export const Popup: React.FC = () => {
     [ToolType.FLAME_GRAPH]: { enabled: false },
     [ToolType.VISUAL_REGRESSION]: { enabled: false },
     [ToolType.AI_SUGGESTIONS]: { enabled: true },
-  });
+  } as unknown as ToolsState);
 
   // UI states
   const [isLoading, setIsLoading] = useState(true);
@@ -398,7 +398,7 @@ export const Popup: React.FC = () => {
               [ToolType.FLAME_GRAPH]: response.states.flameGraph || { enabled: false },
               [ToolType.VISUAL_REGRESSION]: response.states.visualRegression || { enabled: false },
               [ToolType.AI_SUGGESTIONS]: response.states.aiSuggestions || { enabled: true },
-            });
+            } as unknown as ToolsState);
           }
         }
         setIsLoading(false);
@@ -506,7 +506,7 @@ export const Popup: React.FC = () => {
       [ToolType.RESPONSIVE_PREVIEW]: { enabled: false },
       [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enabled: false },
       [ToolType.NETWORK_ANALYZER]: { enabled: false },
-    };
+    } as unknown as ToolsState;
 
     setToolsState(resetState);
     setShowResetConfirm(false);

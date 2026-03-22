@@ -28,7 +28,7 @@ export function enable(): void {
   if (isEnabled) return;
   isEnabled = true;
   logger.log('[AISuggestions] Enabled');
-  
+
   // Auto-run analysis when enabled
   runAnalysis();
 }
@@ -49,16 +49,16 @@ export function toggle(): void {
 }
 
 export function getState(): { enabled: boolean; isPanelOpen: boolean; hasAnalysis: boolean } {
-  return { 
-    enabled: isEnabled, 
-    isPanelOpen, 
-    hasAnalysis: analysisResult !== null 
+  return {
+    enabled: isEnabled,
+    isPanelOpen,
+    hasAnalysis: analysisResult !== null,
   };
 }
 
 export async function runAnalysis(): Promise<AIAnalysisResult | null> {
   if (!isEnabled) return null;
-  
+
   try {
     analysisResult = await runAIAnalysis();
     if (isPanelOpen) {
@@ -111,7 +111,7 @@ function createPanel(): void {
   shadowRoot.appendChild(panel);
 
   document.body.appendChild(panelContainer);
-  
+
   renderPanel();
 }
 
@@ -124,12 +124,12 @@ function destroyPanel(): void {
 
 function renderPanel(): void {
   if (!shadowRoot || !analysisResult) return;
-  
+
   const panel = shadowRoot.querySelector(`#${PREFIX}-panel`);
   if (!panel) return;
 
   const { summary } = analysisResult;
-  
+
   panel.innerHTML = `
     <div id="${PREFIX}-header">
       <div id="${PREFIX}-title">
@@ -158,7 +158,10 @@ function renderPanel(): void {
         </div>
       </div>
       <div id="${PREFIX}-suggestions">
-        ${analysisResult.suggestions.slice(0, 5).map(s => `
+        ${analysisResult.suggestions
+          .slice(0, 5)
+          .map(
+            (s) => `
           <div class="${PREFIX}-suggestion ${PREFIX}-${s.priority}">
             <div class="${PREFIX}-suggestion-header">
               <span class="${PREFIX}-category">${s.category}</span>
@@ -168,10 +171,16 @@ function renderPanel(): void {
             <div class="${PREFIX}-suggestion-desc">${s.description}</div>
             ${s.autoFixable ? `<button class="${PREFIX}-fix-btn" data-id="${s.id}">🔧 Fix</button>` : ''}
           </div>
-        `).join('')}
-        ${analysisResult.suggestions.length > 5 ? `
+        `
+          )
+          .join('')}
+        ${
+          analysisResult.suggestions.length > 5
+            ? `
           <div class="${PREFIX}-more">+${analysisResult.suggestions.length - 5} more suggestions</div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     </div>
     <div id="${PREFIX}-footer">

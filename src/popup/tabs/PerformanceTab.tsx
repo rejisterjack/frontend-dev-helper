@@ -114,7 +114,7 @@ export const PerformanceTab: React.FC = () => {
             renderBlocking: (domData.renderBlocking || []).map(
               (r: { url: string; type: string }) => {
                 // Find matching resource timing
-                const resource = metrics.resources.slowestResources.find((res) =>
+                const resource = metrics.resources.slowestResources?.find((res) =>
                   res.url.includes(r.url.split('/').pop() || '')
                 );
                 return {
@@ -143,7 +143,7 @@ export const PerformanceTab: React.FC = () => {
       try {
         observerRef.current = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            logger.log('[Performance]', entry.name, entry.value);
+            logger.log('[Performance]', entry.name, (entry as { value?: number }).value);
           }
         });
         observerRef.current.observe({ entryTypes: ['web-vitals'] });
@@ -758,7 +758,7 @@ function getPageMetrics(): Omit<PerformanceData, 'imageOptimizations' | 'renderB
   renderBlocking: [];
 } {
   const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-  const resources = performance.getEntriesByType('resource');
+  const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
   const paintEntries = performance.getEntriesByType('paint');
 
   // Calculate Web Vitals

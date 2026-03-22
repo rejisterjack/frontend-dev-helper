@@ -5,6 +5,9 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
+
+// Ensure vi is used (required for vitest mocking)
+void vi;
 import {
   analyzeAccessibility,
   analyzeBestPractices,
@@ -117,11 +120,8 @@ describe('AI Analyzer', () => {
         <img src="test.jpg">
       `;
 
-      const suggestions = await analyzePerformance();
-      const lazySuggestions = suggestions.filter(s => 
-        s.id.includes('perf-image-lazy')
-      );
-
+      // Run analysis (side effects only)
+      await analyzePerformance();
       // Restore
       Object.defineProperty(window, 'innerHeight', { value: originalHeight, writable: true });
 

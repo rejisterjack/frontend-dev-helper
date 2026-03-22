@@ -16,7 +16,7 @@ import type {
   CookieInfo,
   IndexedDBDatabase,
   IndexedDBObjectStore,
-  StorageItem,
+  StorageInspectorItem,
   StorageSnapshot,
 } from '@/types';
 import { logger } from '@/utils/logger';
@@ -98,8 +98,8 @@ export async function refresh(): Promise<void> {
 // Data Collection
 // ============================================
 
-export async function getLocalStorage(): Promise<StorageItem[]> {
-  const items: StorageItem[] = [];
+export async function getLocalStorage(): Promise<StorageInspectorItem[]> {
+  const items: StorageInspectorItem[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key) {
@@ -115,8 +115,8 @@ export async function getLocalStorage(): Promise<StorageItem[]> {
   return items.sort((a, b) => a.key.localeCompare(b.key));
 }
 
-export async function getSessionStorage(): Promise<StorageItem[]> {
-  const items: StorageItem[] = [];
+export async function getSessionStorage(): Promise<StorageInspectorItem[]> {
+  const items: StorageInspectorItem[] = [];
   for (let i = 0; i < sessionStorage.length; i++) {
     const key = sessionStorage.key(i);
     if (key) {
@@ -138,9 +138,12 @@ export async function getIndexedDB(): Promise<IndexedDBDatabase[]> {
   try {
     // Get list of databases (if supported)
     if ('databases' in indexedDB) {
-      const dbList = await (indexedDB as IDBFactory & { databases(): Promise<{ name: string; version: number }[]> }).databases();
+      const dbList = await (
+        indexedDB as IDBFactory & { databases(): Promise<{ name: string; version: number }[]> }
+      ).databases();
 
       for (const dbInfo of dbList) {
+        if (!dbInfo.name) continue;
         const db = await openDatabase(dbInfo.name);
         if (db) {
           const objectStores: IndexedDBObjectStore[] = [];
@@ -154,7 +157,12 @@ export async function getIndexedDB(): Promise<IndexedDBDatabase[]> {
               request.onerror = () => resolve(0);
             });
 
-            const indexes: Array<{ name: string; keyPath: string | string[]; unique: boolean; multiEntry: boolean }> = [];
+            const indexes: Array<{
+              name: string;
+              keyPath: string | string[];
+              unique: boolean;
+              multiEntry: boolean;
+            }> = [];
             for (const indexName of Array.from(store.indexNames)) {
               const index = store.index(indexName);
               indexes.push({
@@ -273,7 +281,7 @@ export async function getStorageQuota(): Promise<{
       return {
         usage: estimate.usage || 0,
         quota: estimate.quota || 0,
-        usageDetails: estimate.usageDetails,
+        usageDetails: (estimate as { usageDetails?: Record<string, number> }).usageDetails,
       };
     }
   } catch (error) {
@@ -548,7 +556,10 @@ async function renderCurrentTab(): Promise<void> {
   }
 }
 
-function renderStorageItems(items: StorageItem[], type: 'localStorage' | 'sessionStorage'): string {
+function renderStorageItems(
+  items: StorageInspectorItem[],
+  type: 'localStorage' | 'sessionStorage'
+): string {
   if (items.length === 0) {
     return `<div class="${PREFIX}-empty">No items in ${type}</div>`;
   }
@@ -694,12 +705,12 @@ function renderCacheStorage(caches: { [cacheName: string]: CacheEntry[] }): stri
 // Utilities
 // ============================================
 
-function inferType(value: string): StorageItem['type'] {
+function inferType(value: string): StorageInspectorItem['type'] {
   try {
     const parsed = JSON.parse(value);
     if (Array.isArray(parsed)) return 'array';
     if (parsed === null) return 'null';
-    return typeof parsed as StorageItem['type'];
+    return typeof parsed as StorageInspectorItem['type'];
   } catch {
     if (value === 'true' || value === 'false') return 'boolean';
     if (!Number.isNaN(Number(value)) && value !== '') return 'number';
@@ -751,7 +762,9 @@ function updateStatus(message: string): void {
 }
 
 function filterContent(query: string): void {
-  const items = shadowRoot?.querySelectorAll(`.${PREFIX}-item, .${PREFIX}-database, .${PREFIX}-cookie, .${PREFIX}-cache`);
+  const items = shadowRoot?.querySelectorAll(
+    `.${PREFIX}-item, .${PREFIX}-database, .${PREFIX}-cookie, .${PREFIX}-cache`
+  );
   items?.forEach((item) => {
     const text = item.textContent?.toLowerCase() || '';
     (item as HTMLElement).style.display = text.includes(query.toLowerCase()) ? '' : 'none';
@@ -781,12 +794,12 @@ async function exportAllData(): Promise<void> {
   const dataStr = JSON.stringify(snapshot, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement('a');
   link.href = url;
   link.download = `storage-snapshot-${Date.now()}.json`;
   link.click();
-  
+
   URL.revokeObjectURL(url);
   updateStatus('Exported');
 }

@@ -1,3 +1,4 @@
+export type { Command } from '@/types';
 export { CommandPalette } from './CommandPalette';
 export {
   addRecentCommand,
@@ -8,4 +9,3 @@ export {
   getRecentCommands,
   searchCommands,
 } from './commands';
-export type { Command } from '@/types';

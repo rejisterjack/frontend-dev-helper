@@ -11,6 +11,9 @@ import { logger } from '../utils/logger';
  * - Build tools and more
  */
 
+// Use typed window for tech detection
+const win = window as unknown as Record<string, unknown>;
+
 interface DetectedTech {
   name: string;
   category: 'framework' | 'css' | 'analytics' | 'font' | 'build' | 'cms' | 'other';
@@ -32,7 +35,7 @@ const TECH_PATTERNS: Record<
     patterns: [
       () => !!window.React,
       () => !!document.querySelector('[data-reactroot], [data-reactid]'),
-      () => !!window.__REACT_DEVTOOLS_GLOBAL_HOOK__,
+      () => !!win.__REACT_DEVTOOLS_GLOBAL_HOOK__,
       () => document.querySelectorAll('*[class*="_react"]').length > 0,
     ],
   },
@@ -42,7 +45,7 @@ const TECH_PATTERNS: Record<
     patterns: [
       () => !!window.Vue,
       () => !!document.querySelector('#app[data-v-app]'),
-      () => !!window.__VUE__ || !!window.__VUE_OPTIONS_API__,
+      () => !!win.__VUE__ || !!win.__VUE_OPTIONS_API__,
       () => document.querySelectorAll('[v-cloak], [v-if], [v-for]').length > 0,
     ],
   },
@@ -50,7 +53,7 @@ const TECH_PATTERNS: Record<
     category: 'framework',
     icon: '🅰️',
     patterns: [
-      () => !!window.angular,
+      () => !!win.angular,
       () => !!document.querySelector('[ng-app], [ng-controller], [ng-model]'),
       () => document.querySelectorAll('*[ng-version]').length > 0,
     ],
@@ -59,7 +62,7 @@ const TECH_PATTERNS: Record<
     category: 'framework',
     icon: '🔥',
     patterns: [
-      () => !!window.__svelte__,
+      () => !!win.__svelte__,
       () => document.querySelectorAll('[class*="svelte"]').length > 0,
     ],
   },
@@ -67,14 +70,14 @@ const TECH_PATTERNS: Record<
     category: 'framework',
     icon: '▲',
     patterns: [
-      () => !!window.__NEXT_DATA__,
+      () => !!win.__NEXT_DATA__,
       () => document.querySelector('script#__NEXT_DATA__') !== null,
     ],
   },
   Nuxt: {
     category: 'framework',
     icon: '⛰️',
-    patterns: [() => !!window.__NUXT__, () => !!window.$nuxt],
+    patterns: [() => !!win.__NUXT__, () => !!win.$nuxt],
   },
   'Tailwind CSS': {
     category: 'css',
@@ -92,7 +95,7 @@ const TECH_PATTERNS: Record<
     category: 'css',
     icon: '🅱️',
     patterns: [
-      () => !!window.bootstrap,
+      () => !!win.bootstrap,
       () => document.querySelectorAll('.container, .row, .col-md-').length > 5,
       () => !!document.querySelector('link[href*="bootstrap"]'),
     ],
@@ -100,7 +103,7 @@ const TECH_PATTERNS: Record<
   'Material UI': {
     category: 'css',
     icon: '🎨',
-    patterns: [() => document.querySelectorAll('[class*="Mui"]').length > 5, () => !!window.Mui],
+    patterns: [() => document.querySelectorAll('[class*="Mui"]').length > 5, () => !!win.Mui],
   },
   'Styled Components': {
     category: 'css',
@@ -113,38 +116,38 @@ const TECH_PATTERNS: Record<
   jQuery: {
     category: 'framework',
     icon: '$',
-    patterns: [() => !!window.jQuery, () => !!window.$],
+    patterns: [() => !!win.jQuery, () => !!win.$],
   },
   'Google Analytics': {
     category: 'analytics',
     icon: '📊',
-    patterns: [() => !!window.ga, () => !!window.gtag, () => !!window.GoogleAnalyticsObject],
+    patterns: [() => !!win.ga, () => !!win.gtag, () => !!win.GoogleAnalyticsObject],
   },
   'Google Tag Manager': {
     category: 'analytics',
     icon: '🏷️',
-    patterns: [() => !!window.google_tag_manager, () => !!window.dataLayer],
+    patterns: [() => !!win.google_tag_manager, () => !!win.dataLayer],
   },
   Segment: {
     category: 'analytics',
     icon: '📈',
-    patterns: [() => !!window.analytics, () => !!window.segment],
+    patterns: [() => !!win.analytics, () => !!win.segment],
   },
   Mixpanel: {
     category: 'analytics',
     icon: '📉',
-    patterns: [() => !!window.mixpanel],
+    patterns: [() => !!win.mixpanel],
   },
   Hotjar: {
     category: 'analytics',
     icon: '🔥',
-    patterns: [() => !!window.hj],
+    patterns: [() => !!win.hj],
   },
   WordPress: {
     category: 'cms',
     icon: '📝',
     patterns: [
-      () => !!window.wp,
+      () => !!win.wp,
       () => !!document.querySelector('meta[name="generator"][content*="WordPress"]'),
       () => document.querySelectorAll('link[href*="wp-content"]').length > 0,
     ],
@@ -153,27 +156,27 @@ const TECH_PATTERNS: Record<
     category: 'cms',
     icon: '🛒',
     patterns: [
-      () => !!window.Shopify,
+      () => !!win.Shopify,
       () => document.querySelectorAll('script[src*="shopify"]').length > 0,
     ],
   },
   Webflow: {
     category: 'cms',
     icon: '💙',
-    patterns: [() => !!window.Webflow, () => !!document.querySelector('html[data-wf-site]')],
+    patterns: [() => !!win.Webflow, () => !!document.querySelector('html[data-wf-site]')],
   },
   Vite: {
     category: 'build',
     icon: '⚡',
     patterns: [
-      () => !!window.__vite_plugin_react_preamble_installed__,
+      () => !!win.__vite_plugin_react_preamble_installed__,
       () => document.querySelectorAll('script[type="module"]').length > 5,
     ],
   },
   Webpack: {
     category: 'build',
     icon: '📦',
-    patterns: [() => !!window.webpackJsonp, () => !!window.__webpack_require__],
+    patterns: [() => !!win.webpackJsonp, () => !!win.__webpack_require__],
   },
   'Google Fonts': {
     category: 'font',
@@ -184,7 +187,7 @@ const TECH_PATTERNS: Record<
     category: 'font',
     icon: '⭐',
     patterns: [
-      () => !!window.FontAwesome,
+      () => !!win.FontAwesome,
       () =>
         document.querySelectorAll('link[href*="font-awesome"], link[href*="fontawesome"]').length >
         0,
@@ -194,7 +197,7 @@ const TECH_PATTERNS: Record<
   TypeScript: {
     category: 'other',
     icon: '📘',
-    patterns: [() => !!window.__typescript__],
+    patterns: [() => !!win.__typescript__],
   },
   Emotion: {
     category: 'css',
@@ -204,12 +207,12 @@ const TECH_PATTERNS: Record<
   Lodash: {
     category: 'other',
     icon: '🔗',
-    patterns: [() => !!window._ && !!window._.debounce],
+    patterns: [() => !!(win._ && (win._ as Record<string, unknown>).debounce)],
   },
   Axios: {
     category: 'other',
     icon: '🌐',
-    patterns: [() => !!window.axios],
+    patterns: [() => !!win.axios],
   },
 };
 

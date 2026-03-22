@@ -54,8 +54,6 @@ async function toggleTool(toolType: ToolType): Promise<void> {
   }
 }
 
-
-
 /**
  * Get all registered commands
  */
@@ -535,7 +533,8 @@ export function searchCommands(query: string): Command[] {
 
   return commands
     .map((command) => {
-      const searchText = `${command.title} ${command.description} ${command.keywords.join(' ')}`.toLowerCase();
+      const searchText =
+        `${command.title} ${command.description} ${command.keywords.join(' ')}`.toLowerCase();
       const matchCount = queryTerms.filter((term) => searchText.includes(term)).length;
       return { command, matchCount };
     })

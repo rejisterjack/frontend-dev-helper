@@ -27,7 +27,7 @@ export class StorageManager {
     // Check cache first
     const cached = this.cache.get(key);
     if (cached !== undefined) {
-      return cached as ExtensionStorage[K]['value'];
+      return cached as ExtensionStorage[K];
     }
 
     try {

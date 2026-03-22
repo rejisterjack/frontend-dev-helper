@@ -86,9 +86,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     return (
       node.name.toLowerCase().includes(query) ||
       Object.keys(node.props || {}).some((key) => key.toLowerCase().includes(query)) ||
-      Object.values(node.props || {}).some((val) =>
-        String(val).toLowerCase().includes(query)
-      )
+      Object.values(node.props || {}).some((val) => String(val).toLowerCase().includes(query))
     );
   }, [node, searchQuery]);
 
@@ -146,10 +144,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         <FrameworkIcon framework={node.framework} />
 
         {/* Node name */}
-        <span
-          className="flex-1 truncate font-mono text-sm"
-          title={getNodeTooltip(node)}
-        >
+        <span className="flex-1 truncate font-mono text-sm" title={getNodeTooltip(node)}>
           {highlightMatch(node.name, searchQuery)}
         </span>
 
@@ -299,22 +294,19 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
   }, []);
 
   // Select node
-  const handleSelect = useCallback(
-    async (node: ComponentNode) => {
-      setTreeState((prev) => ({ ...prev, selectedNode: node }));
+  const handleSelect = useCallback(async (node: ComponentNode) => {
+    setTreeState((prev) => ({ ...prev, selectedNode: node }));
 
-      // Send highlight message to content script
-      try {
-        await chrome.runtime.sendMessage({
-          type: 'HIGHLIGHT_COMPONENT',
-          payload: { nodeId: node.id },
-        });
-      } catch (error) {
-        logger.error('[ComponentTree] Failed to highlight component:', error);
-      }
-    },
-    []
-  );
+    // Send highlight message to content script
+    try {
+      await chrome.runtime.sendMessage({
+        type: 'HIGHLIGHT_COMPONENT',
+        payload: { nodeId: node.id },
+      });
+    } catch (error) {
+      logger.error('[ComponentTree] Failed to highlight component:', error);
+    }
+  }, []);
 
   // Expand all nodes
   const expandAll = useCallback(() => {
@@ -469,7 +461,12 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               title="Expand All"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
             <button
@@ -478,7 +475,12 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               title="Collapse All"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
               </svg>
             </button>
             <button
@@ -487,7 +489,12 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               title="Close (Esc)"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -523,7 +530,12 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             )}
@@ -535,7 +547,14 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-500">
               <svg className="mb-3 h-8 w-8 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
                 <path
                   className="opacity-75"
                   fill="currentColor"
@@ -551,7 +570,9 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
                 {searchQuery ? 'No components match your filter' : 'No component tree detected'}
               </p>
               <p className="mt-1 text-xs text-slate-600">
-                {searchQuery ? 'Try a different search term' : 'Make sure a supported framework is running'}
+                {searchQuery
+                  ? 'Try a different search term'
+                  : 'Make sure a supported framework is running'}
               </p>
             </div>
           ) : (
@@ -583,12 +604,12 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-slate-700 bg-slate-800/50 px-4 py-2 text-xs text-slate-500">
-          <span>{nodeCount} component{nodeCount !== 1 ? 's' : ''}</span>
+          <span>
+            {nodeCount} component{nodeCount !== 1 ? 's' : ''}
+          </span>
           <div className="flex items-center gap-3">
             {treeState.selectedNode && (
-              <span className="text-indigo-400">
-                Selected: {treeState.selectedNode.name}
-              </span>
+              <span className="text-indigo-400">Selected: {treeState.selectedNode.name}</span>
             )}
             <span className="text-slate-600">FrontendDevHelper</span>
           </div>

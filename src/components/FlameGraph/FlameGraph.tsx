@@ -54,7 +54,11 @@ const TYPE_COLORS: Record<FlameGraphEntry['type'], { bg: string; border: string;
 // Component
 // ============================================
 
-export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile: externalProfile }) => {
+export const FlameGraph: React.FC<FlameGraphProps> = ({
+  isOpen,
+  onClose,
+  profile: externalProfile,
+}) => {
   // State
   const [isProfiling] = useState(false);
   const [profile, setProfile] = useState<PerformanceProfile | null>(externalProfile || null);
@@ -143,7 +147,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
 
     // Filter and process entries
     const filteredEntries = filterEntries(profile.entries);
-    
+
     if (filteredEntries.length === 0) {
       renderEmptyState(ctx, width, height);
       return;
@@ -166,8 +170,8 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
     const traverse = (entry: FlameGraphEntry) => {
       const matchesType = filter.types.has(entry.type);
       const matchesDuration = entry.duration >= filter.minDuration;
-      const matchesSearch = !filter.searchQuery || 
-        entry.name.toLowerCase().includes(filter.searchQuery.toLowerCase());
+      const matchesSearch =
+        !filter.searchQuery || entry.name.toLowerCase().includes(filter.searchQuery.toLowerCase());
 
       if (matchesType && matchesDuration && matchesSearch) {
         result.push(entry);
@@ -186,7 +190,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(
-      filter.searchQuery 
+      filter.searchQuery
         ? 'No matching entries found'
         : 'No data available. Start profiling to collect performance data.',
       width / 2,
@@ -257,7 +261,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
       // Draw bar background
       const baseColor = getEntryColor(entry.type);
       ctx.fillStyle = isHovered || isSelected ? lightenColor(baseColor, 20) : baseColor;
-      
+
       // Rounded rect
       const radius = 3;
       ctx.beginPath();
@@ -276,7 +280,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
         ctx.fillStyle = '#ffffff';
         ctx.font = '12px system-ui, -apple-system, sans-serif';
         ctx.textBaseline = 'middle';
-        
+
         const text = truncateText(ctx, entry.name, barWidth - 10);
         ctx.fillText(text, x + 5, y + BAR_HEIGHT / 2);
 
@@ -295,71 +299,83 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
   // Event Handlers
   // ============================================
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
 
-    const zoomDirection = e.deltaY > 0 ? 1 / ZOOM_FACTOR : ZOOM_FACTOR;
-    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, view.zoom * zoomDirection));
+      const zoomDirection = e.deltaY > 0 ? 1 / ZOOM_FACTOR : ZOOM_FACTOR;
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, view.zoom * zoomDirection));
 
-    if (newZoom !== view.zoom) {
-      // Zoom towards mouse position
-      const newPanX = mouseX - (mouseX - view.panX) * (newZoom / view.zoom);
-      
-      setView(prev => ({
-        ...prev,
-        zoom: newZoom,
-        panX: newPanX,
-      }));
-    }
-  }, [view.zoom, view.panX]);
+      if (newZoom !== view.zoom) {
+        // Zoom towards mouse position
+        const newPanX = mouseX - (mouseX - view.panX) * (newZoom / view.zoom);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - view.panX, y: e.clientY });
-  }, [view.panX]);
+        setView((prev) => ({
+          ...prev,
+          zoom: newZoom,
+          panX: newPanX,
+        }));
+      }
+    },
+    [view.zoom, view.panX]
+  );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - view.panX, y: e.clientY });
+    },
+    [view.panX]
+  );
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    if (isDragging) {
-      setView(prev => ({
-        ...prev,
-        panX: e.clientX - dragStart.x,
-      }));
-    } else {
-      // Find hovered entry
-      const entry = getEntryAtPosition(x, y);
-      setHoveredEntry(entry);
-      setTooltipPos({ x: e.clientX, y: e.clientY });
-    }
-  }, [isDragging, dragStart, view, profile, filter]);
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (isDragging) {
+        setView((prev) => ({
+          ...prev,
+          panX: e.clientX - dragStart.x,
+        }));
+      } else {
+        // Find hovered entry
+        const entry = getEntryAtPosition(x, y);
+        setHoveredEntry(entry);
+        setTooltipPos({ x: e.clientX, y: e.clientY });
+      }
+    },
+    [isDragging, dragStart, view, profile, filter]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    const entry = getEntryAtPosition(x, y);
-    setSelectedEntry(entry);
-  }, [view, profile, filter]);
+      const entry = getEntryAtPosition(x, y);
+      setSelectedEntry(entry);
+    },
+    [view, profile, filter]
+  );
 
   const getEntryAtPosition = (x: number, y: number): FlameGraphEntry | null => {
     if (!profile) return null;
@@ -393,14 +409,14 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
   // ============================================
 
   const handleZoomIn = () => {
-    setView(prev => ({
+    setView((prev) => ({
       ...prev,
       zoom: Math.min(MAX_ZOOM, prev.zoom * ZOOM_FACTOR),
     }));
   };
 
   const handleZoomOut = () => {
-    setView(prev => ({
+    setView((prev) => ({
       ...prev,
       zoom: Math.max(MIN_ZOOM, prev.zoom / ZOOM_FACTOR),
     }));
@@ -411,7 +427,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
   };
 
   const handleToggleType = (type: FlameGraphEntry['type']) => {
-    setFilter(prev => {
+    setFilter((prev) => {
       const newTypes = new Set(prev.types);
       if (newTypes.has(type)) {
         newTypes.delete(type);
@@ -428,12 +444,12 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
     const dataStr = JSON.stringify(profile, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `flame-graph-${Date.now()}.json`;
     link.click();
-    
+
     URL.revokeObjectURL(url);
   };
 
@@ -466,7 +482,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
   };
 
   // ============================================
- // Render Helpers
+  // Render Helpers
   // ============================================
 
   if (!isOpen) return null;
@@ -481,12 +497,11 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
             <div>
               <h2 className="font-semibold text-white">Performance Flame Graph</h2>
               <p className="text-xs text-slate-400">
-                {isProfiling 
-                  ? 'Profiling in progress...' 
-                  : profile 
+                {isProfiling
+                  ? 'Profiling in progress...'
+                  : profile
                     ? `${stats?.totalEntries} entries • ${stats?.totalDuration}ms total`
-                    : 'Ready to profile'
-                }
+                    : 'Ready to profile'}
               </p>
             </div>
           </div>
@@ -520,9 +535,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
                   onChange={() => handleToggleType(type)}
                   className="rounded border-slate-600"
                 />
-                <span className={`text-xs capitalize ${TYPE_COLORS[type].text}`}>
-                  {type}
-                </span>
+                <span className={`text-xs capitalize ${TYPE_COLORS[type].text}`}>{type}</span>
               </label>
             ))}
           </div>
@@ -536,7 +549,12 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
                 min="0"
                 max="50"
                 value={filter.minDuration}
-                onChange={(e) => setFilter(prev => ({ ...prev, minDuration: Number.parseInt(e.target.value, 10) }))}
+                onChange={(e) =>
+                  setFilter((prev) => ({
+                    ...prev,
+                    minDuration: Number.parseInt(e.target.value, 10),
+                  }))
+                }
                 className="w-24"
               />
               <span className="text-xs text-slate-400 w-12">{filter.minDuration}ms</span>
@@ -545,17 +563,14 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
               type="text"
               placeholder="Search..."
               value={filter.searchQuery}
-              onChange={(e) => setFilter(prev => ({ ...prev, searchQuery: e.target.value }))}
+              onChange={(e) => setFilter((prev) => ({ ...prev, searchQuery: e.target.value }))}
               className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
             />
           </div>
         </div>
 
         {/* Canvas Container */}
-        <div 
-          ref={containerRef}
-          className="flex-1 relative overflow-hidden bg-slate-950"
-        >
+        <div ref={containerRef} className="flex-1 relative overflow-hidden bg-slate-950">
           <canvas
             ref={canvasRef}
             onWheel={handleWheel}
@@ -663,7 +678,9 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-xs uppercase px-2 py-0.5 rounded ${TYPE_COLORS[selectedEntry.type].bg} text-white`}>
+                  <span
+                    className={`text-xs uppercase px-2 py-0.5 rounded ${TYPE_COLORS[selectedEntry.type].bg} text-white`}
+                  >
                     {selectedEntry.type}
                   </span>
                   <span className="font-medium text-white">{selectedEntry.name}</span>
@@ -671,15 +688,21 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
                 <div className="grid grid-cols-4 gap-4 text-xs">
                   <div>
                     <span className="text-slate-500">Duration:</span>
-                    <span className="ml-2 text-slate-200">{selectedEntry.duration.toFixed(3)}ms</span>
+                    <span className="ml-2 text-slate-200">
+                      {selectedEntry.duration.toFixed(3)}ms
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">Start:</span>
-                    <span className="ml-2 text-slate-200">{selectedEntry.startTime.toFixed(3)}ms</span>
+                    <span className="ml-2 text-slate-200">
+                      {selectedEntry.startTime.toFixed(3)}ms
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">End:</span>
-                    <span className="ml-2 text-slate-200">{selectedEntry.endTime.toFixed(3)}ms</span>
+                    <span className="ml-2 text-slate-200">
+                      {selectedEntry.endTime.toFixed(3)}ms
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">Depth:</span>
@@ -708,7 +731,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({ isOpen, onClose, profile
 function calculateTimeStep(pixelsPerMs: number): number {
   const minPixelSpacing = 60;
   const rawStep = minPixelSpacing / pixelsPerMs;
-  
+
   // Round to nice numbers
   const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
   for (const step of steps) {

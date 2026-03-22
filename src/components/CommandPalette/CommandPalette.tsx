@@ -9,11 +9,7 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Command } from '@/types';
 import { logger } from '@/utils/logger';
-import {
-  addRecentCommand,
-  getRecentCommands,
-  searchCommands,
-} from './commands';
+import { addRecentCommand, getRecentCommands, searchCommands } from './commands';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -53,9 +49,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex((prev) =>
-            prev < filteredCommands.length - 1 ? prev + 1 : prev
-          );
+          setSelectedIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : prev));
           break;
         case 'ArrowUp':
           e.preventDefault();
@@ -201,7 +195,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
               className="ml-2 rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -214,10 +213,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         </div>
 
         {/* Command List */}
-        <div
-          ref={listRef}
-          className="max-h-[60vh] overflow-y-auto p-2"
-        >
+        <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
           {filteredCommands.length === 0 ? (
             <div className="py-8 text-center text-slate-500">
               <div className="mb-2 text-4xl">🔍</div>

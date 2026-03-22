@@ -42,7 +42,13 @@ let dragStart = { x: 0, y: 0 };
 let _selectedEntry: FlameGraphEntry | null = null;
 void _selectedEntry; // Mark as intentionally used
 let filterThreshold = 1; // Minimum duration in ms to show
-const visibleTypes: Set<FlameGraphEntry['type']> = new Set(['script', 'layout', 'paint', 'composite', 'other']);
+const visibleTypes: Set<FlameGraphEntry['type']> = new Set([
+  'script',
+  'layout',
+  'paint',
+  'composite',
+  'other',
+]);
 
 // ============================================
 // Public API
@@ -99,7 +105,7 @@ export function getState(): { enabled: boolean; isPanelOpen: boolean; isProfilin
  */
 export function refresh(): void {
   if (!isEnabled) return;
-  
+
   currentProfile = performanceProfiler.stopProfiling();
   renderFlameGraph();
   startProfiling();
@@ -164,12 +170,12 @@ export function exportProfile(): void {
   const dataStr = JSON.stringify(currentProfile, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement('a');
   link.href = url;
   link.download = `flame-graph-${Date.now()}.json`;
   link.click();
-  
+
   URL.revokeObjectURL(url);
   updateStatus('Exported');
 }
@@ -387,13 +393,13 @@ function setupCanvasInteractions(panel: HTMLElement): void {
   // Mouse wheel zoom
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    
+
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
-    
+
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
     const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel * zoomFactor));
-    
+
     // Zoom towards mouse position
     if (newZoom !== zoomLevel) {
       panOffset.x = mouseX - (mouseX - panOffset.x) * (newZoom / zoomLevel);
@@ -447,7 +453,7 @@ function setupCanvasInteractions(panel: HTMLElement): void {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const entry = getEntryAtPosition(x, y);
     if (entry) {
       showDetails(entry);
@@ -468,7 +474,7 @@ function renderFlameGraph(): void {
   const container = shadowRoot.querySelector(`#${PREFIX}-canvas-container`) as HTMLElement;
   const width = container.clientWidth;
   const height = container.clientHeight;
-  
+
   canvas.width = width;
   canvas.height = height;
 
@@ -488,7 +494,11 @@ function renderFlameGraph(): void {
     ctx.fillStyle = '#64748b';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('No data available. Start profiling to collect performance data.', width / 2, height / 2);
+    ctx.fillText(
+      'No data available. Start profiling to collect performance data.',
+      width / 2,
+      height / 2
+    );
     return;
   }
 
@@ -539,7 +549,7 @@ function renderEntries(
       ctx.fillStyle = '#ffffff';
       ctx.font = '11px sans-serif';
       ctx.textBaseline = 'middle';
-      
+
       const text = truncateText(ctx, entry.name, barWidth - 8);
       ctx.fillText(text, x + 4, y + BAR_HEIGHT / 2);
     }
@@ -557,11 +567,7 @@ function renderEntries(
   drawTimeAxis(ctx, width, pixelsPerMs);
 }
 
-function drawTimeAxis(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  pixelsPerMs: number
-): void {
+function drawTimeAxis(ctx: CanvasRenderingContext2D, width: number, pixelsPerMs: number): void {
   ctx.strokeStyle = '#334155';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -579,7 +585,7 @@ function drawTimeAxis(
     const x = t * pixelsPerMs + panOffset.x;
     if (x >= 0) {
       ctx.fillText(`${t}ms`, x, 25);
-      
+
       ctx.strokeStyle = '#334155';
       ctx.beginPath();
       ctx.moveTo(x, 30);
@@ -591,11 +597,11 @@ function drawTimeAxis(
 
 function getEntryColor(entry: FlameGraphEntry): string {
   const colors: Record<FlameGraphEntry['type'], string> = {
-    script: '#f59e0b',     // Amber
-    layout: '#3b82f6',     // Blue
-    paint: '#10b981',      // Emerald
-    composite: '#8b5cf6',  // Violet
-    other: '#64748b',      // Slate
+    script: '#f59e0b', // Amber
+    layout: '#3b82f6', // Blue
+    paint: '#10b981', // Emerald
+    composite: '#8b5cf6', // Violet
+    other: '#64748b', // Slate
   };
 
   return colors[entry.type] || colors.other;
@@ -669,7 +675,7 @@ function updateStats(): void {
   if (!currentProfile) return;
 
   const { summary } = currentProfile;
-  
+
   const totalTimeEl = shadowRoot?.querySelector(`#${PREFIX}-total-time`);
   const scriptTimeEl = shadowRoot?.querySelector(`#${PREFIX}-script-time`);
   const layoutTimeEl = shadowRoot?.querySelector(`#${PREFIX}-layout-time`);
@@ -705,9 +711,9 @@ function showTooltip(x: number, y: number, entry: FlameGraphEntry): void {
       <span>Start: ${entry.startTime.toFixed(2)}ms</span>
     </div>
   `;
-  
+
   tooltip.classList.remove(`${PREFIX}-hidden`);
-  
+
   // Position tooltip
   const panelRect = panelContainer?.getBoundingClientRect();
   if (panelRect) {
@@ -728,7 +734,7 @@ function showDetails(entry: FlameGraphEntry): void {
   void _selectedEntry;
   const details = shadowRoot?.querySelector(`#${PREFIX}-details`) as HTMLElement;
   const content = shadowRoot?.querySelector(`#${PREFIX}-details-content`) as HTMLElement;
-  
+
   if (!details || !content) return;
 
   content.innerHTML = `
@@ -756,18 +762,26 @@ function showDetails(entry: FlameGraphEntry): void {
       <span class="${PREFIX}-detail-label">Depth:</span>
       <span class="${PREFIX}-detail-value">${entry.depth}</span>
     </div>
-    ${entry.source ? `
+    ${
+      entry.source
+        ? `
     <div class="${PREFIX}-detail-row">
       <span class="${PREFIX}-detail-label">Source:</span>
       <span class="${PREFIX}-detail-value">${escapeHtml(entry.source)}</span>
     </div>
-    ` : ''}
-    ${entry.line ? `
+    `
+        : ''
+    }
+    ${
+      entry.line
+        ? `
     <div class="${PREFIX}-detail-row">
       <span class="${PREFIX}-detail-label">Line:</span>
       <span class="${PREFIX}-detail-value">${entry.line}</span>
     </div>
-    ` : ''}
+    `
+        : ''
+    }
     <div class="${PREFIX}-detail-row">
       <span class="${PREFIX}-detail-label">Children:</span>
       <span class="${PREFIX}-detail-value">${entry.children.length}</span>

@@ -104,7 +104,7 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
   // Load initial state
   useEffect(() => {
     mountedRef.current = true;
-    
+
     // Define loadState inside useEffect to avoid dependency issues
     const loadState = async () => {
       setIsLoading(true);
@@ -140,13 +140,13 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
         }
       }
     };
-    
+
     loadState();
 
     return () => {
       mountedRef.current = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolId, tabId]); // Intentionally omit loadState to prevent infinite loop
 
   // Listen for storage changes
@@ -193,7 +193,7 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
 
         if (tabId !== undefined) {
           if (!storage.tabs[tabId]) {
-            storage.tabs[tabId] = {};
+            storage.tabs[tabId] = {} as Record<ToolId, ToolState>;
           }
           storage.tabs[tabId][toolId] = newState;
         } else {
@@ -313,7 +313,7 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
   // Load initial states
   useEffect(() => {
     mountedRef.current = true;
-    
+
     // Define refresh inside useEffect to avoid dependency issues
     const refresh = async () => {
       setIsLoading(true);
@@ -367,13 +367,13 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
         }
       }
     };
-    
+
     refresh();
 
     return () => {
       mountedRef.current = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabId]); // Intentionally omit refresh to prevent infinite loop
 
   useEffect(() => {
@@ -387,25 +387,25 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
               tabs?: Record<number, Record<ToolId, ToolState>>;
             }
           | undefined;
-        
+
         if (newValue) {
           setStates((prevStates) => {
             const updatedStates = { ...prevStates };
-            
+
             // Apply global states
             if (newValue.global) {
               for (const [id, state] of Object.entries(newValue.global)) {
                 updatedStates[id as ToolId] = state;
               }
             }
-            
+
             // Apply tab-specific states if provided
             if (tabId !== undefined && newValue.tabs?.[tabId]) {
               for (const [id, state] of Object.entries(newValue.tabs[tabId])) {
                 updatedStates[id as ToolId] = state;
               }
             }
-            
+
             return updatedStates;
           });
         }

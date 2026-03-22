@@ -594,9 +594,7 @@ function renderTree(): void {
   }
 
   // Apply filter
-  const filteredRoot = state.filter
-    ? filterTree(state.root, state.filter)
-    : state.root;
+  const filteredRoot = state.filter ? filterTree(state.root, state.filter) : state.root;
 
   if (!filteredRoot) {
     content.innerHTML = `<div class="${PREFIX}-empty">No components match filter</div>`;
@@ -636,17 +634,19 @@ function renderNode(node: ComponentNode): string {
       style="padding-left: ${indent}px"
     >
       <div class="${PREFIX}-node-content">
-        ${hasChildren
-      ? `<span class="${PREFIX}-toggle">${toggleIcon}</span>`
-      : `<span class="${PREFIX}-toggle-placeholder"></span>`
-    }
+        ${
+          hasChildren
+            ? `<span class="${PREFIX}-toggle">${toggleIcon}</span>`
+            : `<span class="${PREFIX}-toggle-placeholder"></span>`
+        }
         <span class="${PREFIX}-type-icon">${typeIcon}</span>
         <span class="${PREFIX}-framework-icon">${frameworkIcon}</span>
         <span class="${PREFIX}-node-name" title="${escapeHtml(getNodeTooltip(node))}">${escapeHtml(node.name)}</span>
-        ${node.props && Object.keys(node.props).length > 0
-      ? `<span class="${PREFIX}-props-badge">${Object.keys(node.props).length}</span>`
-      : ''
-    }
+        ${
+          node.props && Object.keys(node.props).length > 0
+            ? `<span class="${PREFIX}-props-badge">${Object.keys(node.props).length}</span>`
+            : ''
+        }
       </div>
     </div>
   `;

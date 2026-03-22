@@ -5,8 +5,8 @@
  * Uses a Shadow DOM to isolate styles from the host page.
  */
 
-import { logger } from '@/utils/logger';
 import { executeCommandById, getAllCommands } from '@/components/CommandPalette/commands';
+import { logger } from '@/utils/logger';
 
 // ============================================
 // State
@@ -213,14 +213,15 @@ let selectedIndex = 0;
 
 function handleSearch(e: Event): void {
   const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
-  
+
   if (!query) {
     filteredCommands = getAllCommands();
   } else {
     const queryTerms = query.split(/\s+/);
     filteredCommands = getAllCommands()
       .map((command) => {
-        const searchText = `${command.title} ${command.description} ${command.keywords.join(' ')}`.toLowerCase();
+        const searchText =
+          `${command.title} ${command.description} ${command.keywords.join(' ')}`.toLowerCase();
         const matchCount = queryTerms.filter((term) => searchText.includes(term)).length;
         return { command, matchCount };
       })
@@ -295,11 +296,14 @@ function renderCommands(commands: ReturnType<typeof getAllCommands>): void {
   }
 
   // Group by category
-  const grouped = commands.reduce((acc, cmd) => {
-    if (!acc[cmd.category]) acc[cmd.category] = [];
-    acc[cmd.category].push(cmd);
-    return acc;
-  }, {} as Record<string, typeof commands>);
+  const grouped = commands.reduce(
+    (acc, cmd) => {
+      if (!acc[cmd.category]) acc[cmd.category] = [];
+      acc[cmd.category].push(cmd);
+      return acc;
+    },
+    {} as Record<string, typeof commands>
+  );
 
   const categoryOrder = ['tool', 'action', 'setting', 'navigation'];
   const categoryLabels: Record<string, string> = {
@@ -329,7 +333,7 @@ function renderCommands(commands: ReturnType<typeof getAllCommands>): void {
           <span class="${PREFIX}-item-icon">${cmd.icon}</span>
           <div class="${PREFIX}-item-content">
             <div class="${PREFIX}-item-title">${escapeHtml(cmd.title)}</div>
-            <div class="${PREFIX}-item-description">${escapeHtml(cmd.description)}</div>
+            <div class="${PREFIX}-item-description">${escapeHtml(cmd.description ?? '')}</div>
           </div>
           ${cmd.shortcut ? `<kbd class="${PREFIX}-item-shortcut">${escapeHtml(cmd.shortcut)}</kbd>` : ''}
         </div>

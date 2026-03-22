@@ -104,17 +104,19 @@ function isInIgnoreRegion(
 ): boolean {
   return ignoreRegions.some(
     (region) =>
-      x >= region.x &&
-      x < region.x + region.width &&
-      y >= region.y &&
-      y < region.y + region.height
+      x >= region.x && x < region.x + region.width && y >= region.y && y < region.y + region.height
   );
 }
 
 /**
  * Get pixel color at coordinates
  */
-function getPixel(data: Uint8ClampedArray, x: number, y: number, width: number): {
+function getPixel(
+  data: Uint8ClampedArray,
+  x: number,
+  y: number,
+  width: number
+): {
   r: number;
   g: number;
   b: number;
@@ -205,8 +207,12 @@ function comparePixels(
 
       let isDifferent = false;
 
-      if (x < baselineData.width && x < currentData.width &&
-          y < baselineData.height && y < currentData.height) {
+      if (
+        x < baselineData.width &&
+        x < currentData.width &&
+        y < baselineData.height &&
+        y < currentData.height
+      ) {
         // Both images have this pixel
         const p1 = getPixel(baselineData.data, x, y, baselineData.width);
         const p2 = getPixel(currentData.data, x, y, currentData.width);

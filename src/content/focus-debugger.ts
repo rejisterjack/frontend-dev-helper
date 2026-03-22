@@ -188,10 +188,7 @@ function isElementVisible(element: HTMLElement): boolean {
 }
 
 function isElementDisabled(element: HTMLElement): boolean {
-  return (
-    element.hasAttribute('disabled') ||
-    element.getAttribute('aria-disabled') === 'true'
-  );
+  return element.hasAttribute('disabled') || element.getAttribute('aria-disabled') === 'true';
 }
 
 function generateSelector(element: HTMLElement): string {
@@ -250,19 +247,16 @@ function detectFocusTraps(): void {
   // Check for hidden/disabled elements in tab order
   focusableElements.forEach((el) => {
     const element = el.element;
-    
+
     // Check for elements that might trap focus
     const style = window.getComputedStyle(element);
     const parent = element.parentElement;
 
     if (parent) {
       const parentStyle = window.getComputedStyle(parent);
-      
+
       // Check for overflow hidden with focusable children
-      if (
-        parentStyle.overflow === 'hidden' &&
-        (element.offsetLeft < 0 || element.offsetTop < 0)
-      ) {
+      if (parentStyle.overflow === 'hidden' && (element.offsetLeft < 0 || element.offsetTop < 0)) {
         trapElements.push(element);
       }
     }
@@ -352,7 +346,7 @@ function handleMouseDown(): void {
 
 function handleClick(event: MouseEvent): void {
   const target = event.target as HTMLElement;
-  
+
   // Check if clicked on an overlay
   if (target?.closest(`.${PREFIX}-overlay`)) {
     event.preventDefault();
@@ -598,14 +592,15 @@ function renderHistory(): string {
 }
 
 function renderIssues(): string {
-  const issues: Array<{ type: 'error' | 'warning' | 'info'; message: string; element?: string }> = [];
+  const issues: Array<{ type: 'error' | 'warning' | 'info'; message: string; element?: string }> =
+    [];
 
   // Check for missing focus indicators
   focusableElements.forEach((el) => {
     const style = window.getComputedStyle(el.element);
     const outline = style.outline;
     const outlineWidth = parseFloat(style.outlineWidth);
-    
+
     if (outline === 'none' || outlineWidth === 0) {
       issues.push({
         type: 'warning',
@@ -633,7 +628,10 @@ function renderIssues(): string {
       ((element as HTMLInputElement).labels && (element as HTMLInputElement).labels!.length > 0) ||
       !!element.getAttribute('title');
 
-    if (!hasLabel && ['input', 'textarea', 'select', 'button'].includes(element.tagName.toLowerCase())) {
+    if (
+      !hasLabel &&
+      ['input', 'textarea', 'select', 'button'].includes(element.tagName.toLowerCase())
+    ) {
       issues.push({
         type: 'error',
         message: 'Focusable element missing accessible label',
@@ -714,7 +712,7 @@ function updateOverlays(): void {
   // Add number overlays for each focusable element
   focusableElements.forEach((el) => {
     const rect = el.element.getBoundingClientRect();
-    
+
     // Skip elements outside viewport
     if (
       rect.bottom < 0 ||
@@ -727,9 +725,9 @@ function updateOverlays(): void {
 
     const overlay = document.createElement('div');
     overlay.className = `${PREFIX}-overlay`;
-    
+
     const isCurrent = el.element === currentFocusedElement;
-    
+
     overlay.style.cssText = `
       position: fixed;
       top: ${rect.top}px;
@@ -844,7 +842,7 @@ function updateStats(): void {
 function updateBadges(): void {
   updateBadge('elements', focusableElements.length);
   updateBadge('history', focusHistory.length);
-  
+
   const issueCount = shadowRoot?.querySelectorAll(`.${PREFIX}-issue`).length || 0;
   updateBadge('issues', issueCount);
 }
@@ -855,7 +853,9 @@ function updateBadge(type: string, count: number): void {
 }
 
 function filterContent(query: string): void {
-  const items = shadowRoot?.querySelectorAll(`.${PREFIX}-item, .${PREFIX}-history-item, .${PREFIX}-issue`);
+  const items = shadowRoot?.querySelectorAll(
+    `.${PREFIX}-item, .${PREFIX}-history-item, .${PREFIX}-issue`
+  );
   items?.forEach((item) => {
     const text = item.textContent?.toLowerCase() || '';
     (item as HTMLElement).style.display = text.includes(query.toLowerCase()) ? '' : 'none';

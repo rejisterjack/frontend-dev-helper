@@ -189,10 +189,10 @@ export function applyNoopenerFix(): number {
  * Apply all common fixes at once
  */
 export function applyAllCommonFixes(): {
-  focusStyles: undefined;
-  lang: undefined;
-  viewport: undefined;
-  charset: undefined;
+  focusStyles: void;
+  lang: void;
+  viewport: void;
+  charset: void;
   lazyLoading: number;
   noopener: number;
 } {

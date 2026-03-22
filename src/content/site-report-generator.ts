@@ -435,7 +435,7 @@ export async function generateReport(options: ReportOptions = {}): Promise<SiteR
  */
 async function analyzePerformance(): Promise<PerformanceReport> {
   const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-  const resources = performance.getEntriesByType('resource');
+  const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
   const paintEntries = performance.getEntriesByType('paint');
 
   // Calculate Web Vitals
@@ -776,19 +776,61 @@ async function analyzeAccessibility(): Promise<AccessibilityReport> {
 
   return {
     timestamp: Date.now(),
+    url: window.location.href,
     summary: {
-      total: issues.length,
+      totalIssues: issues.length,
       errors,
       warnings,
       info,
     },
-    ariaIssues: issues.filter((i) => i.issue.includes('ARIA') || i.issue.includes('role')),
-    focusOrder: [], // Would need full implementation
-    contrastIssues,
-    altTextIssues: issues.filter((i) => i.issue.includes('alt')),
-    formLabelIssues: issues.filter((i) => i.issue.includes('label')),
-    keyboardNavIssues: [], // Would need full implementation
-  } as AccessibilityReport;
+    aria: {
+      issues: issues
+        .filter((i) => i.issue.includes('ARIA') || i.issue.includes('role'))
+        .map((i) => ({
+          element: i.element,
+          selector: i.selector,
+          issue: i.issue,
+          severity: i.severity,
+        })),
+      count: issues.filter((i) => i.issue.includes('ARIA') || i.issue.includes('role')).length,
+    },
+    focusOrder: {
+      items: [],
+      issues: [],
+      count: 0,
+    },
+    contrast: {
+      issues: contrastIssues.map((i) => ({
+        element: i.element,
+        selector: i.selector,
+        foreground: i.foreground,
+        background: i.background,
+        ratio: i.ratio,
+        requiredRatio: i.requiredRatio,
+      })),
+      count: contrastIssues.length,
+    },
+    altText: {
+      issues: issues
+        .filter((i) => i.issue.includes('alt'))
+        .map((i) => ({
+          element: i.element,
+          selector: i.selector,
+          src: '',
+        })),
+      count: issues.filter((i) => i.issue.includes('alt')).length,
+    },
+    formLabels: {
+      issues: issues
+        .filter((i) => i.issue.includes('label'))
+        .map((i) => ({
+          element: i.element,
+          selector: i.selector,
+          id: '',
+        })),
+      count: issues.filter((i) => i.issue.includes('label')).length,
+    },
+  } as unknown as AccessibilityReport;
 }
 
 /**
@@ -1334,24 +1376,30 @@ function analyzeBestPractices(): BestPracticesReport {
  * Calculate overall scores
  */
 function calculateScores(report: SiteReport): SiteReport['scores'] {
-  const performance = Math.round(
-    (report.performance.webVitals.lcp.score +
-      report.performance.webVitals.fcp.score +
-      report.performance.webVitals.cls.score) /
-      3
-  );
+  const performance = report.performance
+    ? Math.round(
+        (report.performance.webVitals.lcp.score +
+          report.performance.webVitals.fcp.score +
+          report.performance.webVitals.cls.score) /
+          3
+      )
+    : 0;
 
-  const accessibility = Math.max(
-    0,
-    100 - report.accessibility.summary.errors * 10 - report.accessibility.summary.warnings * 3
-  );
+  const accessibility = report.accessibility
+    ? Math.max(
+        0,
+        100 - report.accessibility.summary.errors * 10 - report.accessibility.summary.warnings * 3
+      )
+    : 0;
 
-  const seo = report.seo.score;
+  const seo = report.seo?.score ?? 0;
 
-  const bestPractices = Math.max(
-    0,
-    100 - report.bestPractices.issues.filter((i) => i.severity === 'error').length * 15
-  );
+  const bestPractices = report.bestPractices
+    ? Math.max(
+        0,
+        100 - report.bestPractices.issues.filter((i) => i.severity === 'error').length * 15
+      )
+    : 0;
 
   const overall = Math.round((performance + accessibility + seo + bestPractices) / 4);
 
@@ -1371,18 +1419,18 @@ function generateRecommendations(report: SiteReport): Recommendation[] {
   const recommendations: Recommendation[] = [];
 
   // Performance recommendations
-  if (report.performance.webVitals.lcp.rating !== 'good') {
+  if (report.performance?.webVitals.lcp.rating !== 'good') {
     recommendations.push({
       priority: 'high',
       category: 'Performance',
       title: 'Optimize Largest Contentful Paint (LCP)',
-      description: `Current LCP: ${report.performance.webVitals.lcp.value}ms. Target: < 2.5s`,
+      description: `Current LCP: ${report.performance?.webVitals.lcp.value}ms. Target: < 2.5s`,
       impact: 'Improves loading speed and user experience',
       effort: 'medium',
     });
   }
 
-  if (report.performance.imageOptimizations.length > 0) {
+  if (report.performance?.imageOptimizations.length) {
     recommendations.push({
       priority: 'medium',
       category: 'Performance',
@@ -1394,7 +1442,7 @@ function generateRecommendations(report: SiteReport): Recommendation[] {
   }
 
   // Accessibility recommendations
-  if (report.accessibility.summary.errors > 0) {
+  if (report.accessibility?.summary.errors) {
     recommendations.push({
       priority: 'high',
       category: 'Accessibility',
@@ -1406,7 +1454,7 @@ function generateRecommendations(report: SiteReport): Recommendation[] {
   }
 
   // SEO recommendations
-  if (report.seo.meta.description.content === null) {
+  if (report.seo?.meta.description.content === null) {
     recommendations.push({
       priority: 'high',
       category: 'SEO',
@@ -1417,7 +1465,7 @@ function generateRecommendations(report: SiteReport): Recommendation[] {
     });
   }
 
-  if (report.seo.images.withoutAlt > 0) {
+  if (report.seo?.images.withoutAlt) {
     recommendations.push({
       priority: 'medium',
       category: 'SEO',
@@ -1429,7 +1477,7 @@ function generateRecommendations(report: SiteReport): Recommendation[] {
   }
 
   // Best practices recommendations
-  if (!report.bestPractices.https) {
+  if (!report.bestPractices?.https) {
     recommendations.push({
       priority: 'high',
       category: 'Security',
@@ -1550,9 +1598,9 @@ export function showReportOverlay(report: SiteReport): void {
       <div style="background: rgba(30, 41, 59, 0.5); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(99, 102, 241, 0.2);">
         <h2 style="margin: 0 0 20px; font-size: 20px; color: #c084fc;">⚡ Core Web Vitals</h2>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-          ${renderVitalCard('LCP', report.performance.webVitals.lcp, 'Largest Contentful Paint')}
-          ${renderVitalCard('FID', report.performance.webVitals.fid, 'First Input Delay')}
-          ${renderVitalCard('CLS', report.performance.webVitals.cls, 'Cumulative Layout Shift')}
+          ${renderVitalCard('LCP', report.performance?.webVitals.lcp ?? { value: null, score: 0, rating: 'poor', unit: 'ms' }, 'Largest Contentful Paint')}
+          ${renderVitalCard('FID', report.performance?.webVitals.fid ?? { value: null, score: 0, rating: 'poor', unit: 'ms' }, 'First Input Delay')}
+          ${renderVitalCard('CLS', report.performance?.webVitals.cls ?? { value: null, score: 0, rating: 'poor', unit: '' }, 'Cumulative Layout Shift')}
         </div>
       </div>
 
@@ -1832,7 +1880,8 @@ function generateFullHTMLReport(report: SiteReport): string {
         ${['lcp', 'fid', 'cls']
           .map((key) => {
             const vital =
-              report.performance.webVitals[key as keyof typeof report.performance.webVitals];
+              report.performance?.webVitals[key as keyof typeof report.performance.webVitals];
+            if (!vital) return '';
             const names: Record<string, string> = { lcp: 'LCP', fid: 'FID', cls: 'CLS' };
             const descs: Record<string, string> = {
               lcp: 'Largest Contentful Paint',
@@ -1861,11 +1910,11 @@ function generateFullHTMLReport(report: SiteReport): string {
     <div class="section">
       <h2>📱 Page Information</h2>
       <table style="width: 100%; border-collapse: collapse;">
-        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Total Requests</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.performance.resources.totalRequests}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Page Size</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${formatBytes(report.performance.resources.totalSize)}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Load Time</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.performance.navigation.totalLoad}ms</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Colors Found</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.colors.totalColors}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Accessibility Issues</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.accessibility.summary.errors + report.accessibility.summary.warnings}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Total Requests</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.performance?.resources.totalRequests ?? 'N/A'}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Page Size</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.performance ? formatBytes(report.performance.resources.totalSize) : 'N/A'}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Load Time</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.performance?.navigation.totalLoad ?? 'N/A'}ms</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Colors Found</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.colors?.totalColors ?? 'N/A'}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #334155; color: #64748b;">Accessibility Issues</td><td style="padding: 8px; border-bottom: 1px solid #334155; text-align: right;">${report.accessibility ? report.accessibility.summary.errors + report.accessibility.summary.warnings : 'N/A'}</td></tr>
       </table>
     </div>
     

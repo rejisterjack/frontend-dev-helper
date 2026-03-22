@@ -90,7 +90,8 @@ function detectFontSource(fontFamily: string): { source: FontInfo['source']; url
         if (rule instanceof CSSFontFaceRule) {
           const ruleFamily = rule.style.fontFamily?.replace(/['"]/g, '').trim();
           if (ruleFamily?.toLowerCase() === cleanFamily.toLowerCase()) {
-            const src = rule.style.src;
+            // biome-ignore lint/suspicious/noExplicitAny: CSSFontFaceRule style has src property
+            const src = (rule.style as unknown as Record<string, string>).src;
             if (src) {
               const urlMatch = src.match(/url\(["']?([^"')]+)["']?\)/);
               if (urlMatch) {
@@ -614,7 +615,7 @@ function isValidTextElement(element: HTMLElement): boolean {
     element.childNodes.length > 0 &&
     Array.from(element.childNodes).some((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        return node.textContent?.trim().length > 0;
+        return (node.textContent?.trim().length ?? 0) > 0;
       }
       return false;
     });

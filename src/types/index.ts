@@ -34,8 +34,10 @@ export enum ToolType {
   AI_SUGGESTIONS = 'aiSuggestions',
 }
 
-/** Tool ID type - imported from constants to ensure consistency */
-export type { ToolId } from '@/constants';
+// ToolId is defined in constants but we re-export it here for convenience
+// Using import type to avoid circular dependencies
+import type { ToolId as ToolIdFromConstants } from '@/constants';
+export type ToolId = ToolIdFromConstants;
 
 /** State of an individual tool */
 export interface ToolState {
@@ -46,7 +48,7 @@ export interface ToolState {
 }
 
 /** Map of all tool states */
-export type ToolsState = Record<ToolId, ToolState>;
+export type ToolsState = Record<ToolId, ToolState> & Record<string, ToolState>;
 
 /** Tool metadata for display */
 export interface ToolMeta {
@@ -264,6 +266,7 @@ export interface ExtensionSettings {
   shortcuts: Record<string, string>;
   autoSave: boolean;
   autoOpenDevTools: boolean;
+  experimentalFeatures?: boolean;
 }
 
 // ============================================
@@ -279,6 +282,7 @@ export interface StorageItem<T = unknown> {
   value: T;
   area: StorageArea;
   timestamp?: number;
+  version?: number;
 }
 
 /** Extension storage interface */
@@ -298,6 +302,8 @@ export interface UITab {
   id: string;
   label: string;
   icon?: string;
+  disabled?: boolean;
+  badge?: string | number;
 }
 
 /** Async state */
@@ -316,6 +322,7 @@ export interface ElementInfo {
   tag: string;
   id: string | null;
   class: string | null;
+  classes?: string[];
   selector: string;
   dimensions: {
     width: number;
@@ -323,9 +330,17 @@ export interface ElementInfo {
     top: number;
     left: number;
   };
+  rect?: {
+    width: number;
+    height: number;
+    top: number;
+    left: number;
+  };
   styles: Record<string, string>;
+  inlineStyles?: Record<string, string>;
   text: string | null;
   children: number;
+  aria?: Record<string, string | null>;
 }
 
 // ============================================
@@ -369,8 +384,96 @@ export interface MemoryInfo {
 }
 
 // ============================================
+// Accessibility Report Types
+// ============================================
+
+/** Accessibility issue severity */
+export type AccessibilityIssueSeverity = 'error' | 'warning' | 'info';
+
+/** ARIA issue */
+export interface ARIAIssue {
+  element: string;
+  selector: string;
+  issue: string;
+  severity: AccessibilityIssueSeverity;
+}
+
+/** Focus order item */
+export interface FocusOrderItem {
+  element: string;
+  selector: string;
+  tabIndex: number;
+  order: number;
+}
+
+/** Contrast issue */
+export interface ContrastIssue {
+  element: string;
+  selector: string;
+  foreground: string;
+  background: string;
+  ratio: number;
+  requiredRatio: number;
+  severity?: 'error' | 'warning' | 'info';
+}
+
+/** Alt text issue */
+export interface AltTextIssue {
+  element: string;
+  selector: string;
+  src: string;
+}
+
+/** Form label issue */
+export interface FormLabelIssue {
+  element: string;
+  selector: string;
+  id: string;
+}
+
+/** Comprehensive accessibility report */
+export interface AccessibilityReport {
+  timestamp: number;
+  url: string;
+  summary: {
+    totalIssues: number;
+    errors: number;
+    warnings: number;
+    info: number;
+  };
+  aria: {
+    issues: ARIAIssue[];
+    count: number;
+  };
+  focusOrder: {
+    items: FocusOrderItem[];
+    issues: FocusOrderItem[];
+    count: number;
+  };
+  contrast: {
+    issues: ContrastIssue[];
+    count: number;
+  };
+  altText: {
+    issues: AltTextIssue[];
+    count: number;
+  };
+  formLabels: {
+    issues: FormLabelIssue[];
+    count: number;
+  };
+}
+
+// ============================================
 // Site Report Types
 // ============================================
+
+/** Tech stack information */
+export interface TechStackInfo {
+  frameworks: string[];
+  libraries: string[];
+  detected: Record<string, string | boolean>;
+}
 
 /** Comprehensive site report */
 export interface SiteReport {
@@ -385,12 +488,12 @@ export interface SiteReport {
     bestPractices: number;
     overall: number;
   };
-  performance: PerformanceReportData;
-  accessibility: AccessibilityReport;
-  colors: ColorReportData;
-  seo: SEOReportData;
-  techStack: TechStackInfo;
-  bestPractices: BestPracticesReport;
+  performance: PerformanceReportData | null;
+  accessibility: AccessibilityReport | null;
+  colors: ColorReportData | null;
+  seo: SEOReportData | null;
+  techStack: TechStackInfo | null;
+  bestPractices: BestPracticesReport | null;
   recommendations: SiteReportRecommendation[];
 }
 

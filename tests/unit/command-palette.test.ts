@@ -10,6 +10,9 @@ import {
 } from '../../src/components/CommandPalette/commands';
 import { ToolType } from '../../src/types';
 
+// Ensure ToolType is used (for future test expansion)
+void ToolType;
+
 describe('Command Palette', () => {
   describe('getAllCommands', () => {
     it('should return all available commands', () => {

@@ -2,5 +2,4 @@
  * Visual Regression Component Exports
  */
 
-export { VisualRegression } from './VisualRegression';
-export { VisualRegression as default } from './VisualRegression';
+export { VisualRegression, VisualRegression as default } from './VisualRegression';

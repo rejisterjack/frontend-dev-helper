@@ -4,5 +4,4 @@
  * Performance Flame Graph visualization for JavaScript execution profiling.
  */
 
-export { FlameGraph } from './FlameGraph';
-export { default } from './FlameGraph';
+export { default, FlameGraph } from './FlameGraph';

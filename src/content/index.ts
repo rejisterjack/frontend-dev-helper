@@ -14,8 +14,8 @@
  */
 
 import { logger } from '../utils/logger';
-import { registry } from './handlers';
 import type { GridOverlay } from './grid-overlay';
+import { registry } from './handlers';
 import type { Inspector } from './inspector';
 import type { MeasureTool } from './measure-tool';
 

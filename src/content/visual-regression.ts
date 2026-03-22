@@ -13,11 +13,7 @@
  * Uses Shadow DOM for UI isolation.
  */
 
-import type {
-  BaselineScreenshot,
-  VisualRegressionState,
-  VisualRegressionTest,
-} from '@/types';
+import type { BaselineScreenshot, VisualRegressionState, VisualRegressionTest } from '@/types';
 import { logger } from '@/utils/logger';
 import { baselineManager } from './visual-regression/baseline-manager';
 import { diffEngine } from './visual-regression/diff-engine';
@@ -155,10 +151,7 @@ export async function captureFullPageScreenshot(): Promise<string> {
  * Create a baseline screenshot
  */
 export async function createBaseline(
-  options: {
-    fullPage?: boolean;
-    name?: string;
-  } = {}
+  options: { fullPage?: boolean; name?: string } = {}
 ): Promise<BaselineScreenshot> {
   if (isCapturing) {
     throw new Error('Already capturing screenshot');
@@ -218,15 +211,11 @@ export async function runTest(baselineId: string): Promise<VisualRegressionTest>
     const currentScreenshot = await captureViewportScreenshot();
 
     // Compare with baseline
-    const diffResult = await diffEngine.compareScreenshots(
-      baseline.screenshot,
-      currentScreenshot,
-      {
-        threshold: currentState.threshold,
-        ignoreRegions: currentState.ignoreRegions,
-        generateDiffImage: true,
-      }
-    );
+    const diffResult = await diffEngine.compareScreenshots(baseline.screenshot, currentScreenshot, {
+      threshold: currentState.threshold,
+      ignoreRegions: currentState.ignoreRegions,
+      generateDiffImage: true,
+    });
 
     // Create test result
     const test: VisualRegressionTest = {
@@ -277,7 +266,9 @@ export async function runBatchTests(): Promise<VisualRegressionTest[]> {
     }
   }
 
-  updateStatus(`Batch complete: ${results.filter((r) => r.status === 'passed').length}/${results.length} passed`);
+  updateStatus(
+    `Batch complete: ${results.filter((r) => r.status === 'passed').length}/${results.length} passed`
+  );
   return results;
 }
 
@@ -352,9 +343,12 @@ export async function deleteTest(testId: string): Promise<void> {
 /**
  * Add an ignore region
  */
-export function addIgnoreRegion(
-  region: { x: number; y: number; width: number; height: number }
-): void {
+export function addIgnoreRegion(region: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): void {
   currentState.ignoreRegions.push(region);
   updateSettingsUI();
 }
@@ -388,10 +382,7 @@ export async function exportDiffImage(testId: string): Promise<void> {
     throw new Error('Diff image not found');
   }
 
-  await diffEngine.exportDiffImage(
-    test.result.diffImage,
-    `diff-${testId}-${Date.now()}.png`
-  );
+  await diffEngine.exportDiffImage(test.result.diffImage, `diff-${testId}-${Date.now()}.png`);
 }
 
 /**
@@ -566,7 +557,7 @@ function setupEventListeners(panel: HTMLElement): void {
       <button id="${PREFIX}-export-data">Export Data (JSON)</button>
       <button id="${PREFIX}-import-data">Import Data</button>
     `;
-    
+
     const actions = panel.querySelector(`#${PREFIX}-actions`);
     actions?.appendChild(dropdown);
 
@@ -666,9 +657,7 @@ function renderBaselines(): void {
   const list = shadowRoot?.querySelector(`#${PREFIX}-baselines-list`);
   if (!list) return;
 
-  const baselines = currentState.baselines.filter(
-    (b) => b.url === window.location.href
-  );
+  const baselines = currentState.baselines.filter((b) => b.url === window.location.href);
 
   updateBadge('baseline', baselines.length);
 
@@ -732,9 +721,7 @@ function renderTests(): void {
   const list = shadowRoot?.querySelector(`#${PREFIX}-tests-list`);
   if (!list) return;
 
-  const tests = currentState.tests.filter(
-    (t) => t.url === window.location.href
-  );
+  const tests = currentState.tests.filter((t) => t.url === window.location.href);
 
   updateBadge('test', tests.length);
 
@@ -746,7 +733,8 @@ function renderTests(): void {
   list.innerHTML = tests
     .map((test) => {
       const date = new Date(test.timestamp).toLocaleString();
-      const statusClass = test.status === 'passed' || test.status === 'approved' ? 'passed' : 'failed';
+      const statusClass =
+        test.status === 'passed' || test.status === 'approved' ? 'passed' : 'failed';
 
       return `
         <div class="${PREFIX}-test ${statusClass}" data-id="${test.id}">
@@ -757,19 +745,31 @@ function renderTests(): void {
             <span class="${PREFIX}-test-date">${date}</span>
             <span class="${PREFIX}-test-diff">${test.result.diffPercentage.toFixed(2)}%</span>
           </div>
-          ${test.result.diffImage ? `
+          ${
+            test.result.diffImage
+              ? `
             <div class="${PREFIX}-test-preview">
               <img src="${test.result.diffImage}" alt="Diff" loading="lazy">
             </div>
-          ` : ''}
+          `
+              : ''
+          }
           <div class="${PREFIX}-test-actions">
-            ${test.status === 'failed' ? `
+            ${
+              test.status === 'failed'
+                ? `
               <button class="${PREFIX}-approve-btn" data-id="${test.id}">Approve</button>
               <button class="${PREFIX}-reject-btn" data-id="${test.id}">Reject</button>
-            ` : ''}
-            ${test.result.diffImage ? `
+            `
+                : ''
+            }
+            ${
+              test.result.diffImage
+                ? `
               <button class="${PREFIX}-export-btn" data-id="${test.id}">Export</button>
-            ` : ''}
+            `
+                : ''
+            }
             <button class="${PREFIX}-delete-btn" data-id="${test.id}">Delete</button>
           </div>
         </div>
@@ -1365,7 +1365,11 @@ async function html2canvas(
             ctx.fillStyle = computed.color;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
-            ctx.fillText(text, drawX + Number.parseInt(computed.paddingLeft || '0', 10), drawY + Number.parseInt(computed.paddingTop || '0', 10));
+            ctx.fillText(
+              text,
+              drawX + Number.parseInt(computed.paddingLeft || '0', 10),
+              drawY + Number.parseInt(computed.paddingTop || '0', 10)
+            );
           }
         }
       }

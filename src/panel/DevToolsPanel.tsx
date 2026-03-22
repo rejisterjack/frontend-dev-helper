@@ -78,7 +78,7 @@ export const DevToolsPanel: React.FC = () => {
               {selectedElement.id && (
                 <span className="text-syntax-string">#{selectedElement.id}</span>
               )}
-              {selectedElement.classes.length > 0 && (
+              {selectedElement.classes && selectedElement.classes.length > 0 && (
                 <span className="text-syntax-variable">
                   .{selectedElement.classes.slice(0, 3).join('.')}
                   {selectedElement.classes.length > 3 && '...'}
@@ -86,7 +86,9 @@ export const DevToolsPanel: React.FC = () => {
               )}
             </div>
             <div className="mt-1 text-xs text-dev-muted">
-              {Math.round(selectedElement.rect.width)} × {Math.round(selectedElement.rect.height)}
+              {selectedElement.rect
+                ? `${Math.round(selectedElement.rect.width)} × ${Math.round(selectedElement.rect.height)}`
+                : ''}
             </div>
           </div>
 
@@ -112,12 +114,23 @@ export const DevToolsPanel: React.FC = () => {
             {activeTab === 'styles' && (
               <StylesTab
                 styles={selectedElement.styles}
-                inlineStyles={selectedElement.inlineStyles}
+                inlineStyles={selectedElement.inlineStyles || {}}
               />
             )}
             {activeTab === 'computed' && <ComputedTab element={selectedElement} />}
-            {activeTab === 'layout' && <LayoutTab rect={selectedElement.rect} />}
-            {activeTab === 'accessibility' && <AccessibilityTab aria={selectedElement.aria} />}
+            {activeTab === 'layout' && selectedElement.rect && (
+              <LayoutTab rect={selectedElement.rect as unknown as DOMRect} />
+            )}
+            {activeTab === 'accessibility' && (
+              <AccessibilityTab
+                aria={
+                  (selectedElement.aria || {}) as Record<
+                    string,
+                    string | number | boolean | undefined
+                  >
+                }
+              />
+            )}
           </div>
         </>
       ) : (
@@ -187,7 +200,9 @@ const ComputedTab: React.FC<{ element: ElementInfo }> = ({ element }) => (
               <div className="rounded bg-blue-500/20 p-4 text-center">
                 <div className="text-xs text-blue-300">content</div>
                 <div className="text-sm">
-                  {Math.round(element.rect.width)} × {Math.round(element.rect.height)}
+                  {element.rect
+                    ? `${Math.round(element.rect.width)} × ${Math.round(element.rect.height)}`
+                    : 'N/A'}
                 </div>
               </div>
             </div>

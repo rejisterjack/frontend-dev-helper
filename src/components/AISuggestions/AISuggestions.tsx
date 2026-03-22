@@ -7,23 +7,32 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AIAnalysisResult, AISuggestion, AISuggestionCategory } from '@/types';
-import { logger } from '@/utils/logger';
 import { runAIAnalysis } from '@/ai/ai-analyzer';
 import { quickFixes } from '@/ai/quick-fixes';
+import type { AIAnalysisResult, AISuggestion, AISuggestionCategory } from '@/types';
+import { logger } from '@/utils/logger';
 
 interface AISuggestionsProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const CATEGORY_COLORS: Record<AISuggestionCategory, { bg: string; text: string; border: string }> = {
-  accessibility: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30' },
-  performance: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
-  seo: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30' },
-  'best-practice': { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  security: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
-};
+const CATEGORY_COLORS: Record<AISuggestionCategory, { bg: string; text: string; border: string }> =
+  {
+    accessibility: {
+      bg: 'bg-purple-500/10',
+      text: 'text-purple-400',
+      border: 'border-purple-500/30',
+    },
+    performance: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' },
+    seo: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30' },
+    'best-practice': {
+      bg: 'bg-emerald-500/10',
+      text: 'text-emerald-400',
+      border: 'border-emerald-500/30',
+    },
+    security: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
+  };
 
 const PRIORITY_COLORS = {
   critical: 'text-red-400 bg-red-500/10',
@@ -35,8 +44,12 @@ const PRIORITY_COLORS = {
 export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose }) => {
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<Set<AISuggestionCategory>>(new Set());
-  const [selectedPriorities, setSelectedPriorities] = useState<Set<AISuggestion['priority']>>(new Set());
+  const [selectedCategories, setSelectedCategories] = useState<Set<AISuggestionCategory>>(
+    new Set()
+  );
+  const [selectedPriorities, setSelectedPriorities] = useState<Set<AISuggestion['priority']>>(
+    new Set()
+  );
   const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
   const [applyingFix, setApplyingFix] = useState<string | null>(null);
   const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
@@ -177,23 +190,27 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
         {/* Summary Cards */}
         {analysis && (
           <div className="grid grid-cols-5 gap-2 p-3 border-b border-slate-700">
-            {(['accessibility', 'performance', 'seo', 'best-practice', 'security'] as const).map((category) => (
-              <button
-                key={category}
-                onClick={() => toggleCategory(category)}
-                className={`
+            {(['accessibility', 'performance', 'seo', 'best-practice', 'security'] as const).map(
+              (category) => (
+                <button
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`
                   rounded-lg p-2 text-left transition-colors
                   ${selectedCategories.has(category) ? 'bg-slate-700' : 'bg-slate-800/50 hover:bg-slate-800'}
                 `}
-              >
-                <div className={`text-xs uppercase tracking-wider ${CATEGORY_COLORS[category].text}`}>
-                  {category.replace('-', ' ')}
-                </div>
-                <div className="text-lg font-semibold text-white">
-                  {analysis.summary.byCategory[category]}
-                </div>
-              </button>
-            ))}
+                >
+                  <div
+                    className={`text-xs uppercase tracking-wider ${CATEGORY_COLORS[category].text}`}
+                  >
+                    {category.replace('-', ' ')}
+                  </div>
+                  <div className="text-lg font-semibold text-white">
+                    {analysis.summary.byCategory[category]}
+                  </div>
+                </button>
+              )
+            )}
           </div>
         )}
 
@@ -281,7 +298,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-white truncate">{suggestion.title}</span>
+                          <span className="font-medium text-white truncate">
+                            {suggestion.title}
+                          </span>
                           <span
                             className={`
                               rounded-full px-2 py-0.5 text-[10px] uppercase
@@ -296,7 +315,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                             </span>
                           )}
                         </div>
-                        <p className={`text-sm ${colors.text} line-clamp-2`}>{suggestion.description}</p>
+                        <p className={`text-sm ${colors.text} line-clamp-2`}>
+                          {suggestion.description}
+                        </p>
                       </div>
                       <svg
                         className={`h-5 w-5 text-slate-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -304,7 +325,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </div>
                   </button>
@@ -326,7 +352,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                         </div>
                         <div>
                           <span className="text-slate-500">Confidence:</span>
-                          <p className="text-slate-300">{Math.round(suggestion.confidence * 100)}%</p>
+                          <p className="text-slate-300">
+                            {Math.round(suggestion.confidence * 100)}%
+                          </p>
                         </div>
                       </div>
 

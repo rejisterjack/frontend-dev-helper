@@ -301,7 +301,9 @@ export async function getAllTests(): Promise<VisualRegressionState['tests']> {
 /**
  * Get tests by baseline ID
  */
-export async function getTestsByBaseline(baselineId: string): Promise<VisualRegressionState['tests']> {
+export async function getTestsByBaseline(
+  baselineId: string
+): Promise<VisualRegressionState['tests']> {
   const database = await initDatabase();
 
   return new Promise((resolve, reject) => {
@@ -388,7 +390,10 @@ export async function getState(): Promise<VisualRegressionState> {
 /**
  * Get settings only
  */
-export async function getSettings(): Promise<{ threshold: number; ignoreRegions: Array<{ x: number; y: number; width: number; height: number }> }> {
+export async function getSettings(): Promise<{
+  threshold: number;
+  ignoreRegions: Array<{ x: number; y: number; width: number; height: number }>;
+}> {
   // In a real implementation, this would be stored separately
   // For now, return defaults
   return {
@@ -400,7 +405,10 @@ export async function getSettings(): Promise<{ threshold: number; ignoreRegions:
 /**
  * Update settings
  */
-export async function updateSettings(settings: { threshold?: number; ignoreRegions?: Array<{ x: number; y: number; width: number; height: number }> }): Promise<void> {
+export async function updateSettings(settings: {
+  threshold?: number;
+  ignoreRegions?: Array<{ x: number; y: number; width: number; height: number }>;
+}): Promise<void> {
   // In a real implementation, this would persist to storage
   logger.log('[BaselineManager] Settings updated:', settings);
 }
@@ -442,7 +450,13 @@ export async function importData(data: {
     await saveTest(test);
   }
 
-  logger.log('[BaselineManager] Data imported:', data.baselines.length, 'baselines,', data.tests.length, 'tests');
+  logger.log(
+    '[BaselineManager] Data imported:',
+    data.baselines.length,
+    'baselines,',
+    data.tests.length,
+    'tests'
+  );
 }
 
 // ============================================

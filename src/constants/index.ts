@@ -718,7 +718,7 @@ export const STORAGE_KEYS = {
 /**
  * Message types for extension communication
  * This is the single source of truth for all message types in the extension.
- * 
+ *
  * NOTE: Legacy MessageType enum in src/types/messages.ts is deprecated.
  * Use MESSAGE_TYPES from this file instead.
  */

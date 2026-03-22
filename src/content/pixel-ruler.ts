@@ -94,7 +94,7 @@ export class PixelRuler {
   getState(): { enabled: boolean; mode: MeasurementMode } {
     return {
       enabled: this.isActive,
-      mode: this.currentMode,
+      mode: this.mode,
     };
   }
 

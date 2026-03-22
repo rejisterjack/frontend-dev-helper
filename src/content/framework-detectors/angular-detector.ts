@@ -516,13 +516,12 @@ function formatValue(value: unknown): unknown {
  */
 function extractTreeFromDOM(): ComponentNode | null {
   const appElement =
-    document.querySelector('[ng-version]') ||
-    document.querySelector('[ng-app]') ||
-    document.body;
+    document.querySelector('[ng-version]') || document.querySelector('[ng-app]') || document.body;
 
   if (!appElement) return null;
 
-  const angularVersion = appElement.getAttribute('ng-version') ||
+  const angularVersion =
+    appElement.getAttribute('ng-version') ||
     appElement.getAttribute('data-ng-version') ||
     'unknown';
 
@@ -553,8 +552,7 @@ function domElementToNode(element: HTMLElement, depth: number, index: number): C
   }
 
   // Check if element has Angular bindings
-  const hasBindings = element.hasAttribute('[ng-reflect-') ||
-    element.hasAttribute('ng-reflect-');
+  const hasBindings = element.hasAttribute('[ng-reflect-') || element.hasAttribute('ng-reflect-');
 
   return {
     id: `dom-${element.tagName}-${depth}-${index}`,
@@ -585,8 +583,9 @@ function extractDOMProps(element: HTMLElement): Record<string, string> {
   }
 
   // Add Angular-specific attributes
-  const ngReflectAttrs = Array.from(element.attributes)
-    .filter((attr) => attr.name.startsWith('ng-reflect-') || attr.name.startsWith('_ngcontent'));
+  const ngReflectAttrs = Array.from(element.attributes).filter(
+    (attr) => attr.name.startsWith('ng-reflect-') || attr.name.startsWith('_ngcontent')
+  );
 
   for (const attr of ngReflectAttrs.slice(0, 5)) {
     props[attr.name] = attr.value;

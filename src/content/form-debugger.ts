@@ -174,17 +174,21 @@ export function selectForm(formIndex: number): void {
 
 function analyzeForms(): void {
   const formElements = Array.from(document.querySelectorAll('form'));
-  
+
   forms = formElements.map((form, index) => analyzeForm(form, index));
 
   // Also find form-like structures (inputs not in forms)
-  const orphanedInputs = Array.from(document.querySelectorAll('input:not(form input), select:not(form select), textarea:not(form textarea)'));
+  const orphanedInputs = Array.from(
+    document.querySelectorAll(
+      'input:not(form input), select:not(form select), textarea:not(form textarea)'
+    )
+  );
   if (orphanedInputs.length > 0) {
     forms.push(createOrphanedForm(orphanedInputs));
   }
 
   // Validate selected form still exists
-  if (selectedForm && !forms.find(f => f.element === selectedForm?.element)) {
+  if (selectedForm && !forms.find((f) => f.element === selectedForm?.element)) {
     selectedForm = null;
   }
 }
@@ -200,16 +204,20 @@ function analyzeForm(form: HTMLFormElement, index: number): FormInfo {
     action: form.action || window.location.href,
     method: form.method || 'GET',
     fields,
-    isValid: fields.every(f => f.isValid),
+    isValid: fields.every((f) => f.isValid),
     hasSubmitHandler: hasSubmitHandler(form),
-    autofillEnabled: fields.some(f => f.autofill),
+    autofillEnabled: fields.some((f) => f.autofill),
     accessibilityIssues,
   };
 }
 
 function analyzeFormFields(form: HTMLFormElement): FormField[] {
   const fieldSelectors = 'input, select, textarea, button';
-  const fields = Array.from(form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(fieldSelectors));
+  const fields = Array.from(
+    form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+      fieldSelectors
+    )
+  );
 
   return fields.map((field) => {
     const isValid = (field as HTMLInputElement).checkValidity?.() ?? true;
@@ -267,14 +275,17 @@ function createOrphanedForm(inputs: Element[]): FormInfo {
     action: '',
     method: '',
     fields,
-    isValid: fields.every(f => f.isValid),
+    isValid: fields.every((f) => f.isValid),
     hasSubmitHandler: false,
-    autofillEnabled: fields.some(f => f.autofill),
+    autofillEnabled: fields.some((f) => f.autofill),
     accessibilityIssues,
   };
 }
 
-function getLabelInfo(field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): { hasLabel: boolean; text?: string } {
+function getLabelInfo(field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): {
+  hasLabel: boolean;
+  text?: string;
+} {
   // Check for explicit label
   if (field.id) {
     const explicitLabel = document.querySelector(`label[for="${field.id}"]`);
@@ -319,7 +330,9 @@ function getLabelInfo(field: HTMLInputElement | HTMLTextAreaElement | HTMLSelect
   return { hasLabel: false };
 }
 
-function detectAutofill(field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): string | undefined {
+function detectAutofill(
+  field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+): string | undefined {
   const autocomplete = field.getAttribute('autocomplete');
   if (autocomplete && AUTOFILL_FIELDS.includes(autocomplete)) {
     return autocomplete;
@@ -365,22 +378,22 @@ function checkAccessibilityIssues(form: HTMLFormElement, fields: FormField[]): s
   }
 
   // Check for fields without labels
-  const unlabeledFields = fields.filter(f => !f.hasLabel);
+  const unlabeledFields = fields.filter((f) => !f.hasLabel);
   if (unlabeledFields.length > 0) {
     issues.push(`${unlabeledFields.length} fields without proper labels`);
   }
 
   // Check for required fields without required attribute
-  const requiredByName = fields.filter(f => 
-    !f.isRequired && 
-    (f.name.includes('required') || f.element.className.includes('required'))
+  const requiredByName = fields.filter(
+    (f) =>
+      !f.isRequired && (f.name.includes('required') || f.element.className.includes('required'))
   );
   if (requiredByName.length > 0) {
     issues.push(`${requiredByName.length} fields appear required but lack required attribute`);
   }
 
   // Check for missing error message containers
-  const fieldsWithErrors = fields.filter(f => f.isRequired && !f.isValid);
+  const fieldsWithErrors = fields.filter((f) => f.isRequired && !f.isValid);
   if (fieldsWithErrors.length > 0 && !form.querySelector('[role="alert"], .error, [aria-live]')) {
     issues.push('Form may lack error message announcement for screen readers');
   }
@@ -391,8 +404,8 @@ function checkAccessibilityIssues(form: HTMLFormElement, fields: FormField[]): s
 function checkOrphanedAccessibilityIssues(inputs: Element[]): string[] {
   const issues: string[] = [];
   issues.push('Fields exist outside of a form element');
-  
-  const unlabeledCount = inputs.filter(input => {
+
+  const unlabeledCount = inputs.filter((input) => {
     const field = input as HTMLInputElement;
     return !field.id || !document.querySelector(`label[for="${field.id}"]`);
   }).length;
@@ -454,7 +467,7 @@ function generateSelector(element: HTMLElement): string {
 function attachEventListeners(): void {
   document.addEventListener('input', handleInput, true);
   document.addEventListener('change', handleChange, true);
-  document.addEventListener('invalid', handleInvalid, true,);
+  document.addEventListener('invalid', handleInvalid, true);
   document.addEventListener('submit', handleSubmit, true);
 }
 
@@ -497,16 +510,20 @@ function handleSubmit(event: SubmitEvent): void {
 }
 
 function isFormField(element: HTMLElement): boolean {
-  return element instanceof HTMLInputElement ||
-         element instanceof HTMLTextAreaElement ||
-         element instanceof HTMLSelectElement;
+  return (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    element instanceof HTMLSelectElement
+  );
 }
 
-function updateFieldValidity(field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement): void {
-  const formInfo = forms.find(f => f.element.contains(field));
+function updateFieldValidity(
+  field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+): void {
+  const formInfo = forms.find((f) => f.element.contains(field));
   if (!formInfo) return;
 
-  const fieldInfo = formInfo.fields.find(f => f.element === field);
+  const fieldInfo = formInfo.fields.find((f) => f.element === field);
   if (fieldInfo) {
     fieldInfo.isValid = (field as HTMLInputElement).checkValidity?.() ?? true;
     fieldInfo.validationMessage = (field as HTMLInputElement).validationMessage || '';
@@ -695,15 +712,19 @@ function renderOverview(): string {
           </div>
           <div class="${PREFIX}-form-meta">
             <span>${form.fields.length} fields</span>
-            <span>${form.fields.filter(f => f.isRequired).length} required</span>
+            <span>${form.fields.filter((f) => f.isRequired).length} required</span>
             ${form.autofillEnabled ? `<span class="${PREFIX}-badge-autofill">Autofill</span>` : ''}
             ${form.accessibilityIssues.length > 0 ? `<span class="${PREFIX}-badge-warning">${form.accessibilityIssues.length} issues</span>` : ''}
           </div>
-          ${form.fields.some(f => f.hasError) ? `
+          ${
+            form.fields.some((f) => f.hasError)
+              ? `
             <div class="${PREFIX}-form-errors">
-              ${form.fields.filter(f => f.hasError).length} validation errors
+              ${form.fields.filter((f) => f.hasError).length} validation errors
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       `
         )
@@ -714,7 +735,7 @@ function renderOverview(): string {
 
 function renderFields(): string {
   const targetForm = selectedForm || forms[0];
-  
+
   if (!targetForm || targetForm.fields.length === 0) {
     return `<div class="${PREFIX}-empty">No fields to display</div>`;
   }
@@ -748,22 +769,25 @@ function renderFields(): string {
 
 function renderValidation(): string {
   const targetForm = selectedForm || forms[0];
-  
+
   if (!targetForm) {
     return `<div class="${PREFIX}-empty">No form selected</div>`;
   }
 
-  const invalidFields = targetForm.fields.filter(f => !f.isValid || f.hasError);
+  const invalidFields = targetForm.fields.filter((f) => !f.isValid || f.hasError);
 
   return `
     <div class="${PREFIX}-info">
-      ${invalidFields.length} validation issue${invalidFields.length !== 1 ? 's' : ''} • ${targetForm.fields.filter(f => f.isRequired).length} required fields
+      ${invalidFields.length} validation issue${invalidFields.length !== 1 ? 's' : ''} • ${targetForm.fields.filter((f) => f.isRequired).length} required fields
     </div>
-    ${invalidFields.length === 0 ? `
+    ${
+      invalidFields.length === 0
+        ? `
       <div class="${PREFIX}-empty">
         <div>✅ All fields valid</div>
       </div>
-    ` : `
+    `
+        : `
       <div class="${PREFIX}-list">
         ${invalidFields
           .map(
@@ -787,26 +811,27 @@ function renderValidation(): string {
           )
           .join('')}
       </div>
-    `}
+    `
+    }
   `;
 }
 
 function renderAccessibility(): string {
   const allIssues: Array<{ form: string; issue: string }> = [];
-  
-  forms.forEach(form => {
-    form.accessibilityIssues.forEach(issue => {
+
+  forms.forEach((form) => {
+    form.accessibilityIssues.forEach((issue) => {
       allIssues.push({ form: form.name || 'Unnamed', issue });
     });
   });
 
   // Add field-level issues
-  forms.forEach(form => {
-    form.fields.forEach(field => {
+  forms.forEach((form) => {
+    form.fields.forEach((field) => {
       if (!field.hasLabel) {
-        allIssues.push({ 
-          form: form.name || 'Unnamed', 
-          issue: `Field "${field.name || field.type}" lacks accessible label` 
+        allIssues.push({
+          form: form.name || 'Unnamed',
+          issue: `Field "${field.name || field.type}" lacks accessible label`,
         });
       }
     });
@@ -856,14 +881,14 @@ function updateValidationOverlays(): void {
 
   validationOverlays.innerHTML = '';
 
-  forms.forEach(form => {
+  forms.forEach((form) => {
     // Highlight form container
     if (form.accessibilityIssues.length > 0) {
       highlightElement(form.element, 'warning', `${form.accessibilityIssues.length} issues`);
     }
 
     // Highlight fields
-    form.fields.forEach(field => {
+    form.fields.forEach((field) => {
       if (field.hasError) {
         highlightElement(field.element, 'error', field.validationMessage || 'Invalid');
       } else if (!field.hasLabel) {
@@ -875,9 +900,13 @@ function updateValidationOverlays(): void {
   });
 }
 
-function highlightElement(element: HTMLElement, type: 'error' | 'warning' | 'info', label: string): void {
+function highlightElement(
+  element: HTMLElement,
+  type: 'error' | 'warning' | 'info',
+  label: string
+): void {
   const rect = element.getBoundingClientRect();
-  
+
   // Skip elements outside viewport
   if (
     rect.bottom < 0 ||
@@ -973,20 +1002,26 @@ function updateStats(): void {
   const statsEl = shadowRoot?.querySelector(`#${PREFIX}-stats`);
   if (statsEl) {
     const totalFields = forms.reduce((sum, f) => sum + f.fields.length, 0);
-    const validFields = forms.reduce((sum, f) => sum + f.fields.filter(field => field.isValid).length, 0);
+    const validFields = forms.reduce(
+      (sum, f) => sum + f.fields.filter((field) => field.isValid).length,
+      0
+    );
     statsEl.textContent = `${validFields}/${totalFields} valid`;
   }
 }
 
 function updateBadges(): void {
   updateBadge('forms', forms.length);
-  
+
   const totalFields = forms.reduce((sum, f) => sum + f.fields.length, 0);
   updateBadge('fields', totalFields);
-  
-  const validationIssues = forms.reduce((sum, f) => sum + f.fields.filter(field => !field.isValid).length, 0);
+
+  const validationIssues = forms.reduce(
+    (sum, f) => sum + f.fields.filter((field) => !field.isValid).length,
+    0
+  );
   updateBadge('validation', validationIssues);
-  
+
   const a11yIssues = forms.reduce((sum, f) => sum + f.accessibilityIssues.length, 0);
   updateBadge('a11y', a11yIssues);
 }
@@ -997,7 +1032,9 @@ function updateBadge(type: string, count: number): void {
 }
 
 function filterContent(query: string): void {
-  const items = shadowRoot?.querySelectorAll(`.${PREFIX}-form-card, .${PREFIX}-field, .${PREFIX}-validation-item, .${PREFIX}-a11y-issue`);
+  const items = shadowRoot?.querySelectorAll(
+    `.${PREFIX}-form-card, .${PREFIX}-field, .${PREFIX}-validation-item, .${PREFIX}-a11y-issue`
+  );
   items?.forEach((item) => {
     const text = item.textContent?.toLowerCase() || '';
     (item as HTMLElement).style.display = text.includes(query.toLowerCase()) ? '' : 'none';

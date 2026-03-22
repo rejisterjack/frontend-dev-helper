@@ -6,8 +6,8 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Popup } from './Popup';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { Popup } from './Popup';
 import '../assets/css/globals.css';
 
 const rootElement = document.getElementById('root');

@@ -2,7 +2,7 @@
  * Utility Functions
  */
 
-import type { StorageItem } from '@/types';
+import type { StorageArea, StorageItem } from '@/types';
 
 /**
  * Generate a unique ID
@@ -94,7 +94,7 @@ export function deepClone<T>(obj: T): T {
 
   const cloned = {} as T;
   for (const key in obj) {
-    if (Object.hasOwn(obj, key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       cloned[key] = deepClone(obj[key]);
     }
   }
@@ -213,9 +213,16 @@ export function getLuminance(color: string): number {
 /**
  * Create a storage item wrapper
  */
-export function createStorageItem<T>(value: T, version = 1): StorageItem<T> {
+export function createStorageItem<T>(
+  key: string,
+  value: T,
+  area: StorageArea = 'local',
+  version = 1
+): StorageItem<T> {
   return {
+    key,
     value,
+    area,
     timestamp: Date.now(),
     version,
   };

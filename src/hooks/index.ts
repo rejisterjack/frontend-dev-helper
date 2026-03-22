@@ -28,7 +28,7 @@ export function useAsync<T>(
       setState({
         data: null,
         loading: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }, deps);

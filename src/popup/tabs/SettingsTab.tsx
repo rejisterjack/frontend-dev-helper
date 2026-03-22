@@ -74,7 +74,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
 
         <SettingRow label="Experimental Features">
           <Toggle
-            checked={settings.experimentalFeatures}
+            checked={settings.experimentalFeatures ?? false}
             onChange={(checked) => handleChange('experimentalFeatures', checked)}
           />
         </SettingRow>

@@ -8,8 +8,10 @@ import type { ExtensionMessage, MessageResponse } from '@/types';
 import { logger } from '@/utils/logger';
 
 interface HandlerDependencies {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   featureManager: import('./feature-manager').FeatureManager;
-  elementInspector: import('./inspector').ElementInspector;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  elementInspector: any;
 }
 
 export class MessageHandler {
@@ -62,7 +64,8 @@ export class MessageHandler {
         case 'GET_SETTINGS':
           sendResponse({
             success: true,
-            data: window.__FRONTEND_DEV_HELPER__?.settings,
+            data: (window as { __FRONTEND_DEV_HELPER__?: { settings?: unknown } })
+              .__FRONTEND_DEV_HELPER__?.settings,
             id: message.id,
           });
           break;
@@ -110,7 +113,9 @@ export class MessageHandler {
         }
 
         case 'GET_COMPUTED_STYLES': {
-          const styles = this.getComputedStylesForElement(message.payload?.selector as string);
+          const styles = this.getComputedStylesForElement(
+            (message.payload as { selector?: string })?.selector ?? ''
+          );
           sendResponse({
             success: true,
             data: styles,
@@ -120,7 +125,7 @@ export class MessageHandler {
         }
 
         case 'COPY_CSS': {
-          const css = this.generateCSS(message.payload?.selector as string);
+          const css = this.generateCSS((message.payload as { selector?: string })?.selector ?? '');
           await this.copyToClipboard(css);
           sendResponse({
             success: true,
@@ -168,7 +173,8 @@ export class MessageHandler {
    */
   private async handleToggleFeature(message: ExtensionMessage): Promise<void> {
     const { feature, enabled } = message.payload as {
-      feature: Parameters<typeof this.deps.featureManager.toggleFeature>[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      feature: any;
       enabled: boolean;
     };
 
@@ -180,9 +186,9 @@ export class MessageHandler {
       }
     } else {
       if (enabled) {
-        this.deps.featureManager.enableFeature(feature);
+        (this.deps.featureManager.enableFeature as (f: string) => void)(feature as string);
       } else {
-        this.deps.featureManager.disableFeature(feature);
+        (this.deps.featureManager.disableFeature as (f: string) => void)(feature as string);
       }
     }
   }

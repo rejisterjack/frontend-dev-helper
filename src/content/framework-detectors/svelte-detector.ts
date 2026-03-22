@@ -153,9 +153,7 @@ function findSvelteRoots(): SvelteComponent[] {
   const elements = document.querySelectorAll('*');
   for (const el of Array.from(elements)) {
     // Check for Svelte internal properties
-    const svelteKeys = Object.keys(el).filter(
-      (key) => key.startsWith('__svelte') || key === '$$'
-    );
+    const svelteKeys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
 
     for (const key of svelteKeys) {
       const value = (el as unknown as Record<string, SvelteComponent>)[key];
@@ -302,9 +300,7 @@ function findChildComponents(component: SvelteComponent): SvelteComponent[] {
   const seen = new Set<unknown>();
 
   for (const el of Array.from(childElements)) {
-    const keys = Object.keys(el).filter(
-      (key) => key.startsWith('__svelte') || key === '$$'
-    );
+    const keys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
 
     for (const key of keys) {
       const value = (el as unknown as Record<string, SvelteComponent>)[key];
@@ -331,9 +327,7 @@ function findComponentElement(component: SvelteComponent): HTMLElement | null {
   // Search all elements for this component reference
   const elements = document.querySelectorAll('*');
   for (const el of Array.from(elements)) {
-    const keys = Object.keys(el).filter(
-      (key) => key.startsWith('__svelte') || key === '$$'
-    );
+    const keys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
 
     for (const key of keys) {
       if ((el as unknown as Record<string, SvelteComponent>)[key] === component) {
@@ -403,8 +397,7 @@ function isSvelteStore(value: unknown): boolean {
   return (
     typeof value === 'object' &&
     value !== null &&
-    ('subscribe' in value ||
-      ('set' in value && 'update' in value))
+    ('subscribe' in value || ('set' in value && 'update' in value))
   );
 }
 

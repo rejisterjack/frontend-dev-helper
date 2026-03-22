@@ -7,5 +7,5 @@
  */
 
 export { baselineManager } from './baseline-manager';
-export { diffEngine } from './diff-engine';
 export type { DiffOptions, PixelComparison } from './diff-engine';
+export { diffEngine } from './diff-engine';

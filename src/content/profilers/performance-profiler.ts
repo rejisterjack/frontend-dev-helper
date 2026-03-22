@@ -96,7 +96,7 @@ export function startProfiling(opts: ProfilerOptions = {}): void {
     setupPerformanceObserver();
     setupLongTaskObserver();
     setupLayoutObserver();
-    
+
     if (opts.trackMemory !== false) {
       startMemoryTracking();
     }
@@ -131,16 +131,16 @@ export function stopProfiling(): PerformanceProfile | null {
   performanceObserver?.disconnect();
   longTaskObserver?.disconnect();
   layoutObserver?.disconnect();
-  
+
   if (memoryInterval) {
     clearInterval(memoryInterval);
     memoryInterval = null;
   }
 
   const profile = buildProfile();
-  
+
   logger.log('[PerformanceProfiler] Profiling stopped', profile);
-  
+
   if (options.onComplete) {
     options.onComplete(profile);
   }
@@ -213,7 +213,7 @@ function setupPerformanceObserver(): void {
 
     // Observe various entry types
     const entryTypes = ['mark', 'measure', 'navigation', 'resource'];
-    
+
     for (const type of entryTypes) {
       try {
         performanceObserver.observe({ entryTypes: [type] });
@@ -235,9 +235,9 @@ function setupLongTaskObserver(): void {
     longTaskObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         longTasks++;
-        
+
         const threshold = options.longTaskThreshold || LONG_TASK_THRESHOLD;
-        
+
         if (entry.duration > threshold) {
           const flameEntry = createFlameEntry({
             name: entry.name || 'Long Task',
@@ -246,9 +246,9 @@ function setupLongTaskObserver(): void {
             type: 'script',
             source: entry.toJSON?.()?.attribution?.[0]?.containerSrc,
           });
-          
+
           entries.push(flameEntry);
-          
+
           if (options.onLongTask) {
             options.onLongTask(entry);
           }
@@ -271,17 +271,19 @@ function setupLayoutObserver(): void {
     layoutObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         // Check for layout/paint entries that might indicate forced reflow
-        if (entry.entryType === 'layout-shift' || 
-            (entry.entryType === 'measure' && entry.name.includes('forced-reflow'))) {
+        if (
+          entry.entryType === 'layout-shift' ||
+          (entry.entryType === 'measure' && entry.name.includes('forced-reflow'))
+        ) {
           forcedReflows++;
-          
+
           const flameEntry = createFlameEntry({
             name: `Forced Reflow: ${entry.name}`,
             startTime: entry.startTime,
             duration: entry.duration || 0,
             type: 'layout',
           });
-          
+
           entries.push(flameEntry);
         }
       }
@@ -303,8 +305,10 @@ function startMemoryTracking(): void {
   }
 
   memoryInterval = window.setInterval(() => {
-    const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }).memory;
-    
+    const memory = (
+      performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }
+    ).memory;
+
     if (memory) {
       memorySnapshots.push({
         timestamp: performance.now() - startTime,
@@ -341,15 +345,17 @@ function categorizeEntry(entry: PerformanceEntry): FlameGraphEntry['type'] {
 
   if (entryType === 'resource') {
     const initiatorType = (entry as PerformanceResourceTiming).initiatorType;
-    
+
     if (initiatorType === 'script' || name.endsWith('.js')) {
       return 'script';
     }
     if (initiatorType === 'css' || name.endsWith('.css')) {
       return 'layout';
     }
-    if (['img', 'image', 'picture'].includes(initiatorType) || 
-        /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(name)) {
+    if (
+      ['img', 'image', 'picture'].includes(initiatorType) ||
+      /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(name)
+    ) {
       return 'paint';
     }
   }
@@ -402,16 +408,16 @@ function createFlameEntry(params: {
 function buildProfile(): PerformanceProfile {
   const now = performance.now();
   const endTime = isProfiling ? now : startTime + entries[entries.length - 1]?.duration || 0;
-  
+
   // Calculate summary statistics
   const scriptTime = entries
     .filter((e) => e.type === 'script')
     .reduce((sum, e) => sum + e.duration, 0);
-  
+
   const layoutTime = entries
     .filter((e) => e.type === 'layout')
     .reduce((sum, e) => sum + e.duration, 0);
-  
+
   const paintTime = entries
     .filter((e) => e.type === 'paint')
     .reduce((sum, e) => sum + e.duration, 0);
@@ -443,7 +449,7 @@ export function buildHierarchy(flatEntries: FlameGraphEntry[]): FlameGraphEntry[
 
   // Sort by start time
   const sorted = [...flatEntries].sort((a, b) => a.startTime - b.startTime);
-  
+
   const roots: FlameGraphEntry[] = [];
   const stack: FlameGraphEntry[] = [];
 
@@ -498,9 +504,7 @@ export function getEntriesInRange(
   start: number,
   end: number
 ): FlameGraphEntry[] {
-  return entryList.filter(
-    (entry) => entry.startTime >= start && entry.endTime <= end
-  );
+  return entryList.filter((entry) => entry.startTime >= start && entry.endTime <= end);
 }
 
 // ============================================

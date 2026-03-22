@@ -233,7 +233,7 @@ function detectCSSTransitions(element: HTMLElement): AnimationInfo[] {
   const properties = style.transitionProperty.split(',').map((p) => p.trim());
   const durations = style.transitionDuration.split(',').map((d) => d.trim());
   const delays = style.transitionDelay.split(',').map((d) => d.trim());
-  const timingFunctions = style.transitionTimingFunction.split(','.map((t) => t.trim()));
+  const timingFunctions = style.transitionTimingFunction.split(',').map((t) => t.trim());
 
   properties.forEach((prop, index) => {
     if (prop === 'all') return;
@@ -1017,7 +1017,7 @@ function setupPanelEventListeners(): void {
 
   // Header drag
   const header = panel.querySelector('.fdh-anim-header');
-  header?.addEventListener('mousedown', handleDragStart);
+  header?.addEventListener('mousedown', handleDragStart as EventListener);
 }
 
 /**
@@ -1084,7 +1084,7 @@ function startProgressUpdates(): void {
             const timing = (
               wa.effect as AnimationEffect & { getComputedTiming: () => { progress?: number } }
             ).getComputedTiming();
-            if (timing.progress !== undefined) {
+            if (timing.progress !== undefined && timing.progress !== null) {
               anim.progress = timing.progress * 100;
             }
           }
