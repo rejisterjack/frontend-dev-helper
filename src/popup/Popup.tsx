@@ -1,5 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Onboarding } from '../components';
+import { AISuggestions } from '../components/AISuggestions';
+import { ComponentTree } from '../components/ComponentTree';
+import { FlameGraph } from '../components/FlameGraph';
+import { VisualRegression } from '../components/VisualRegression';
 import { type ToolMeta, type ToolsState, ToolType } from '../types';
 import { logger } from '../utils/logger';
 import { ColorLegend } from './components/ColorLegend';
@@ -232,7 +236,38 @@ const TOOLS: ToolMeta[] = [
 ];
 
 /** Extension version */
-const EXTENSION_VERSION = '1.0.0';
+const EXTENSION_VERSION = '1.2.0';
+
+/** Tool message type mapping for enable/disable operations */
+const TOOL_MESSAGE_MAP: Record<ToolType, { enable: string; disable: string }> = {
+  [ToolType.DOM_OUTLINER]: { enable: 'PESTICIDE_ENABLE', disable: 'PESTICIDE_DISABLE' },
+  [ToolType.SPACING_VISUALIZER]: { enable: 'SPACING_ENABLE', disable: 'SPACING_DISABLE' },
+  [ToolType.FONT_INSPECTOR]: { enable: 'FONT_INSPECTOR_ENABLE', disable: 'FONT_INSPECTOR_DISABLE' },
+  [ToolType.COLOR_PICKER]: { enable: 'COLOR_PICKER_ENABLE', disable: 'COLOR_PICKER_DISABLE' },
+  [ToolType.PIXEL_RULER]: { enable: 'PIXEL_RULER_ENABLE', disable: 'PIXEL_RULER_DISABLE' },
+  [ToolType.RESPONSIVE_BREAKPOINT]: { enable: 'BREAKPOINT_OVERLAY_ENABLE', disable: 'BREAKPOINT_OVERLAY_DISABLE' },
+  [ToolType.CSS_INSPECTOR]: { enable: 'CSS_INSPECTOR_ENABLE', disable: 'CSS_INSPECTOR_DISABLE' },
+  [ToolType.CONTRAST_CHECKER]: { enable: 'CONTRAST_CHECKER_ENABLE', disable: 'CONTRAST_CHECKER_DISABLE' },
+  [ToolType.LAYOUT_VISUALIZER]: { enable: 'LAYOUT_VISUALIZER_ENABLE', disable: 'LAYOUT_VISUALIZER_DISABLE' },
+  [ToolType.ZINDEX_VISUALIZER]: { enable: 'ZINDEX_VISUALIZER_ENABLE', disable: 'ZINDEX_VISUALIZER_DISABLE' },
+  [ToolType.TECH_DETECTOR]: { enable: 'TECH_DETECTOR_ENABLE', disable: 'TECH_DETECTOR_DISABLE' },
+  [ToolType.ACCESSIBILITY_AUDIT]: { enable: 'ACCESSIBILITY_AUDIT_ENABLE', disable: 'ACCESSIBILITY_AUDIT_DISABLE' },
+  [ToolType.SITE_REPORT]: { enable: 'SITE_REPORT_ENABLE', disable: 'SITE_REPORT_DISABLE' },
+  [ToolType.CSS_EDITOR]: { enable: 'CSS_EDITOR_ENABLE', disable: 'CSS_EDITOR_DISABLE' },
+  [ToolType.SCREENSHOT_STUDIO]: { enable: 'SCREENSHOT_STUDIO_ENABLE', disable: 'SCREENSHOT_STUDIO_DISABLE' },
+  [ToolType.ANIMATION_INSPECTOR]: { enable: 'ANIMATION_INSPECTOR_ENABLE', disable: 'ANIMATION_INSPECTOR_DISABLE' },
+  [ToolType.RESPONSIVE_PREVIEW]: { enable: 'RESPONSIVE_PREVIEW_ENABLE', disable: 'RESPONSIVE_PREVIEW_DISABLE' },
+  [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enable: 'DESIGN_SYSTEM_VALIDATOR_ENABLE', disable: 'DESIGN_SYSTEM_VALIDATOR_DISABLE' },
+  [ToolType.NETWORK_ANALYZER]: { enable: 'NETWORK_ANALYZER_ENABLE', disable: 'NETWORK_ANALYZER_DISABLE' },
+  [ToolType.COMMAND_PALETTE]: { enable: 'COMMAND_PALETTE_ENABLE', disable: 'COMMAND_PALETTE_DISABLE' },
+  [ToolType.STORAGE_INSPECTOR]: { enable: 'STORAGE_INSPECTOR_ENABLE', disable: 'STORAGE_INSPECTOR_DISABLE' },
+  [ToolType.FOCUS_DEBUGGER]: { enable: 'FOCUS_DEBUGGER_ENABLE', disable: 'FOCUS_DEBUGGER_DISABLE' },
+  [ToolType.FORM_DEBUGGER]: { enable: 'FORM_DEBUGGER_ENABLE', disable: 'FORM_DEBUGGER_DISABLE' },
+  [ToolType.COMPONENT_TREE]: { enable: 'COMPONENT_TREE_ENABLE', disable: 'COMPONENT_TREE_DISABLE' },
+  [ToolType.FLAME_GRAPH]: { enable: 'FLAME_GRAPH_ENABLE', disable: 'FLAME_GRAPH_DISABLE' },
+  [ToolType.VISUAL_REGRESSION]: { enable: 'VISUAL_REGRESSION_ENABLE', disable: 'VISUAL_REGRESSION_DISABLE' },
+  [ToolType.AI_SUGGESTIONS]: { enable: 'AI_SUGGESTIONS_ENABLE', disable: 'AI_SUGGESTIONS_DISABLE' },
+};
 
 export const Popup: React.FC = () => {
   // Tool states
@@ -271,6 +306,10 @@ export const Popup: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Panel state for React component integration
+  const [openPanel, setOpenPanel] = useState<ToolType | null>(null);
+  const [currentTabUrl, setCurrentTabUrl] = useState<string>('');
 
   // Load initial state from content script
   useEffect(() => {
@@ -359,96 +398,10 @@ export const Popup: React.FC = () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
 
-    let messageType: string;
-    switch (tool) {
-      case ToolType.DOM_OUTLINER:
-        messageType = enabled ? 'PESTICIDE_ENABLE' : 'PESTICIDE_DISABLE';
-        break;
-      case ToolType.SPACING_VISUALIZER:
-        messageType = enabled ? 'SPACING_ENABLE' : 'SPACING_DISABLE';
-        break;
-      case ToolType.FONT_INSPECTOR:
-        messageType = enabled ? 'FONT_INSPECTOR_ENABLE' : 'FONT_INSPECTOR_DISABLE';
-        break;
-      case ToolType.COLOR_PICKER:
-        messageType = enabled ? 'COLOR_PICKER_ENABLE' : 'COLOR_PICKER_DISABLE';
-        break;
-      case ToolType.PIXEL_RULER:
-        messageType = enabled ? 'PIXEL_RULER_ENABLE' : 'PIXEL_RULER_DISABLE';
-        break;
-      case ToolType.RESPONSIVE_BREAKPOINT:
-        messageType = enabled ? 'BREAKPOINT_OVERLAY_ENABLE' : 'BREAKPOINT_OVERLAY_DISABLE';
-        break;
-      case ToolType.CSS_INSPECTOR:
-        messageType = enabled ? 'CSS_INSPECTOR_ENABLE' : 'CSS_INSPECTOR_DISABLE';
-        break;
-      case ToolType.CONTRAST_CHECKER:
-        messageType = enabled ? 'CONTRAST_CHECKER_ENABLE' : 'CONTRAST_CHECKER_DISABLE';
-        break;
-      case ToolType.LAYOUT_VISUALIZER:
-        messageType = enabled ? 'LAYOUT_VISUALIZER_ENABLE' : 'LAYOUT_VISUALIZER_DISABLE';
-        break;
-      case ToolType.ZINDEX_VISUALIZER:
-        messageType = enabled ? 'ZINDEX_VISUALIZER_ENABLE' : 'ZINDEX_VISUALIZER_DISABLE';
-        break;
-      case ToolType.TECH_DETECTOR:
-        messageType = enabled ? 'TECH_DETECTOR_ENABLE' : 'TECH_DETECTOR_DISABLE';
-        break;
-      case ToolType.ACCESSIBILITY_AUDIT:
-        messageType = enabled ? 'ACCESSIBILITY_AUDIT_ENABLE' : 'ACCESSIBILITY_AUDIT_DISABLE';
-        break;
-      case ToolType.SITE_REPORT:
-        messageType = enabled ? 'SITE_REPORT_ENABLE' : 'SITE_REPORT_DISABLE';
-        break;
-      case ToolType.CSS_EDITOR:
-        messageType = enabled ? 'CSS_EDITOR_ENABLE' : 'CSS_EDITOR_DISABLE';
-        break;
-      case ToolType.SCREENSHOT_STUDIO:
-        messageType = enabled ? 'SCREENSHOT_STUDIO_ENABLE' : 'SCREENSHOT_STUDIO_DISABLE';
-        break;
-      case ToolType.ANIMATION_INSPECTOR:
-        messageType = enabled ? 'ANIMATION_INSPECTOR_ENABLE' : 'ANIMATION_INSPECTOR_DISABLE';
-        break;
-      case ToolType.RESPONSIVE_PREVIEW:
-        messageType = enabled ? 'RESPONSIVE_PREVIEW_ENABLE' : 'RESPONSIVE_PREVIEW_DISABLE';
-        break;
-      case ToolType.DESIGN_SYSTEM_VALIDATOR:
-        messageType = enabled
-          ? 'DESIGN_SYSTEM_VALIDATOR_ENABLE'
-          : 'DESIGN_SYSTEM_VALIDATOR_DISABLE';
-        break;
-      case ToolType.NETWORK_ANALYZER:
-        messageType = enabled ? 'NETWORK_ANALYZER_ENABLE' : 'NETWORK_ANALYZER_DISABLE';
-        break;
-      // New "Best of the Best" Tools
-      case ToolType.COMMAND_PALETTE:
-        messageType = enabled ? 'COMMAND_PALETTE_ENABLE' : 'COMMAND_PALETTE_DISABLE';
-        break;
-      case ToolType.STORAGE_INSPECTOR:
-        messageType = enabled ? 'STORAGE_INSPECTOR_ENABLE' : 'STORAGE_INSPECTOR_DISABLE';
-        break;
-      case ToolType.FOCUS_DEBUGGER:
-        messageType = enabled ? 'FOCUS_DEBUGGER_ENABLE' : 'FOCUS_DEBUGGER_DISABLE';
-        break;
-      case ToolType.FORM_DEBUGGER:
-        messageType = enabled ? 'FORM_DEBUGGER_ENABLE' : 'FORM_DEBUGGER_DISABLE';
-        break;
-      case ToolType.COMPONENT_TREE:
-        messageType = enabled ? 'COMPONENT_TREE_ENABLE' : 'COMPONENT_TREE_DISABLE';
-        break;
-      case ToolType.FLAME_GRAPH:
-        messageType = enabled ? 'FLAME_GRAPH_ENABLE' : 'FLAME_GRAPH_DISABLE';
-        break;
-      case ToolType.VISUAL_REGRESSION:
-        messageType = enabled ? 'VISUAL_REGRESSION_ENABLE' : 'VISUAL_REGRESSION_DISABLE';
-        break;
-      case ToolType.AI_SUGGESTIONS:
-        messageType = enabled ? 'AI_SUGGESTIONS_ENABLE' : 'AI_SUGGESTIONS_DISABLE';
-        break;
-      default:
-        return;
-    }
-
+    const messages = TOOL_MESSAGE_MAP[tool];
+    if (!messages) return;
+    
+    const messageType = enabled ? messages.enable : messages.disable;
     try {
       await chrome.tabs.sendMessage(tab.id, { type: messageType });
     } catch (err) {
@@ -463,6 +416,17 @@ export const Popup: React.FC = () => {
     // Open the options page with the tool pre-selected
     const url = chrome.runtime.getURL(`options.html#tool=${tool}`);
     chrome.tabs.create({ url });
+  }, []);
+
+  /**
+   * Open panel for a tool (for React component integration)
+   */
+  const handleOpenPanel = useCallback(async (tool: ToolType) => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.url) {
+      setCurrentTabUrl(tab.url);
+    }
+    setOpenPanel(tool);
   }, []);
 
   /**
@@ -670,6 +634,12 @@ export const Popup: React.FC = () => {
                 color={tool.color}
                 onToggle={(enabled) => handleToggleTool(tool.type, enabled)}
                 onSettingsClick={() => handleOpenSettings(tool.type)}
+                onView={
+                  // Only 4 tools have React panel components
+                  [ToolType.AI_SUGGESTIONS, ToolType.VISUAL_REGRESSION, ToolType.FLAME_GRAPH, ToolType.COMPONENT_TREE].includes(tool.type)
+                    ? () => handleOpenPanel(tool.type)
+                    : undefined
+                }
                 animationDelay={`stagger-${index + 1}`}
               />
 
@@ -750,6 +720,20 @@ export const Popup: React.FC = () => {
             </a>
           </div>
         </footer>
+
+        {/* Panel Overlays for React Component Integration */}
+        {openPanel === ToolType.AI_SUGGESTIONS && (
+          <AISuggestions isOpen={true} onClose={() => setOpenPanel(null)} />
+        )}
+        {openPanel === ToolType.VISUAL_REGRESSION && (
+          <VisualRegression isOpen={true} onClose={() => setOpenPanel(null)} currentUrl={currentTabUrl} />
+        )}
+        {openPanel === ToolType.FLAME_GRAPH && (
+          <FlameGraph isOpen={true} onClose={() => setOpenPanel(null)} />
+        )}
+        {openPanel === ToolType.COMPONENT_TREE && (
+          <ComponentTree isOpen={true} onClose={() => setOpenPanel(null)} />
+        )}
       </div>
     </>
   );

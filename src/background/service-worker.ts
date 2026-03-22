@@ -35,12 +35,13 @@ import {
   toggleToolState,
 } from '@/utils/storage';
 import { logger } from '../utils/logger';
+import { MessageRouter } from './message-router';
 
 // ============================================
 // Constants
 // ============================================
 
-const EXTENSION_VERSION = '1.0.0';
+const EXTENSION_VERSION = '1.2.0';
 const EXTENSION_NAME = 'FrontendDevHelper';
 
 // Context menu item IDs
@@ -92,6 +93,9 @@ const state: ServiceWorkerState = {
   initialized: false,
 };
 
+// Initialize message router
+const messageRouter = new MessageRouter();
+
 // ============================================
 // Lifecycle Events
 // ============================================
@@ -103,6 +107,9 @@ async function initialize(): Promise<void> {
   logger.log(`[${EXTENSION_NAME}] Service Worker initializing v${EXTENSION_VERSION}`);
 
   try {
+    // Register tool message handlers with the router
+    registerMessageHandlers();
+
     // Set up lifecycle listeners
     setupInstallListeners();
     setupMessageListeners();
@@ -339,70 +346,78 @@ async function handleContextMenuClick(
 // ============================================
 
 /**
- * Set up message listeners
+ * Register message handlers with the router
  */
-function setupMessageListeners(): void {
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // Return true to indicate async response
-    handleMessage(message as ExtensionMessage, sender)
-      .then((response) => sendResponse({ success: true, data: response }))
-      .catch((error) =>
-        sendResponse({
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-        })
-      );
-    return true;
+function registerMessageHandlers(): void {
+  // Tool management handlers
+  messageRouter.registerHandler(MESSAGE_TYPES.TOGGLE_TOOL, async (message) => {
+    const { payload } = message;
+    return handleToggleTool(payload as { toolId: ToolId; enabled?: boolean; tabId?: number });
   });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.GET_TOOL_STATE, async (message) => {
+    const { payload } = message;
+    return handleGetToolState(payload as { toolId: ToolId; tabId?: number });
+  });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.SET_TOOL_STATE, async (message) => {
+    const { payload } = message;
+    return handleSetToolState(payload as { toolId: ToolId; state: ToolState; tabId?: number });
+  });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.GET_ALL_TOOL_STATES, async (message) => {
+    const { payload } = message;
+    return handleGetAllToolStates(payload as { tabId?: number } | undefined);
+  });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.TOOL_STATE_CHANGED, async () => {
+    await updateBadge();
+    return { acknowledged: true };
+  });
+
+  // Feature toggle handler (overrides default to support tab-specific routing)
+  messageRouter.registerHandler(MESSAGE_TYPES.TOGGLE_FEATURE, async (message) => {
+    const { payload } = message;
+    const { feature, enabled } = payload as { feature: string; enabled: boolean };
+    // Note: tabId would come from sender in a real scenario
+    // For now, we broadcast to all tabs like the default handler
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id) {
+        try {
+          await sendMessageToTab(tab.id, {
+            type: MESSAGE_TYPES.TOGGLE_FEATURE,
+            payload: { feature, enabled },
+            timestamp: Date.now(),
+          } as ExtensionMessage);
+        } catch {
+          // Tab may not have content script
+        }
+      }
+    }
+    return { success: true };
+  });
+
+  // Settings handlers (these override the default handlers in MessageRouter)
+  messageRouter.registerHandler(MESSAGE_TYPES.GET_SETTINGS, async () => {
+    return handleGetSettings();
+  });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.UPDATE_SETTINGS, async (message) => {
+    const { payload } = message;
+    return handleUpdateSettings(payload);
+  });
+
+  logger.log('[ServiceWorker] Message handlers registered');
 }
 
 /**
- * Handle incoming messages
+ * Set up message listeners - delegates to the message router
  */
-async function handleMessage(
-  message: ExtensionMessage,
-  sender: chrome.runtime.MessageSender
-): Promise<unknown> {
-  const { type, payload } = message;
-
-  logger.log(`[${EXTENSION_NAME}] Received message:`, type, 'from tab:', sender.tab?.id);
-
-  switch (type) {
-    // Tool management
-    case MESSAGE_TYPES.TOGGLE_TOOL:
-      return handleToggleTool(payload as { toolId: ToolId; enabled?: boolean; tabId?: number });
-
-    case MESSAGE_TYPES.GET_TOOL_STATE:
-      return handleGetToolState(payload as { toolId: ToolId; tabId?: number });
-
-    case MESSAGE_TYPES.SET_TOOL_STATE:
-      return handleSetToolState(payload as { toolId: ToolId; state: ToolState; tabId?: number });
-
-    case MESSAGE_TYPES.GET_ALL_TOOL_STATES:
-      return handleGetAllToolStates(payload as { tabId?: number } | undefined);
-
-    case MESSAGE_TYPES.TOOL_STATE_CHANGED:
-      await updateBadge();
-      return { acknowledged: true };
-
-    // Feature toggles
-    case MESSAGE_TYPES.TOGGLE_FEATURE:
-      return handleToggleFeature(payload as { feature: string; enabled: boolean }, sender.tab?.id);
-
-    // Settings
-    case MESSAGE_TYPES.GET_SETTINGS:
-      return handleGetSettings();
-
-    case MESSAGE_TYPES.UPDATE_SETTINGS:
-      return handleUpdateSettings(payload);
-
-    // Ping
-    case MESSAGE_TYPES.PING:
-      return { pong: true, timestamp: Date.now() };
-
-    default:
-      throw new Error(`Unknown message type: ${type}`);
-  }
+function setupMessageListeners(): void {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    return messageRouter.handleMessage(message as ExtensionMessage, sender, sendResponse);
+  });
 }
 
 /**
@@ -459,30 +474,6 @@ async function handleSetToolState(payload: {
  */
 async function handleGetAllToolStates(payload?: { tabId?: number }): Promise<ToolsState> {
   return getAllToolStates(payload?.tabId);
-}
-
-/**
- * Handle TOGGLE_FEATURE message
- */
-async function handleToggleFeature(
-  payload: { feature: string; enabled: boolean },
-  tabId?: number
-): Promise<{ success: boolean }> {
-  const { feature, enabled } = payload;
-
-  if (tabId) {
-    try {
-      await sendMessageToTab(tabId, {
-        type: MESSAGE_TYPES.TOGGLE_FEATURE,
-        payload: { feature, enabled },
-        timestamp: Date.now(),
-      } as ExtensionMessage);
-    } catch {
-      // Tab may not have content script
-    }
-  }
-
-  return { success: true };
 }
 
 /**
@@ -894,7 +885,6 @@ export {
   activateToolOnTab,
   getActiveToolIds,
   handleCommand,
-  handleMessage,
   state,
   toggleToolOnTab,
   updateBadge,

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FrontendDevHelper",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A powerful browser extension for frontend developers with essential dev tools, color picker, layout inspector, and more.",
   "author": "FrontendDevHelper Team",
   "homepage_url": "https://github.com/rejisterjack/frontend-dev-helper",
@@ -53,7 +53,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; object-src 'self'; connect-src 'none'"
   },
   "options_page": "options.html",
   "commands": {

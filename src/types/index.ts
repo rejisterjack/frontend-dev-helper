@@ -946,3 +946,35 @@ export interface VisualRegressionExportResponse {
 export interface VisualRegressionImportResponse {
   success: boolean;
 }
+
+// ============================================
+// Content Script Handler Types
+// ============================================
+
+/** Content script state interface */
+export interface ContentScriptState {
+  inspector: unknown;
+  measureTool: unknown;
+  gridOverlay: unknown;
+  isInspectorActive: boolean;
+  isColorPickerActive: boolean;
+  isMeasureToolActive: boolean;
+  isGridVisible: boolean;
+  isScreenshotStudioActive: boolean;
+  domOutlinerEnabled: boolean;
+  spacingVisualizerEnabled: boolean;
+  fontInspectorEnabled: boolean;
+  pixelRulerEnabled: boolean;
+  breakpointOverlayEnabled: boolean;
+  responsivePreviewEnabled: boolean;
+}
+
+/** Content handler function type */
+export type ContentHandler = (
+  payload: Record<string, unknown> | undefined,
+  state: ContentScriptState,
+  sendResponse: (response: Record<string, unknown>) => void
+) => boolean | undefined; // return true only if async
+
+/** Handler registry type */
+export type HandlerRegistry = Record<string, ContentHandler>;
