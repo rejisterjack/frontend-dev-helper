@@ -181,9 +181,13 @@ export class MessageRouter {
 
     // Update settings handler
     this.registerHandler('UPDATE_SETTINGS', async (message) => {
-      const { payload } = message;
+      const settingsSchema = z.record(z.unknown());
+      const validatedPayload = this.validatePayload(settingsSchema, message.payload);
+      if (!validatedPayload) {
+        throw new Error('Invalid UPDATE_SETTINGS payload');
+      }
       await chrome.storage.local.set({
-        [STORAGE_KEYS.SETTINGS]: payload,
+        [STORAGE_KEYS.SETTINGS]: validatedPayload,
       });
       return { success: true };
     });
@@ -224,8 +228,13 @@ export class MessageRouter {
     });
 
     // Copy to clipboard handler
+    const copyToClipboardSchema = z.object({ text: z.string() });
     this.registerHandler('COPY_TO_CLIPBOARD', async (message) => {
-      const { text } = message.payload as { text: string };
+      const validatedPayload = this.validatePayload(copyToClipboardSchema, message.payload);
+      if (!validatedPayload) {
+        throw new Error('Invalid COPY_TO_CLIPBOARD payload');
+      }
+      const { text } = validatedPayload;
 
       // Use offscreen document for clipboard operations in MV3
       // For now, return the text - actual copying happens in content/popup context
