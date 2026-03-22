@@ -1,8 +1,26 @@
 /**
  * Message Router
  *
- * Routes messages between different extension contexts
- * (popup, content script, devtools panel, background).
+ * Central message routing system for the FrontendDevHelper extension.
+ * Handles communication between popup, content scripts, devtools panel, and background service worker.
+ *
+ * Features:
+ * - Type-safe message routing with Zod validation
+ * - Automatic message validation and sanitization
+ * - Handler registration and lifecycle management
+ * - Error handling with detailed logging
+ *
+ * @module message-router
+ * @example
+ * ```typescript
+ * const router = new MessageRouter();
+ * router.initialize();
+ *
+ * // Register custom handler
+ * router.registerHandler('CUSTOM_MESSAGE', async (message) => {
+ *   return { success: true, data: 'processed' };
+ * });
+ * ```
  */
 
 import { STORAGE_KEYS } from '@/constants';
@@ -11,22 +29,9 @@ import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
 import { z } from 'zod';
 
-// Message validation schemas
-const messageTypeSchema = z.enum([
-  'PING', 'GET_SETTINGS', 'UPDATE_SETTINGS', 'GET_FEATURES', 'TOGGLE_FEATURE',
-  'GET_TOOL_STATE', 'SET_TOOL_STATE', 'TOGGLE_TOOL', 'GET_ALL_TOOL_STATES',
-  'SITE_REPORT_GENERATE', 'EXPORT_GENERATE_REPORT', 'PESTICIDE_ENABLE',
-  'PESTICIDE_DISABLE', 'PESTICIDE_TOGGLE', 'COLOR_PICKER_ENABLE',
-  'COLOR_PICKER_DISABLE', 'MEASURE_TOOL_ENABLE', 'MEASURE_TOOL_DISABLE',
-  'GRID_OVERLAY_ENABLE', 'GRID_OVERLAY_DISABLE', 'BREAKPOINT_ANALYZER_ENABLE',
-  'CONSOLE_PLUS_ENABLE', 'CONSOLE_PLUS_DISABLE', 'STORAGE_INSPECTOR_ENABLE',
-  'STORAGE_INSPECTOR_DISABLE', 'API_TESTER_ENABLE', 'API_TESTER_DISABLE',
-  'FORM_VALIDATOR_ENABLE', 'FORM_VALIDATOR_DISABLE', 'ACCESSIBILITY_CHECKER_ENABLE',
-  'ACCESSIBILITY_CHECKER_DISABLE', 'SEO_ANALYZER_ENABLE', 'SEO_ANALYZER_DISABLE',
-  'SCREENSHOT_TOOL_ENABLE', 'SCREENSHOT_TOOL_DISABLE', 'DESIGN_MODE_ENABLE',
-  'DESIGN_MODE_DISABLE', 'VISUAL_REGRESSION_ENABLE', 'VISUAL_REGRESSION_DISABLE',
-  'AI_SUGGESTIONS_ENABLE', 'AI_SUGGESTIONS_DISABLE'
-]);
+// ============================================
+// Zod Validation Schemas
+// ============================================
 
 const baseMessageSchema = z.object({
   type: z.string(),
@@ -46,22 +51,110 @@ const toolStatePayloadSchema = z.object({
   settings: z.record(z.unknown()).optional(),
 });
 
+const settingsSchema = z.record(z.unknown());
+
+const copyToClipboardSchema = z.object({
+  text: z.string().min(1).max(10000),
+});
+
+const generateReportSchema = z.object({
+  includePerformance: z.boolean().optional(),
+  includeAccessibility: z.boolean().optional(),
+  includeSeo: z.boolean().optional(),
+  includeSecurity: z.boolean().optional(),
+});
+
+const exportReportSchema = z.object({
+  format: z.enum(['json', 'html', 'pdf']),
+  data: z.unknown(),
+});
+
+const getToolStateSchema = z.object({
+  toolId: z.string().min(1).max(100),
+});
+
+const setToolStateSchema = z.object({
+  toolId: z.string().min(1).max(100),
+  state: z.record(z.unknown()),
+});
+
+// Message type enum for validation
+const messageTypeSchema = z.enum([
+  'PING',
+  'GET_SETTINGS',
+  'UPDATE_SETTINGS',
+  'GET_FEATURES',
+  'TOGGLE_FEATURE',
+  'GET_TOOL_STATE',
+  'SET_TOOL_STATE',
+  'TOGGLE_TOOL',
+  'GET_ALL_TOOL_STATES',
+  'COPY_TO_CLIPBOARD',
+  'SITE_REPORT_GENERATE',
+  'EXPORT_GENERATE_REPORT',
+]);
+
+// Union type for all message payloads
+type MessagePayloads = {
+  PING: undefined;
+  GET_SETTINGS: undefined;
+  UPDATE_SETTINGS: z.infer<typeof settingsSchema>;
+  GET_FEATURES: undefined;
+  TOGGLE_FEATURE: z.infer<typeof toggleFeaturePayloadSchema>;
+  GET_TOOL_STATE: z.infer<typeof getToolStateSchema>;
+  SET_TOOL_STATE: z.infer<typeof setToolStateSchema>;
+  TOGGLE_TOOL: z.infer<typeof toolStatePayloadSchema>;
+  GET_ALL_TOOL_STATES: undefined;
+  COPY_TO_CLIPBOARD: z.infer<typeof copyToClipboardSchema>;
+  SITE_REPORT_GENERATE: z.infer<typeof generateReportSchema>;
+  EXPORT_GENERATE_REPORT: z.infer<typeof exportReportSchema>;
+};
+
+/**
+ * MessageRouter class for handling extension message routing.
+ *
+ * Provides a centralized message handling system with:
+ * - Automatic message validation using Zod schemas
+ * - Handler registration and management
+ * - Error handling and logging
+ * - Type-safe message processing
+ */
 export class MessageRouter {
   private handlers: Map<string, (message: ExtensionMessage) => Promise<unknown>> = new Map();
 
+  /**
+   * Creates a new MessageRouter instance.
+   * Automatically registers default handlers for built-in message types.
+   */
   constructor() {
     this.registerDefaultHandlers();
   }
 
   /**
-   * Initialize the message router
+   * Initializes the message router.
+   * Logs initialization status for debugging purposes.
    */
   initialize(): void {
     logger.log('[MessageRouter] Initialized');
   }
 
   /**
-   * Handle incoming messages
+   * Handles incoming messages from any extension context.
+   *
+   * Validates the message format, routes to the appropriate handler,
+   * and manages the response lifecycle.
+   *
+   * @param message - The incoming message object
+   * @param sender - Information about the message sender
+   * @param sendResponse - Callback function to send response back
+   * @returns true to indicate async response handling
+   *
+   * @example
+   * ```typescript
+   * chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+   *   return router.handleMessage(msg, sender, sendResponse);
+   * });
+   * ```
    */
   handleMessage(
     message: ExtensionMessage,
@@ -120,28 +213,53 @@ export class MessageRouter {
   }
 
   /**
-   * Register a message handler
+   * Registers a message handler for a specific message type.
+   *
+   * @param type - The message type to handle
+   * @param handler - Async function to process messages of this type
+   *
+   * @example
+   * ```typescript
+   * router.registerHandler('CUSTOM_MESSAGE', async (message) => {
+   *   const data = await processData(message.payload);
+   *   return { success: true, data };
+   * });
+   * ```
    */
   registerHandler(type: string, handler: (message: ExtensionMessage) => Promise<unknown>): void {
     this.handlers.set(type, handler);
   }
 
   /**
-   * Unregister a message handler
+   * Unregisters a message handler.
+   *
+   * @param type - The message type to remove handler for
    */
   unregisterHandler(type: string): void {
     this.handlers.delete(type);
   }
 
   /**
-   * Get a registered handler
+   * Gets a registered message handler.
+   *
+   * @param type - The message type to get handler for
+   * @returns The handler function, or undefined if not found
    */
   getHandler(type: string): ((message: ExtensionMessage) => Promise<unknown>) | undefined {
     return this.handlers.get(type);
   }
 
   /**
-   * Validate incoming message structure
+   * Validates incoming message structure against Zod schema.
+   *
+   * Checks that the message has the required structure:
+   * - type: string (required)
+   * - id: string (optional)
+   * - timestamp: number (optional)
+   * - payload: unknown (optional)
+   *
+   * @param message - The message to validate
+   * @returns True if message is valid ExtensionMessage
    */
   private validateMessage(message: unknown): message is ExtensionMessage {
     const result = baseMessageSchema.safeParse(message);
@@ -153,7 +271,19 @@ export class MessageRouter {
   }
 
   /**
-   * Validate message payload against schema
+   * Validates message payload against a Zod schema.
+   *
+   * @typeParam T - The expected type of the payload
+   * @param schema - Zod schema to validate against
+   * @param payload - The payload to validate
+   * @returns Validated payload, or null if validation fails
+   *
+   * @example
+   * ```typescript
+   * const schema = z.object({ name: z.string() });
+   * const payload = this.validatePayload(schema, message.payload);
+   * if (!payload) throw new Error('Invalid payload');
+   * ```
    */
   private validatePayload<T>(schema: z.ZodSchema<T>, payload: unknown): T | null {
     const result = schema.safeParse(payload);

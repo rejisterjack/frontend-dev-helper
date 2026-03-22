@@ -145,8 +145,8 @@ const mockChrome = {
   },
 };
 
-// @ts-expect-error - Mocking chrome global
-global.chrome = mockChrome;
+// Mock chrome global for tests
+(global as unknown as { chrome: typeof mockChrome }).chrome = mockChrome;
 
 // ============================================
 // Browser API Mocks

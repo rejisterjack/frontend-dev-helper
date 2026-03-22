@@ -33,7 +33,15 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        manualChunks: {
+          // Split vendor code
+          'vendor-react': ['react', 'react-dom'],
+          // Split heavy utilities
+          'vendor-zod': ['zod'],
+          // Content script tools - will be split dynamically
+          'tools-core': ['./src/content/index.ts'],
+        },
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name?.split('.') ?? [];
           const ext = info[info.length - 1];
@@ -47,6 +55,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+    chunkSizeWarningLimit: 500,
     emptyOutDir: true,
     outDir: 'dist',
   },
