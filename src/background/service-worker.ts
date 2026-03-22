@@ -67,6 +67,7 @@ const COMMAND_TO_TOOL_ID: Record<string, ToolId> = {
   'toggle-pixel-ruler': TOOL_IDS.PIXEL_RULER,
   'toggle-breakpoint': TOOL_IDS.RESPONSIVE_BREAKPOINT,
   'toggle-inspector': TOOL_IDS.ELEMENT_INSPECTOR,
+  'open-command-palette': TOOL_IDS.COMMAND_PALETTE,
 };
 
 // ============================================

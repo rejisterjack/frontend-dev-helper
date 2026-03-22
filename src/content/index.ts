@@ -663,6 +663,9 @@ chrome.runtime.onMessage.addListener(
           commandPalette.toggle();
           sendResponse({ success: true, state: commandPalette.getState() });
           break;
+        case 'COMMAND_PALETTE_GET_STATE':
+          sendResponse({ success: true, state: commandPalette.getState() });
+          break;
 
         // Storage Inspector
         case 'STORAGE_INSPECTOR_ENABLE':
@@ -676,6 +679,13 @@ chrome.runtime.onMessage.addListener(
         case 'STORAGE_INSPECTOR_TOGGLE':
           storageInspector.toggle();
           sendResponse({ success: true, state: storageInspector.getState() });
+          break;
+        case 'STORAGE_INSPECTOR_GET_STATE':
+          sendResponse({ success: true, state: storageInspector.getState() });
+          break;
+        case 'STORAGE_INSPECTOR_REFRESH':
+          storageInspector.refresh();
+          sendResponse({ success: true });
           break;
 
         // Component Tree
@@ -691,6 +701,13 @@ chrome.runtime.onMessage.addListener(
           componentTree.toggle();
           sendResponse({ success: true, state: componentTree.getState() });
           break;
+        case 'COMPONENT_TREE_GET_STATE':
+          sendResponse({ success: true, state: componentTree.getState() });
+          break;
+        case 'COMPONENT_TREE_REFRESH':
+          componentTree.refresh();
+          sendResponse({ success: true });
+          break;
 
         // Visual Regression
         case 'VISUAL_REGRESSION_ENABLE':
@@ -704,6 +721,30 @@ chrome.runtime.onMessage.addListener(
         case 'VISUAL_REGRESSION_TOGGLE':
           visualRegression.toggle();
           sendResponse({ success: true, state: visualRegression.getState() });
+          break;
+        case 'VISUAL_REGRESSION_GET_STATE':
+          sendResponse({ success: true, state: visualRegression.getState() });
+          break;
+
+        // AI Suggestions
+        case 'AI_SUGGESTIONS_ENABLE':
+          aiSuggestions.enable();
+          sendResponse({ success: true, active: true });
+          break;
+        case 'AI_SUGGESTIONS_DISABLE':
+          aiSuggestions.disable();
+          sendResponse({ success: true, active: false });
+          break;
+        case 'AI_SUGGESTIONS_TOGGLE':
+          aiSuggestions.toggle();
+          sendResponse({ success: true, state: aiSuggestions.getState() });
+          break;
+        case 'AI_SUGGESTIONS_GET_STATE':
+          sendResponse({ success: true, state: aiSuggestions.getState() });
+          break;
+        case 'AI_SUGGESTIONS_RUN_ANALYSIS':
+          aiSuggestions.runAnalysis();
+          sendResponse({ success: true });
           break;
 
         // Get all states
