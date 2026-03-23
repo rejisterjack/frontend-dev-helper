@@ -207,16 +207,21 @@ export function setFilter(filter: string): void {
  * Detect which framework is being used
  */
 function detectFramework(): FrameworkType {
-  // Check each framework in order
-  if (isReactDetected()) {
-    state.framework = 'react';
-  } else if (isVueDetected()) {
-    state.framework = 'vue';
-  } else if (isAngularDetected()) {
-    state.framework = 'angular';
-  } else if (isSvelteDetected()) {
-    state.framework = 'svelte';
-  } else {
+  try {
+    // Check each framework in order
+    if (isReactDetected()) {
+      state.framework = 'react';
+    } else if (isVueDetected()) {
+      state.framework = 'vue';
+    } else if (isAngularDetected()) {
+      state.framework = 'angular';
+    } else if (isSvelteDetected()) {
+      state.framework = 'svelte';
+    } else {
+      state.framework = 'unknown';
+    }
+  } catch (error) {
+    logger.error('[ComponentTree] Framework detection failed:', error);
     state.framework = 'unknown';
   }
 

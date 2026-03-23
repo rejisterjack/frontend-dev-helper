@@ -160,10 +160,19 @@ function renderPanel(): void {
         </div>
       </div>
       <div id="${PREFIX}-suggestions">
-        ${analysisResult.suggestions
-          .slice(0, 5)
-          .map(
-            (s) => `
+        ${
+          analysisResult.suggestions.length === 0
+            ? `
+          <div class="${PREFIX}-empty">
+            <div class="${PREFIX}-empty-icon">🎉</div>
+            <div class="${PREFIX}-empty-title">No issues found</div>
+            <div class="${PREFIX}-empty-desc">This page looks great!</div>
+          </div>
+        `
+            : analysisResult.suggestions
+                .slice(0, 5)
+                .map(
+                  (s) => `
           <div class="${PREFIX}-suggestion ${PREFIX}-${s.priority}">
             <div class="${PREFIX}-suggestion-header">
               <span class="${PREFIX}-category">${escapeHtml(s.category)}</span>
@@ -174,8 +183,9 @@ function renderPanel(): void {
             ${s.autoFixable ? `<button class="${PREFIX}-fix-btn" data-id="${s.id}">🔧 Fix</button>` : ''}
           </div>
         `
-          )
-          .join('')}
+                )
+                .join('')
+        }
         ${
           analysisResult.suggestions.length > 5
             ? `
