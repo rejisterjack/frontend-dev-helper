@@ -69,7 +69,6 @@ export {
   activateToolOnTab,
   getActiveToolIds,
   handleCommand,
-  handleMessage,
   state,
   toggleToolOnTab,
   updateBadge,

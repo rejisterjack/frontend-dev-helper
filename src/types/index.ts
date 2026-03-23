@@ -209,45 +209,33 @@ export type ToolSettings =
 // Extension Settings
 // ============================================
 
-/** Feature toggles */
-export interface FeatureToggles {
-  domOutliner: boolean;
-  spacingVisualizer: boolean;
-  fontInspector: boolean;
-  colorPicker: boolean;
-  pixelRuler: boolean;
-  breakpointOverlay: boolean;
-  elementInspector: boolean;
-  gridOverlay: boolean;
-  measureTool: boolean;
-  cssScanner: boolean;
-  breakpointVisualizer: boolean;
-  networkAnalyzer: boolean;
-  // New "Best of the Best" Tools
-  commandPalette: boolean;
-  storageInspector: boolean;
-  focusDebugger: boolean;
-  formDebugger: boolean;
-  componentTree: boolean;
-  flameGraph: boolean;
-  visualRegression: boolean;
-  aiSuggestions: boolean;
-}
+/**
+ * Feature toggles - maps tool IDs to their enabled state
+ * Uses the canonical ToolId type from constants for type safety
+ * @deprecated Use ToolState from storage or TOOL_METADATA from constants instead
+ */
+export type FeatureToggles = Record<ToolId, boolean>;
 
-/** Default feature toggles */
+/**
+ * Default feature toggles
+ * @deprecated Use DEFAULT_SETTINGS.tools from constants/index.ts instead
+ */
 export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
+  // Core tools (22 tools matching TOOL_IDS)
   domOutliner: true,
   spacingVisualizer: true,
   fontInspector: true,
   colorPicker: true,
   pixelRuler: true,
   breakpointOverlay: true,
-  elementInspector: true,
-  gridOverlay: true,
-  measureTool: true,
-  cssScanner: false,
-  breakpointVisualizer: false,
+  cssInspector: true,
+  contrastChecker: true,
+  layoutVisualizer: true,
+  zIndexVisualizer: true,
+  techDetector: true,
   networkAnalyzer: false,
+  elementInspector: true,
+  measurementTool: true,
   // New "Best of the Best" Tools
   commandPalette: true,
   storageInspector: false,
@@ -257,6 +245,14 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   flameGraph: false,
   visualRegression: false,
   aiSuggestions: true,
+  // Additional tools (missing from original)
+  accessibilityAudit: false,
+  siteReport: false,
+  cssEditor: false,
+  screenshotStudio: false,
+  animationInspector: false,
+  responsivePreview: false,
+  designSystemValidator: false,
 };
 
 /** Extension settings */

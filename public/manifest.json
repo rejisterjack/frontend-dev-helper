@@ -37,7 +37,11 @@
     "storage",
     "scripting",
     "tabs",
-    "clipboardWrite"
+    "clipboardWrite",
+    "notifications"
+  ],
+  "optional_permissions": [
+    "cookies"
   ],
   "host_permissions": [
     "<all_urls>"

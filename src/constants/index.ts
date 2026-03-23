@@ -52,6 +52,15 @@ export const TOOL_IDS = {
   FLAME_GRAPH: 'flameGraph',
   VISUAL_REGRESSION: 'visualRegression',
   AI_SUGGESTIONS: 'aiSuggestions',
+
+  // Additional Tools (missing from TOOL_IDS)
+  ACCESSIBILITY_AUDIT: 'accessibilityAudit',
+  SITE_REPORT: 'siteReport',
+  CSS_EDITOR: 'cssEditor',
+  SCREENSHOT_STUDIO: 'screenshotStudio',
+  ANIMATION_INSPECTOR: 'animationInspector',
+  RESPONSIVE_PREVIEW: 'responsivePreview',
+  DESIGN_SYSTEM_VALIDATOR: 'designSystemValidator',
 } as const;
 
 /**
@@ -288,6 +297,71 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     category: 'utility',
     hasSettings: true,
     defaultEnabled: true,
+  },
+
+  // Additional Tools (missing from TOOL_METADATA)
+  [TOOL_IDS.ACCESSIBILITY_AUDIT]: {
+    id: TOOL_IDS.ACCESSIBILITY_AUDIT,
+    name: 'Accessibility Audit',
+    description: 'WCAG compliance checker with ARIA validation',
+    icon: 'accessibility',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.SITE_REPORT]: {
+    id: TOOL_IDS.SITE_REPORT,
+    name: 'Site Report Generator',
+    description: 'Comprehensive site analysis with scores & recommendations',
+    icon: 'file-bar-chart',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.CSS_EDITOR]: {
+    id: TOOL_IDS.CSS_EDITOR,
+    name: 'Live CSS Editor',
+    description: 'Edit CSS in real-time with live preview',
+    icon: 'code',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.SCREENSHOT_STUDIO]: {
+    id: TOOL_IDS.SCREENSHOT_STUDIO,
+    name: 'Screenshot Studio',
+    description: 'Capture and annotate screenshots',
+    icon: 'camera',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.ANIMATION_INSPECTOR]: {
+    id: TOOL_IDS.ANIMATION_INSPECTOR,
+    name: 'Animation Inspector',
+    description: 'Debug CSS animations and transitions',
+    icon: 'play-circle',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.RESPONSIVE_PREVIEW]: {
+    id: TOOL_IDS.RESPONSIVE_PREVIEW,
+    name: 'Responsive Preview',
+    description: 'Multi-device preview side-by-side',
+    icon: 'smartphone',
+    category: 'responsive',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: {
+    id: TOOL_IDS.DESIGN_SYSTEM_VALIDATOR,
+    name: 'Design System Validator',
+    description: 'Check consistency with design tokens',
+    icon: 'check-circle',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
   },
 };
 
@@ -635,6 +709,14 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.FLAME_GRAPH]: {},
   [TOOL_IDS.VISUAL_REGRESSION]: {},
   [TOOL_IDS.AI_SUGGESTIONS]: {},
+  // Additional Tools
+  [TOOL_IDS.ACCESSIBILITY_AUDIT]: {},
+  [TOOL_IDS.SITE_REPORT]: {},
+  [TOOL_IDS.CSS_EDITOR]: {},
+  [TOOL_IDS.SCREENSHOT_STUDIO]: {},
+  [TOOL_IDS.ANIMATION_INSPECTOR]: {},
+  [TOOL_IDS.RESPONSIVE_PREVIEW]: {},
+  [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: {},
 };
 
 /**
