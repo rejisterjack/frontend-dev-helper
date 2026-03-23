@@ -108,18 +108,18 @@ export class FeatureManager {
       isEnabled: () => this.state.elementInspector,
     });
 
-    // CSS Scanner
+    // CSS Scanner (maps to cssScanner ToolId)
     this.features.set('cssScanner', {
       enable: () => this.enableCSSScanner(),
       disable: () => this.disableCSSScanner(),
       isEnabled: () => this.state.cssScanner,
     });
 
-    // Breakpoint Visualizer
-    this.features.set('breakpointVisualizer', {
+    // Breakpoint Visualizer (maps to responsiveBreakpoint ToolId)
+    this.features.set('responsiveBreakpoint', {
       enable: () => this.enableBreakpointVisualizer(),
       disable: () => this.disableBreakpointVisualizer(),
-      isEnabled: () => this.state.breakpointVisualizer,
+      isEnabled: () => this.state.responsiveBreakpoint,
     });
 
     // Color Picker

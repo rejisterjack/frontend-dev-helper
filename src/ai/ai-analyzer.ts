@@ -131,12 +131,17 @@ async function runLLMAnalysis(): Promise<AISuggestion[] | null> {
     timestamp: Date.now(),
   });
 
-  if (!response?.success || !response.suggestions) {
+  if (!response?.success) {
+    return null;
+  }
+
+  const responseData = response.data as { suggestions?: LLMSuggestion[] } | undefined;
+  if (!responseData?.suggestions) {
     return null;
   }
 
   // Convert LLM suggestions to AISuggestion format
-  return (response.suggestions as LLMSuggestion[]).map(
+  return responseData.suggestions.map(
     (s, index): AISuggestion => ({
       id: `llm-${index}`,
       category: s.category,

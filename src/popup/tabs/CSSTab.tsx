@@ -21,28 +21,28 @@ export const CSSTab: React.FC<CSSTabProps> = ({ features, onToggleFeature }) => 
           label="CSS Scanner"
           description="Scan and analyze CSS"
           enabled={features?.cssScanner ?? false}
-          onChange={() => onToggleFeature('cssScanner')}
+          onChange={() => onToggleFeature('cssScanner' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Spacing Visualizer"
           description="Visualize element spacing and margins"
           enabled={features?.spacingVisualizer ?? false}
-          onChange={() => onToggleFeature('spacingVisualizer')}
+          onChange={() => onToggleFeature('spacingVisualizer' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Pixel Ruler"
           description="Measure pixel-precise dimensions"
           enabled={features?.pixelRuler ?? false}
-          onChange={() => onToggleFeature('pixelRuler')}
+          onChange={() => onToggleFeature('pixelRuler' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Measure Tool"
           description="Measure distances on the page"
-          enabled={features?.measureTool ?? false}
-          onChange={() => onToggleFeature('measureTool')}
+          enabled={features?.measurementTool ?? false}
+          onChange={() => onToggleFeature('measurementTool' as keyof FeatureToggles)}
         />
       </div>
 
@@ -54,15 +54,15 @@ export const CSSTab: React.FC<CSSTabProps> = ({ features, onToggleFeature }) => 
         <FeatureToggle
           label="Breakpoint Visualizer"
           description="Show current breakpoint"
-          enabled={features?.breakpointVisualizer ?? false}
-          onChange={() => onToggleFeature('breakpointVisualizer')}
+          enabled={features?.responsiveBreakpoint ?? false}
+          onChange={() => onToggleFeature('responsiveBreakpoint' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Breakpoint Overlay"
           description="Show active responsive breakpoints"
-          enabled={features?.breakpointOverlay ?? false}
-          onChange={() => onToggleFeature('breakpointOverlay')}
+          enabled={features?.responsiveBreakpoint ?? false}
+          onChange={() => onToggleFeature('responsiveBreakpoint' as keyof FeatureToggles)}
         />
       </div>
 

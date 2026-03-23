@@ -391,7 +391,7 @@ Components are wrapped in Error Boundaries to prevent crashes from taking down t
 
 - **Unit Tests**: `tests/unit/` - Jest/Vitest for utilities and hooks
 - **E2E Tests**: `tests/e2e/` - Playwright for extension flow testing
-- **Coverage Target**: 70%+
+- **Coverage Target**: 80%+ lines/functions/statements, 75%+ branches
 
 ## Build & Development
 

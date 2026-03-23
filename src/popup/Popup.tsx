@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Onboarding } from '../components';
 import { AISuggestions } from '../components/AISuggestions';
 import { ComponentTree } from '../components/ComponentTree';
 import { FlameGraph } from '../components/FlameGraph';
@@ -556,9 +555,6 @@ export const Popup: React.FC = () => {
 
   return (
     <>
-      {/* Onboarding Flow - shows on first install */}
-      <Onboarding onComplete={() => logger.log('Onboarding completed')} />
-
       <div className="w-[380px] bg-slate-900 text-slate-100 flex flex-col min-h-[200px] max-h-[600px]">
         {/* Header */}
         <header className="popup-header px-4 py-3 flex items-center justify-between shrink-0">
@@ -641,6 +637,7 @@ export const Popup: React.FC = () => {
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg
+                aria-hidden="true"
                 className="h-4 w-4 text-slate-500"
                 fill="none"
                 stroke="currentColor"
@@ -660,6 +657,7 @@ export const Popup: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tools..."
+              aria-label="Search tools"
               className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             />
             {searchQuery && (

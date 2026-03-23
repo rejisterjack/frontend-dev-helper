@@ -43,8 +43,6 @@ export default defineConfig(({ mode }) => ({
           'tools-core': ['./src/content/index.ts'],
         },
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name?.split('.') ?? [];
-          const ext = info[info.length - 1];
           if (/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(assetInfo.name ?? '')) {
             return 'assets/images/[name]-[hash][extname]';
           }

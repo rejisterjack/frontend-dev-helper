@@ -42,6 +42,8 @@ export const TOOL_IDS = {
   // Additional Tools (internal/helpers)
   ELEMENT_INSPECTOR: 'elementInspector',
   MEASUREMENT_TOOL: 'measurementTool',
+  GRID_OVERLAY: 'gridOverlay',
+  CSS_SCANNER: 'cssScanner',
 
   // New "Best of the Best" Tools
   COMMAND_PALETTE: 'commandPalette',
@@ -359,6 +361,24 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     name: 'Design System Validator',
     description: 'Check consistency with design tokens',
     icon: 'check-circle',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.GRID_OVERLAY]: {
+    id: TOOL_IDS.GRID_OVERLAY,
+    name: 'Grid Overlay',
+    description: 'Visualize grid and box model',
+    icon: 'grid',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.CSS_SCANNER]: {
+    id: TOOL_IDS.CSS_SCANNER,
+    name: 'CSS Scanner',
+    description: 'Scan and analyze CSS issues',
+    icon: 'scan',
     category: 'css',
     hasSettings: true,
     defaultEnabled: false,
@@ -717,6 +737,8 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.ANIMATION_INSPECTOR]: {},
   [TOOL_IDS.RESPONSIVE_PREVIEW]: {},
   [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: {},
+  [TOOL_IDS.GRID_OVERLAY]: {},
+  [TOOL_IDS.CSS_SCANNER]: {},
 };
 
 /**

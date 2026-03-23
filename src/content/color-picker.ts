@@ -343,7 +343,14 @@ export class ColorPicker {
     const colors = new Map<string, number>();
     const elements = document.querySelectorAll('*');
 
-    elements.forEach((el) => {
+    // Performance: Sample elements on large DOMs to avoid freezing the UI
+    // Cap at 500 elements, sample every Nth element for larger DOMs
+    const maxElements = 500;
+    const totalElements = elements.length;
+    const samplingRate = totalElements > maxElements ? Math.ceil(totalElements / maxElements) : 1;
+
+    for (let i = 0; i < totalElements; i += samplingRate) {
+      const el = elements[i];
       if (el instanceof HTMLElement) {
         const computed = window.getComputedStyle(el);
 
@@ -369,7 +376,7 @@ export class ColorPicker {
           }
         });
       }
-    });
+    }
 
     return colors;
   }

@@ -221,13 +221,13 @@ export type FeatureToggles = Record<ToolId, boolean>;
  * @deprecated Use DEFAULT_SETTINGS.tools from constants/index.ts instead
  */
 export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
-  // Core tools (22 tools matching TOOL_IDS)
+  // Core tools (matching TOOL_IDS)
   domOutliner: true,
   spacingVisualizer: true,
   fontInspector: true,
   colorPicker: true,
   pixelRuler: true,
-  breakpointOverlay: true,
+  responsiveBreakpoint: true,
   cssInspector: true,
   contrastChecker: true,
   layoutVisualizer: true,
@@ -236,6 +236,8 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   networkAnalyzer: false,
   elementInspector: true,
   measurementTool: true,
+  gridOverlay: false,
+  cssScanner: false,
   // New "Best of the Best" Tools
   commandPalette: true,
   storageInspector: false,
@@ -245,7 +247,7 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   flameGraph: false,
   visualRegression: false,
   aiSuggestions: true,
-  // Additional tools (missing from original)
+  // Additional tools
   accessibilityAudit: false,
   siteReport: false,
   cssEditor: false,

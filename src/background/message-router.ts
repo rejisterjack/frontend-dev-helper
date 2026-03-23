@@ -301,9 +301,14 @@ export class MessageRouter {
       }
       const { text } = validatedPayload;
 
-      // Use offscreen document for clipboard operations in MV3
-      // For now, return the text - actual copying happens in content/popup context
-      return { text, copied: true };
+      // MV3 requires Offscreen Document for clipboard write from service worker
+      // This is not yet implemented - clipboard operations should be done in content/popup context
+      // See: https://developer.chrome.com/docs/extensions/reference/api/offscreen
+      return {
+        text,
+        copied: false,
+        error: 'Clipboard write not implemented in service worker. Use content/popup context.',
+      };
     });
   }
 }

@@ -10,14 +10,9 @@
  * - Badge updates
  */
 
+import { z } from 'zod';
 import type { ToolId } from '@/constants';
-import {
-  DEFAULT_SETTINGS,
-  MESSAGE_TYPES,
-  STORAGE_KEYS,
-  TOOL_IDS,
-  TOOL_METADATA,
-} from '@/constants';
+import { DEFAULT_SETTINGS, MESSAGE_TYPES, STORAGE_KEYS, TOOL_IDS } from '@/constants';
 import type { LLMConfig, LLMPageContext, ToolState, ToolsState } from '@/types';
 import {
   broadcastMessage,
@@ -60,6 +55,38 @@ const COMMAND_TO_TOOL_ID: Record<string, ToolId> = {
   'toggle-inspector': TOOL_IDS.ELEMENT_INSPECTOR,
   'open-command-palette': TOOL_IDS.COMMAND_PALETTE,
 };
+
+// ============================================
+// Payload Validation Schemas
+// ============================================
+
+const toolIdSchema = z.enum(Object.values(TOOL_IDS) as [string, ...string[]]);
+
+const toggleToolPayloadSchema = z.object({
+  toolId: toolIdSchema,
+  enabled: z.boolean().optional(),
+  tabId: z.number().optional(),
+});
+
+const getToolStatePayloadSchema = z.object({
+  toolId: toolIdSchema,
+  tabId: z.number().optional(),
+});
+
+const setToolStatePayloadSchema = z.object({
+  toolId: toolIdSchema,
+  state: z.object({
+    enabled: z.boolean(),
+    settings: z.record(z.string(), z.unknown()).optional(),
+  }),
+  tabId: z.number().optional(),
+});
+
+const getAllToolStatesPayloadSchema = z
+  .object({
+    tabId: z.number().optional(),
+  })
+  .optional();
 
 // ============================================
 // State Management
@@ -173,6 +200,9 @@ async function handleInstalled(details: chrome.runtime.InstalledDetails): Promis
   } else if (details.reason === 'chrome_update') {
     logger.log(`[${EXTENSION_NAME}] Chrome updated`);
   }
+
+  // Clean up old/orphaned storage after install/update
+  await cleanupOldStorage();
 }
 
 /**
@@ -205,53 +235,46 @@ async function initializeDefaultSettings(): Promise<void> {
  * Register message handlers with the router
  */
 function registerMessageHandlers(): void {
-  // Tool management handlers
+  // Tool management handlers with Zod validation
   messageRouter.registerHandler(MESSAGE_TYPES.TOGGLE_TOOL, async (message) => {
-    const { payload } = message;
-    return handleToggleTool(payload as { toolId: ToolId; enabled?: boolean; tabId?: number });
+    const validatedPayload = toggleToolPayloadSchema.safeParse(message.payload);
+    if (!validatedPayload.success) {
+      throw new Error(`Invalid TOGGLE_TOOL payload: ${validatedPayload.error.message}`);
+    }
+    return handleToggleTool(
+      validatedPayload.data as { toolId: ToolId; enabled?: boolean; tabId?: number }
+    );
   });
 
   messageRouter.registerHandler(MESSAGE_TYPES.GET_TOOL_STATE, async (message) => {
-    const { payload } = message;
-    return handleGetToolState(payload as { toolId: ToolId; tabId?: number });
+    const validatedPayload = getToolStatePayloadSchema.safeParse(message.payload);
+    if (!validatedPayload.success) {
+      throw new Error(`Invalid GET_TOOL_STATE payload: ${validatedPayload.error.message}`);
+    }
+    return handleGetToolState(validatedPayload.data as { toolId: ToolId; tabId?: number });
   });
 
   messageRouter.registerHandler(MESSAGE_TYPES.SET_TOOL_STATE, async (message) => {
-    const { payload } = message;
-    return handleSetToolState(payload as { toolId: ToolId; state: ToolState; tabId?: number });
+    const validatedPayload = setToolStatePayloadSchema.safeParse(message.payload);
+    if (!validatedPayload.success) {
+      throw new Error(`Invalid SET_TOOL_STATE payload: ${validatedPayload.error.message}`);
+    }
+    return handleSetToolState(
+      validatedPayload.data as { toolId: ToolId; state: ToolState; tabId?: number }
+    );
   });
 
   messageRouter.registerHandler(MESSAGE_TYPES.GET_ALL_TOOL_STATES, async (message) => {
-    const { payload } = message;
-    return handleGetAllToolStates(payload as { tabId?: number } | undefined);
+    const validatedPayload = getAllToolStatesPayloadSchema.safeParse(message.payload);
+    if (!validatedPayload.success) {
+      throw new Error(`Invalid GET_ALL_TOOL_STATES payload: ${validatedPayload.error.message}`);
+    }
+    return handleGetAllToolStates(validatedPayload.data);
   });
 
   messageRouter.registerHandler(MESSAGE_TYPES.TOOL_STATE_CHANGED, async () => {
     await updateBadge();
     return { acknowledged: true };
-  });
-
-  // Feature toggle handler (overrides default to support tab-specific routing)
-  messageRouter.registerHandler(MESSAGE_TYPES.TOGGLE_FEATURE, async (message) => {
-    const { payload } = message;
-    const { feature, enabled } = payload as { feature: string; enabled: boolean };
-    // Note: tabId would come from sender in a real scenario
-    // For now, we broadcast to all tabs like the default handler
-    const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      if (tab.id) {
-        try {
-          await sendMessageToTab(tab.id, {
-            type: MESSAGE_TYPES.TOGGLE_FEATURE,
-            payload: { feature, enabled },
-            timestamp: Date.now(),
-          } as ExtensionMessage);
-        } catch {
-          // Tab may not have content script
-        }
-      }
-    }
-    return { success: true };
   });
 
   // Settings handlers (these override the default handlers in MessageRouter)
@@ -547,24 +570,6 @@ async function handleStorageChanges(
 // ============================================
 
 /**
- * Activate a tool on a specific tab
- */
-async function activateToolOnTab(toolId: ToolId, tabId: number): Promise<void> {
-  await setToolState(toolId, { enabled: true, settings: {} }, tabId);
-  await broadcastToolStateChange(toolId, true, tabId);
-  await updateBadge(tabId);
-
-  // Show notification
-  const meta = TOOL_METADATA[toolId];
-  if (meta) {
-    await showNotification(
-      `${meta.name} Activated`,
-      `The ${meta.name} tool is now active on this tab.`
-    );
-  }
-}
-
-/**
  * Toggle a tool on a specific tab
  */
 async function toggleToolOnTab(toolId: ToolId, tabId: number): Promise<boolean> {
@@ -726,11 +731,6 @@ async function cleanupOldStorage(): Promise<void> {
   }
 }
 
-// Run cleanup on activation
-chrome.runtime.onInstalled.addListener(() => {
-  cleanupOldStorage();
-});
-
 // ============================================
 // Keep Alive
 // ============================================
@@ -754,4 +754,4 @@ chrome.runtime.onConnect.addListener((port) => {
 initialize();
 
 // Export for testing
-export { activateToolOnTab, getActiveToolIds, handleCommand, state, toggleToolOnTab, updateBadge };
+export { getActiveToolIds, handleCommand, state, toggleToolOnTab, updateBadge };

@@ -13,12 +13,17 @@ interface InspectorTabProps {
 
 export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFeature }) => {
   const handleInspectClick = async (): Promise<void> => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab.id) {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id) return;
+
       await chrome.tabs.sendMessage(tab.id, {
         type: 'TOGGLE_INSPECTOR',
       });
       window.close();
+    } catch (error) {
+      // Silently fail if content script not available (e.g., on chrome:// pages)
+      console.error('Failed to toggle inspector:', error);
     }
   };
 
@@ -58,28 +63,28 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
           label="Element Inspector"
           description="Hover to inspect elements"
           enabled={features?.elementInspector ?? false}
-          onChange={() => onToggleFeature('elementInspector')}
+          onChange={() => onToggleFeature('elementInspector' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="CSS Scanner"
           description="Scan and highlight CSS issues"
           enabled={features?.cssScanner ?? false}
-          onChange={() => onToggleFeature('cssScanner')}
+          onChange={() => onToggleFeature('cssScanner' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Grid Overlay"
           description="Visualize grid and box model"
           enabled={features?.gridOverlay ?? false}
-          onChange={() => onToggleFeature('gridOverlay')}
+          onChange={() => onToggleFeature('gridOverlay' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Measure Tool"
           description="Measure distances on the page"
-          enabled={features?.measureTool ?? false}
-          onChange={() => onToggleFeature('measureTool')}
+          enabled={features?.measurementTool ?? false}
+          onChange={() => onToggleFeature('measurementTool' as keyof FeatureToggles)}
         />
       </div>
 

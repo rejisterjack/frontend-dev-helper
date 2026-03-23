@@ -441,7 +441,7 @@ const WelcomeStep: React.FC = () => (
     {/* Feature highlights */}
     <div className="flex items-center gap-4 text-xs text-slate-500">
       <span className="flex items-center gap-1">
-        <span className="text-emerald-400">●</span> 11 Powerful Tools
+        <span className="text-emerald-400">●</span> 27 Powerful Tools
       </span>
       <span className="flex items-center gap-1">
         <span className="text-blue-400">●</span> Keyboard Shortcuts
@@ -456,7 +456,7 @@ const WelcomeStep: React.FC = () => (
 /** Step 2: Tools Overview Grid */
 const ToolsStep: React.FC = () => (
   <div className="flex-1 flex flex-col animate-fade-in">
-    <h3 className="text-lg font-semibold text-white mb-1">11 Powerful Tools</h3>
+    <h3 className="text-lg font-semibold text-white mb-1">27 Powerful Tools</h3>
     <p className="text-slate-400 text-xs mb-4">
       Everything you need to debug and inspect frontend code
     </p>
