@@ -4,10 +4,7 @@
  * Tests for the AI analysis engine and suggestion system.
  */
 
-import { describe, expect, it, vi } from 'vitest';
-
-// Ensure vi is used (required for vitest mocking)
-void vi;
+import { describe, expect, it } from 'vitest';
 import {
   analyzeAccessibility,
   analyzeBestPractices,

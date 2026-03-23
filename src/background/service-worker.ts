@@ -36,8 +36,8 @@ import {
 } from '@/utils/storage';
 import { logger } from '../utils/logger';
 import { ContextMenuManager } from './context-menu';
-import { MessageRouter } from './message-router';
 import { llmService } from './llm-service';
+import { MessageRouter } from './message-router';
 
 // ============================================
 // Constants

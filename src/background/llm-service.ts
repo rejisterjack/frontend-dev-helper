@@ -11,7 +11,14 @@
  * - Caching for repeated analysis of same pages
  */
 
-import type { LLMConfig, LLMMessage, LLMPageContext, LLMRequest, LLMResponse, LLMSuggestion } from '@/types';
+import type {
+  LLMConfig,
+  LLMMessage,
+  LLMPageContext,
+  LLMRequest,
+  LLMResponse,
+  LLMSuggestion,
+} from '@/types';
 import { DEFAULT_LLM_CONFIG } from '@/types';
 import { logger } from '@/utils/logger';
 
@@ -102,7 +109,7 @@ export async function sendRequest(messages: LLMMessage[]): Promise<LLMResponse |
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
         'HTTP-Referer': 'https://github.com/rejisterjack/frontend-dev-helper',
         'X-Title': 'FrontendDevHelper',
       },
@@ -199,10 +206,9 @@ Provide your analysis as JSON.`,
     if (!content) return null;
 
     // Extract JSON from the response (handle markdown code blocks)
-    const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || 
-                      content.match(/```\n?([\s\S]*?)\n?```/) || 
-                      [null, content];
-    
+    const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) ||
+      content.match(/```\n?([\s\S]*?)\n?```/) || [null, content];
+
     const jsonStr = jsonMatch[1] || content;
     const parsed = JSON.parse(jsonStr.trim());
 
@@ -254,7 +260,8 @@ export async function analyzeElement(
   const messages: LLMMessage[] = [
     {
       role: 'system',
-      content: 'You are a frontend expert providing quick, actionable feedback on HTML elements. Be concise (1-2 sentences).',
+      content:
+        'You are a frontend expert providing quick, actionable feedback on HTML elements. Be concise (1-2 sentences).',
     },
     {
       role: 'user',

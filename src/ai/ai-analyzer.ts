@@ -5,9 +5,15 @@
  * Analyzes the page for accessibility, performance, SEO, and best practice issues.
  */
 
-import type { AIAnalysisResult, AISuggestion, AISuggestionCategory, LLMPageContext, LLMSuggestion } from '@/types';
+import type {
+  AIAnalysisResult,
+  AISuggestion,
+  AISuggestionCategory,
+  LLMPageContext,
+  LLMSuggestion,
+} from '@/types';
+import { hasVeryLowContrast } from '@/utils/color-parser';
 import { logger } from '@/utils/logger';
-import { parseColor, hasVeryLowContrast, getContrastRatio } from '@/utils/color-parser';
 import { sendMessage } from '@/utils/messaging';
 
 // ============================================
@@ -104,8 +110,10 @@ async function runLLMAnalysis(): Promise<AISuggestion[] | null> {
     url: window.location.href,
     title: document.title,
     meta: {
-      description: document.querySelector('meta[name="description"]')?.getAttribute('content') || undefined,
-      viewport: document.querySelector('meta[name="viewport"]')?.getAttribute('content') || undefined,
+      description:
+        document.querySelector('meta[name="description"]')?.getAttribute('content') || undefined,
+      viewport:
+        document.querySelector('meta[name="viewport"]')?.getAttribute('content') || undefined,
     },
     techStack: detectTechStack(),
     domStats: {
@@ -162,7 +170,11 @@ function detectTechStack(): string[] {
   // Check for common libraries
   if ((window as unknown as Record<string, unknown>).jQuery) tech.push('jQuery');
   if ((window as unknown as Record<string, unknown>).$) tech.push('jQuery');
-  if ((window as unknown as Record<string, unknown>)._ || (window as unknown as Record<string, unknown>).lodash) tech.push('Lodash');
+  if (
+    (window as unknown as Record<string, unknown>)._ ||
+    (window as unknown as Record<string, unknown>).lodash
+  )
+    tech.push('Lodash');
   if ((window as unknown as Record<string, unknown>).moment) tech.push('Moment.js');
   if ((window as unknown as Record<string, unknown>).gsap) tech.push('GSAP');
 

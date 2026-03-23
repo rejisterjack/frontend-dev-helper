@@ -5,17 +5,17 @@
     "name": "All JS assets"
   },
   {
-    "path": "dist/assets/*.css",
+    "path": "dist/assets/styles/*.css",
     "limit": "100 KB",
     "name": "All CSS assets"
   },
   {
-    "path": "dist/assets/service-worker.ts.js",
+    "path": "dist/assets/service-worker.ts-*.js",
     "limit": "50 KB",
     "name": "Service Worker"
   },
   {
-    "path": "dist/assets/index.ts.js",
+    "path": "dist/assets/index.ts-*.js",
     "limit": "600 KB",
     "name": "Content Script"
   },

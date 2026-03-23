@@ -11,6 +11,58 @@ import { ToolCard } from './components/ToolCard';
 import './popup.css';
 
 // ============================================
+// Message Type Mapping (Unified System)
+// ============================================
+
+/**
+ * Maps ToolType to the message prefix used by content script handlers.
+ * This creates the unified message system - the popup sends messages
+ * that match what the handler registry expects.
+ */
+const TOOL_MESSAGE_PREFIXES: Record<ToolType, string> = {
+  [ToolType.DOM_OUTLINER]: 'PESTICIDE',
+  [ToolType.SPACING_VISUALIZER]: 'SPACING',
+  [ToolType.FONT_INSPECTOR]: 'FONT_INSPECTOR',
+  [ToolType.COLOR_PICKER]: 'COLOR_PICKER',
+  [ToolType.PIXEL_RULER]: 'PIXEL_RULER',
+  [ToolType.RESPONSIVE_BREAKPOINT]: 'BREAKPOINT_OVERLAY',
+  [ToolType.CSS_INSPECTOR]: 'CSS_INSPECTOR',
+  [ToolType.CSS_EDITOR]: 'CSS_EDITOR',
+  [ToolType.CONTRAST_CHECKER]: 'CONTRAST_CHECKER',
+  [ToolType.LAYOUT_VISUALIZER]: 'LAYOUT_VISUALIZER',
+  [ToolType.ZINDEX_VISUALIZER]: 'ZINDEX_VISUALIZER',
+  [ToolType.TECH_DETECTOR]: 'TECH_DETECTOR',
+  [ToolType.ACCESSIBILITY_AUDIT]: 'ACCESSIBILITY_AUDIT',
+  [ToolType.SITE_REPORT]: 'SITE_REPORT',
+  [ToolType.SCREENSHOT_STUDIO]: 'SCREENSHOT_STUDIO',
+  [ToolType.ANIMATION_INSPECTOR]: 'ANIMATION_INSPECTOR',
+  [ToolType.RESPONSIVE_PREVIEW]: 'RESPONSIVE_PREVIEW',
+  [ToolType.DESIGN_SYSTEM_VALIDATOR]: 'DESIGN_SYSTEM_VALIDATOR',
+  [ToolType.NETWORK_ANALYZER]: 'NETWORK_ANALYZER',
+  [ToolType.COMMAND_PALETTE]: 'COMMAND_PALETTE',
+  [ToolType.STORAGE_INSPECTOR]: 'STORAGE_INSPECTOR',
+  [ToolType.FOCUS_DEBUGGER]: 'FOCUS_DEBUGGER',
+  [ToolType.FORM_DEBUGGER]: 'FORM_DEBUGGER',
+  [ToolType.COMPONENT_TREE]: 'COMPONENT_TREE',
+  [ToolType.FLAME_GRAPH]: 'FLAME_GRAPH',
+  [ToolType.VISUAL_REGRESSION]: 'VISUAL_REGRESSION',
+  [ToolType.AI_SUGGESTIONS]: 'AI_SUGGESTIONS',
+};
+
+/**
+ * Generates the message type for a tool action.
+ * This replaces the legacy hardcoded TOOL_MESSAGE_MAP.
+ */
+function getToolMessageType(tool: ToolType, action: 'ENABLE' | 'DISABLE'): string {
+  const prefix = TOOL_MESSAGE_PREFIXES[tool];
+  if (!prefix) {
+    logger.warn(`Unknown tool type: ${tool}`);
+    return '';
+  }
+  return `${prefix}_${action}`;
+}
+
+// ============================================
 // FrontendDevHelper - Main Popup Component
 // ============================================
 
@@ -238,76 +290,6 @@ const TOOLS: ToolMeta[] = [
 /** Extension version */
 const EXTENSION_VERSION = '1.2.0';
 
-/** Tool message type mapping for enable/disable operations */
-const TOOL_MESSAGE_MAP: Record<ToolType, { enable: string; disable: string }> = {
-  [ToolType.DOM_OUTLINER]: { enable: 'PESTICIDE_ENABLE', disable: 'PESTICIDE_DISABLE' },
-  [ToolType.SPACING_VISUALIZER]: { enable: 'SPACING_ENABLE', disable: 'SPACING_DISABLE' },
-  [ToolType.FONT_INSPECTOR]: { enable: 'FONT_INSPECTOR_ENABLE', disable: 'FONT_INSPECTOR_DISABLE' },
-  [ToolType.COLOR_PICKER]: { enable: 'COLOR_PICKER_ENABLE', disable: 'COLOR_PICKER_DISABLE' },
-  [ToolType.PIXEL_RULER]: { enable: 'PIXEL_RULER_ENABLE', disable: 'PIXEL_RULER_DISABLE' },
-  [ToolType.RESPONSIVE_BREAKPOINT]: {
-    enable: 'BREAKPOINT_OVERLAY_ENABLE',
-    disable: 'BREAKPOINT_OVERLAY_DISABLE',
-  },
-  [ToolType.CSS_INSPECTOR]: { enable: 'CSS_INSPECTOR_ENABLE', disable: 'CSS_INSPECTOR_DISABLE' },
-  [ToolType.CONTRAST_CHECKER]: {
-    enable: 'CONTRAST_CHECKER_ENABLE',
-    disable: 'CONTRAST_CHECKER_DISABLE',
-  },
-  [ToolType.LAYOUT_VISUALIZER]: {
-    enable: 'LAYOUT_VISUALIZER_ENABLE',
-    disable: 'LAYOUT_VISUALIZER_DISABLE',
-  },
-  [ToolType.ZINDEX_VISUALIZER]: {
-    enable: 'ZINDEX_VISUALIZER_ENABLE',
-    disable: 'ZINDEX_VISUALIZER_DISABLE',
-  },
-  [ToolType.TECH_DETECTOR]: { enable: 'TECH_DETECTOR_ENABLE', disable: 'TECH_DETECTOR_DISABLE' },
-  [ToolType.ACCESSIBILITY_AUDIT]: {
-    enable: 'ACCESSIBILITY_AUDIT_ENABLE',
-    disable: 'ACCESSIBILITY_AUDIT_DISABLE',
-  },
-  [ToolType.SITE_REPORT]: { enable: 'SITE_REPORT_ENABLE', disable: 'SITE_REPORT_DISABLE' },
-  [ToolType.CSS_EDITOR]: { enable: 'CSS_EDITOR_ENABLE', disable: 'CSS_EDITOR_DISABLE' },
-  [ToolType.SCREENSHOT_STUDIO]: {
-    enable: 'SCREENSHOT_STUDIO_ENABLE',
-    disable: 'SCREENSHOT_STUDIO_DISABLE',
-  },
-  [ToolType.ANIMATION_INSPECTOR]: {
-    enable: 'ANIMATION_INSPECTOR_ENABLE',
-    disable: 'ANIMATION_INSPECTOR_DISABLE',
-  },
-  [ToolType.RESPONSIVE_PREVIEW]: {
-    enable: 'RESPONSIVE_PREVIEW_ENABLE',
-    disable: 'RESPONSIVE_PREVIEW_DISABLE',
-  },
-  [ToolType.DESIGN_SYSTEM_VALIDATOR]: {
-    enable: 'DESIGN_SYSTEM_VALIDATOR_ENABLE',
-    disable: 'DESIGN_SYSTEM_VALIDATOR_DISABLE',
-  },
-  [ToolType.NETWORK_ANALYZER]: {
-    enable: 'NETWORK_ANALYZER_ENABLE',
-    disable: 'NETWORK_ANALYZER_DISABLE',
-  },
-  [ToolType.COMMAND_PALETTE]: {
-    enable: 'COMMAND_PALETTE_ENABLE',
-    disable: 'COMMAND_PALETTE_DISABLE',
-  },
-  [ToolType.STORAGE_INSPECTOR]: {
-    enable: 'STORAGE_INSPECTOR_ENABLE',
-    disable: 'STORAGE_INSPECTOR_DISABLE',
-  },
-  [ToolType.FOCUS_DEBUGGER]: { enable: 'FOCUS_DEBUGGER_ENABLE', disable: 'FOCUS_DEBUGGER_DISABLE' },
-  [ToolType.FORM_DEBUGGER]: { enable: 'FORM_DEBUGGER_ENABLE', disable: 'FORM_DEBUGGER_DISABLE' },
-  [ToolType.COMPONENT_TREE]: { enable: 'COMPONENT_TREE_ENABLE', disable: 'COMPONENT_TREE_DISABLE' },
-  [ToolType.FLAME_GRAPH]: { enable: 'FLAME_GRAPH_ENABLE', disable: 'FLAME_GRAPH_DISABLE' },
-  [ToolType.VISUAL_REGRESSION]: {
-    enable: 'VISUAL_REGRESSION_ENABLE',
-    disable: 'VISUAL_REGRESSION_DISABLE',
-  },
-  [ToolType.AI_SUGGESTIONS]: { enable: 'AI_SUGGESTIONS_ENABLE', disable: 'AI_SUGGESTIONS_DISABLE' },
-};
-
 export const Popup: React.FC = () => {
   // Tool states
   const [toolsState, setToolsState] = useState<ToolsState>({
@@ -427,6 +409,8 @@ export const Popup: React.FC = () => {
 
   /**
    * Toggle a tool on/off
+   * Uses the unified message system - generates message types dynamically
+   * from TOOL_MESSAGE_PREFIXES instead of hardcoded mappings.
    */
   const handleToggleTool = useCallback(async (tool: ToolType, enabled: boolean) => {
     setToolsState((prev) => ({
@@ -438,10 +422,9 @@ export const Popup: React.FC = () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
 
-    const messages = TOOL_MESSAGE_MAP[tool];
-    if (!messages) return;
+    const messageType = getToolMessageType(tool, enabled ? 'ENABLE' : 'DISABLE');
+    if (!messageType) return;
 
-    const messageType = enabled ? messages.enable : messages.disable;
     try {
       await chrome.tabs.sendMessage(tab.id, { type: messageType });
     } catch (err) {
@@ -513,39 +496,13 @@ export const Popup: React.FC = () => {
     setToolsState(resetState);
     setShowResetConfirm(false);
 
-    // Send disable messages to all tools
+    // Send disable messages to all tools using unified message system
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      const disableMessages = [
-        'PESTICIDE_DISABLE',
-        'SPACING_DISABLE',
-        'FONT_INSPECTOR_DISABLE',
-        'COLOR_PICKER_DISABLE',
-        'PIXEL_RULER_DISABLE',
-        'BREAKPOINT_OVERLAY_DISABLE',
-        'CSS_INSPECTOR_DISABLE',
-        'CONTRAST_CHECKER_DISABLE',
-        'LAYOUT_VISUALIZER_DISABLE',
-        'ZINDEX_VISUALIZER_DISABLE',
-        'TECH_DETECTOR_DISABLE',
-        'ACCESSIBILITY_AUDIT_DISABLE',
-        'SITE_REPORT_DISABLE',
-        'CSS_EDITOR_DISABLE',
-        'SCREENSHOT_STUDIO_DISABLE',
-        'ANIMATION_INSPECTOR_DISABLE',
-        'RESPONSIVE_PREVIEW_DISABLE',
-        'DESIGN_SYSTEM_VALIDATOR_DISABLE',
-        'NETWORK_ANALYZER_DISABLE',
-        // New "Best of the Best" Tools
-        'COMMAND_PALETTE_DISABLE',
-        'STORAGE_INSPECTOR_DISABLE',
-        'FOCUS_DEBUGGER_DISABLE',
-        'FORM_DEBUGGER_DISABLE',
-        'COMPONENT_TREE_DISABLE',
-        'FLAME_GRAPH_DISABLE',
-        'VISUAL_REGRESSION_DISABLE',
-        'AI_SUGGESTIONS_DISABLE',
-      ];
+      // Generate disable messages dynamically from TOOL_MESSAGE_PREFIXES
+      const disableMessages = Object.values(ToolType)
+        .map((tool) => getToolMessageType(tool, 'DISABLE'))
+        .filter(Boolean);
 
       for (const messageType of disableMessages) {
         try {

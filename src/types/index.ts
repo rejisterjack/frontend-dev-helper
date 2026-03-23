@@ -930,10 +930,26 @@ export const DEFAULT_LLM_CONFIG: LLMConfig = {
 
 /** Available OpenRouter models (free tier) */
 export const OPENROUTER_FREE_MODELS = [
-  { id: 'openrouter/quasar-alpha', name: 'Quasar Alpha (Free)', description: 'OpenRouter\'s free model' },
-  { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (Free)', description: 'Google\'s fast multimodal model' },
-  { id: 'deepseek/deepseek-chat:free', name: 'DeepSeek V3 (Free)', description: 'DeepSeek\'s chat model' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Free)', description: 'Meta\'s large instruction model' },
+  {
+    id: 'openrouter/quasar-alpha',
+    name: 'Quasar Alpha (Free)',
+    description: "OpenRouter's free model",
+  },
+  {
+    id: 'google/gemini-2.0-flash-exp:free',
+    name: 'Gemini 2.0 Flash (Free)',
+    description: "Google's fast multimodal model",
+  },
+  {
+    id: 'deepseek/deepseek-chat:free',
+    name: 'DeepSeek V3 (Free)',
+    description: "DeepSeek's chat model",
+  },
+  {
+    id: 'meta-llama/llama-3.3-70b-instruct:free',
+    name: 'Llama 3.3 70B (Free)',
+    description: "Meta's large instruction model",
+  },
 ];
 
 // ============================================

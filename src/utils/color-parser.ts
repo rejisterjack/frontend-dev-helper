@@ -421,10 +421,7 @@ export function extractCssVariableName(color: string): string | null {
  * Resolve a CSS variable to its actual color value
  * Requires a DOM element context to resolve computed styles
  */
-export function resolveCssVariable(
-  varExpression: string,
-  element?: Element
-): string | null {
+export function resolveCssVariable(varExpression: string, element?: Element): string | null {
   const varName = extractCssVariableName(varExpression);
   if (!varName) return null;
 
@@ -655,7 +652,7 @@ export function checkContrastCompliance(
 export function rgbToHex(rgb: RGB): string {
   const toHex = (n: number) => {
     const hex = Math.round(n).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
+    return hex.length === 1 ? `0${hex}` : hex;
   };
   return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
 }
@@ -683,7 +680,10 @@ export function isLightColor(color: string | RGB, element?: Element): boolean {
 /**
  * Get suggested text color (black or white) for maximum contrast
  */
-export function getContrastTextColor(backgroundColor: string, element?: Element): '#000000' | '#ffffff' {
+export function getContrastTextColor(
+  backgroundColor: string,
+  element?: Element
+): '#000000' | '#ffffff' {
   return isLightColor(backgroundColor, element) ? '#000000' : '#ffffff';
 }
 

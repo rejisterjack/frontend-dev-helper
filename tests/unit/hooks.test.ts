@@ -2,10 +2,7 @@
  * Custom Hooks Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
-
-// Ensure vi is used (required for vitest mocking)
-void vi;
+import { describe, it, expect } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import {
   useToggle,

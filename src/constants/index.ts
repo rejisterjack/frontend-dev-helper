@@ -723,7 +723,7 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
  * Default extension settings
  */
 export const DEFAULT_SETTINGS = {
-  version: '1.0.0',
+  version: '1.2.0',
   theme: 'dark' as const,
   enabled: true,
   autoOpenDevTools: false,
