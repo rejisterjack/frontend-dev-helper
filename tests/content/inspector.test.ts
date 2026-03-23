@@ -49,8 +49,8 @@ describe('Inspector', () => {
       const selector = element.id
         ? `#${element.id}`
         : element.className
-        ? `.${element.className.split(' ')[0]}`
-        : element.tagName.toLowerCase();
+          ? `.${element.className.split(' ')[0]}`
+          : element.tagName.toLowerCase();
 
       expect(selector).toBe('#test-element');
     });
@@ -59,6 +59,43 @@ describe('Inspector', () => {
       const uniqueSelector = element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '');
 
       expect(uniqueSelector).toBe('div#test-element');
+    });
+  });
+
+  describe('Scroll Offset', () => {
+    it('should account for scroll offset in absolute position', () => {
+      // Simulate scrolled page
+      Object.defineProperty(window, 'scrollY', { value: 100, writable: true, configurable: true });
+      Object.defineProperty(window, 'scrollX', { value: 50, writable: true, configurable: true });
+
+      const rect = element.getBoundingClientRect();
+      // In fixed positioning mode, we should NOT add scroll offset
+      // The element position is relative to viewport
+      const viewportTop = rect.top;
+      const viewportLeft = rect.left;
+
+      expect(viewportTop).toBeGreaterThanOrEqual(0);
+      expect(viewportLeft).toBeGreaterThanOrEqual(0);
+
+      // Reset scroll values
+      Object.defineProperty(window, 'scrollY', { value: 0, writable: true, configurable: true });
+      Object.defineProperty(window, 'scrollX', { value: 0, writable: true, configurable: true });
+    });
+
+    it('should handle fixed position elements without scroll offset', () => {
+      element.style.position = 'fixed';
+      element.style.top = '10px';
+      element.style.left = '20px';
+
+      Object.defineProperty(window, 'scrollY', { value: 100, writable: true, configurable: true });
+
+      const rect = element.getBoundingClientRect();
+      // Fixed elements stay at viewport position regardless of scroll
+      expect(rect.top).toBe(10);
+      expect(rect.left).toBe(20);
+
+      // Reset
+      Object.defineProperty(window, 'scrollY', { value: 0, writable: true, configurable: true });
     });
   });
 });

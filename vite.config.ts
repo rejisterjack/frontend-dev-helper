@@ -8,7 +8,7 @@ import manifest from './public/manifest.json' with { type: 'json' };
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    crx({ manifest: manifest as chrome.runtime.ManifestV3 }),
+    crx({ manifest: manifest as any }),
   ],
   resolve: {
     alias: {
@@ -39,8 +39,6 @@ export default defineConfig(({ mode }) => ({
           'vendor-react': ['react', 'react-dom'],
           // Split heavy utilities
           'vendor-zod': ['zod'],
-          // Content script tools - will be split dynamically
-          'tools-core': ['./src/content/index.ts'],
         },
         assetFileNames: (assetInfo) => {
           if (/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(assetInfo.name ?? '')) {

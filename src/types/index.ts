@@ -212,13 +212,11 @@ export type ToolSettings =
 /**
  * Feature toggles - maps tool IDs to their enabled state
  * Uses the canonical ToolId type from constants for type safety
- * @deprecated Use ToolState from storage or TOOL_METADATA from constants instead
  */
 export type FeatureToggles = Record<ToolId, boolean>;
 
 /**
- * Default feature toggles
- * @deprecated Use DEFAULT_SETTINGS.tools from constants/index.ts instead
+ * Default feature toggles - aligned with TOOL_IDS
  */
 export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   // Core tools (matching TOOL_IDS)

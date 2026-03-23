@@ -66,7 +66,6 @@ The service worker is the central coordinator of the extension:
 ```typescript
 // Main initialization happens automatically on import
 export {
-  activateToolOnTab,
   getActiveToolIds,
   handleCommand,
   state,
