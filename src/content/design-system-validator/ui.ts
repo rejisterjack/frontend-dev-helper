@@ -14,6 +14,7 @@ import {
   setShadowRoot,
   state,
 } from './constants';
+import { validate } from './core';
 
 type DisableFn = () => void;
 let disableFn: DisableFn | null = null;

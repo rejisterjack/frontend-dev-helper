@@ -33,8 +33,7 @@ describe('MessageRouter', () => {
       },
     } as unknown as typeof chrome;
     
-    // @ts-expect-error - mocking chrome global
-    global.chrome = mockChrome;
+    (global as unknown as { chrome: unknown }).chrome = mockChrome;
   });
 
   afterEach(() => {

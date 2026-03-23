@@ -17,33 +17,32 @@ const ignoreRegionSchema = z.object({
 // Baseline screenshot schema
 const baselineSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1).max(200),
   url: z.string().url(),
+  pathname: z.string(),
   viewport: z.object({
     width: z.number().min(1),
     height: z.number().min(1),
   }),
   timestamp: z.number().positive(),
-  dataUrl: z.string().regex(/^data:image\/png;base64,/),
-  ignoreRegions: z.array(ignoreRegionSchema).optional().default([]),
+  screenshot: z.string().regex(/^data:image\/png;base64,/),
+  devicePixelRatio: z.number().positive(),
 });
 
 // Test result schema
 const testResultSchema = z.object({
   id: z.string().uuid(),
+  url: z.string().url(),
   baselineId: z.string().uuid(),
   timestamp: z.number().positive(),
-  passed: z.boolean(),
-  diffPercentage: z.number().min(0).max(100),
-  threshold: z.number().min(0).max(100),
-  viewport: z.object({
-    width: z.number().min(1),
-    height: z.number().min(1),
+  status: z.enum(['pending', 'passed', 'failed', 'approved']),
+  result: z.object({
+    match: z.boolean(),
+    diffPercentage: z.number().min(0).max(100),
+    pixelsDifferent: z.number().min(0),
+    totalPixels: z.number().min(0),
+    diffImage: z.string().optional(),
+    threshold: z.number().min(0).max(100),
   }),
-  diffDataUrl: z
-    .string()
-    .regex(/^data:image\/png;base64,/)
-    .optional(),
 });
 
 // Export data schema

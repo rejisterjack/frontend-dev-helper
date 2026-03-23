@@ -330,7 +330,11 @@ HTMLCanvasElement.prototype.toDataURL = (type = 'image/png') => `data:${type};ba
 
 // Patch HTMLCanvasElement.prototype.getContext to return our mock
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
-HTMLCanvasElement.prototype.getContext = function (contextType: string, ...args: unknown[]) {
+HTMLCanvasElement.prototype.getContext = function (
+  this: HTMLCanvasElement,
+  contextType: string,
+  ...args: unknown[]
+) {
   if (contextType === '2d') {
     const ctx = createMockContext();
     Object.defineProperty(ctx, 'canvas', { value: this, writable: false });

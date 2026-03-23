@@ -10,7 +10,7 @@ export * from './utils';
 import { escapeHtml } from '@/utils/sanitize';
 import { logger } from '../../utils/logger';
 import { exportReportAsHTML, exportReportAsJSON, printReport } from './formatters';
-import type { SiteReport } from './types';
+import type { Recommendation, SiteReport } from './types';
 import { createMetricScore, generateReportId } from './utils';
 
 // State
@@ -265,12 +265,11 @@ function analyzeSEO() {
     meta: {
       hasTitle: !!document.title,
       titleLength: document.title.length,
-      titleQuality:
-        document.title.length > 30 && document.title.length < 60
-          ? 'good'
-          : document.title.length < 30
-            ? 'too-short'
-            : 'too-long',
+      titleQuality: (document.title.length > 30 && document.title.length < 60
+        ? 'good'
+        : document.title.length < 30
+          ? 'too-short'
+          : 'too-long') as 'good' | 'too-short' | 'too-long',
       hasDescription: false,
       descriptionLength: 0,
       hasViewport: !!document.querySelector('meta[name="viewport"]'),
@@ -308,12 +307,11 @@ function analyzeSEO() {
         count: document.querySelectorAll('h6').length,
         texts: Array.from(document.querySelectorAll('h6')).map((h) => h.textContent || ''),
       },
-      structure:
-        document.querySelectorAll('h1').length === 1
-          ? 'good'
-          : document.querySelectorAll('h1').length === 0
-            ? 'missing-h1'
-            : 'multiple-h1',
+      structure: (document.querySelectorAll('h1').length === 1
+        ? 'good'
+        : document.querySelectorAll('h1').length === 0
+          ? 'missing-h1'
+          : 'multiple-h1') as 'good' | 'multiple-h1' | 'missing-h1' | 'skipped-levels',
       issues: [],
     },
     links: {
@@ -399,10 +397,10 @@ function calculateScores(report: SiteReport): SiteReport['scores'] {
   return scores;
 }
 
-function generateRecommendations(report: SiteReport) {
-  const recommendations = [];
+function generateRecommendations(report: SiteReport): Recommendation[] {
+  const recommendations: Recommendation[] = [];
 
-  if (report.seo?.meta.titleLength < 30) {
+  if (report.seo != null && report.seo.meta.titleLength < 30) {
     recommendations.push({
       id: 'seo-title-short',
       category: 'seo',
@@ -415,7 +413,7 @@ function generateRecommendations(report: SiteReport) {
     });
   }
 
-  if (report.seo?.images.withoutAlt > 0) {
+  if (report.seo != null && report.seo.images.withoutAlt > 0) {
     recommendations.push({
       id: 'accessibility-img-alt',
       category: 'accessibility',

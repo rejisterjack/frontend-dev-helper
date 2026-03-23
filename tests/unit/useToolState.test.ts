@@ -11,7 +11,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useToolState } from '@/hooks/useToolState';
 
 // Grab the mocks installed by src/test/setup.ts
-const mockStorageLocal = (global as { chrome: { storage: { local: { get: ReturnType<typeof vi.fn>; set: ReturnType<typeof vi.fn> } } } }).chrome.storage.local;
+const mockStorageLocal = (global as unknown as { chrome: { storage: { local: { get: ReturnType<typeof vi.fn>; set: ReturnType<typeof vi.fn> } } } }).chrome.storage.local;
 
 describe('useToolState', () => {
   beforeEach(() => {

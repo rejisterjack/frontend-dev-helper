@@ -27,6 +27,7 @@ import {
 import {
   captureScreenshot,
   clearSavedState,
+  convertToFormat,
   loadScreenshotImage,
   restoreStateFromStorage,
   saveStateToStorage,
@@ -183,7 +184,6 @@ export class ScreenshotStudio {
       const dataUrl = await captureScreenshot(fullPage);
 
       if (format === 'jpeg') {
-        const { convertToFormat } = await import('./capture');
         return convertToFormat(dataUrl, format, quality);
       }
 
@@ -310,7 +310,7 @@ export class ScreenshotStudio {
       this.state.currentColor
     );
 
-    this.actionBar = createActionBar(this.container, {
+    createActionBar(this.container, {
       onCopy: () => this.handleCopy(),
       onDownloadPng: () => this.handleDownload('png'),
       onDownloadJpg: () => this.handleDownload('jpeg'),
@@ -320,7 +320,7 @@ export class ScreenshotStudio {
       },
     });
 
-    this.instructions = createInstructions(this.container);
+    createInstructions(this.container);
 
     // Attach event listeners
     this.attachEventListeners();
@@ -597,8 +597,7 @@ export class ScreenshotStudio {
     this.ctx = null;
     this.toolbar = null;
     this.colorPicker = null;
-    this.instructions = null;
-    this.actionBar = null;
+
     this.previewImage = null;
     this.selectionBox = null;
     this.resizeHandles = [];

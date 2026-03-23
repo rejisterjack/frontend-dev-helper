@@ -31,13 +31,13 @@ export const extensionSettingsSchema = z.object({
       onInstall: z.boolean().default(true),
       onUpdate: z.boolean().default(true),
     })
-    .default({}),
+    .default({ enabled: true, onInstall: true, onUpdate: true }),
   privacy: z
     .object({
       analyticsEnabled: z.boolean().default(false),
       shareUsageData: z.boolean().default(false),
     })
-    .default({}),
+    .default({ analyticsEnabled: false, shareUsageData: false }),
 });
 
 // Feature flags schema

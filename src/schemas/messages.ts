@@ -32,7 +32,7 @@ export const getSettingsMessageSchema = baseMessageSchema.extend({
 
 export const updateSettingsMessageSchema = baseMessageSchema.extend({
   type: z.literal('UPDATE_SETTINGS'),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
 });
 
 // Feature toggle message schemas

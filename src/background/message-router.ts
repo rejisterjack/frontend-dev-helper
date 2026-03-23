@@ -246,7 +246,7 @@ export class MessageRouter {
 
     // Update settings handler
     this.registerHandler('UPDATE_SETTINGS', async (message) => {
-      const settingsSchema = z.record(z.unknown());
+      const settingsSchema = z.record(z.string(), z.unknown());
       const validatedPayload = this.validatePayload(settingsSchema, message.payload);
       if (!validatedPayload) {
         throw new Error('Invalid UPDATE_SETTINGS payload');

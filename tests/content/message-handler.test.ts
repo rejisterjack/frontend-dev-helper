@@ -7,7 +7,7 @@ import { describe, it, expect, vi } from 'vitest';
 describe('Message Handler', () => {
   describe('Message Routing', () => {
     it('should handle PING messages', () => {
-      const handler = vi.fn(() => ({ pong: true }));
+      const handler = vi.fn((_msg: unknown) => ({ pong: true }));
       const message = { type: 'PING' };
 
       handler(message);

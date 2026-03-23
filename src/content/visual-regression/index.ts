@@ -21,7 +21,7 @@ import { baselineManager } from './baseline-manager';
 import { captureFullPageScreenshot, captureViewportScreenshot, generateId } from './capture';
 import { exportDiffImage as exportDiffImageInternal, runComparison } from './comparison';
 import { DEFAULT_THRESHOLD, PREFIX, STATUS_TIMEOUT } from './constants';
-import type { CreateBaselineOptions, IgnoreRegion } from './types';
+import type { BadgeType, CreateBaselineOptions, IgnoreRegion } from './types';
 import {
   getPanelHTML,
   getStyles,
@@ -603,6 +603,10 @@ function renderTests(): void {
   }
 
   list.innerHTML = tests
+    .filter(
+      (test): test is typeof test & { status: 'passed' | 'failed' | 'approved' } =>
+        test.status !== 'pending'
+    )
     .map((test) => {
       const date = new Date(test.timestamp).toLocaleString();
 

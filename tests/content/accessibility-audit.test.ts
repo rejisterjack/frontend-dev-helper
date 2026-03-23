@@ -35,14 +35,6 @@ describe('Accessibility Audit', () => {
       el.style.color = '#ffffff';
       el.style.backgroundColor = '#ffff00';
       
-      // Calculate contrast ratio
-      const getLuminance = (r: number, g: number, b: number): number => {
-        const [rs, gs, bs] = [r, g, b].map(c => 
-          c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-        );
-        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-      };
-
       // White on yellow has poor contrast — jsdom normalizes hex to rgb()
       expect(el.style.color).toBe('rgb(255, 255, 255)');
       expect(el.style.backgroundColor).toBe('rgb(255, 255, 0)');

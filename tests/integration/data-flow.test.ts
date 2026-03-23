@@ -54,7 +54,7 @@ describe('Data Flow: Background ↔ Content Script ↔ Popup', () => {
 
     const response = await mockChrome.runtime.sendMessage({
       type: 'PESTICIDE_GET_STATE',
-    });
+    }) as { success: boolean; state: { enabled: boolean } };
 
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith({
       type: 'PESTICIDE_GET_STATE',
@@ -69,8 +69,8 @@ describe('Data Flow: Background ↔ Content Script ↔ Popup', () => {
       { id: 3 },
     ]);
 
-    const tabs = await mockChrome.tabs.query({});
-    
+    const tabs = await mockChrome.tabs.query({}) as Array<{ id?: number }>;
+
     for (const tab of tabs) {
       if (tab.id) {
         await mockChrome.tabs.sendMessage(tab.id, {
@@ -91,7 +91,7 @@ describe('Data Flow: Background ↔ Content Script ↔ Popup', () => {
 
     const response = await mockChrome.runtime.sendMessage({
       type: 'PESTICIDE_ENABLE',
-    });
+    }) as { success: boolean; active: boolean };
 
     expect(response.success).toBe(true);
     expect(response.active).toBe(true);
@@ -106,8 +106,8 @@ describe('Data Flow: Background ↔ Content Script ↔ Popup', () => {
 
     // Retrieve settings
     mockChrome.storage.local.get.mockResolvedValue({ settings });
-    const result = await mockChrome.storage.local.get('settings');
-    
+    const result = await mockChrome.storage.local.get('settings') as { settings: typeof settings };
+
     expect(result.settings).toEqual(settings);
   });
 
@@ -142,7 +142,7 @@ describe('Data Flow: Background ↔ Content Script ↔ Popup', () => {
     const response = await mockChrome.runtime.sendMessage({
       type: 'SET_TOOL_STATE',
       payload: originalData,
-    });
+    }) as { success: boolean; data: typeof originalData };
 
     expect(response.success).toBe(true);
     expect(response.data).toEqual(originalData);

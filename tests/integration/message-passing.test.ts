@@ -52,7 +52,7 @@ describe('Message Passing Integration', () => {
 
       const response = await mockChrome.runtime.sendMessage({
         type: 'PESTICIDE_GET_STATE',
-      });
+      }) as { success: boolean; active: boolean };
 
       expect(response.success).toBe(true);
       expect(response.active).toBe(true);
@@ -87,7 +87,7 @@ describe('Message Passing Integration', () => {
     it('should handle tab not found', async () => {
       mockChrome.tabs.query.mockResolvedValue([]);
 
-      const tabs = await mockChrome.tabs.query({ active: true });
+      const tabs = await mockChrome.tabs.query({ active: true }) as unknown[];
       expect(tabs.length).toBe(0);
     });
   });

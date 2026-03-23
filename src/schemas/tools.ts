@@ -39,7 +39,7 @@ export const toolStateSchema = z.object({
   enabled: z.boolean(),
   active: z.boolean().optional(),
   visible: z.boolean().optional(),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
 });
 
 // Tools state record schema

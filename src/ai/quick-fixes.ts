@@ -108,9 +108,9 @@ export function generateFixCSS(): string {
 /**
  * Apply focus styles fix globally
  */
-export function applyFocusStylesFix(): void {
+export function applyFocusStylesFix(): undefined {
   const styleId = 'fdh-focus-styles-fix';
-  if (document.getElementById(styleId)) return;
+  if (document.getElementById(styleId)) return undefined;
 
   const style = document.createElement('style');
   style.id = styleId;
@@ -121,38 +121,42 @@ export function applyFocusStylesFix(): void {
     }
   `;
   document.head.appendChild(style);
+  return undefined;
 }
 
 /**
  * Apply lang attribute fix
  */
-export function applyLangFix(): void {
+export function applyLangFix(): undefined {
   if (!document.documentElement.lang) {
     document.documentElement.lang = navigator.language || 'en';
   }
+  return undefined;
 }
 
 /**
  * Apply viewport meta tag fix
  */
-export function applyViewportFix(): void {
+export function applyViewportFix(): undefined {
   if (!document.querySelector('meta[name="viewport"]')) {
     const meta = document.createElement('meta');
     meta.name = 'viewport';
     meta.content = 'width=device-width, initial-scale=1';
     document.head.appendChild(meta);
   }
+  return undefined;
 }
 
 /**
  * Apply charset fix
  */
-export function applyCharsetFix(): void {
+export function applyCharsetFix(): undefined {
   if (!document.querySelector('meta[charset]')) {
     const meta = document.createElement('meta');
     meta.setAttribute('charset', 'utf-8');
     document.head.insertBefore(meta, document.head.firstChild);
   }
+  return undefined;
 }
 
 /**

@@ -12,11 +12,10 @@ const mockSendMessage = vi.fn();
 const mockQuery = vi.fn();
 const mockSendMessageToTab = vi.fn();
 
-// @ts-expect-error - mocking chrome global
-global.chrome = {
+(global as Record<string, unknown>).chrome = {
   runtime: {
     sendMessage: mockSendMessage,
-    lastError: null,
+    lastError: undefined,
   },
   tabs: {
     query: mockQuery,

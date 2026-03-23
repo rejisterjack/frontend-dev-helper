@@ -2,7 +2,7 @@
  * Site Report Generator Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Site Report Generator', () => {
   describe('Report Data Collection', () => {

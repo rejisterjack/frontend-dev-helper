@@ -2,7 +2,7 @@
  * Visual Regression Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Visual Regression', () => {
   describe('Screenshot Comparison', () => {

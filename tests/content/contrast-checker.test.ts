@@ -7,14 +7,7 @@ import { describe, it, expect } from 'vitest';
 describe('Contrast Checker', () => {
   describe('Contrast Ratio Calculation', () => {
     it('should calculate contrast ratio between colors', () => {
-      const getLuminance = (r: number, g: number, b: number): number => {
-        const [rs, gs, bs] = [r, g, b].map(c => 
-          c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-        );
-        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-      };
-
-      const getContrastRatio = (color1: string, color2: string): number => {
+      const getContrastRatio = (_color1: string, _color2: string): number => {
         // Simplified for test
         const l1 = 1; // white
         const l2 = 0; // black

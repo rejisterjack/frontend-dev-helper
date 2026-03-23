@@ -4,7 +4,7 @@
  * Tests for the DOM outliner tool functionality.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { escapeHtml } from '@/utils/sanitize';
 
 // Mock DOM environment
@@ -47,7 +47,7 @@ describe('Pesticide Tool', () => {
     });
 
     it('should show element tags on hover', () => {
-      const div = container.querySelector('.parent') as HTMLElement;
+      container.querySelector('.parent');
       
       // Add tooltip element
       const tooltip = document.createElement('div');

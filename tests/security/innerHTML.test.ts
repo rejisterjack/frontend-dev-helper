@@ -4,7 +4,7 @@
  * Verifies that innerHTML assignments are properly sanitized.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { escapeHtml, sanitizeColor } from '@/utils/sanitize';
 
 describe('innerHTML Security Patterns', () => {

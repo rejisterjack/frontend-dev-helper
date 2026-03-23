@@ -2,7 +2,7 @@
  * Screenshot Studio Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Screenshot Studio', () => {
   describe('Screenshot Capture', () => {

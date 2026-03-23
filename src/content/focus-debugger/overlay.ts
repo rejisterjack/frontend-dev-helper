@@ -49,7 +49,8 @@ export class OverlayManager {
       document.body.appendChild(this.overlaysContainer);
     }
 
-    this.overlaysContainer.innerHTML = '';
+    const container = this.overlaysContainer;
+    container.innerHTML = '';
 
     // Add number overlays for each focusable element
     focusableElements.forEach((el) => {
@@ -103,7 +104,7 @@ export class OverlayManager {
       `;
 
       overlay.appendChild(badge);
-      this.overlaysContainer.appendChild(overlay);
+      container.appendChild(overlay);
     });
   }
 

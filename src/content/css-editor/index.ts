@@ -18,6 +18,7 @@ import {
   exportAllCSS,
   getHistory,
   getHistoryIndex,
+  getOptions,
   redo,
   resetAll,
   resetElement,
@@ -276,7 +277,6 @@ function updatePanel(): void {
   if (!panel) return;
 
   // Update UI state refs before building content
-  const _modifiedElements = getModifiedElements();
   updateUIState({
     selectedElement: getSelectedElement(),
     activeCategory,
