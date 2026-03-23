@@ -30,6 +30,7 @@ export const FeatureToggle: React.FC<FeatureToggleProps> = ({
         {description && <div className="mt-0.5 text-xs text-dev-muted">{description}</div>}
       </div>
       <button
+        type="button"
         onClick={onChange}
         disabled={disabled}
         className={`relative h-5 w-9 flex-shrink-0 rounded-full transition-colors ${

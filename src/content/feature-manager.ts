@@ -299,8 +299,8 @@ export class FeatureManager {
       .map(
         ([font, els]) => `
         <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #334155;">
-          <div style="font-family: ${font}; font-size: 16px; margin-bottom: 4px;">Aa</div>
-          <div style="font-size: 11px; color: #94a3b8; word-break: break-all;">${font}</div>
+          <div style="font-family: ${escapeHtml(font)}; font-size: 16px; margin-bottom: 4px;">Aa</div>
+          <div style="font-size: 11px; color: #94a3b8; word-break: break-all;">${escapeHtml(font)}</div>
           <div style="font-size: 11px; color: #64748b; margin-top: 4px;">${els.length} elements</div>
         </div>
       `

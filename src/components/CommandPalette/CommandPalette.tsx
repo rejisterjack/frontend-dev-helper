@@ -191,10 +191,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={() => setSearchQuery('')}
               className="ml-2 rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -236,6 +243,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
                   return (
                     <button
+                      type="button"
                       key={command.id}
                       onClick={() => handleExecuteCommand(command)}
                       onMouseEnter={() => setSelectedIndex(flatIndex)}
@@ -298,6 +306,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             <span>{filteredCommands.length} commands</span>
             {recentCommands.length > 0 && (
               <button
+                type="button"
                 onClick={() => {
                   setRecentCommands([]);
                 }}

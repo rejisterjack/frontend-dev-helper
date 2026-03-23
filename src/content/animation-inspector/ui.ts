@@ -164,7 +164,8 @@ export function buildHeader(): string {
       cursor: move;
     ">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2">
+        <svg
+          aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 6v6l4 2"/>
         </svg>
@@ -178,7 +179,8 @@ export function buildHeader(): string {
           font-weight: 500;
         ">${animationsRef.length} found</span>
       </div>
-      <button class="fdh-anim-close" style="
+      <button
+        type="button" class="fdh-anim-close" style="
         background: transparent;
         border: none;
         color: #94a3b8;
@@ -190,7 +192,8 @@ export function buildHeader(): string {
         align-items: center;
         justify-content: center;
       " title="Close (Esc)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
@@ -213,7 +216,8 @@ export function buildToolbar(): string {
       gap: 12px;
     ">
       <div style="display: flex; gap: 8px;">
-        <button class="fdh-anim-play-pause" style="
+        <button
+          type="button" class="fdh-anim-play-pause" style="
           background: ${isPausedRef ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
           border: 1px solid ${isPausedRef ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'};
           color: ${isPausedRef ? '#4ade80' : '#f87171'};
@@ -234,7 +238,8 @@ export function buildToolbar(): string {
           }
         </button>
         
-        <button class="fdh-anim-highlight-toggle" style="
+        <button
+          type="button" class="fdh-anim-highlight-toggle" style="
           background: ${highlightEnabledRef ? 'rgba(99, 102, 241, 0.3)' : 'rgba(30, 41, 59, 0.8)'};
           border: 1px solid ${highlightEnabledRef ? 'rgba(99, 102, 241, 0.5)' : 'rgba(99, 102, 241, 0.3)'};
           color: ${highlightEnabledRef ? '#818cf8' : '#94a3b8'};
@@ -247,7 +252,8 @@ export function buildToolbar(): string {
           gap: 6px;
           transition: all 0.2s;
         ">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
             <path d="M12 4v1M17.66 6.344l-.828.828M20.005 12.004h-1M17.66 17.664l-.828-.828M12 20.01V19M6.34 17.664l.828-.828M3.995 12.004h1M6.34 6.344l.828.828"/>
           </svg>
@@ -260,7 +266,8 @@ export function buildToolbar(): string {
         <div style="display: flex; background: rgba(30, 41, 59, 0.8); border-radius: 6px; padding: 2px;">
           ${SPEED_OPTIONS.map(
             (speed) => `
-            <button class="fdh-anim-speed" data-speed="${speed}" style="
+            <button
+              type="button" class="fdh-anim-speed" data-speed="${speed}" style="
               background: ${playbackSpeedRef === speed ? 'rgba(99, 102, 241, 0.4)' : 'transparent'};
               border: none;
               color: ${playbackSpeedRef === speed ? '#e2e8f0' : '#64748b'};
@@ -294,7 +301,8 @@ export function buildAnimationList(): string {
         color: #64748b;
         text-align: center;
       ">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 16px; opacity: 0.5;">
+        <svg
+          aria-hidden="true" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 16px; opacity: 0.5;">
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 6v6l4 2"/>
         </svg>
@@ -346,7 +354,8 @@ export function buildAnimationList(): string {
                 flex-shrink: 0;
               ">${anim.type === 'css-animation' ? 'CSS' : 'Trans'}</span>
             </div>
-            <button class="fdh-anim-item-play" data-id="${anim.id}" style="
+            <button
+              type="button" class="fdh-anim-item-play" data-id="${anim.id}" style="
               background: transparent;
               border: none;
               color: ${anim.playState === 'running' ? '#f87171' : '#4ade80'};
@@ -459,7 +468,8 @@ export function buildAnimationDetails(anim: AnimationInfo): string {
       
       ${keyframesHtml}
       
-      <button class="fdh-anim-scroll-to" data-id="${anim.id}" style="
+      <button
+        type="button" class="fdh-anim-scroll-to" data-id="${anim.id}" style="
         width: 100%;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);
@@ -490,7 +500,8 @@ export function buildFooter(): string {
       color: #64748b;
     ">
       <span>Press <kbd style="background: rgba(30, 41, 59, 0.8); padding: 2px 6px; border-radius: 4px; font-family: inherit;">Esc</kbd> to close</span>
-      <button class="fdh-anim-refresh" style="
+      <button
+        type="button" class="fdh-anim-refresh" style="
         background: transparent;
         border: none;
         color: #64748b;
@@ -503,7 +514,8 @@ export function buildFooter(): string {
         border-radius: 4px;
         transition: all 0.2s;
       ">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M23 4v6h-6M1 20v-6h6"/>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
         </svg>

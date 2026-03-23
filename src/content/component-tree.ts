@@ -496,10 +496,14 @@ function getPanelHTML(): string {
         <span id="${PREFIX}-framework" class="${PREFIX}-badge">${frameworkLabel}</span>
       </div>
       <div id="${PREFIX}-actions">
-        <button id="${PREFIX}-refresh" title="Refresh">🔄</button>
-        <button id="${PREFIX}-expand-all" title="Expand All">⬇️</button>
-        <button id="${PREFIX}-collapse-all" title="Collapse All">➡️</button>
-        <button id="${PREFIX}-close" title="Close">✕</button>
+        <button
+          type="button" id="${PREFIX}-refresh" title="Refresh">🔄</button>
+        <button
+          type="button" id="${PREFIX}-expand-all" title="Expand All">⬇️</button>
+        <button
+          type="button" id="${PREFIX}-collapse-all" title="Collapse All">➡️</button>
+        <button
+          type="button" id="${PREFIX}-close" title="Close">✕</button>
       </div>
     </div>
     
@@ -704,7 +708,6 @@ function updateStatus(message: string): void {
     }, 2000);
   }
 }
-
 
 // ============================================
 // Auto Refresh

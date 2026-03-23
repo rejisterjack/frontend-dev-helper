@@ -185,6 +185,7 @@ export const PerformanceTab: React.FC = () => {
           <div className="mb-2 text-4xl">📊</div>
           <div className="text-dev-muted">No performance data available</div>
           <button
+            type="button"
             onClick={loadMetrics}
             className="mt-4 rounded bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700"
           >
@@ -211,11 +212,18 @@ export const PerformanceTab: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={loadMetrics}
             className="rounded p-1.5 text-dev-muted hover:text-dev-text hover:bg-dev-surface transition-colors"
             title="Refresh metrics"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              aria-hidden="true"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -230,6 +238,7 @@ export const PerformanceTab: React.FC = () => {
       {/* Core Web Vitals Section */}
       <div className="rounded-lg bg-dev-surface overflow-hidden">
         <button
+          type="button"
           onClick={() => toggleSection('vitals')}
           className="w-full flex items-center justify-between p-3 hover:bg-dev-surface/80 transition-colors"
         >
@@ -238,6 +247,7 @@ export const PerformanceTab: React.FC = () => {
             <span className="text-sm font-medium text-dev-text">Core Web Vitals</span>
           </div>
           <svg
+            aria-hidden="true"
             className={`h-4 w-4 text-dev-muted transition-transform ${expandedSections.has('vitals') ? 'rotate-180' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
@@ -252,6 +262,7 @@ export const PerformanceTab: React.FC = () => {
             {/* Vitals Tabs */}
             <div className="flex gap-1 mt-3 mb-3">
               <button
+                type="button"
                 onClick={() => setActiveVitalsTab('overview')}
                 className={`flex-1 py-1.5 px-2 text-xs rounded-md transition-colors ${
                   activeVitalsTab === 'overview'
@@ -262,6 +273,7 @@ export const PerformanceTab: React.FC = () => {
                 Overview
               </button>
               <button
+                type="button"
                 onClick={() => setActiveVitalsTab('details')}
                 className={`flex-1 py-1.5 px-2 text-xs rounded-md transition-colors ${
                   activeVitalsTab === 'details'
@@ -371,6 +383,7 @@ export const PerformanceTab: React.FC = () => {
       {/* Navigation Timing */}
       <div className="rounded-lg bg-dev-surface overflow-hidden">
         <button
+          type="button"
           onClick={() => toggleSection('timing')}
           className="w-full flex items-center justify-between p-3 hover:bg-dev-surface/80 transition-colors"
         >
@@ -379,6 +392,7 @@ export const PerformanceTab: React.FC = () => {
             <span className="text-sm font-medium text-dev-text">Navigation Timing</span>
           </div>
           <svg
+            aria-hidden="true"
             className={`h-4 w-4 text-dev-muted transition-transform ${expandedSections.has('timing') ? 'rotate-180' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
@@ -407,6 +421,7 @@ export const PerformanceTab: React.FC = () => {
       {/* Resource Analysis */}
       <div className="rounded-lg bg-dev-surface overflow-hidden">
         <button
+          type="button"
           onClick={() => toggleSection('resources')}
           className="w-full flex items-center justify-between p-3 hover:bg-dev-surface/80 transition-colors"
         >
@@ -418,6 +433,7 @@ export const PerformanceTab: React.FC = () => {
             </span>
           </div>
           <svg
+            aria-hidden="true"
             className={`h-4 w-4 text-dev-muted transition-transform ${expandedSections.has('resources') ? 'rotate-180' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
@@ -484,6 +500,7 @@ export const PerformanceTab: React.FC = () => {
       {imageOptimizations.length > 0 && (
         <div className="rounded-lg bg-dev-surface overflow-hidden">
           <button
+            type="button"
             onClick={() => toggleSection('images')}
             className="w-full flex items-center justify-between p-3 hover:bg-dev-surface/80 transition-colors"
           >
@@ -498,6 +515,7 @@ export const PerformanceTab: React.FC = () => {
               </span>
             </div>
             <svg
+              aria-hidden="true"
               className={`h-4 w-4 text-dev-muted transition-transform ${expandedSections.has('images') ? 'rotate-180' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
@@ -554,6 +572,7 @@ export const PerformanceTab: React.FC = () => {
       {renderBlocking.length > 0 && (
         <div className="rounded-lg bg-dev-surface overflow-hidden">
           <button
+            type="button"
             onClick={() => toggleSection('blocking')}
             className="w-full flex items-center justify-between p-3 hover:bg-dev-surface/80 transition-colors"
           >
@@ -565,6 +584,7 @@ export const PerformanceTab: React.FC = () => {
               </span>
             </div>
             <svg
+              aria-hidden="true"
               className={`h-4 w-4 text-dev-muted transition-transform ${expandedSections.has('blocking') ? 'rotate-180' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
@@ -612,6 +632,7 @@ export const PerformanceTab: React.FC = () => {
       {memory && (
         <div className="rounded-lg bg-dev-surface overflow-hidden">
           <button
+            type="button"
             onClick={() => toggleSection('memory')}
             className="w-full flex items-center justify-between p-3 hover:bg-dev-surface/80 transition-colors"
           >
@@ -620,6 +641,7 @@ export const PerformanceTab: React.FC = () => {
               <span className="text-sm font-medium text-dev-text">Memory Usage</span>
             </div>
             <svg
+              aria-hidden="true"
               className={`h-4 w-4 text-dev-muted transition-transform ${expandedSections.has('memory') ? 'rotate-180' : ''}`}
               fill="none"
               viewBox="0 0 24 24"

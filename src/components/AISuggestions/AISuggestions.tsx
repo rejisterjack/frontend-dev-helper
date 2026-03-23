@@ -162,6 +162,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={runAnalysis}
               disabled={loading}
               className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
@@ -179,6 +180,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
               )}
             </button>
             <button
+              type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
             >
@@ -193,6 +195,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
             {(['accessibility', 'performance', 'seo', 'best-practice', 'security'] as const).map(
               (category) => (
                 <button
+                  type="button"
                   key={category}
                   onClick={() => toggleCategory(category)}
                   className={`
@@ -220,6 +223,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
             <span className="text-xs text-slate-500">Priority:</span>
             {(['critical', 'high', 'medium', 'low'] as const).map((priority) => (
               <button
+                type="button"
                 key={priority}
                 onClick={() => togglePriority(priority)}
                 className={`
@@ -233,6 +237,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleApplyCommonFixes}
               className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700"
             >
@@ -240,6 +245,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
             </button>
             {analysis && analysis.summary.autoFixable > 0 && (
               <button
+                type="button"
                 onClick={handleApplyAll}
                 className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs text-white hover:bg-emerald-700"
               >
@@ -285,6 +291,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                   `}
                 >
                   <button
+                    type="button"
                     onClick={() => setExpandedSuggestion(isExpanded ? null : suggestion.id)}
                     className="w-full p-3 text-left"
                   >
@@ -320,6 +327,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                         </p>
                       </div>
                       <svg
+                        aria-hidden="true"
                         className={`h-5 w-5 text-slate-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                         fill="none"
                         viewBox="0 0 24 24"
@@ -369,6 +377,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
 
                       {suggestion.autoFixable && !isApplied && (
                         <button
+                          type="button"
                           onClick={() => handleApplyFix(suggestion)}
                           disabled={applyingFix === suggestion.id}
                           className="w-full rounded-lg bg-emerald-600 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"

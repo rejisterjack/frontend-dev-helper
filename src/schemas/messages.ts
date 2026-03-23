@@ -49,12 +49,14 @@ export const toggleFeatureMessageSchema = baseMessageSchema.extend({
 // Report generation message schema
 export const generateReportMessageSchema = baseMessageSchema.extend({
   type: z.literal('SITE_REPORT_GENERATE'),
-  payload: z.object({
-    includePerformance: z.boolean().optional(),
-    includeAccessibility: z.boolean().optional(),
-    includeSeo: z.boolean().optional(),
-    includeSecurity: z.boolean().optional(),
-  }).optional(),
+  payload: z
+    .object({
+      includePerformance: z.boolean().optional(),
+      includeAccessibility: z.boolean().optional(),
+      includeSeo: z.boolean().optional(),
+      includeSecurity: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 // Export message schema

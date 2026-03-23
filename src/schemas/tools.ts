@@ -55,7 +55,10 @@ export const pesticideConfigSchema = z.object({
 export const gridOverlayConfigSchema = z.object({
   columns: z.number().min(2).max(24).default(12),
   gutterWidth: z.number().min(0).max(100).default(24),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('rgba(99, 102, 241, 0.2)'), // biome-ignore lint/suspicious/noControlCharactersInRegex: hex color regex
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .default('rgba(99, 102, 241, 0.2)'),
 });
 
 export const responsiveTesterConfigSchema = z.object({
@@ -68,12 +71,16 @@ export const responsiveTesterConfigSchema = z.object({
 
 export const visualRegressionConfigSchema = z.object({
   threshold: z.number().min(0).max(1).default(0.1),
-  ignoreRegions: z.array(z.object({
-    x: z.number(),
-    y: z.number(),
-    width: z.number(),
-    height: z.number(),
-  })).default([]),
+  ignoreRegions: z
+    .array(
+      z.object({
+        x: z.number(),
+        y: z.number(),
+        width: z.number(),
+        height: z.number(),
+      })
+    )
+    .default([]),
 });
 
 // Type exports

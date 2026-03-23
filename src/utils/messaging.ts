@@ -375,9 +375,7 @@ export async function sendMessageToBackground<T = unknown>(
  *
  * Uses the MV3 Promise-based chrome.runtime.sendMessage API.
  */
-export async function sendMessage<T = unknown>(
-  message: BaseMessage
-): Promise<MessageResponse<T>> {
+export async function sendMessage<T = unknown>(message: BaseMessage): Promise<MessageResponse<T>> {
   const response = (await chrome.runtime.sendMessage(message)) as MessageResponse<T>;
   if (!response?.success) {
     throw new Error(response?.error ?? 'Message failed');
@@ -434,7 +432,10 @@ export type MessageHandler<T = unknown> = (
  * ```
  */
 export function createMessageHandler(
-  handlers: Record<string, (message: BaseMessage, sender: chrome.runtime.MessageSender) => Promise<unknown> | unknown>
+  handlers: Record<
+    string,
+    (message: BaseMessage, sender: chrome.runtime.MessageSender) => Promise<unknown> | unknown
+  >
 ): (
   message: BaseMessage,
   sender: chrome.runtime.MessageSender,

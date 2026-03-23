@@ -1,5 +1,4 @@
 import { logger } from '../utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
 
 /**
  * Tech Stack Detector
@@ -380,7 +379,8 @@ function buildPanelContent(): string {
     <div class="fdh-tech-header" style="margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h3 style="margin: 0; font-size: 16px; color: #c084fc;">🔍 Tech Stack</h3>
-        <button class="fdh-close-btn" style="
+        <button
+          type="button" class="fdh-close-btn" style="
           background: transparent;
           border: none;
           color: #94a3b8;
@@ -444,7 +444,8 @@ function buildPanelContent(): string {
     </div>
     
     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px;">
-      <button class="fdh-refresh-btn" style="
+      <button
+        type="button" class="fdh-refresh-btn" style="
         flex: 1;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);
@@ -454,7 +455,8 @@ function buildPanelContent(): string {
         font-size: 11px;
         cursor: pointer;
       ">🔄 Refresh</button>
-      <button class="fdh-copy-btn" style="
+      <button
+        type="button" class="fdh-copy-btn" style="
         flex: 1;
         background: rgba(34, 197, 94, 0.2);
         border: 1px solid rgba(34, 197, 94, 0.4);

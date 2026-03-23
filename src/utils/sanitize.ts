@@ -292,7 +292,11 @@ export function css(strings: TemplateStringsArray, ...values: unknown[]): string
     }
     // For colors, validate; for numbers, sanitize; otherwise escape
     const strValue = String(value);
-    if (string.endsWith('color:') || string.endsWith('background:') || string.endsWith('border-color:')) {
+    if (
+      string.endsWith('color:') ||
+      string.endsWith('background:') ||
+      string.endsWith('border-color:')
+    ) {
       return result + string + (sanitizeColor(strValue) || 'transparent');
     }
     if (/:\s*$/.test(string) && /^-?\d/.test(strValue)) {

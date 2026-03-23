@@ -24,7 +24,7 @@ const baselineSchema = z.object({
     height: z.number().min(1),
   }),
   timestamp: z.number().positive(),
-  dataUrl: z.string().regex(/^data:image\/png;base64,/), // biome-ignore lint/suspicious/noControlCharactersInRegex: regex for base64 data URL
+  dataUrl: z.string().regex(/^data:image\/png;base64,/),
   ignoreRegions: z.array(ignoreRegionSchema).optional().default([]),
 });
 
@@ -40,7 +40,10 @@ const testResultSchema = z.object({
     width: z.number().min(1),
     height: z.number().min(1),
   }),
-  diffDataUrl: z.string().regex(/^data:image\/png;base64,/).optional(), // biome-ignore lint/suspicious/noControlCharactersInRegex: regex for base64 data URL
+  diffDataUrl: z
+    .string()
+    .regex(/^data:image\/png;base64,/)
+    .optional(),
 });
 
 // Export data schema

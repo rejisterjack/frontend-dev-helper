@@ -100,6 +100,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
         <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">Data</h3>
 
         <button
+          type="button"
           onClick={async () => {
             if (confirm('Clear all saved data? This cannot be undone.')) {
               await chrome.storage.local.clear();
@@ -117,11 +118,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onUpdate }) 
           {saving ? 'Saving...' : saved ? 'Saved!' : ''}
         </span>
         <button
+          type="button"
           onClick={() => chrome.runtime.openOptionsPage()}
           className="flex items-center gap-1 text-xs text-primary-400 hover:text-primary-300"
         >
           Open Full Options
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            aria-hidden="true"
+            className="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -151,6 +159,7 @@ const Toggle: React.FC<{
   onChange: (checked: boolean) => void;
 }> = ({ checked, onChange }) => (
   <button
+    type="button"
     onClick={() => onChange(!checked)}
     className={`relative h-5 w-9 rounded-full transition-colors ${
       checked ? 'bg-primary-600' : 'bg-dev-border'

@@ -23,11 +23,11 @@
  * ```
  */
 
+import { z } from 'zod';
 import { STORAGE_KEYS } from '@/constants';
 import type { ExtensionMessage, MessageResponse } from '@/types';
 import { generateMessageId } from '@/utils/messaging';
 import { logger } from '../utils/logger';
-import { z } from 'zod';
 
 // ============================================
 // Zod Validation Schemas
@@ -44,71 +44,6 @@ const toggleFeaturePayloadSchema = z.object({
   feature: z.string().min(1).max(100),
   enabled: z.boolean(),
 });
-
-const toolStatePayloadSchema = z.object({
-  toolId: z.string().min(1).max(100),
-  enabled: z.boolean(),
-  settings: z.record(z.unknown()).optional(),
-});
-
-const settingsSchema = z.record(z.unknown());
-
-const copyToClipboardSchema = z.object({
-  text: z.string().min(1).max(10000),
-});
-
-const generateReportSchema = z.object({
-  includePerformance: z.boolean().optional(),
-  includeAccessibility: z.boolean().optional(),
-  includeSeo: z.boolean().optional(),
-  includeSecurity: z.boolean().optional(),
-});
-
-const exportReportSchema = z.object({
-  format: z.enum(['json', 'html', 'pdf']),
-  data: z.unknown(),
-});
-
-const getToolStateSchema = z.object({
-  toolId: z.string().min(1).max(100),
-});
-
-const setToolStateSchema = z.object({
-  toolId: z.string().min(1).max(100),
-  state: z.record(z.unknown()),
-});
-
-// Message type enum for validation
-const messageTypeSchema = z.enum([
-  'PING',
-  'GET_SETTINGS',
-  'UPDATE_SETTINGS',
-  'GET_FEATURES',
-  'TOGGLE_FEATURE',
-  'GET_TOOL_STATE',
-  'SET_TOOL_STATE',
-  'TOGGLE_TOOL',
-  'GET_ALL_TOOL_STATES',
-  'COPY_TO_CLIPBOARD',
-  'SITE_REPORT_GENERATE',
-  'EXPORT_GENERATE_REPORT',
-]);
-
-// Union type for all message payloads
-type MessagePayloads = {
-  PING: undefined;
-  GET_SETTINGS: undefined;
-  UPDATE_SETTINGS: z.infer<typeof settingsSchema>;
-  GET_FEATURES: undefined;
-  TOGGLE_FEATURE: z.infer<typeof toggleFeaturePayloadSchema>;
-  GET_TOOL_STATE: z.infer<typeof getToolStateSchema>;
-  SET_TOOL_STATE: z.infer<typeof setToolStateSchema>;
-  TOGGLE_TOOL: z.infer<typeof toolStatePayloadSchema>;
-  GET_ALL_TOOL_STATES: undefined;
-  COPY_TO_CLIPBOARD: z.infer<typeof copyToClipboardSchema>;
-  SITE_REPORT_GENERATE: z.infer<typeof generateReportSchema>;
-  EXPORT_GENERATE_REPORT: z.infer<typeof exportReportSchema>;
-};
 
 /**
  * MessageRouter class for handling extension message routing.

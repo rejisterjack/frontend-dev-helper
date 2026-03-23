@@ -7,7 +7,6 @@
 
 import { createOverlay, throttle } from '@/utils/dom';
 import { logger } from '../utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
 
 // Tailwind CSS breakpoints
 const TAILWIND_BREAKPOINTS = {
@@ -222,10 +221,12 @@ export class BreakpointOverlay {
         
         <!-- Framework Toggle -->
         <div class="fdh-breakpoint-footer" style="${this.getFooterStyles()}">
-          <button class="fdh-framework-toggle" data-framework="tailwind" style="${this.getFrameworkButtonStyles('tailwind')}">
+          <button
+            type="button" class="fdh-framework-toggle" data-framework="tailwind" style="${this.getFrameworkButtonStyles('tailwind')}">
             Tailwind
           </button>
-          <button class="fdh-framework-toggle" data-framework="bootstrap" style="${this.getFrameworkButtonStyles('bootstrap')}">
+          <button
+            type="button" class="fdh-framework-toggle" data-framework="bootstrap" style="${this.getFrameworkButtonStyles('bootstrap')}">
             Bootstrap
           </button>
         </div>
@@ -238,7 +239,8 @@ export class BreakpointOverlay {
       <div class="fdh-resize-buttons" style="${this.getResizeButtonsStyles()}">
         ${DEVICE_PRESETS.map(
           (device) => `
-          <button 
+          <button
+            type="button" 
             class="fdh-resize-btn" 
             data-width="${device.width}" 
             data-height="${device.height}"

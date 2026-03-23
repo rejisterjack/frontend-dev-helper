@@ -442,6 +442,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={exportData}
               className="rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-600 hover:text-white"
               title="Export Data"
@@ -449,6 +450,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               📤 Export
             </button>
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               className="rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-600 hover:text-white"
               title="Import Data"
@@ -456,10 +458,17 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               📥 Import
             </button>
             <button
+              type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -479,6 +488,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
             { id: TAB_SETTINGS, label: 'Settings' },
           ].map((tab) => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
@@ -508,6 +518,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               {/* Actions */}
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => captureBaseline({ fullPage: false })}
                   disabled={isCapturing}
                   className="
@@ -526,6 +537,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   )}
                 </button>
                 <button
+                  type="button"
                   onClick={() => captureBaseline({ fullPage: true })}
                   disabled={isCapturing}
                   className="
@@ -571,6 +583,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
+                            type="button"
                             onClick={() =>
                               setSelectedBaselineId(
                                 selectedBaselineId === baseline.id ? null : baseline.id
@@ -597,6 +610,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                       {/* Actions */}
                       <div className="flex gap-2">
                         <button
+                          type="button"
                           onClick={() => runTest(baseline.id)}
                           disabled={isComparing}
                           className="flex-1 rounded bg-indigo-600 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:bg-slate-600"
@@ -604,6 +618,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                           {isComparing ? 'Running...' : 'Run Test'}
                         </button>
                         <button
+                          type="button"
                           onClick={() => deleteBaseline(baseline.id)}
                           className="rounded bg-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-red-600 hover:text-white"
                         >
@@ -623,6 +638,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               {/* Actions */}
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => selectedBaselineId && runTest(selectedBaselineId)}
                   disabled={!selectedBaselineId || isComparing}
                   className="
@@ -641,6 +657,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   )}
                 </button>
                 <button
+                  type="button"
                   onClick={runBatchTests}
                   disabled={isComparing || urlBaselines.length === 0}
                   className="
@@ -755,12 +772,14 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                             {test.status === 'failed' && (
                               <>
                                 <button
+                                  type="button"
                                   onClick={() => approveTest(test.id)}
                                   className="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500"
                                 >
                                   ✓ Approve as New Baseline
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => rejectTest(test.id)}
                                   className="rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
                                 >
@@ -770,6 +789,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                             )}
                             {test.result.diffImage && (
                               <button
+                                type="button"
                                 onClick={() => exportDiffImage(test)}
                                 className="rounded bg-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600"
                               >
@@ -777,6 +797,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                               </button>
                             )}
                             <button
+                              type="button"
                               onClick={() => deleteTest(test.id)}
                               className="rounded bg-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-red-600 hover:text-white"
                             >
@@ -823,6 +844,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm font-medium text-white">Ignore Regions</span>
                   <button
+                    type="button"
                     onClick={() =>
                       addIgnoreRegion({
                         x: 0,
@@ -850,10 +872,12 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                           x: {region.x}, y: {region.y}, {region.width}×{region.height}
                         </div>
                         <button
+                          type="button"
                           onClick={() => removeIgnoreRegion(idx)}
                           className="rounded bg-slate-700 p-1.5 text-slate-400 hover:bg-red-600 hover:text-white"
                         >
                           <svg
+                            aria-hidden="true"
                             className="h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"

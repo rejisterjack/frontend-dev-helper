@@ -43,7 +43,13 @@ function getPixel(data: Uint8ClampedArray, width: number, x: number, y: number):
 }
 
 // Set pixel at coordinates
-function setPixel(data: Uint8ClampedArray, width: number, x: number, y: number, pixel: Pixel): void {
+function setPixel(
+  data: Uint8ClampedArray,
+  width: number,
+  x: number,
+  y: number,
+  pixel: Pixel
+): void {
   const index = (y * width + x) * 4;
   data[index] = pixel.r;
   data[index + 1] = pixel.g;
@@ -72,12 +78,7 @@ function isInIgnoreRegion(
 
 // Calculate color difference (squared Euclidean distance)
 function colorDiff(p1: Pixel, p2: Pixel): number {
-  return (
-    (p1.r - p2.r) ** 2 +
-    (p1.g - p2.g) ** 2 +
-    (p1.b - p2.b) ** 2 +
-    (p1.a - p2.a) ** 2
-  );
+  return (p1.r - p2.r) ** 2 + (p1.g - p2.g) ** 2 + (p1.b - p2.b) ** 2 + (p1.a - p2.a) ** 2;
 }
 
 // Anti-aliasing detection
@@ -100,7 +101,7 @@ function isAntiAliased(
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
       if (dx === 0 && dy === 0) continue;
-      
+
       const nx = x + dx;
       const ny = y + dy;
       if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
@@ -130,13 +131,14 @@ function compareImages(
 ): { diffPercentage: number; passed: boolean; diffImageData?: ImageData } {
   const width = Math.min(baseline.width, current.width);
   const height = Math.min(baseline.height, current.height);
-  
+
   const maxDimension = Math.max(baseline.width, baseline.height, current.width, current.height);
-  const dimensionDiff = Math.abs(baseline.width - current.width) + Math.abs(baseline.height - current.height);
-  
+  const dimensionDiff =
+    Math.abs(baseline.width - current.width) + Math.abs(baseline.height - current.height);
+
   // Size mismatch penalty
-  let sizeMismatchPixels = dimensionDiff * maxDimension;
-  
+  const sizeMismatchPixels = dimensionDiff * maxDimension;
+
   // Create diff image
   const diffData = new Uint8ClampedArray(width * height * 4);
   let diffPixels = 0;
@@ -156,10 +158,13 @@ function compareImages(
 
       const p1 = getPixel(baseline.data, baseline.width, x, y);
       const p2 = getPixel(current.data, current.width, x, y);
-      
+
       const diff = colorDiff(p1, p2);
-      
-      if (diff > thresholdSquared && !isAntiAliased(baseline.data, current.data, width, height, x, y)) {
+
+      if (
+        diff > thresholdSquared &&
+        !isAntiAliased(baseline.data, current.data, width, height, x, y)
+      ) {
         diffPixels++;
         // Mark diff pixel in magenta
         setPixel(diffData, width, x, y, { r: 255, g: 0, b: 255, a: 255 });
@@ -173,7 +178,7 @@ function compareImages(
   // Calculate percentage including size mismatch
   totalPixels += sizeMismatchPixels;
   diffPixels += sizeMismatchPixels;
-  
+
   const diffPercentage = (diffPixels / totalPixels) * 100;
   const passed = diffPercentage <= threshold * 100;
 
@@ -185,15 +190,15 @@ function compareImages(
 }
 
 // Worker message handler
-self.onmessage = function (event: MessageEvent<DiffRequest>): void {
+self.onmessage = (event: MessageEvent<DiffRequest>): void => {
   const { type, id } = event.data;
 
   if (type === 'COMPARE_IMAGES') {
     try {
       const { baseline, current, threshold, ignoreRegions } = event.data;
-      
+
       const result = compareImages(baseline, current, threshold, ignoreRegions);
-      
+
       const response: DiffResponse = {
         type: 'COMPARE_RESULT',
         id,
@@ -201,7 +206,7 @@ self.onmessage = function (event: MessageEvent<DiffRequest>): void {
         passed: result.passed,
         diffImageData: result.diffImageData,
       };
-      
+
       self.postMessage(response);
     } catch (error) {
       const response: DiffResponse = {

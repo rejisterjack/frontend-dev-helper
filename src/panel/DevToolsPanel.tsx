@@ -42,7 +42,13 @@ export const DevToolsPanel: React.FC = () => {
       <header className="flex items-center justify-between border-b border-dev-border bg-dev-surface px-4 py-2">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded bg-primary-600 text-white">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              aria-hidden="true"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -54,11 +60,18 @@ export const DevToolsPanel: React.FC = () => {
           <span className="font-medium">FrontendDevHelper</span>
         </div>
         <button
+          type="button"
           onClick={refreshSelection}
           disabled={loading}
           className="rounded p-1 text-dev-muted hover:text-dev-text disabled:opacity-50"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -96,6 +109,7 @@ export const DevToolsPanel: React.FC = () => {
           <div className="flex border-b border-dev-border bg-dev-surface">
             {['styles', 'computed', 'layout', 'accessibility'].map((tab) => (
               <button
+                type="button"
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 text-sm capitalize ${

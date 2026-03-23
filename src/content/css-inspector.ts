@@ -7,7 +7,6 @@
 
 import { getContrastRatio, getWCAGRating } from '../utils/color';
 import { logger } from '../utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
 
 interface CSSProperty {
   name: string;
@@ -446,7 +445,8 @@ function buildTooltipContent(element: HTMLElement): string {
         Show inherited
       </label>
       
-      <button class="fdh-copy-css-btn" style="
+      <button
+        type="button" class="fdh-copy-css-btn" style="
         margin-left: auto;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);

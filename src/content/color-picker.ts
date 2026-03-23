@@ -605,7 +605,8 @@ export class ColorPicker {
     overlay.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="margin: 0; font-size: 18px; color: #c084fc;">🎨 Page Color Palette</h3>
-        <button id="fdh-close-palette" style="
+        <button
+          type="button" id="fdh-close-palette" style="
           background: transparent;
           border: none;
           color: #94a3b8;
@@ -622,10 +623,9 @@ export class ColorPicker {
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 6px;" class="color-palette-grid" data-palette-type="dominant">
           ${palette.dominant
-            .map(
-              (color) => {
-                const safeColor = escapeHtml(color);
-                return `
+            .map((color) => {
+              const safeColor = escapeHtml(color);
+              return `
             <div style="
               width: 40px;
               height: 40px;
@@ -646,7 +646,7 @@ export class ColorPicker {
               ">${safeColor}</span>
             </div>
           `;
-              })
+            })
             .join('')}
         </div>
       </div>
@@ -693,7 +693,8 @@ export class ColorPicker {
       </div>
 
       <div style="margin-top: 16px; display: flex; gap: 8px;">
-        <button id="fdh-copy-palette" style="
+        <button
+          type="button" id="fdh-copy-palette" style="
           flex: 1;
           background: rgba(99, 102, 241, 0.2);
           border: 1px solid rgba(99, 102, 241, 0.4);
@@ -704,7 +705,8 @@ export class ColorPicker {
           cursor: pointer;
           font-family: inherit;
         ">📋 Copy Palette</button>
-        <button id="fdh-export-palette" style="
+        <button
+          type="button" id="fdh-export-palette" style="
           flex: 1;
           background: rgba(34, 197, 94, 0.2);
           border: 1px solid rgba(34, 197, 94, 0.4);
@@ -726,7 +728,7 @@ export class ColorPicker {
 
     // Event listeners
     overlay.querySelector('#fdh-close-palette')?.addEventListener('click', () => overlay.remove());
-    
+
     // Event delegation for color swatches (security: prevents XSS via inline onclick)
     overlay.addEventListener('click', (e) => {
       const swatch = (e.target as HTMLElement).closest('.color-swatch');

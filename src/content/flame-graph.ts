@@ -245,11 +245,16 @@ function getPanelHTML(): string {
         <span>Performance Flame Graph</span>
       </div>
       <div id="${PREFIX}-actions">
-        <button id="${PREFIX}-record" title="Start/Stop Profiling">⏺</button>
-        <button id="${PREFIX}-refresh" title="Refresh Data">🔄</button>
-        <button id="${PREFIX}-reset" title="Reset View">⌖</button>
-        <button id="${PREFIX}-export" title="Export JSON">📤</button>
-        <button id="${PREFIX}-close" title="Close">✕</button>
+        <button
+          type="button" id="${PREFIX}-record" title="Start/Stop Profiling">⏺</button>
+        <button
+          type="button" id="${PREFIX}-refresh" title="Refresh Data">🔄</button>
+        <button
+          type="button" id="${PREFIX}-reset" title="Reset View">⌖</button>
+        <button
+          type="button" id="${PREFIX}-export" title="Export JSON">📤</button>
+        <button
+          type="button" id="${PREFIX}-close" title="Close">✕</button>
       </div>
     </div>
     
@@ -295,9 +300,11 @@ function getPanelHTML(): string {
         <span id="${PREFIX}-long-tasks">Long Tasks: 0</span>
       </div>
       <div id="${PREFIX}-zoom-controls">
-        <button id="${PREFIX}-zoom-out">−</button>
+        <button
+          type="button" id="${PREFIX}-zoom-out">−</button>
         <span id="${PREFIX}-zoom-level">100%</span>
-        <button id="${PREFIX}-zoom-in">+</button>
+        <button
+          type="button" id="${PREFIX}-zoom-in">+</button>
       </div>
     </div>
     
@@ -309,7 +316,8 @@ function getPanelHTML(): string {
     <div id="${PREFIX}-details" class="${PREFIX}-hidden">
       <div id="${PREFIX}-details-header">
         <h3>Function Details</h3>
-        <button id="${PREFIX}-details-close">✕</button>
+        <button
+          type="button" id="${PREFIX}-details-close">✕</button>
       </div>
       <div id="${PREFIX}-details-content"></div>
     </div>
@@ -798,7 +806,6 @@ function hideDetails(): void {
   const details = shadowRoot?.querySelector(`#${PREFIX}-details`) as HTMLElement;
   details?.classList.add(`${PREFIX}-hidden`);
 }
-
 
 // ============================================
 // Styles

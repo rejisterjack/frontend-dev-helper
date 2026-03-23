@@ -159,6 +159,7 @@ export class ErrorBoundary extends Component<Props, State> {
             }}
           >
             <button
+              type="button"
               onClick={this.handleReset}
               style={{
                 flex: 1,
@@ -176,6 +177,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Try Again
             </button>
             <button
+              type="button"
               onClick={this.handleReload}
               style={{
                 flex: 1,

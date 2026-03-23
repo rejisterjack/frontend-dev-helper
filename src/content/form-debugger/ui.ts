@@ -18,26 +18,33 @@ export function getPanelHTML(highlightIssuesEnabled: boolean): string {
         <span>Form Debugger</span>
       </div>
       <div id="${PREFIX}-actions">
-        <button id="${PREFIX}-refresh" title="Refresh">🔄</button>
-        <button id="${PREFIX}-toggle-highlights" title="Toggle Highlights" class="${highlightIssuesEnabled ? 'active' : ''}">🔍</button>
-        <button id="${PREFIX}-close" title="Close">✕</button>
+        <button
+          type="button" id="${PREFIX}-refresh" title="Refresh">🔄</button>
+        <button
+          type="button" id="${PREFIX}-toggle-highlights" title="Toggle Highlights" class="${highlightIssuesEnabled ? 'active' : ''}">🔍</button>
+        <button
+          type="button" id="${PREFIX}-close" title="Close">✕</button>
       </div>
     </div>
     
     <div id="${PREFIX}-tabs">
-      <button class="${PREFIX}-tab active" data-tab="overview">
+      <button
+        type="button" class="${PREFIX}-tab active" data-tab="overview">
         Overview
         <span class="${PREFIX}-badge" id="${PREFIX}-forms-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="fields">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="fields">
         Fields
         <span class="${PREFIX}-badge" id="${PREFIX}-fields-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="validation">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="validation">
         Validation
         <span class="${PREFIX}-badge" id="${PREFIX}-validation-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="accessibility">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="accessibility">
         A11y
         <span class="${PREFIX}-badge" id="${PREFIX}-a11y-count">0</span>
       </button>

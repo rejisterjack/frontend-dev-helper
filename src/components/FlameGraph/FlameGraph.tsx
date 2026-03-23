@@ -507,6 +507,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleExport}
               disabled={!profile}
               className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
@@ -515,6 +516,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
               Export
             </button>
             <button
+              type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
             >
@@ -585,6 +587,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
           {/* Zoom Controls */}
           <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-slate-800 rounded-lg p-1 shadow-lg">
             <button
+              type="button"
               onClick={handleZoomOut}
               className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300"
             >
@@ -594,12 +597,14 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
               {Math.round(view.zoom * 100)}%
             </span>
             <button
+              type="button"
               onClick={handleZoomIn}
               className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300"
             >
               +
             </button>
             <button
+              type="button"
               onClick={handleResetView}
               className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300"
               title="Reset view"
@@ -711,6 +716,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedEntry(null)}
                 className="text-slate-400 hover:text-white"
               >

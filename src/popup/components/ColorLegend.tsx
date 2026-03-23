@@ -52,12 +52,19 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
     <div className={`bg-slate-800/50 rounded-lg overflow-hidden ${className}`}>
       {/* Toggle Header */}
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
         aria-expanded={isExpanded}
       >
         <span className="flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            aria-hidden="true"
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -68,6 +75,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
           Color Legend
         </span>
         <svg
+          aria-hidden="true"
           className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
@@ -88,6 +96,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
           <div className="grid grid-cols-5 gap-2">
             {items.map((item) => (
               <button
+                type="button"
                 key={item.tag}
                 onClick={() => handleColorClick(item.color)}
                 className="color-legend-item group flex flex-col items-center gap-1 p-1.5 rounded hover:bg-slate-700/50 transition-all"

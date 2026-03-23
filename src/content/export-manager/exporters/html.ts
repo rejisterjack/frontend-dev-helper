@@ -156,7 +156,8 @@ export function generatePDFHtml(data: object, options?: Partial<PDFOptions>): st
   }
   
   <div class="no-print" style="margin-top: 30px; text-align: center;">
-    <button onclick="window.print()" style="
+    <button
+      type="button" onclick="window.print()" style="
       padding: 12px 24px;
       background: #3b82f6;
       color: white;

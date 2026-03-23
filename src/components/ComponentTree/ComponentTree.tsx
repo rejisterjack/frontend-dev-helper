@@ -108,6 +108,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   return (
     <>
+      {/* biome-ignore lint/a11y/useSemanticElements: contains a nested <button> for toggle — cannot use outer <button> */}
       <div
         className={`
           flex cursor-pointer select-none items-center gap-1.5 py-1.5 pr-4
@@ -127,6 +128,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
       >
         {/* Toggle button */}
         <button
+          type="button"
           onClick={handleToggle}
           className={`
             flex h-4 w-4 items-center justify-center rounded text-xs
@@ -159,8 +161,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             {Object.keys(node.props).length}
           </span>
         )}
-      </div>
-
+      </div>{' '}
+      {/* end row */}
       {/* Children */}
       {isExpanded &&
         node.children.map((child) => (
@@ -436,12 +438,14 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
           </div>
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={refresh}
               disabled={isLoading}
               className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
               title="Refresh (Ctrl+R)"
             >
               <svg
+                aria-hidden="true"
                 className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -456,11 +460,18 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               </svg>
             </button>
             <button
+              type="button"
               onClick={expandAll}
               className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
               title="Expand All"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -470,11 +481,18 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               </svg>
             </button>
             <button
+              type="button"
               onClick={collapseAll}
               className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
               title="Collapse All"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -484,11 +502,18 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               </svg>
             </button>
             <button
+              type="button"
               onClick={onClose}
               className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
               title="Close (Esc)"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -504,6 +529,7 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
         <div className="border-b border-slate-700 p-3">
           <div className="relative">
             <svg
+              aria-hidden="true"
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
               fill="none"
               viewBox="0 0 24 24"
@@ -526,10 +552,17 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -546,7 +579,12 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
         <div className="flex-1 overflow-y-auto py-2">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-              <svg className="mb-3 h-8 w-8 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg
+                aria-hidden="true"
+                className="mb-3 h-8 w-8 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
                 <circle
                   className="opacity-25"
                   cx="12"

@@ -29,22 +29,28 @@ export class UIManager {
           <span>Focus Debugger</span>
         </div>
         <div id="${this.prefix}-actions">
-          <button id="${this.prefix}-refresh" title="Refresh">🔄</button>
-          <button id="${this.prefix}-toggle-overlays" title="Toggle Overlays">👁️</button>
-          <button id="${this.prefix}-close" title="Close">✕</button>
+          <button
+            type="button" id="${this.prefix}-refresh" title="Refresh">🔄</button>
+          <button
+            type="button" id="${this.prefix}-toggle-overlays" title="Toggle Overlays">👁️</button>
+          <button
+            type="button" id="${this.prefix}-close" title="Close">✕</button>
         </div>
       </div>
       
       <div id="${this.prefix}-tabs">
-        <button class="${this.prefix}-tab active" data-tab="elements">
+        <button
+          type="button" class="${this.prefix}-tab active" data-tab="elements">
           Elements
           <span class="${this.prefix}-badge" id="${this.prefix}-elements-count">0</span>
         </button>
-        <button class="${this.prefix}-tab" data-tab="history">
+        <button
+          type="button" class="${this.prefix}-tab" data-tab="history">
           History
           <span class="${this.prefix}-badge" id="${this.prefix}-history-count">0</span>
         </button>
-        <button class="${this.prefix}-tab" data-tab="issues">
+        <button
+          type="button" class="${this.prefix}-tab" data-tab="issues">
           Issues
           <span class="${this.prefix}-badge" id="${this.prefix}-issues-count">0</span>
         </button>
@@ -107,7 +113,8 @@ export class UIManager {
 
     return `
       <div class="${this.prefix}-toolbar-secondary">
-        <button id="${this.prefix}-clear-history">Clear History</button>
+        <button
+          type="button" id="${this.prefix}-clear-history">Clear History</button>
       </div>
       <div class="${this.prefix}-info">${focusHistory.length} focus events</div>
       <div class="${this.prefix}-list">

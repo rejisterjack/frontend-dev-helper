@@ -365,7 +365,6 @@ async function executeCommand(id: string): Promise<void> {
   }
 }
 
-
 function getStyles(): string {
   return `
     #${PREFIX}-backdrop {

@@ -284,15 +284,25 @@ const createMockContext = (): CanvasRenderingContext2D => {
           return { data: slice, width: w, height: h, colorSpace: 'srgb' } as ImageData;
         }
       }
-      return { data: new Uint8ClampedArray(w * h * 4), width: w, height: h, colorSpace: 'srgb' } as ImageData;
+      return {
+        data: new Uint8ClampedArray(w * h * 4),
+        width: w,
+        height: h,
+        colorSpace: 'srgb',
+      } as ImageData;
     }),
-    createImageData: vi.fn((w: number, h: number): ImageData => ({
-      data: new Uint8ClampedArray(w * h * 4),
-      width: w,
-      height: h,
-      colorSpace: 'srgb',
-    } as ImageData)),
-    measureText: vi.fn(() => ({ width: 0, actualBoundingBoxAscent: 0, actualBoundingBoxDescent: 0 } as TextMetrics)),
+    createImageData: vi.fn(
+      (w: number, h: number): ImageData =>
+        ({
+          data: new Uint8ClampedArray(w * h * 4),
+          width: w,
+          height: h,
+          colorSpace: 'srgb',
+        }) as ImageData
+    ),
+    measureText: vi.fn(
+      () => ({ width: 0, actualBoundingBoxAscent: 0, actualBoundingBoxDescent: 0 }) as TextMetrics
+    ),
     fillText: vi.fn(),
     strokeText: vi.fn(),
     clip: vi.fn(),
@@ -307,7 +317,9 @@ const createMockContext = (): CanvasRenderingContext2D => {
   // Make fillStyle update the tracked local var
   Object.defineProperty(ctx, 'fillStyle', {
     get: () => fillStyle,
-    set: (v: string) => { fillStyle = v; },
+    set: (v: string) => {
+      fillStyle = v;
+    },
   });
 
   return ctx;
@@ -324,7 +336,11 @@ HTMLCanvasElement.prototype.getContext = function (contextType: string, ...args:
     Object.defineProperty(ctx, 'canvas', { value: this, writable: false });
     return ctx as unknown as RenderingContext;
   }
-  return (originalGetContext as (type: string, ...a: unknown[]) => RenderingContext | null).call(this, contextType, ...args);
+  return (originalGetContext as (type: string, ...a: unknown[]) => RenderingContext | null).call(
+    this,
+    contextType,
+    ...args
+  );
 } as typeof HTMLCanvasElement.prototype.getContext;
 
 // Note: Don't mock document.createElement globally as it breaks jsdom for React tests

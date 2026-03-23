@@ -3,15 +3,15 @@
  * Main entry point - re-exports from modular files
  */
 
+export * from './formatters';
 export * from './types';
 export * from './utils';
-export * from './formatters';
 
-import type { SiteReport } from './types';
-import { generateReportId, createMetricScore, colorToHex, rgbToHex, hexToRgb, rgbToHsl, hslToHex, formatBytes } from './utils';
-import { exportReportAsJSON, exportReportAsHTML, printReport, generateFullHTMLReport } from './formatters';
-import { logger } from '../../utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
+import { logger } from '../../utils/logger';
+import { exportReportAsHTML, exportReportAsJSON, printReport } from './formatters';
+import type { SiteReport } from './types';
+import { createMetricScore, generateReportId } from './utils';
 
 // State
 let isEnabled = false;
@@ -23,12 +23,14 @@ const PREFIX = 'fdh-site-report';
 /**
  * Generate comprehensive site report
  */
-export async function generateReport(options: {
-  includePerformance?: boolean;
-  includeAccessibility?: boolean;
-  includeSeo?: boolean;
-  includeSecurity?: boolean;
-} = {}): Promise<SiteReport> {
+export async function generateReport(
+  options: {
+    includePerformance?: boolean;
+    includeAccessibility?: boolean;
+    includeSeo?: boolean;
+    includeSecurity?: boolean;
+  } = {}
+): Promise<SiteReport> {
   logger.log('[SiteReport] Generating report...');
 
   const report: SiteReport = {
@@ -116,7 +118,8 @@ function generateOverlayHTML(report: SiteReport): string {
           <p style="margin: 0; color: #64748b;">${escapeHtml(report.title)}</p>
           <p style="margin: 4px 0 0; font-size: 12px; color: #475569;">${escapeHtml(report.url)}</p>
         </div>
-        <button id="${PREFIX}-close" style="background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 12px 20px; border-radius: 8px; cursor: pointer;">
+        <button
+          type="button" id="${PREFIX}-close" style="background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 12px 20px; border-radius: 8px; cursor: pointer;">
           ✕ Close
         </button>
       </div>
@@ -136,20 +139,25 @@ function generateOverlayHTML(report: SiteReport): string {
       </div>
 
       <div style="display: flex; gap: 12px; margin-bottom: 40px;">
-        <button id="${PREFIX}-export-json" style="flex: 1; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; padding: 12px; border-radius: 8px; cursor: pointer;">
+        <button
+          type="button" id="${PREFIX}-export-json" style="flex: 1; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; padding: 12px; border-radius: 8px; cursor: pointer;">
           📥 Export JSON
         </button>
-        <button id="${PREFIX}-export-html" style="flex: 1; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; padding: 12px; border-radius: 8px; cursor: pointer;">
+        <button
+          type="button" id="${PREFIX}-export-html" style="flex: 1; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; padding: 12px; border-radius: 8px; cursor: pointer;">
           🌐 Export HTML
         </button>
-        <button id="${PREFIX}-print" style="flex: 1; background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4); color: #eab308; padding: 12px; border-radius: 8px; cursor: pointer;">
+        <button
+          type="button" id="${PREFIX}-print" style="flex: 1; background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4); color: #eab308; padding: 12px; border-radius: 8px; cursor: pointer;">
           🖨️ Print
         </button>
       </div>
 
       <div id="${PREFIX}-recommendations">
         <h3 style="margin: 0 0 16px; font-size: 18px; color: #c084fc;">Recommendations (${report.recommendations.length})</h3>
-        ${report.recommendations.map((rec, i) => `
+        ${report.recommendations
+          .map(
+            (rec, _i) => `
           <div style="background: rgba(30, 41, 59, 0.6); border-left: 4px solid ${getPriorityColor(rec.priority)}; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
               <span style="font-weight: 600;">${escapeHtml(rec.title)}</span>
@@ -160,7 +168,9 @@ function generateOverlayHTML(report: SiteReport): string {
               Impact: ${rec.impact} | Effort: ${rec.effort}
             </div>
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     </div>
   `;
@@ -255,7 +265,12 @@ function analyzeSEO() {
     meta: {
       hasTitle: !!document.title,
       titleLength: document.title.length,
-      titleQuality: document.title.length > 30 && document.title.length < 60 ? 'good' : document.title.length < 30 ? 'too-short' : 'too-long',
+      titleQuality:
+        document.title.length > 30 && document.title.length < 60
+          ? 'good'
+          : document.title.length < 30
+            ? 'too-short'
+            : 'too-long',
       hasDescription: false,
       descriptionLength: 0,
       hasViewport: !!document.querySelector('meta[name="viewport"]'),
@@ -269,13 +284,36 @@ function analyzeSEO() {
       issues: [],
     },
     headings: {
-      h1: { count: document.querySelectorAll('h1').length, texts: Array.from(document.querySelectorAll('h1')).map(h => h.textContent || '') },
-      h2: { count: document.querySelectorAll('h2').length, texts: Array.from(document.querySelectorAll('h2')).map(h => h.textContent || '') },
-      h3: { count: document.querySelectorAll('h3').length, texts: Array.from(document.querySelectorAll('h3')).map(h => h.textContent || '') },
-      h4: { count: document.querySelectorAll('h4').length, texts: Array.from(document.querySelectorAll('h4')).map(h => h.textContent || '') },
-      h5: { count: document.querySelectorAll('h5').length, texts: Array.from(document.querySelectorAll('h5')).map(h => h.textContent || '') },
-      h6: { count: document.querySelectorAll('h6').length, texts: Array.from(document.querySelectorAll('h6')).map(h => h.textContent || '') },
-      structure: document.querySelectorAll('h1').length === 1 ? 'good' : document.querySelectorAll('h1').length === 0 ? 'missing-h1' : 'multiple-h1',
+      h1: {
+        count: document.querySelectorAll('h1').length,
+        texts: Array.from(document.querySelectorAll('h1')).map((h) => h.textContent || ''),
+      },
+      h2: {
+        count: document.querySelectorAll('h2').length,
+        texts: Array.from(document.querySelectorAll('h2')).map((h) => h.textContent || ''),
+      },
+      h3: {
+        count: document.querySelectorAll('h3').length,
+        texts: Array.from(document.querySelectorAll('h3')).map((h) => h.textContent || ''),
+      },
+      h4: {
+        count: document.querySelectorAll('h4').length,
+        texts: Array.from(document.querySelectorAll('h4')).map((h) => h.textContent || ''),
+      },
+      h5: {
+        count: document.querySelectorAll('h5').length,
+        texts: Array.from(document.querySelectorAll('h5')).map((h) => h.textContent || ''),
+      },
+      h6: {
+        count: document.querySelectorAll('h6').length,
+        texts: Array.from(document.querySelectorAll('h6')).map((h) => h.textContent || ''),
+      },
+      structure:
+        document.querySelectorAll('h1').length === 1
+          ? 'good'
+          : document.querySelectorAll('h1').length === 0
+            ? 'missing-h1'
+            : 'multiple-h1',
       issues: [],
     },
     links: {
@@ -285,7 +323,8 @@ function analyzeSEO() {
       broken: 0,
       nofollow: document.querySelectorAll('a[rel*="nofollow"]').length,
       newWindow: document.querySelectorAll('a[target="_blank"]').length,
-      withoutAriaLabel: document.querySelectorAll('a:not([aria-label]):not([aria-labelledby])').length,
+      withoutAriaLabel: document.querySelectorAll('a:not([aria-label]):not([aria-labelledby])')
+        .length,
       issues: [],
     },
     images: {
@@ -297,7 +336,8 @@ function analyzeSEO() {
     },
     mobile: {
       hasViewport: !!document.querySelector('meta[name="viewport"]'),
-      viewportContent: document.querySelector('meta[name="viewport"]')?.getAttribute('content') || null,
+      viewportContent:
+        document.querySelector('meta[name="viewport"]')?.getAttribute('content') || null,
       hasTouchTargets: true,
       smallTouchTargets: 0,
       usesFixedPosition: !!document.querySelector('[style*="fixed"]'),
@@ -343,31 +383,38 @@ function analyzeBestPractices() {
 
 function calculateScores(report: SiteReport): SiteReport['scores'] {
   const scores = {
-    performance: report.performance ? Math.round(Object.values(report.performance.webVitals).reduce((sum, v) => sum + v.score, 0) / 6) : 0,
+    performance: report.performance
+      ? Math.round(
+          Object.values(report.performance.webVitals).reduce((sum, v) => sum + v.score, 0) / 6
+        )
+      : 0,
     accessibility: report.accessibility ? 85 : 0,
     seo: report.seo ? report.seo.score : 0,
     bestPractices: report.bestPractices ? 90 : 0,
     overall: 0,
   };
-  scores.overall = Math.round((scores.performance + scores.accessibility + scores.seo + scores.bestPractices) / 4);
+  scores.overall = Math.round(
+    (scores.performance + scores.accessibility + scores.seo + scores.bestPractices) / 4
+  );
   return scores;
 }
 
 function generateRecommendations(report: SiteReport) {
   const recommendations = [];
-  
+
   if (report.seo?.meta.titleLength < 30) {
     recommendations.push({
       id: 'seo-title-short',
       category: 'seo',
       priority: 'medium',
       title: 'Page title is too short',
-      description: 'The page title should be between 30-60 characters for optimal display in search results.',
+      description:
+        'The page title should be between 30-60 characters for optimal display in search results.',
       impact: 'Better click-through rates from search results',
       effort: 'easy',
     });
   }
-  
+
   if (report.seo?.images.withoutAlt > 0) {
     recommendations.push({
       id: 'accessibility-img-alt',
@@ -379,7 +426,7 @@ function generateRecommendations(report: SiteReport) {
       effort: 'easy',
     });
   }
-  
+
   return recommendations;
 }
 

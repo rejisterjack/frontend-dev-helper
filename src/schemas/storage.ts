@@ -25,15 +25,19 @@ export const extensionSettingsSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']).default('system'),
   defaultTools: z.array(z.string()).default([]),
   shortcuts: z.record(z.string(), z.string()).default({}),
-  notifications: z.object({
-    enabled: z.boolean().default(true),
-    onInstall: z.boolean().default(true),
-    onUpdate: z.boolean().default(true),
-  }).default({}),
-  privacy: z.object({
-    analyticsEnabled: z.boolean().default(false),
-    shareUsageData: z.boolean().default(false),
-  }).default({}),
+  notifications: z
+    .object({
+      enabled: z.boolean().default(true),
+      onInstall: z.boolean().default(true),
+      onUpdate: z.boolean().default(true),
+    })
+    .default({}),
+  privacy: z
+    .object({
+      analyticsEnabled: z.boolean().default(false),
+      shareUsageData: z.boolean().default(false),
+    })
+    .default({}),
 });
 
 // Feature flags schema

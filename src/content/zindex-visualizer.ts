@@ -1,5 +1,5 @@
-import { logger } from '../utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
+import { logger } from '../utils/logger';
 
 /**
  * Z-Index Visualizer
@@ -175,7 +175,8 @@ function buildOverlayContent(): string {
     <div class="fdh-zindex-header" style="margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h3 style="margin: 0; font-size: 16px; color: #c084fc;">📚 Z-Index Stack</h3>
-        <button class="fdh-close-btn" style="
+        <button
+          type="button" class="fdh-close-btn" style="
           background: transparent;
           border: none;
           color: #94a3b8;
@@ -262,7 +263,8 @@ function buildOverlayContent(): string {
     </div>
     
     <div style="margin-top: 12px; display: flex; gap: 8px;">
-      <button class="fdh-refresh-btn" style="
+      <button
+        type="button" class="fdh-refresh-btn" style="
         flex: 1;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);
@@ -272,7 +274,8 @@ function buildOverlayContent(): string {
         font-size: 11px;
         cursor: pointer;
       ">🔄 Refresh</button>
-      <button class="fdh-visualize-btn" style="
+      <button
+        type="button" class="fdh-visualize-btn" style="
         flex: 1;
         background: rgba(34, 197, 94, 0.2);
         border: 1px solid rgba(34, 197, 94, 0.4);
@@ -284,7 +287,8 @@ function buildOverlayContent(): string {
       ">👁️ Visualize</button>
     </div>
     <div style="margin-top: 8px;">
-      <button class="fdh-3d-btn" style="
+      <button
+        type="button" class="fdh-3d-btn" style="
         width: 100%;
         background: linear-gradient(135deg, rgba(192, 132, 252, 0.2), rgba(99, 102, 241, 0.2));
         border: 1px solid rgba(192, 132, 252, 0.4);
@@ -510,7 +514,8 @@ function create3DStackView(): void {
   controls.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
       <h3 style="margin: 0; font-size: 14px; color: #c084fc;">🥽 3D Stack View</h3>
-      <button id="fdh-close-3d" style="
+      <button
+        type="button" id="fdh-close-3d" style="
         background: transparent;
         border: none;
         color: #94a3b8;
@@ -524,7 +529,8 @@ function create3DStackView(): void {
       Drag to rotate • Scroll to zoom
     </div>
     <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-      <button id="fdh-reset-view" style="
+      <button
+        type="button" id="fdh-reset-view" style="
         flex: 1;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);
@@ -534,7 +540,8 @@ function create3DStackView(): void {
         font-size: 11px;
         cursor: pointer;
       ">Reset View</button>
-      <button id="fdh-toggle-wireframe" style="
+      <button
+        type="button" id="fdh-toggle-wireframe" style="
         flex: 1;
         background: rgba(34, 197, 94, 0.2);
         border: 1px solid rgba(34, 197, 94, 0.4);

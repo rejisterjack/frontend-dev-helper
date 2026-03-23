@@ -14,7 +14,13 @@ export const Header: React.FC<HeaderProps> = ({ enabled, onToggle }) => {
     <header className="flex items-center justify-between border-b border-dev-border bg-dev-surface px-4 py-3">
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            aria-hidden="true"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -35,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ enabled, onToggle }) => {
       </div>
 
       <button
+        type="button"
         onClick={onToggle}
         className={`relative h-6 w-10 rounded-full transition-colors ${
           enabled ? 'bg-primary-600' : 'bg-dev-border'

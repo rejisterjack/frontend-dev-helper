@@ -46,30 +46,38 @@ export function getPanelHTML(): string {
         <span>Storage Inspector</span>
       </div>
       <div id="${PREFIX}-actions">
-        <button id="${PREFIX}-refresh" title="Refresh">🔄</button>
-        <button id="${PREFIX}-export" title="Export All">📤</button>
-        <button id="${PREFIX}-close" title="Close">✕</button>
+        <button
+          type="button" id="${PREFIX}-refresh" title="Refresh">🔄</button>
+        <button
+          type="button" id="${PREFIX}-export" title="Export All">📤</button>
+        <button
+          type="button" id="${PREFIX}-close" title="Close">✕</button>
       </div>
     </div>
     
     <div id="${PREFIX}-tabs">
-      <button class="${PREFIX}-tab active" data-tab="localStorage">
+      <button
+        type="button" class="${PREFIX}-tab active" data-tab="localStorage">
         LocalStorage
         <span class="${PREFIX}-badge" id="${PREFIX}-localStorage-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="sessionStorage">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="sessionStorage">
         SessionStorage
         <span class="${PREFIX}-badge" id="${PREFIX}-sessionStorage-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="indexedDB">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="indexedDB">
         IndexedDB
         <span class="${PREFIX}-badge" id="${PREFIX}-indexedDB-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="cookies">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="cookies">
         Cookies
         <span class="${PREFIX}-badge" id="${PREFIX}-cookies-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="cache">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="cache">
         Cache
         <span class="${PREFIX}-badge" id="${PREFIX}-cache-count">0</span>
       </button>
@@ -77,7 +85,8 @@ export function getPanelHTML(): string {
     
     <div id="${PREFIX}-toolbar">
       <input type="text" id="${PREFIX}-search" placeholder="Search..." />
-      <button id="${PREFIX}-clear-all">Clear All</button>
+      <button
+        type="button" id="${PREFIX}-clear-all">Clear All</button>
     </div>
     
     <div id="${PREFIX}-content"></div>
@@ -202,8 +211,10 @@ export function renderStorageItems(
           </div>
           <div class="${PREFIX}-item-value">${escapeHtml(truncate(item.value, 100))}</div>
           <div class="${PREFIX}-item-actions">
-            <button class="${PREFIX}-edit" data-key="${escapeHtml(item.key)}">Edit</button>
-            <button class="${PREFIX}-delete" data-key="${escapeHtml(item.key)}">Delete</button>
+            <button
+              type="button" class="${PREFIX}-edit" data-key="${escapeHtml(item.key)}">Edit</button>
+            <button
+              type="button" class="${PREFIX}-delete" data-key="${escapeHtml(item.key)}">Delete</button>
           </div>
         </div>
       `
@@ -231,7 +242,8 @@ export function renderIndexedDB(databases: IndexedDBDatabase[]): string {
           <div class="${PREFIX}-database-header">
             <span class="${PREFIX}-database-name">${escapeHtml(db.name)}</span>
             <span class="${PREFIX}-database-version">v${db.version}</span>
-            <button class="${PREFIX}-delete-db" data-name="${escapeHtml(db.name)}">Delete DB</button>
+            <button
+              type="button" class="${PREFIX}-delete-db" data-name="${escapeHtml(db.name)}">Delete DB</button>
           </div>
           <div class="${PREFIX}-stores">
             ${db.objectStores
@@ -308,7 +320,8 @@ export function renderCacheStorage(caches: { [cacheName: string]: CacheEntry[] }
             <div class="${PREFIX}-cache-header">
               <span class="${PREFIX}-cache-name">${escapeHtml(cacheName)}</span>
               <span class="${PREFIX}-cache-stats">${entries.length} entries (${formatBytes(totalSize)})</span>
-              <button class="${PREFIX}-clear-cache" data-name="${escapeHtml(cacheName)}">Clear Cache</button>
+              <button
+                type="button" class="${PREFIX}-clear-cache" data-name="${escapeHtml(cacheName)}">Clear Cache</button>
             </div>
             <div class="${PREFIX}-cache-entries">
               ${entries

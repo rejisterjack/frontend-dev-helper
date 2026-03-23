@@ -335,13 +335,16 @@ function createPanel(): HTMLElement {
   panel.innerHTML = `
     <div class="dsv-header" id="dsv-header">
       <div class="dsv-title">
-        <svg class="dsv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          aria-hidden="true" class="dsv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
         </svg>
         Design System Validator
       </div>
-      <button class="dsv-close-btn" id="dsv-close" title="Close">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button
+        type="button" class="dsv-close-btn" id="dsv-close" title="Close">
+        <svg
+          aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
       </button>
@@ -360,7 +363,8 @@ function createPanel(): HTMLElement {
       <div class="dsv-section">
         <div class="dsv-toggle" id="dsv-highlight-toggle">
           <span class="dsv-toggle-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
@@ -390,7 +394,8 @@ function createPanel(): HTMLElement {
         <div class="dsv-section-title">Issues Found</div>
         <div class="dsv-violations" id="dsv-violations">
           <div class="dsv-empty">
-            <svg class="dsv-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              aria-hidden="true" class="dsv-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <p>Click "Validate Page" to check for inconsistencies</p>
@@ -399,14 +404,18 @@ function createPanel(): HTMLElement {
       </div>
 
       <div class="dsv-actions">
-        <button class="dsv-btn" id="dsv-validate">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button
+          type="button" class="dsv-btn" id="dsv-validate">
+          <svg
+            aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
           </svg>
           Validate Page
         </button>
-        <button class="dsv-btn dsv-btn-secondary" id="dsv-export">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button
+          type="button" class="dsv-btn dsv-btn-secondary" id="dsv-export">
+          <svg
+            aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
           Export
@@ -468,7 +477,8 @@ export function updateStats(report: ValidationReport): void {
     if (report.violations.length === 0) {
       violationsListEl.innerHTML = `
         <div class="dsv-empty">
-          <svg class="dsv-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            aria-hidden="true" class="dsv-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           <p>No violations found! Your page follows the design system.</p>
@@ -611,7 +621,8 @@ function attachEventListeners(): void {
         updateStats(report);
         updateHighlights();
         validateBtn.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
           </svg>
           Validate Page

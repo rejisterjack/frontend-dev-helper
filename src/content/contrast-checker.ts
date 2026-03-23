@@ -5,9 +5,9 @@
  * Pick foreground and background colors to analyze contrast.
  */
 
+import { escapeHtml, sanitizeColor } from '@/utils/sanitize';
 import { getContrastRatio, hexToRgb } from '../utils/color';
 import { logger } from '../utils/logger';
-import { escapeHtml, sanitizeColor } from '@/utils/sanitize';
 
 interface ContrastResult {
   ratio: number;
@@ -83,7 +83,8 @@ function buildOverlayContent(): string {
     <div class="fdh-contrast-header" style="margin-bottom: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 18px; color: #c084fc;">🔍 Contrast Checker</h3>
-        <button class="fdh-close-btn" style="
+        <button
+          type="button" class="fdh-close-btn" style="
           background: transparent;
           border: none;
           color: #94a3b8;
@@ -126,7 +127,8 @@ function buildOverlayContent(): string {
           text-align: center;
           text-transform: uppercase;
         ">
-        <button class="fdh-pick-fg-btn" style="
+        <button
+          type="button" class="fdh-pick-fg-btn" style="
           margin-top: 8px;
           width: 100%;
           background: ${pickerMode === 'foreground' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.1)'};
@@ -165,7 +167,8 @@ function buildOverlayContent(): string {
           text-align: center;
           text-transform: uppercase;
         ">
-        <button class="fdh-pick-bg-btn" style="
+        <button
+          type="button" class="fdh-pick-bg-btn" style="
           margin-top: 8px;
           width: 100%;
           background: ${pickerMode === 'background' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.1)'};
@@ -263,7 +266,8 @@ function buildOverlayContent(): string {
     
     <!-- Actions -->
     <div style="display: flex; gap: 8px;">
-      <button class="fdh-swap-btn" style="
+      <button
+        type="button" class="fdh-swap-btn" style="
         flex: 1;
         background: rgba(99, 102, 241, 0.1);
         border: 1px solid rgba(99, 102, 241, 0.3);
@@ -274,7 +278,8 @@ function buildOverlayContent(): string {
         cursor: pointer;
         transition: all 0.2s;
       ">🔄 Swap Colors</button>
-      <button class="fdh-copy-btn" style="
+      <button
+        type="button" class="fdh-copy-btn" style="
         flex: 1;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);

@@ -6,7 +6,6 @@
  */
 
 import { createOverlay } from '@/utils/dom';
-import { escapeHtml } from '@/utils/sanitize';
 
 // Device preset definitions
 interface DevicePreset {
@@ -325,7 +324,8 @@ class ResponsivePreview {
           <div style="${this.getDeviceButtonsStyles()}">
             ${DEVICE_PRESETS.map(
               (preset) => `
-              <button 
+              <button
+                type="button" 
                 data-add-device="${preset.id}"
                 style="${this.getDeviceButtonStyles()}"
                 title="Add ${preset.name} (${preset.width}×${preset.height})"
@@ -364,7 +364,8 @@ class ResponsivePreview {
         </div>
         
         <div style="${this.getToolbarRightStyles()}">
-          <button data-close-btn style="${this.getCloseButtonStyles()}">
+          <button
+            type="button" data-close-btn style="${this.getCloseButtonStyles()}">
             <span style="font-size: 18px;">×</span>
             <span>Close</span>
           </button>
@@ -640,14 +641,16 @@ class ResponsivePreview {
         <span style="font-size: 11px; color: #94a3b8;">${width}×${height}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 4px;">
-        <button 
+        <button
+          type="button" 
           data-rotate="${view.id}" 
           title="Rotate"
           style="${this.getHeaderButtonStyles()}"
         >
           🔄
         </button>
-        <button 
+        <button
+          type="button" 
           data-remove="${view.id}" 
           title="Remove"
           style="${this.getHeaderButtonStyles()}"

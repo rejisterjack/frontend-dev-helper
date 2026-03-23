@@ -57,7 +57,11 @@ export class MessageHandler {
 
       switch (message.type) {
         case 'PING':
-          sendResponse({ success: true, data: { pong: true, timestamp: Date.now() }, id: message.id });
+          sendResponse({
+            success: true,
+            data: { pong: true, timestamp: Date.now() },
+            id: message.id,
+          });
           break;
 
         case 'INIT':
@@ -79,7 +83,11 @@ export class MessageHandler {
           break;
 
         case 'GET_FEATURES':
-          sendResponse({ success: true, data: this.deps.featureManager.getFeatures(), id: message.id });
+          sendResponse({
+            success: true,
+            data: this.deps.featureManager.getFeatures(),
+            id: message.id,
+          });
           break;
 
         case 'INSPECT_ELEMENT':
@@ -93,7 +101,11 @@ export class MessageHandler {
           break;
 
         default:
-          sendResponse({ success: false, error: `Unknown message type: ${message.type}`, id: message.id });
+          sendResponse({
+            success: false,
+            error: `Unknown message type: ${message.type}`,
+            id: message.id,
+          });
       }
     } catch (error) {
       logger.error('[MessageHandler] Error:', error);

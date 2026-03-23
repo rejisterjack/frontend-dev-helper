@@ -408,7 +408,8 @@ export function clear(): void {
     if (violationsListEl) {
       violationsListEl.innerHTML = `
         <div class="dsv-empty">
-          <svg class="dsv-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            aria-hidden="true" class="dsv-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           <p>Click "Validate Page" to check for inconsistencies</p>

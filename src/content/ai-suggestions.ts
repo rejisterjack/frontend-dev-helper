@@ -137,7 +137,8 @@ function renderPanel(): void {
         <span>✨</span>
         <span>AI Suggestions</span>
       </div>
-      <button id="${PREFIX}-close">✕</button>
+      <button
+        type="button" id="${PREFIX}-close">✕</button>
     </div>
     <div id="${PREFIX}-content">
       <div id="${PREFIX}-summary">
@@ -165,11 +166,11 @@ function renderPanel(): void {
             (s) => `
           <div class="${PREFIX}-suggestion ${PREFIX}-${s.priority}">
             <div class="${PREFIX}-suggestion-header">
-              <span class="${PREFIX}-category">${s.category}</span>
-              <span class="${PREFIX}-priority">${s.priority}</span>
+              <span class="${PREFIX}-category">${escapeHtml(s.category)}</span>
+              <span class="${PREFIX}-priority">${escapeHtml(s.priority)}</span>
             </div>
-            <div class="${PREFIX}-suggestion-title">${s.title}</div>
-            <div class="${PREFIX}-suggestion-desc">${s.description}</div>
+            <div class="${PREFIX}-suggestion-title">${escapeHtml(s.title)}</div>
+            <div class="${PREFIX}-suggestion-desc">${escapeHtml(s.description)}</div>
             ${s.autoFixable ? `<button class="${PREFIX}-fix-btn" data-id="${s.id}">🔧 Fix</button>` : ''}
           </div>
         `
@@ -185,8 +186,10 @@ function renderPanel(): void {
       </div>
     </div>
     <div id="${PREFIX}-footer">
-      <button id="${PREFIX}-refresh">🔄 Refresh</button>
-      <button id="${PREFIX}-view-all">View All</button>
+      <button
+        type="button" id="${PREFIX}-refresh">🔄 Refresh</button>
+      <button
+        type="button" id="${PREFIX}-view-all">View All</button>
     </div>
   `;
 

@@ -49,7 +49,11 @@ function createToolHandlers(
   stateKey: keyof ContentScriptState
 ): Record<string, ContentHandler> {
   // Type-safe state mutator helper
-  const setState = (state: ContentScriptState, key: keyof ContentScriptState, value: boolean): void => {
+  const setState = (
+    state: ContentScriptState,
+    key: keyof ContentScriptState,
+    value: boolean
+  ): void => {
     (state as Record<keyof ContentScriptState, boolean>)[key] = value;
   };
 

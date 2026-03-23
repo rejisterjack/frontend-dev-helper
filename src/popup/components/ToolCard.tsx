@@ -65,6 +65,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
   };
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: contains nested <button> elements — cannot use outer <button>
     <div
       className={`
         tool-card animate-fade-in
@@ -124,6 +125,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
         {/* View Button - shown when tool is enabled and has onView handler */}
         {enabled && onView && (
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onView();
@@ -132,7 +134,13 @@ export const ToolCard: React.FC<ToolCardProps> = ({
             title={`View ${name}`}
             aria-label={`View ${name}`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              aria-hidden="true"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -152,6 +160,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
         {/* Settings Button */}
         {hasSettings && (
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onSettingsClick?.();
@@ -163,7 +172,13 @@ export const ToolCard: React.FC<ToolCardProps> = ({
             title={`${name} settings`}
             aria-label={`${name} settings`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              aria-hidden="true"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

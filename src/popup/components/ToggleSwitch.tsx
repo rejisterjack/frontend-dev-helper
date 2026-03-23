@@ -63,6 +63,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
         `}
         role="switch"
+        aria-checked={checked}
         tabIndex={disabled ? -1 : 0}
         onKeyDown={handleKeyDown}
       >

@@ -26,10 +26,17 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
     <div className="space-y-4 p-4">
       <div className="rounded-lg bg-dev-surface p-3">
         <button
+          type="button"
           onClick={handleInspectClick}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 py-3 font-medium text-white transition-colors hover:bg-primary-700"
         >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            aria-hidden="true"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -78,7 +85,13 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
 
       <div className="rounded-lg border border-dev-border p-3">
         <div className="flex items-center gap-2 text-xs text-dev-muted">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

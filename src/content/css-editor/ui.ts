@@ -102,7 +102,8 @@ export function buildPanelContent(): string {
           Live CSS Editor
         </h3>
         <div style="display: flex; gap: 4px;">
-          <button class="fdh-btn-reset" title="Reset all changes" style="
+          <button
+            type="button" class="fdh-btn-reset" title="Reset all changes" style="
             background: rgba(239, 68, 68, 0.2);
             border: 1px solid rgba(239, 68, 68, 0.4);
             border-radius: 6px;
@@ -112,7 +113,8 @@ export function buildPanelContent(): string {
             cursor: pointer;
             transition: all 0.2s;
           ">↩ Reset</button>
-          <button class="fdh-btn-close" title="Close editor" style="
+          <button
+            type="button" class="fdh-btn-close" title="Close editor" style="
             background: transparent;
             border: none;
             color: #94a3b8;
@@ -165,7 +167,8 @@ export function buildPanelContent(): string {
       ">
         ${CSS_CATEGORIES.map(
           (cat) => `
-          <button class="fdh-tab ${cat.name === activeCategoryRef ? 'active' : ''}" data-category="${escapeHtml(cat.name)}" style="
+          <button
+            type="button" class="fdh-tab ${cat.name === activeCategoryRef ? 'active' : ''}" data-category="${escapeHtml(cat.name)}" style="
             background: ${cat.name === activeCategoryRef ? 'rgba(99, 102, 241, 0.3)' : 'transparent'};
             border: 1px solid ${cat.name === activeCategoryRef ? 'rgba(99, 102, 241, 0.5)' : 'transparent'};
             border-radius: 6px;
@@ -205,7 +208,8 @@ export function buildPanelContent(): string {
         gap: 8px;
         flex-wrap: wrap;
       ">
-        <button class="fdh-btn-undo" ${historyIndexRef < 0 ? 'disabled' : ''} style="
+        <button
+          type="button" class="fdh-btn-undo" ${historyIndexRef < 0 ? 'disabled' : ''} style="
           flex: 1;
           min-width: 60px;
           background: ${historyIndexRef < 0 ? 'rgba(100,116,139,0.2)' : 'rgba(99, 102, 241, 0.2)'};
@@ -218,7 +222,8 @@ export function buildPanelContent(): string {
           transition: all 0.2s;
         ">↶ Undo</button>
         
-        <button class="fdh-btn-redo" ${historyIndexRef >= historyLengthRef - 1 ? 'disabled' : ''} style="
+        <button
+          type="button" class="fdh-btn-redo" ${historyIndexRef >= historyLengthRef - 1 ? 'disabled' : ''} style="
           flex: 1;
           min-width: 60px;
           background: ${historyIndexRef >= historyLengthRef - 1 ? 'rgba(100,116,139,0.2)' : 'rgba(99, 102, 241, 0.2)'};
@@ -231,7 +236,8 @@ export function buildPanelContent(): string {
           transition: all 0.2s;
         ">↷ Redo</button>
         
-        <button class="fdh-btn-copy" style="
+        <button
+          type="button" class="fdh-btn-copy" style="
           flex: 2;
           min-width: 100px;
           background: rgba(34, 197, 94, 0.2);

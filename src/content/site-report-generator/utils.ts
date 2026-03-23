@@ -62,7 +62,7 @@ export function colorToHex(color: string): string | null {
 }
 
 export function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
 }
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -76,7 +76,11 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
     : { r: 0, g: 0, b: 0 };
 }
 
-export function rgbToHsl(rgb: { r: number; g: number; b: number }): { h: number; s: number; l: number } {
+export function rgbToHsl(rgb: { r: number; g: number; b: number }): {
+  h: number;
+  s: number;
+  l: number;
+} {
   const r = rgb.r / 255;
   const g = rgb.g / 255;
   const b = rgb.b / 255;
@@ -126,7 +130,7 @@ export function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 export function generateReportId(): string {

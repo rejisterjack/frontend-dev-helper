@@ -80,7 +80,13 @@ export const Options: React.FC = () => {
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white">
-              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                aria-hidden="true"
+                className="h-7 w-7"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -109,6 +115,7 @@ export const Options: React.FC = () => {
                 { id: 'advanced', label: 'Advanced', icon: '🔬' },
               ].map((item) => (
                 <button
+                  type="button"
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
@@ -139,6 +146,7 @@ export const Options: React.FC = () => {
 
             <div className="mt-8 flex items-center justify-between border-t border-dev-border pt-6">
               <button
+                type="button"
                 onClick={async () => {
                   if (confirm('Reset all settings to default?')) {
                     await chrome.storage.local.clear();
@@ -150,6 +158,7 @@ export const Options: React.FC = () => {
                 Reset to Defaults
               </button>
               <button
+                type="button"
                 onClick={saveSettings}
                 disabled={saving}
                 className="rounded-lg bg-primary-600 px-6 py-2 font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
@@ -273,6 +282,7 @@ const AdvancedSection: React.FC = () => (
           Download your extension settings as a JSON file
         </p>
         <button
+          type="button"
           onClick={() => {
             chrome.storage.local.get(null, (data) => {
               const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

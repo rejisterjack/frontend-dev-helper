@@ -2,8 +2,8 @@
  * Site Report Generator Formatters
  */
 
-import type { SiteReport, MetricScore } from './types';
-import { escapeHtml, formatBytes, getScoreColor } from './utils';
+import type { MetricScore, SiteReport } from './types';
+import { escapeHtml, getScoreColor } from './utils';
 
 export function exportReportAsJSON(report: SiteReport): void {
   const json = JSON.stringify(report, null, 2);

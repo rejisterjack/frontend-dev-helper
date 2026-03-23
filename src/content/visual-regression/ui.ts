@@ -18,18 +18,23 @@ export function getPanelHTML(): string {
         <span>Visual Regression</span>
       </div>
       <div id="${PREFIX}-actions">
-        <button id="${PREFIX}-settings" title="Settings">⚙️</button>
-        <button id="${PREFIX}-export" title="Export All">📤</button>
-        <button id="${PREFIX}-close" title="Close">✕</button>
+        <button
+          type="button" id="${PREFIX}-settings" title="Settings">⚙️</button>
+        <button
+          type="button" id="${PREFIX}-export" title="Export All">📤</button>
+        <button
+          type="button" id="${PREFIX}-close" title="Close">✕</button>
       </div>
     </div>
     
     <div id="${PREFIX}-tabs">
-      <button class="${PREFIX}-tab active" data-tab="baselines">
+      <button
+        type="button" class="${PREFIX}-tab active" data-tab="baselines">
         Baselines
         <span class="${PREFIX}-badge" id="${PREFIX}-baseline-count">0</span>
       </button>
-      <button class="${PREFIX}-tab" data-tab="tests">
+      <button
+        type="button" class="${PREFIX}-tab" data-tab="tests">
         Tests
         <span class="${PREFIX}-badge" id="${PREFIX}-test-count">0</span>
       </button>
@@ -38,16 +43,20 @@ export function getPanelHTML(): string {
     <div id="${PREFIX}-content">
       <div id="${PREFIX}-baselines-panel" class="${PREFIX}-panel active">
         <div class="${PREFIX}-toolbar">
-          <button id="${PREFIX}-capture-viewport" class="${PREFIX}-btn-primary">Capture Viewport</button>
-          <button id="${PREFIX}-capture-full" class="${PREFIX}-btn-secondary">Capture Full Page</button>
+          <button
+            type="button" id="${PREFIX}-capture-viewport" class="${PREFIX}-btn-primary">Capture Viewport</button>
+          <button
+            type="button" id="${PREFIX}-capture-full" class="${PREFIX}-btn-secondary">Capture Full Page</button>
         </div>
         <div id="${PREFIX}-baselines-list" class="${PREFIX}-list"></div>
       </div>
       
       <div id="${PREFIX}-tests-panel" class="${PREFIX}-panel">
         <div class="${PREFIX}-toolbar">
-          <button id="${PREFIX}-run-test" class="${PREFIX}-btn-primary" disabled>Run Test</button>
-          <button id="${PREFIX}-run-batch" class="${PREFIX}-btn-secondary">Run Batch</button>
+          <button
+            type="button" id="${PREFIX}-run-test" class="${PREFIX}-btn-primary" disabled>Run Test</button>
+          <button
+            type="button" id="${PREFIX}-run-batch" class="${PREFIX}-btn-secondary">Run Batch</button>
         </div>
         <div id="${PREFIX}-tests-list" class="${PREFIX}-list"></div>
       </div>
@@ -62,7 +71,8 @@ export function getPanelHTML(): string {
       <div class="${PREFIX}-settings-section">
         <label>Ignore Regions</label>
         <div id="${PREFIX}-ignore-regions"></div>
-        <button id="${PREFIX}-clear-regions" class="${PREFIX}-btn-secondary">Clear All</button>
+        <button
+          type="button" id="${PREFIX}-clear-regions" class="${PREFIX}-btn-secondary">Clear All</button>
       </div>
     </div>
     
@@ -479,10 +489,12 @@ export function renderBaselineItem(
         </div>
       </div>
       <div class="${PREFIX}-baseline-actions">
-        <button class="${PREFIX}-select-btn" data-id="${escapedId}">
+        <button
+          type="button" class="${PREFIX}-select-btn" data-id="${escapedId}">
           ${isSelected ? '✓' : 'Select'}
         </button>
-        <button class="${PREFIX}-delete-btn" data-id="${escapedId}">🗑️</button>
+        <button
+          type="button" class="${PREFIX}-delete-btn" data-id="${escapedId}">🗑️</button>
       </div>
     </div>
   `;
@@ -514,8 +526,10 @@ export function renderTestItem(
   const actionsHtml =
     status === 'failed'
       ? `
-      <button class="${PREFIX}-approve-btn" data-id="${escapedId}">Approve</button>
-      <button class="${PREFIX}-reject-btn" data-id="${escapedId}">Reject</button>
+      <button
+        type="button" class="${PREFIX}-approve-btn" data-id="${escapedId}">Approve</button>
+      <button
+        type="button" class="${PREFIX}-reject-btn" data-id="${escapedId}">Reject</button>
     `
       : '';
 
@@ -536,7 +550,8 @@ export function renderTestItem(
       <div class="${PREFIX}-test-actions">
         ${actionsHtml}
         ${exportHtml}
-        <button class="${PREFIX}-delete-btn" data-id="${escapedId}">Delete</button>
+        <button
+          type="button" class="${PREFIX}-delete-btn" data-id="${escapedId}">Delete</button>
       </div>
     </div>
   `;
@@ -552,7 +567,8 @@ export function renderIgnoreRegionItem(
   return `
     <div class="${PREFIX}-region">
       <span>${region.x}, ${region.y} (${region.width}×${region.height})</span>
-      <button data-index="${index}">Remove</button>
+      <button
+        type="button" data-index="${index}">Remove</button>
     </div>
   `;
 }
@@ -570,8 +586,10 @@ export function renderEmptyState(message: string): string {
 export function renderExportDropdown(prefix: string): string {
   return `
     <div class="${prefix}-dropdown">
-      <button id="${prefix}-export-data">Export Data (JSON)</button>
-      <button id="${prefix}-import-data">Import Data</button>
+      <button
+        type="button" id="${prefix}-export-data">Export Data (JSON)</button>
+      <button
+        type="button" id="${prefix}-import-data">Import Data</button>
     </div>
   `;
 }

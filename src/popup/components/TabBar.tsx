@@ -16,6 +16,7 @@ export const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onChange }) => 
     <div className="flex border-b border-dev-border bg-dev-surface">
       {tabs.map((tab) => (
         <button
+          type="button"
           key={tab.id}
           onClick={() => onChange(tab.id)}
           disabled={tab.disabled}

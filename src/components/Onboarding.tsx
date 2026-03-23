@@ -287,6 +287,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
             <div className="flex items-center gap-2">
               {[1, 2, 3, 4].map((step) => (
                 <button
+                  type="button"
                   key={step}
                   onClick={() => handleGoToStep(step as OnboardingStep)}
                   className={`
@@ -310,6 +311,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
               {/* Skip Button (show on first 3 steps) */}
               {currentStep < 4 && (
                 <button
+                  type="button"
                   onClick={handleSkip}
                   className="
                     text-xs text-slate-400 hover:text-slate-300
@@ -323,6 +325,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
               {/* Previous Button */}
               {currentStep > 1 && (
                 <button
+                  type="button"
                   onClick={handlePrev}
                   className="
                     btn-secondary text-xs px-4 py-2 rounded-lg
@@ -338,6 +341,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
               {/* Next/Finish Button */}
               {currentStep < 4 ? (
                 <button
+                  type="button"
                   onClick={handleNext}
                   className="
                     btn-primary text-xs px-4 py-2 rounded-lg
@@ -351,6 +355,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={handleFinish}
                   className="
                     btn-primary text-xs px-6 py-2 rounded-lg
@@ -390,7 +395,13 @@ const WelcomeStep: React.FC = () => (
         animate-bounce-soft
       "
       >
-        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          aria-hidden="true"
+          className="w-12 h-12 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

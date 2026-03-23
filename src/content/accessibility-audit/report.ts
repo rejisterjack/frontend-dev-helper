@@ -78,7 +78,8 @@ export function buildReportContent(report: AccessibilityReport): string {
         <h3 style="margin: 0; font-size: 18px; color: ${COLORS.accent}; display: flex; align-items: center; gap: 8px;">
           ♿ Accessibility Audit
         </h3>
-        <button class="fdh-audit-close" style="
+        <button
+          type="button" class="fdh-audit-close" style="
           background: transparent;
           border: none;
           color: ${COLORS.textSecondary};
@@ -137,7 +138,8 @@ export function buildReportContent(report: AccessibilityReport): string {
 
     <!-- Controls -->
     <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-      <button class="fdh-toggle-focus" style="
+      <button
+        type="button" class="fdh-toggle-focus" style="
         flex: 1;
         background: ${showFocusOrderRef ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.1)'};
         border: 1px solid rgba(99, 102, 241, 0.4);
@@ -148,7 +150,8 @@ export function buildReportContent(report: AccessibilityReport): string {
         cursor: pointer;
         transition: all 0.2s;
       ">${showFocusOrderRef ? '🔢 Hide' : '🔢 Show'} Focus Order</button>
-      <button class="fdh-toggle-highlights" style="
+      <button
+        type="button" class="fdh-toggle-highlights" style="
         flex: 1;
         background: ${highlightIssuesRef ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.1)'};
         border: 1px solid rgba(99, 102, 241, 0.4);
@@ -159,7 +162,8 @@ export function buildReportContent(report: AccessibilityReport): string {
         cursor: pointer;
         transition: all 0.2s;
       ">${highlightIssuesRef ? '🎯 Hide' : '🎯 Show'} Highlights</button>
-      <button class="fdh-rerun-audit" style="
+      <button
+        type="button" class="fdh-rerun-audit" style="
         flex: 1;
         background: rgba(34, 197, 94, 0.2);
         border: 1px solid rgba(34, 197, 94, 0.4);
@@ -414,7 +418,8 @@ export function buildReportContent(report: AccessibilityReport): string {
     ">
       <div>Audited: ${new Date(report.timestamp).toLocaleString()}</div>
       <div style="margin-top: 8px;">
-        <button class="fdh-export-report" style="
+        <button
+          type="button" class="fdh-export-report" style="
           background: rgba(99, 102, 241, 0.2);
           border: 1px solid rgba(99, 102, 241, 0.4);
           border-radius: 6px;

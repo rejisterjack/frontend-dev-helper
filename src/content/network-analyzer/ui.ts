@@ -217,7 +217,8 @@ export function buildHeader(requests: NetworkRequest[]): string {
           <span style="font-size: 14px; font-weight: 600; color: #f8fafc;">Network Analyzer</span>
           <span style="font-size: 11px; color: #64748b;">${requests.length} requests</span>
         </div>
-        <button class="fdh-na-close" style="
+        <button
+          type="button" class="fdh-na-close" style="
           background: transparent;
           border: none;
           color: #94a3b8;
@@ -272,7 +273,8 @@ export function buildHeader(requests: NetworkRequest[]): string {
           min-width: 150px;
           outline: none;
         ">
-        <button class="fdh-na-export" style="
+        <button
+          type="button" class="fdh-na-export" style="
           background: rgba(99, 102, 241, 0.2);
           border: 1px solid rgba(99, 102, 241, 0.4);
           border-radius: 6px;
@@ -283,7 +285,8 @@ export function buildHeader(requests: NetworkRequest[]): string {
           transition: all 0.2s;
           white-space: nowrap;
         ">Export HAR</button>
-        <button class="fdh-na-clear" style="
+        <button
+          type="button" class="fdh-na-clear" style="
           background: rgba(239, 68, 68, 0.2);
           border: 1px solid rgba(239, 68, 68, 0.4);
           border-radius: 6px;
@@ -508,7 +511,8 @@ export function buildDetailPanel(requestId: string, requests: NetworkRequest[]):
     ">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <span style="font-size: 14px; font-weight: 600;">Request Details</span>
-        <button class="fdh-na-detail-close" style="
+        <button
+          type="button" class="fdh-na-detail-close" style="
           background: transparent;
           border: none;
           color: #94a3b8;
