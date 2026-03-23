@@ -902,6 +902,9 @@ export const MESSAGE_TYPES = {
 
   // Get all states
   GET_ALL_STATES: 'GET_ALL_STATES',
+
+  // Batch operations
+  DISABLE_ALL_TOOLS: 'DISABLE_ALL_TOOLS',
 } as const;
 
 /**

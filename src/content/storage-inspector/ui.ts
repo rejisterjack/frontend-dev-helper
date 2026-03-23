@@ -180,7 +180,8 @@ export function setLoading(): void {
 export function setError(error: unknown): void {
   const content = getContentElement();
   if (content) {
-    content.innerHTML = `<div class="${PREFIX}-error">Error loading data: ${error}</div>`;
+    const safeError = escapeHtml(String(error));
+    content.innerHTML = `<div class="${PREFIX}-error">Error loading data: ${safeError}</div>`;
   }
 }
 

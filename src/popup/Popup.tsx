@@ -6,6 +6,7 @@ import { FlameGraph } from '../components/FlameGraph';
 import { VisualRegression } from '../components/VisualRegression';
 import { type ToolMeta, type ToolsState, ToolType } from '../types';
 import { logger } from '../utils/logger';
+import { clearAllStates } from '../utils/storage';
 import { ColorLegend } from './components/ColorLegend';
 import { ToolCard } from './components/ToolCard';
 import './popup.css';
@@ -287,8 +288,8 @@ const TOOLS: ToolMeta[] = [
   },
 ];
 
-/** Extension version */
-const EXTENSION_VERSION = '1.2.0';
+/** Extension version - read from manifest */
+const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 
 export const Popup: React.FC = () => {
   // Tool states
@@ -388,11 +389,7 @@ export const Popup: React.FC = () => {
         setIsLoading(false);
       } catch (err) {
         logger.error('Failed to load state:', err);
-        // Fallback to localStorage if content script not available
-        const stored = localStorage.getItem('frontendDevHelperState');
-        if (stored) {
-          setToolsState(JSON.parse(stored));
-        }
+        // Use default state (don't fall back to localStorage for security)
         setIsLoading(false);
       }
     };
@@ -400,12 +397,7 @@ export const Popup: React.FC = () => {
     loadState();
   }, []);
 
-  // Persist state changes to localStorage as backup
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('frontendDevHelperState', JSON.stringify(toolsState));
-    }
-  }, [toolsState, isLoading]);
+  // Note: State is persisted to chrome.storage, not localStorage (security)
 
   /**
    * Toggle a tool on/off
@@ -496,21 +488,21 @@ export const Popup: React.FC = () => {
     setToolsState(resetState);
     setShowResetConfirm(false);
 
-    // Send disable messages to all tools using unified message system
+    // Send batch disable message to content script
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      // Generate disable messages dynamically from TOOL_MESSAGE_PREFIXES
-      const disableMessages = Object.values(ToolType)
-        .map((tool) => getToolMessageType(tool, 'DISABLE'))
-        .filter(Boolean);
-
-      for (const messageType of disableMessages) {
-        try {
-          await chrome.tabs.sendMessage(tab.id, { type: messageType });
-        } catch (err) {
-          logger.error(`Failed to send ${messageType}:`, err);
-        }
+      try {
+        await chrome.tabs.sendMessage(tab.id, { type: 'DISABLE_ALL_TOOLS' });
+      } catch (err) {
+        logger.error('Failed to send DISABLE_ALL_TOOLS:', err);
       }
+    }
+
+    // Clear chrome.storage to persist the reset
+    try {
+      await clearAllStates();
+    } catch (err) {
+      logger.error('Failed to clear storage:', err);
     }
   }, [showResetConfirm]);
 

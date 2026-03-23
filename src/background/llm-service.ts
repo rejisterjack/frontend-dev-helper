@@ -6,11 +6,14 @@
  *
  * Features:
  * - OpenRouter API integration with free-tier models
- * - Secure API key storage (chrome.storage.local)
+ * - Secure API key storage (chrome.storage.session) - not accessible to content scripts
  * - Request/response handling with error recovery
  * - Caching for repeated analysis of same pages
+ * - Retry logic with exponential backoff
+ * - Rate limit handling (HTTP 429)
  */
 
+import { z } from 'zod';
 import type {
   LLMConfig,
   LLMMessage,
@@ -30,6 +33,29 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const STORAGE_KEY = 'fdh_llm_config';
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+const RATE_LIMIT_DELAY_MS = 60000; // 1 minute wait after 429
+
+// Zod schema for LLM response validation
+const SuggestionSchema = z.object({
+  category: z.enum(['accessibility', 'performance', 'seo', 'best-practice', 'security']),
+  priority: z.enum(['critical', 'high', 'medium', 'low']),
+  title: z.string(),
+  description: z.string(),
+  impact: z.string(),
+  effort: z.enum(['easy', 'medium', 'hard']),
+  element: z.string().optional(),
+  selector: z.string().optional(),
+  autoFixable: z.boolean(),
+  suggestedFix: z.string().optional(),
+});
+
+const LLMResponseSchema = z.object({
+  suggestions: z.array(SuggestionSchema),
+});
+
 // ============================================
 // State
 // ============================================
@@ -42,11 +68,12 @@ const analysisCache = new Map<string, { result: LLMSuggestion[]; timestamp: numb
 // ============================================
 
 /**
- * Load LLM configuration from storage
+ * Load LLM configuration from storage (chrome.storage.session for security)
+ * Session storage is cleared when browser closes and is NOT accessible to content scripts
  */
 export async function loadConfig(): Promise<LLMConfig> {
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
+    const result = await chrome.storage.session.get(STORAGE_KEY);
     if (result[STORAGE_KEY]) {
       config = { ...DEFAULT_LLM_CONFIG, ...result[STORAGE_KEY] };
     }
@@ -58,13 +85,13 @@ export async function loadConfig(): Promise<LLMConfig> {
 }
 
 /**
- * Save LLM configuration to storage
+ * Save LLM configuration to storage (chrome.storage.session for security)
  */
 export async function saveConfig(newConfig: Partial<LLMConfig>): Promise<void> {
   config = { ...config, ...newConfig };
   try {
-    await chrome.storage.local.set({ [STORAGE_KEY]: config });
-    logger.log('[LLMService] Config saved');
+    await chrome.storage.session.set({ [STORAGE_KEY]: config });
+    logger.log('[LLMService] Config saved to session storage');
   } catch (error) {
     logger.error('[LLMService] Failed to save config:', error);
   }
@@ -89,7 +116,7 @@ export function isLLMEnabled(): boolean {
 // ============================================
 
 /**
- * Send a request to the LLM API
+ * Send a request to the LLM API with retry logic and rate limit handling
  */
 export async function sendRequest(messages: LLMMessage[]): Promise<LLMResponse | null> {
   if (!config.apiKey) {
@@ -104,30 +131,66 @@ export async function sendRequest(messages: LLMMessage[]): Promise<LLMResponse |
     max_tokens: 2000,
   };
 
-  try {
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.apiKey}`,
-        'HTTP-Referer': 'https://github.com/rejisterjack/frontend-dev-helper',
-        'X-Title': 'FrontendDevHelper',
-      },
-      body: JSON.stringify(request),
-    });
+  let lastError: Error | null = null;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      logger.error('[LLMService] API error:', response.status, errorData);
-      return null;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.apiKey}`,
+          'HTTP-Referer': 'https://github.com/rejisterjack/frontend-dev-helper',
+          'X-Title': 'FrontendDevHelper',
+        },
+        body: JSON.stringify(request),
+      });
+
+      // Handle rate limiting (HTTP 429)
+      if (response.status === 429) {
+        logger.warn('[LLMService] Rate limited, waiting before retry...');
+        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
+        continue;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logger.error('[LLMService] API error:', response.status, errorData);
+
+        // Retry on server errors (5xx) but not client errors (4xx)
+        if (response.status >= 500 && attempt < MAX_RETRIES - 1) {
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * 2 ** attempt));
+          continue;
+        }
+
+        return null;
+      }
+
+      // Check Content-Type header
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType?.includes('application/json')) {
+        logger.warn('[LLMService] Unexpected response content type:', contentType);
+        return null;
+      }
+
+      const data: LLMResponse = await response.json();
+      return data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      logger.error(
+        `[LLMService] Request failed (attempt ${attempt + 1}/${MAX_RETRIES}):`,
+        lastError
+      );
+
+      if (attempt < MAX_RETRIES - 1) {
+        // Exponential backoff
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * 2 ** attempt));
+      }
     }
-
-    const data: LLMResponse = await response.json();
-    return data;
-  } catch (error) {
-    logger.error('[LLMService] Request failed:', error);
-    return null;
   }
+
+  logger.error('[LLMService] All retry attempts failed:', lastError);
+  return null;
 }
 
 // ============================================
@@ -212,20 +275,25 @@ Provide your analysis as JSON.`,
     const jsonStr = jsonMatch[1] || content;
     const parsed = JSON.parse(jsonStr.trim());
 
-    if (parsed.suggestions && Array.isArray(parsed.suggestions)) {
-      // Cache the result
-      analysisCache.set(cacheKey, {
-        result: parsed.suggestions,
-        timestamp: Date.now(),
-      });
-
-      // Clean up old cache entries
-      cleanupCache();
-
-      return parsed.suggestions;
+    // Validate with Zod schema
+    const validated = LLMResponseSchema.safeParse(parsed);
+    if (!validated.success) {
+      logger.error('[LLMService] LLM response validation failed:', validated.error);
+      return null;
     }
 
-    return null;
+    const suggestions = validated.data.suggestions;
+
+    // Cache the result
+    analysisCache.set(cacheKey, {
+      result: suggestions,
+      timestamp: Date.now(),
+    });
+
+    // Clean up old cache entries
+    cleanupCache();
+
+    return suggestions;
   } catch (error) {
     logger.error('[LLMService] Failed to parse LLM response:', error);
     return null;

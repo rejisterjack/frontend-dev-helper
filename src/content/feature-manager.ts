@@ -235,6 +235,8 @@ export class FeatureManager {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     `;
 
+    // Debounce resize updates to avoid performance issues
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
     const updateBreakpoint = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -244,14 +246,31 @@ export class FeatureManager {
       `;
     };
 
+    const debouncedUpdate = () => {
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      resizeTimeout = setTimeout(updateBreakpoint, 100);
+    };
+
     updateBreakpoint();
-    window.addEventListener('resize', updateBreakpoint);
+    window.addEventListener('resize', debouncedUpdate);
+
+    // Store cleanup function on the overlay element for removal
+    (overlay as HTMLElement & { __cleanup?: () => void }).__cleanup = () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', debouncedUpdate);
+    };
     document.body.appendChild(overlay);
   }
 
   private hideBreakpointOverlay(): void {
-    const overlay = document.getElementById('fdh-breakpoint-overlay');
+    const overlay = document.getElementById('fdh-breakpoint-overlay') as HTMLElement & {
+      __cleanup?: () => void;
+    };
     if (overlay) {
+      // Call cleanup function to remove event listeners
+      overlay.__cleanup?.();
       overlay.remove();
     }
   }

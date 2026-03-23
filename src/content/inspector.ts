@@ -159,12 +159,11 @@ export class Inspector {
     if (!this.highlightBox) return;
 
     const rect = element.getBoundingClientRect();
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
 
+    // NOTE: position: fixed is relative to viewport, so we must NOT add scroll offsets
     this.highlightBox.style.display = 'block';
-    this.highlightBox.style.left = `${rect.left + scrollX}px`;
-    this.highlightBox.style.top = `${rect.top + scrollY}px`;
+    this.highlightBox.style.left = `${rect.left}px`;
+    this.highlightBox.style.top = `${rect.top}px`;
     this.highlightBox.style.width = `${rect.width}px`;
     this.highlightBox.style.height = `${rect.height}px`;
 

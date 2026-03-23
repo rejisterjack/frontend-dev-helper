@@ -384,6 +384,69 @@ export const registry: Record<string, ContentHandler> = {
     });
   },
 
+  // Disable all tools in one batch operation
+  DISABLE_ALL_TOOLS: (_payload, state, sendResponse) => {
+    // Disable all tools
+    pesticide.disable();
+    spacingVisualizer.disable();
+    fontInspector.disable();
+    colorPicker.disable();
+    pixelRuler.disable();
+    breakpointOverlay.disable();
+    cssInspector.disable();
+    cssEditor.disable();
+    contrastChecker.disable();
+    layoutVisualizer.disable();
+    zIndexVisualizer.disable();
+    techDetector.disable();
+    networkAnalyzer.disable();
+    accessibilityAudit.disable();
+    siteReportGenerator.disable();
+    screenshotStudio.disable();
+    animationInspector.disable();
+    designSystemValidator.disable();
+    responsivePreview.disable();
+    flameGraph.disable();
+    focusDebugger.disable();
+    formDebugger.disable();
+    commandPalette.disable();
+    storageInspector.disable();
+    componentTree.disable();
+    visualRegression.disable();
+    aiSuggestions.disable();
+
+    // Update state flags
+    state.domOutlinerEnabled = false;
+    state.spacingVisualizerEnabled = false;
+    state.fontInspectorEnabled = false;
+    state.isColorPickerActive = false;
+    state.pixelRulerEnabled = false;
+    state.breakpointOverlayEnabled = false;
+    state.isCssInspectorActive = false;
+    state.isCssEditorActive = false;
+    state.isContrastCheckerActive = false;
+    state.isLayoutVisualizerActive = false;
+    state.isZIndexVisualizerActive = false;
+    state.isTechDetectorActive = false;
+    state.isNetworkAnalyzerActive = false;
+    state.isAccessibilityAuditActive = false;
+    state.isSiteReportActive = false;
+    state.isScreenshotStudioActive = false;
+    state.isAnimationInspectorActive = false;
+    state.isDesignSystemValidatorActive = false;
+    state.responsivePreviewEnabled = false;
+    state.isFlameGraphActive = false;
+    state.isFocusDebuggerActive = false;
+    state.isFormDebuggerActive = false;
+    state.isCommandPaletteActive = false;
+    state.isStorageInspectorActive = false;
+    state.isComponentTreeActive = false;
+    state.isVisualRegressionActive = false;
+    state.isAiSuggestionsActive = false;
+
+    sendResponse({ success: true });
+  },
+
   // Performance DOM data collection
   GET_PERFORMANCE_DOM_DATA: (_payload, _state, sendResponse) => {
     const imageOptimizations: Array<{

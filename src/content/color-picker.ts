@@ -16,8 +16,6 @@ export class ColorPicker {
   private options: Required<ColorPickerOptions>;
   private isActive = false;
   private magnifier: HTMLElement | null = null;
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
   private previewElement: HTMLElement | null = null;
 
   constructor(options: ColorPickerOptions = {}) {
@@ -26,15 +24,6 @@ export class ColorPicker {
       defaultFormat: options.defaultFormat ?? 'hex',
       showMagnifier: options.showMagnifier ?? true,
     };
-
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = 1;
-    this.canvas.height = 1;
-    const ctx = this.canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Failed to get canvas context');
-    }
-    this.ctx = ctx;
   }
 
   activate(): void {
@@ -165,7 +154,7 @@ export class ColorPicker {
     }
   };
 
-  private handleClick = (e: MouseEvent): void => {
+  private handleClick = async (e: MouseEvent): Promise<void> => {
     if (!this.isActive) return;
 
     const target = e.target as HTMLElement;
@@ -174,8 +163,23 @@ export class ColorPicker {
     e.preventDefault();
     e.stopPropagation();
 
-    const color = this.getColorAtPoint(e.clientX, e.clientY);
-    this.options.onColorSelect(color, this.options.defaultFormat);
+    // Use EyeDropper API if available (Chrome 95+)
+    const eyeDropper = (
+      window as unknown as { EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> } }
+    ).EyeDropper;
+    if (eyeDropper) {
+      try {
+        const picker = new eyeDropper();
+        const result = await picker.open();
+        this.options.onColorSelect(result.sRGBHex, this.options.defaultFormat);
+      } catch {
+        // User cancelled or error - do nothing
+      }
+    } else {
+      // Fallback to computed style
+      const color = this.getColorAtPoint(e.clientX, e.clientY);
+      this.options.onColorSelect(color, this.options.defaultFormat);
+    }
   };
 
   private handleKeyDown = (e: KeyboardEvent): void => {
@@ -187,46 +191,32 @@ export class ColorPicker {
   };
 
   private getColorAtPoint(x: number, y: number): string {
-    try {
-      this.ctx.drawImage(
-        document.documentElement as unknown as CanvasImageSource,
-        x,
-        y,
-        1,
-        1,
-        0,
-        0,
-        1,
-        1
-      );
-    } catch {
-      // Fallback: try to get element color
-      const element = document.elementFromPoint(x, y) as HTMLElement;
-      if (element) {
-        const computedStyle = window.getComputedStyle(element);
-        return computedStyle.backgroundColor || computedStyle.color || '#000000';
-      }
+    // Get color at point using elementFromPoint and computed styles
+    // This is the fallback method since HTMLElement is not a valid CanvasImageSource
+    const element = document.elementFromPoint(x, y) as HTMLElement;
+    if (element) {
+      const computedStyle = window.getComputedStyle(element);
+      return computedStyle.backgroundColor || computedStyle.color || '#000000';
     }
-
-    const pixel = this.ctx.getImageData(0, 0, 1, 1).data;
-    return this.rgbToHex(pixel[0], pixel[1], pixel[2]);
+    return '#000000';
   }
 
   private updatePreview(color: string): void {
     if (!this.previewElement) return;
 
     this.previewElement.style.display = 'flex';
+    const safeColor = escapeHtml(color);
     this.previewElement.innerHTML = `
       <div style="
         width: 32px;
         height: 32px;
         border-radius: 4px;
-        background: ${color};
+        background: ${safeColor};
         border: 2px solid white;
       "></div>
       <div>
-        <div>${color}</div>
-        <div style="color: #9ca3af; font-size: 10px;">${this.hexToRgb(color)}</div>
+        <div>${safeColor}</div>
+        <div style="color: #9ca3af; font-size: 10px;">${this.hexToRgb(safeColor)}</div>
       </div>
     `;
   }
@@ -256,28 +246,24 @@ export class ColorPicker {
     this.magnifier.style.left = `${left}px`;
     this.magnifier.style.top = `${top}px`;
 
-    // Update zoom canvas
+    // Update magnifier background to show current color
     const canvas = this.magnifier.querySelector('canvas') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.clearRect(0, 0, 100, 100);
-      ctx.imageSmoothingEnabled = false;
 
-      try {
-        ctx.drawImage(
-          document.documentElement as unknown as CanvasImageSource,
-          x - 10,
-          y - 10,
-          20,
-          20,
-          0,
-          0,
-          100,
-          100
-        );
-      } catch {
-        // Fallback
+      // Draw checkerboard pattern background
+      const squareSize = 10;
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          ctx.fillStyle = (i + j) % 2 === 0 ? '#ccc' : '#fff';
+          ctx.fillRect(i * squareSize, j * squareSize, squareSize, squareSize);
+        }
       }
+
+      // Draw current color overlay
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 100, 100);
 
       // Draw center crosshair
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';

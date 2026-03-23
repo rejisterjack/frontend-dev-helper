@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ToolId } from '@/constants';
+import { STORAGE_KEYS, TOOL_IDS, type ToolId } from '@/constants';
 import type { ToolState, ToolsState } from '@/types';
 
 // ============================================
@@ -111,8 +111,8 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
       setError(null);
 
       try {
-        const result = await chrome.storage.local.get('fdh_tool_states');
-        const storage = result.fdh_tool_states as
+        const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+        const storage = result[STORAGE_KEYS.TOOL_STATES] as
           | {
               global?: Record<ToolId, ToolState>;
               tabs?: Record<number, Record<ToolId, ToolState>>;
@@ -152,7 +152,7 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
   // Listen for storage changes
   useEffect(() => {
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>) => {
-      const toolStatesChange = changes.fdh_tool_states;
+      const toolStatesChange = changes[STORAGE_KEYS.TOOL_STATES];
       if (toolStatesChange) {
         const newValue = toolStatesChange.newValue as
           | {
@@ -185,8 +185,8 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
   const saveState = useCallback(
     async (newState: ToolState): Promise<void> => {
       try {
-        const result = await chrome.storage.local.get('fdh_tool_states');
-        const storage = (result.fdh_tool_states as {
+        const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+        const storage = (result[STORAGE_KEYS.TOOL_STATES] as {
           global: Record<ToolId, ToolState>;
           tabs: Record<number, Record<ToolId, ToolState>>;
         }) || { global: {}, tabs: {} };
@@ -200,7 +200,7 @@ export function useToolState(toolId: ToolId, tabId?: number): UseToolStateReturn
           storage.global[toolId] = newState;
         }
 
-        await chrome.storage.local.set({ fdh_tool_states: storage });
+        await chrome.storage.local.set({ [STORAGE_KEYS.TOOL_STATES]: storage });
 
         // Notify background script
         await chrome.runtime
@@ -320,10 +320,9 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
       setError(null);
 
       try {
-        // Import TOOL_IDS dynamically to avoid issues during SSR
-        const { TOOL_IDS } = await import('@/constants');
-        const result = await chrome.storage.local.get('fdh_tool_states');
-        const storage = result.fdh_tool_states as
+        // TOOL_IDS and STORAGE_KEYS are statically imported
+        const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+        const storage = result[STORAGE_KEYS.TOOL_STATES] as
           | {
               global?: Record<ToolId, ToolState>;
               tabs?: Record<number, Record<ToolId, ToolState>>;
@@ -378,7 +377,7 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
 
   useEffect(() => {
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>) => {
-      const toolStatesChange = changes.fdh_tool_states;
+      const toolStatesChange = changes[STORAGE_KEYS.TOOL_STATES];
       if (toolStatesChange && mountedRef.current) {
         // Trigger a re-render by updating states directly
         const newValue = toolStatesChange.newValue as
@@ -420,8 +419,8 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
   const saveToolState = useCallback(
     async (toolId: ToolId, newState: ToolState): Promise<void> => {
       try {
-        const result = await chrome.storage.local.get('fdh_tool_states');
-        const storage = (result.fdh_tool_states as {
+        const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+        const storage = (result[STORAGE_KEYS.TOOL_STATES] as {
           global: Record<ToolId, ToolState>;
           tabs: Record<number, Record<ToolId, ToolState>>;
         }) || { global: {}, tabs: {} };
@@ -435,7 +434,7 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
           storage.global[toolId] = newState;
         }
 
-        await chrome.storage.local.set({ fdh_tool_states: storage });
+        await chrome.storage.local.set({ [STORAGE_KEYS.TOOL_STATES]: storage });
 
         // Update local state
         setStates((prev) => ({
@@ -510,17 +509,68 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
     [enableTool]
   );
 
-  // Disable multiple tools
+  // Disable multiple tools (single storage write to prevent race conditions)
   const disableMultiple = useCallback(
     async (toolIds: ToolId[]): Promise<void> => {
-      await Promise.all(toolIds.map((id) => disableTool(id)));
+      try {
+        // Read storage once
+        const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+        const storage = (result[STORAGE_KEYS.TOOL_STATES] as {
+          global: Record<ToolId, ToolState>;
+          tabs: Record<number, Record<ToolId, ToolState>>;
+        }) || { global: {}, tabs: {} };
+
+        // Update all tools in memory
+        const disabledStates: Partial<Record<ToolId, ToolState>> = {};
+        for (const toolId of toolIds) {
+          const newState: ToolState = {
+            enabled: false,
+            settings: states[toolId]?.settings ?? {},
+          };
+          disabledStates[toolId] = newState;
+
+          if (tabId !== undefined) {
+            if (!storage.tabs[tabId]) {
+              storage.tabs[tabId] = {} as Record<ToolId, ToolState>;
+            }
+            storage.tabs[tabId][toolId] = newState;
+          } else {
+            storage.global[toolId] = newState;
+          }
+        }
+
+        // Write to storage once (prevent race condition)
+        await chrome.storage.local.set({ [STORAGE_KEYS.TOOL_STATES]: storage });
+
+        // Update local React state
+        setStates((prev) => ({
+          ...prev,
+          ...disabledStates,
+        }));
+
+        // Notify background script (fire and forget)
+        for (const toolId of toolIds) {
+          chrome.runtime
+            .sendMessage({
+              type: 'TOOL_STATE_CHANGED',
+              payload: { toolId, state: disabledStates[toolId], tabId },
+              timestamp: Date.now(),
+            })
+            .catch(() => {
+              // Ignore errors - background may not be listening
+            });
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+        throw err;
+      }
     },
-    [disableTool]
+    [states, tabId]
   );
 
   // Disable all tools
   const disableAll = useCallback(async (): Promise<void> => {
-    const { TOOL_IDS } = await import('@/constants');
+    // TOOL_IDS is statically imported
     const allToolIds = Object.values(TOOL_IDS);
     await disableMultiple(allToolIds);
   }, [disableMultiple]);
@@ -531,9 +581,9 @@ export function useAllToolStates(tabId?: number): UseAllToolStatesReturn {
     setError(null);
 
     try {
-      const { TOOL_IDS } = await import('@/constants');
-      const result = await chrome.storage.local.get('fdh_tool_states');
-      const storage = result.fdh_tool_states as
+      // TOOL_IDS and STORAGE_KEYS are statically imported
+      const result = await chrome.storage.local.get(STORAGE_KEYS.TOOL_STATES);
+      const storage = result[STORAGE_KEYS.TOOL_STATES] as
         | {
             global?: Record<ToolId, ToolState>;
             tabs?: Record<number, Record<ToolId, ToolState>>;
