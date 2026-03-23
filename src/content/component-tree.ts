@@ -43,7 +43,7 @@ import {
 // ============================================
 
 const PREFIX = 'fdh-component-tree';
-const REFRESH_INTERVAL = 5000;
+const REFRESH_DEBOUNCE_MS = 500; // Debounce mutations to avoid excessive updates
 
 // ============================================
 // State
@@ -53,7 +53,8 @@ let isEnabled = false;
 let isPanelOpen = false;
 let panelContainer: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
-let refreshTimer: number | null = null;
+let mutationObserver: MutationObserver | null = null;
+let refreshDebounceTimer: number | null = null;
 
 const state: ComponentTreeState = {
   framework: 'unknown',
@@ -715,20 +716,75 @@ function updateStatus(message: string): void {
 }
 
 // ============================================
-// Auto Refresh
+// Auto Refresh with MutationObserver
 // ============================================
 
 function startAutoRefresh(): void {
-  if (refreshTimer) return;
-  refreshTimer = window.setInterval(() => {
-    refresh();
-  }, REFRESH_INTERVAL);
+  if (mutationObserver) return;
+
+  // Use MutationObserver instead of polling for better performance
+  mutationObserver = new MutationObserver((mutations) => {
+    // Only trigger refresh for meaningful DOM changes
+    const hasMeaningfulChanges = mutations.some((mutation) => {
+      // Ignore changes to our own overlay elements
+      if (mutation.target instanceof Element) {
+        const target = mutation.target as Element;
+        if (
+          target.id?.startsWith(PREFIX) ||
+          target.closest(`#${PREFIX}-container`) ||
+          target.hasAttribute('data-fdh-overlay')
+        ) {
+          return false;
+        }
+      }
+
+      // Check if nodes were added or removed
+      if (mutation.type === 'childList') {
+        return mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0;
+      }
+
+      // Check for attribute changes that might affect component structure
+      if (mutation.type === 'attributes') {
+        const relevantAttributes = ['class', 'id', 'data-component', 'data-testid'];
+        return relevantAttributes.includes(mutation.attributeName || '');
+      }
+
+      return false;
+    });
+
+    if (!hasMeaningfulChanges) return;
+
+    // Debounce refresh to batch multiple mutations
+    if (refreshDebounceTimer) {
+      clearTimeout(refreshDebounceTimer);
+    }
+
+    refreshDebounceTimer = window.setTimeout(() => {
+      refresh();
+    }, REFRESH_DEBOUNCE_MS);
+  });
+
+  // Observe the document body for changes
+  mutationObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'id', 'data-component', 'data-testid'],
+  });
+
+  logger.log('[ComponentTree] MutationObserver started');
 }
 
 function stopAutoRefresh(): void {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
+  if (mutationObserver) {
+    mutationObserver.disconnect();
+    mutationObserver = null;
+    logger.log('[ComponentTree] MutationObserver stopped');
+  }
+
+  if (refreshDebounceTimer) {
+    clearTimeout(refreshDebounceTimer);
+    refreshDebounceTimer = null;
   }
 }
 

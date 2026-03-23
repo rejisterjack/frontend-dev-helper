@@ -266,7 +266,7 @@ export function createPreviewPanel(report: ExportReport): HTMLElement {
 
   for (const item of summaryItems) {
     const row = document.createElement('div');
-    row.innerHTML = `<span style="color: #6b7280;">${item.label}:</span> ${item.value}`;
+    row.innerHTML = `<span style="color: #6b7280;">${escapeHtml(item.label)}:</span> ${escapeHtml(String(item.value))}`;
     summaryGrid.appendChild(row);
   }
 
@@ -350,7 +350,7 @@ export function createPreviewPanel(report: ExportReport): HTMLElement {
 
     for (const item of perfItems) {
       const row = document.createElement('div');
-      row.innerHTML = `<span style="color: #6b7280;">${item.label}:</span> ${item.value}`;
+      row.innerHTML = `<span style="color: #6b7280;">${escapeHtml(item.label)}:</span> ${escapeHtml(String(item.value))}`;
       perfGrid.appendChild(row);
     }
 

@@ -5,8 +5,10 @@
  * Analyzes the page for accessibility, performance, SEO, and best practice issues.
  */
 
-import type { AIAnalysisResult, AISuggestion, AISuggestionCategory } from '@/types';
+import type { AIAnalysisResult, AISuggestion, AISuggestionCategory, LLMPageContext, LLMSuggestion } from '@/types';
 import { logger } from '@/utils/logger';
+import { parseColor, hasVeryLowContrast, getContrastRatio } from '@/utils/color-parser';
+import { sendMessage } from '@/utils/messaging';
 
 // ============================================
 // Configuration
@@ -46,6 +48,7 @@ const ANALYSIS_CONFIG = {
 
 /**
  * Run complete AI analysis on the current page
+ * Combines rule-based analysis with LLM-powered suggestions when enabled
  */
 export async function runAIAnalysis(): Promise<AIAnalysisResult> {
   const startTime = performance.now();
@@ -59,6 +62,22 @@ export async function runAIAnalysis(): Promise<AIAnalysisResult> {
   suggestions.push(...analyzeSEO());
   suggestions.push(...analyzeBestPractices());
   suggestions.push(...analyzeSecurity());
+
+  // Try to get LLM-powered suggestions
+  try {
+    const llmSuggestions = await runLLMAnalysis();
+    if (llmSuggestions && llmSuggestions.length > 0) {
+      // Merge LLM suggestions with rule-based, avoiding duplicates
+      const existingSelectors = new Set(suggestions.map((s) => s.selector));
+      const uniqueLLMSuggestions = llmSuggestions.filter(
+        (s) => !s.selector || !existingSelectors.has(s.selector)
+      );
+      suggestions.push(...uniqueLLMSuggestions);
+      logger.log(`[AIAnalyzer] Added ${uniqueLLMSuggestions.length} LLM-powered suggestions`);
+    }
+  } catch (error) {
+    logger.warn('[AIAnalyzer] LLM analysis failed:', error);
+  }
 
   // Calculate summary
   const summary = calculateSummary(suggestions);
@@ -74,6 +93,85 @@ export async function runAIAnalysis(): Promise<AIAnalysisResult> {
     suggestions,
     summary,
   };
+}
+
+/**
+ * Run LLM-powered analysis via the service worker
+ */
+async function runLLMAnalysis(): Promise<AISuggestion[] | null> {
+  // Build page context for LLM
+  const context: LLMPageContext = {
+    url: window.location.href,
+    title: document.title,
+    meta: {
+      description: document.querySelector('meta[name="description"]')?.getAttribute('content') || undefined,
+      viewport: document.querySelector('meta[name="viewport"]')?.getAttribute('content') || undefined,
+    },
+    techStack: detectTechStack(),
+    domStats: {
+      totalElements: document.querySelectorAll('*').length,
+      images: document.querySelectorAll('img').length,
+      links: document.querySelectorAll('a').length,
+      headings: document.querySelectorAll('h1, h2, h3, h4, h5, h6').length,
+    },
+  };
+
+  // Send request to service worker
+  const response = await sendMessage({
+    type: 'LLM_ANALYZE_PAGE',
+    payload: context,
+    timestamp: Date.now(),
+  });
+
+  if (!response?.success || !response.suggestions) {
+    return null;
+  }
+
+  // Convert LLM suggestions to AISuggestion format
+  return (response.suggestions as LLMSuggestion[]).map(
+    (s, index): AISuggestion => ({
+      id: `llm-${index}`,
+      category: s.category,
+      priority: s.priority,
+      title: s.title,
+      description: s.description,
+      element: s.element,
+      selector: s.selector,
+      impact: s.impact,
+      effort: s.effort,
+      confidence: 0.85, // LLM suggestions have high confidence
+      autoFixable: s.autoFixable,
+    })
+  );
+}
+
+/**
+ * Detect tech stack from global variables and meta tags
+ */
+function detectTechStack(): string[] {
+  const tech: string[] = [];
+
+  // Check for common frameworks
+  if ((window as unknown as Record<string, unknown>).React) tech.push('React');
+  if ((window as unknown as Record<string, unknown>).Vue) tech.push('Vue');
+  if ((window as unknown as Record<string, unknown>).angular) tech.push('Angular');
+  if (document.querySelector('[data-reactroot], [data-reactid]')) tech.push('React');
+  if (document.querySelector('[ng-app], [ng-controller]')) tech.push('Angular');
+  if (document.querySelector('[data-v-app]')) tech.push('Vue');
+
+  // Check for common libraries
+  if ((window as unknown as Record<string, unknown>).jQuery) tech.push('jQuery');
+  if ((window as unknown as Record<string, unknown>).$) tech.push('jQuery');
+  if ((window as unknown as Record<string, unknown>)._ || (window as unknown as Record<string, unknown>).lodash) tech.push('Lodash');
+  if ((window as unknown as Record<string, unknown>).moment) tech.push('Moment.js');
+  if ((window as unknown as Record<string, unknown>).gsap) tech.push('GSAP');
+
+  // Check for CSS frameworks
+  if (document.querySelector('.tailwind, [class*="tw-"]')) tech.push('Tailwind CSS');
+  if (document.querySelector('[class*="bootstrap"]')) tech.push('Bootstrap');
+  if (document.querySelector('[class*="material"]')) tech.push('Material UI');
+
+  return tech;
 }
 
 // ============================================
@@ -227,7 +325,8 @@ export async function analyzeAccessibility(): Promise<AISuggestion[]> {
       const bgColor = style.backgroundColor;
 
       // Check for very low contrast using proper color parsing
-      if (hasVeryLowContrast(color, bgColor)) {
+      // Pass element context to resolve CSS variables
+      if (hasVeryLowContrast(color, bgColor, el)) {
         suggestions.push({
           id: `a11y-contrast-${i}`,
           category: 'accessibility',
@@ -766,73 +865,8 @@ export function analyzeSecurity(): AISuggestion[] {
 // Color Utilities
 // ============================================
 
-/**
- * Parse RGB color string to RGB values
- * Supports: rgb(r, g, b), rgba(r, g, b, a)
- * Returns null if parsing fails
- */
-function parseRGB(color: string): { r: number; g: number; b: number } | null {
-  // Match rgb(r, g, b) or rgba(r, g, b, a)
-  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (!match) return null;
-  return {
-    r: Number.parseInt(match[1], 10),
-    g: Number.parseInt(match[2], 10),
-    b: Number.parseInt(match[3], 10),
-  };
-}
-
-/**
- * Calculate relative luminance of a color
- * Based on WCAG 2.0 formula
- */
-function getLuminance(r: number, g: number, b: number): number {
-  // Convert to sRGB
-  const rsRGB = r / 255;
-  const gsRGB = g / 255;
-  const bsRGB = b / 255;
-
-  // Apply gamma correction
-  const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : ((rsRGB + 0.055) / 1.055) ** 2.4;
-  const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : ((gsRGB + 0.055) / 1.055) ** 2.4;
-  const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : ((bsRGB + 0.055) / 1.055) ** 2.4;
-
-  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-}
-
-/**
- * Calculate contrast ratio between two colors
- * Returns ratio (1-21) or null if colors can't be parsed
- */
-function getContrastRatio(color1: string, color2: string): number | null {
-  const rgb1 = parseRGB(color1);
-  const rgb2 = parseRGB(color2);
-
-  if (!rgb1 || !rgb2) return null;
-
-  const lum1 = getLuminance(rgb1.r, rgb1.g, rgb1.b);
-  const lum2 = getLuminance(rgb2.r, rgb2.g, rgb2.b);
-
-  const lighter = Math.max(lum1, lum2);
-  const darker = Math.min(lum1, lum2);
-
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-/**
- * Check if colors are effectively the same (very low contrast)
- */
-function hasVeryLowContrast(color: string, bgColor: string): boolean {
-  // Direct string comparison for exact matches
-  if (color === bgColor) return true;
-
-  // Check contrast ratio
-  const ratio = getContrastRatio(color, bgColor);
-  if (ratio === null) return false;
-
-  // Ratio of 1.05 or less means essentially same color
-  return ratio <= 1.05;
-}
+// Color parsing utilities are now imported from '@/utils/color-parser'
+// Re-exporting hasVeryLowContrast with element context for CSS variable resolution
 
 // ============================================
 // DOM Sampling & Batching Utilities

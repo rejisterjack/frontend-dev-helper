@@ -18,7 +18,7 @@ import {
   TOOL_IDS,
   TOOL_METADATA,
 } from '@/constants';
-import type { ToolState, ToolsState } from '@/types';
+import type { LLMConfig, LLMPageContext, ToolState, ToolsState } from '@/types';
 import {
   broadcastMessage,
   type ExtensionMessage,
@@ -37,6 +37,7 @@ import {
 import { logger } from '../utils/logger';
 import { ContextMenuManager } from './context-menu';
 import { MessageRouter } from './message-router';
+import { llmService } from './llm-service';
 
 // ============================================
 // Constants
@@ -109,6 +110,9 @@ async function initialize(): Promise<void> {
 
     // Initialize context menus
     contextMenuManager?.initialize();
+
+    // Initialize LLM service
+    await llmService.loadConfig();
 
     // Migrate storage if needed
     await migrateStorage();
@@ -258,6 +262,23 @@ function registerMessageHandlers(): void {
   messageRouter.registerHandler(MESSAGE_TYPES.UPDATE_SETTINGS, async (message) => {
     const { payload } = message;
     return handleUpdateSettings(payload);
+  });
+
+  // LLM service handlers
+  messageRouter.registerHandler('LLM_GET_CONFIG', async () => {
+    return { config: llmService.getConfig() };
+  });
+
+  messageRouter.registerHandler('LLM_UPDATE_CONFIG', async (message) => {
+    const { payload } = message;
+    await llmService.saveConfig(payload as Partial<LLMConfig>);
+    return { success: true };
+  });
+
+  messageRouter.registerHandler('LLM_ANALYZE_PAGE', async (message) => {
+    const { payload } = message;
+    const suggestions = await llmService.analyzePage(payload as LLMPageContext);
+    return { suggestions };
   });
 
   logger.log('[ServiceWorker] Message handlers registered');

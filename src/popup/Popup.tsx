@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Onboarding } from '../components';
 import { AISuggestions } from '../components/AISuggestions';
 import { ComponentTree } from '../components/ComponentTree';
@@ -344,6 +344,8 @@ export const Popup: React.FC = () => {
   // UI states
   const [isLoading, setIsLoading] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Panel state for React component integration
   const [openPanel, setOpenPanel] = useState<ToolType | null>(null);
@@ -560,6 +562,41 @@ export const Popup: React.FC = () => {
    */
   const activeToolsCount = Object.values(toolsState).filter((s) => s.enabled).length;
 
+  /**
+   * Filter tools based on search query
+   */
+  const filteredTools = useMemo(() => {
+    if (!searchQuery.trim()) return TOOLS;
+    const query = searchQuery.toLowerCase().trim();
+    return TOOLS.filter(
+      (tool) =>
+        tool.name.toLowerCase().includes(query) ||
+        tool.description.toLowerCase().includes(query) ||
+        tool.type.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
+  /**
+   * Handle keyboard shortcut to focus search
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Focus search on '/' key, but not when typing in an input
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      // Clear search on Escape when search is focused
+      if (e.key === 'Escape' && searchInputRef.current === document.activeElement) {
+        setSearchQuery('');
+        searchInputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="w-[380px] min-h-[200px] bg-slate-900 flex items-center justify-center">
@@ -651,8 +688,62 @@ export const Popup: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-3 space-y-2">
+          {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                className="h-4 w-4 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tools..."
+              className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                title="Clear search"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+            {!searchQuery && (
+              <kbd className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span className="text-[10px] text-slate-600 border border-slate-700 rounded px-1.5 py-0.5">
+                  /
+                </span>
+              </kbd>
+            )}
+          </div>
+
           {/* Tool Cards */}
-          {TOOLS.map((tool, index) => (
+          {filteredTools.map((tool, index) => (
             <React.Fragment key={tool.type}>
               <ToolCard
                 type={tool.type}
@@ -688,9 +779,18 @@ export const Popup: React.FC = () => {
           ))}
 
           {/* Empty State (when no tools match search) */}
-          {TOOLS.length === 0 && (
+          {filteredTools.length === 0 && (
             <div className="text-center py-8 text-slate-500">
-              <p className="text-sm">No tools found</p>
+              <div className="text-4xl mb-2">🔍</div>
+              <p className="text-sm font-medium">No tools match your search</p>
+              <p className="text-xs mt-1">Try a different keyword or press Escape to clear</p>
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                Clear search
+              </button>
             </div>
           )}
 
