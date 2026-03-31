@@ -6,13 +6,17 @@
  */
 
 import type {
+  AnimationInspectorSettings,
   ColorPickerSettings,
+  CSSInspectorSettings,
   DOMOutlinerSettings,
   FontInspectorSettings,
+  LayoutVisualizerSettings,
   PixelRulerSettings,
   ResponsiveBreakpointSettings,
   SpacingVisualizerSettings,
   ToolSettings,
+  ZIndexVisualizerSettings,
 } from '@/types';
 
 // ============================================
@@ -53,7 +57,7 @@ export const TOOL_IDS = {
   COMPONENT_TREE: 'componentTree',
   FLAME_GRAPH: 'flameGraph',
   VISUAL_REGRESSION: 'visualRegression',
-  AI_SUGGESTIONS: 'aiSuggestions',
+  SMART_SUGGESTIONS: 'smartSuggestions',
 
   // Additional Tools (missing from TOOL_IDS)
   ACCESSIBILITY_AUDIT: 'accessibilityAudit',
@@ -63,6 +67,18 @@ export const TOOL_IDS = {
   ANIMATION_INSPECTOR: 'animationInspector',
   RESPONSIVE_PREVIEW: 'responsivePreview',
   DESIGN_SYSTEM_VALIDATOR: 'designSystemValidator',
+
+  // Advanced Tools (implemented but not registered)
+  CSS_VARIABLE_INSPECTOR: 'cssVariableInspector',
+  SMART_ELEMENT_PICKER: 'smartElementPicker',
+  SESSION_RECORDER: 'sessionRecorder',
+  PERFORMANCE_BUDGET: 'performanceBudget',
+  FRAMEWORK_DEVTOOLS: 'frameworkDevtools',
+
+  // Beast Mode: Next-Gen Features
+  CONTAINER_QUERY_INSPECTOR: 'containerQueryInspector',
+  VIEW_TRANSITIONS_DEBUGGER: 'viewTransitionsDebugger',
+  SCROLL_ANIMATIONS_DEBUGGER: 'scrollAnimationsDebugger',
 } as const;
 
 /**
@@ -264,6 +280,15 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     hasSettings: true,
     defaultEnabled: false,
   },
+  [TOOL_IDS.SMART_SUGGESTIONS]: {
+    id: TOOL_IDS.SMART_SUGGESTIONS,
+    name: 'Smart Suggestions',
+    description: 'Intelligent analysis with 50+ detection patterns & auto-fixes',
+    icon: 'sparkles',
+    category: 'ai',
+    hasSettings: true,
+    defaultEnabled: true,
+  },
   [TOOL_IDS.COMPONENT_TREE]: {
     id: TOOL_IDS.COMPONENT_TREE,
     name: 'Component Tree',
@@ -291,15 +316,7 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     hasSettings: true,
     defaultEnabled: false,
   },
-  [TOOL_IDS.AI_SUGGESTIONS]: {
-    id: TOOL_IDS.AI_SUGGESTIONS,
-    name: 'AI Suggestions',
-    description: 'Smart analysis with one-click fixes for common issues',
-    icon: 'sparkles',
-    category: 'utility',
-    hasSettings: true,
-    defaultEnabled: true,
-  },
+
 
   // Additional Tools (missing from TOOL_METADATA)
   [TOOL_IDS.ACCESSIBILITY_AUDIT]: {
@@ -379,6 +396,85 @@ export const TOOL_METADATA: Record<ToolId, ToolMetadata> = {
     name: 'CSS Scanner',
     description: 'Scan and analyze CSS issues',
     icon: 'scan',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+
+  // Advanced Tools (newly added)
+  [TOOL_IDS.CSS_VARIABLE_INSPECTOR]: {
+    id: TOOL_IDS.CSS_VARIABLE_INSPECTOR,
+    name: 'CSS Variable Inspector',
+    description: 'Detect, edit, and export CSS custom properties',
+    icon: 'palette',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+    shortcut: 'Alt+V',
+  },
+  [TOOL_IDS.SMART_ELEMENT_PICKER]: {
+    id: TOOL_IDS.SMART_ELEMENT_PICKER,
+    name: 'Smart Element Picker',
+    description: 'Unified inspection panel for CSS, spacing, fonts, and more',
+    icon: 'mouse-pointer-click',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+    shortcut: 'Alt+I',
+  },
+  [TOOL_IDS.SESSION_RECORDER]: {
+    id: TOOL_IDS.SESSION_RECORDER,
+    name: 'Session Recorder',
+    description: 'Record and replay debugging sessions',
+    icon: 'video',
+    category: 'utility',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.PERFORMANCE_BUDGET]: {
+    id: TOOL_IDS.PERFORMANCE_BUDGET,
+    name: 'Performance Budget',
+    description: 'Set and monitor performance budgets with alerts',
+    icon: 'gauge',
+    category: 'performance',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.FRAMEWORK_DEVTOOLS]: {
+    id: TOOL_IDS.FRAMEWORK_DEVTOOLS,
+    name: 'Framework DevTools',
+    description: 'React, Vue, Angular, Svelte detection and debugging',
+    icon: 'framework',
+    category: 'inspection',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+
+  // Beast Mode: Next-Gen Features
+  [TOOL_IDS.CONTAINER_QUERY_INSPECTOR]: {
+    id: TOOL_IDS.CONTAINER_QUERY_INSPECTOR,
+    name: 'Container Query Inspector',
+    description: 'Visualize CSS container queries and @container rules',
+    icon: 'containers',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+    shortcut: 'Alt+Q',
+  },
+  [TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER]: {
+    id: TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER,
+    name: 'View Transitions Debugger',
+    description: 'Debug the View Transitions API',
+    icon: 'transition',
+    category: 'css',
+    hasSettings: true,
+    defaultEnabled: false,
+  },
+  [TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER]: {
+    id: TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER,
+    name: 'Scroll Animations Debugger',
+    description: 'Debug scroll-driven and view-driven animations',
+    icon: 'scroll',
     category: 'css',
     hasSettings: true,
     defaultEnabled: false,
@@ -619,10 +715,10 @@ export const KEYBOARD_SHORTCUTS = {
     command: 'toggle_visual_regression',
     description: 'Toggle Visual Regression',
   },
-  TOGGLE_AI_SUGGESTIONS: {
+  TOGGLE_SMART_SUGGESTIONS: {
     key: '',
-    command: 'toggle_ai_suggestions',
-    description: 'Toggle AI Suggestions',
+    command: 'toggle_smart_suggestions',
+    description: 'Toggle Smart Suggestions',
   },
 } as const;
 
@@ -703,6 +799,43 @@ export const DEFAULT_RESPONSIVE_BREAKPOINT_SETTINGS: ResponsiveBreakpointSetting
 };
 
 /**
+ * Default settings for CSS Inspector
+ */
+export const DEFAULT_CSS_INSPECTOR_SETTINGS: CSSInspectorSettings = {
+  showInherited: false,
+  defaultCategory: 'all',
+  showComputedValues: true,
+};
+
+/**
+ * Default settings for Layout Visualizer
+ */
+export const DEFAULT_LAYOUT_VISUALIZER_SETTINGS: LayoutVisualizerSettings = {
+  flexColor: '#a855f7',
+  gridColor: '#06b6d4',
+  showGapValues: true,
+  showItemNumbers: true,
+};
+
+/**
+ * Default settings for Z-Index Visualizer
+ */
+export const DEFAULT_ZINDEX_VISUALIZER_SETTINGS: ZIndexVisualizerSettings = {
+  defaultViewMode: 'list',
+  overlayOpacity: 0.7,
+  showStackingContext: true,
+};
+
+/**
+ * Default settings for Animation Inspector
+ */
+export const DEFAULT_ANIMATION_INSPECTOR_SETTINGS: AnimationInspectorSettings = {
+  defaultSpeed: 1,
+  autoHighlight: true,
+  showTimeline: true,
+};
+
+/**
  * Default settings for all tools
  */
 export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string, never>> = {
@@ -712,10 +845,10 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.COLOR_PICKER]: DEFAULT_COLOR_PICKER_SETTINGS,
   [TOOL_IDS.PIXEL_RULER]: DEFAULT_PIXEL_RULER_SETTINGS,
   [TOOL_IDS.RESPONSIVE_BREAKPOINT]: DEFAULT_RESPONSIVE_BREAKPOINT_SETTINGS,
-  [TOOL_IDS.CSS_INSPECTOR]: {},
+  [TOOL_IDS.CSS_INSPECTOR]: DEFAULT_CSS_INSPECTOR_SETTINGS,
   [TOOL_IDS.CONTRAST_CHECKER]: {},
-  [TOOL_IDS.LAYOUT_VISUALIZER]: {},
-  [TOOL_IDS.ZINDEX_VISUALIZER]: {},
+  [TOOL_IDS.LAYOUT_VISUALIZER]: DEFAULT_LAYOUT_VISUALIZER_SETTINGS,
+  [TOOL_IDS.ZINDEX_VISUALIZER]: DEFAULT_ZINDEX_VISUALIZER_SETTINGS,
   [TOOL_IDS.TECH_DETECTOR]: {},
   [TOOL_IDS.NETWORK_ANALYZER]: {},
   [TOOL_IDS.ELEMENT_INSPECTOR]: { showTooltips: true, highlightStyles: true },
@@ -728,17 +861,26 @@ export const DEFAULT_TOOL_SETTINGS: Record<ToolId, ToolSettings | Record<string,
   [TOOL_IDS.COMPONENT_TREE]: {},
   [TOOL_IDS.FLAME_GRAPH]: {},
   [TOOL_IDS.VISUAL_REGRESSION]: {},
-  [TOOL_IDS.AI_SUGGESTIONS]: {},
+  [TOOL_IDS.SMART_SUGGESTIONS]: {},
   // Additional Tools
   [TOOL_IDS.ACCESSIBILITY_AUDIT]: {},
   [TOOL_IDS.SITE_REPORT]: {},
   [TOOL_IDS.CSS_EDITOR]: {},
   [TOOL_IDS.SCREENSHOT_STUDIO]: {},
-  [TOOL_IDS.ANIMATION_INSPECTOR]: {},
+  [TOOL_IDS.ANIMATION_INSPECTOR]: DEFAULT_ANIMATION_INSPECTOR_SETTINGS,
   [TOOL_IDS.RESPONSIVE_PREVIEW]: {},
   [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: {},
   [TOOL_IDS.GRID_OVERLAY]: {},
   [TOOL_IDS.CSS_SCANNER]: {},
+  [TOOL_IDS.CSS_VARIABLE_INSPECTOR]: {},
+  [TOOL_IDS.SMART_ELEMENT_PICKER]: {},
+  [TOOL_IDS.SESSION_RECORDER]: {},
+  [TOOL_IDS.PERFORMANCE_BUDGET]: {},
+  [TOOL_IDS.FRAMEWORK_DEVTOOLS]: {},
+  // Beast Mode: Next-Gen Features
+  [TOOL_IDS.CONTAINER_QUERY_INSPECTOR]: {},
+  [TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER]: {},
+  [TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER]: {},
 };
 
 /**
@@ -886,10 +1028,10 @@ export const MESSAGE_TYPES = {
   DELETE_STORAGE_ITEM: 'DELETE_STORAGE_ITEM',
   CLEAR_STORAGE: 'CLEAR_STORAGE',
 
-  // AI Suggestions
-  RUN_AI_ANALYSIS: 'RUN_AI_ANALYSIS',
-  GET_AI_SUGGESTIONS: 'GET_AI_SUGGESTIONS',
-  APPLY_AI_FIX: 'APPLY_AI_FIX',
+  // Smart Suggestions
+  RUN_SMART_ANALYSIS: 'RUN_SMART_ANALYSIS',
+  GET_SMART_SUGGESTIONS: 'GET_SMART_SUGGESTIONS',
+  APPLY_SMART_FIX: 'APPLY_SMART_FIX',
 
   // Component Tree
   GET_COMPONENT_TREE: 'GET_COMPONENT_TREE',

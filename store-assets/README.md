@@ -1,123 +1,158 @@
 # Chrome Web Store Assets
 
-This folder contains assets for the Chrome Web Store listing.
+This directory contains all assets required for Chrome Web Store submission.
 
 ## Required Assets
 
-### Icons
-- `icon-128.png` - Extension icon (128×128px) ✅ (in dist/icons/)
+### Screenshots (1280x800 or 640x400)
+- [ ] Screenshot 1: Popup Overview (Tools tab with categories)
+- [ ] Screenshot 2: DevTools Panel (Element inspector with computed styles)
+- [ ] Screenshot 3: CSS Variable Inspector
+- [ ] Screenshot 4: Smart Element Picker with unified panel
+- [ ] Screenshot 5: Responsive Testing Report
+- [ ] Screenshot 6: Dashboard - Sessions Overview
 
-### Screenshots (1280×800px or 640×400px)
-Create these screenshots showing the extension in action:
+### Promotional Images
+- [ ] Small Promo (440x280) - Feature highlight
+- [ ] Large Promo (920x680) - Full feature showcase
+- [ ] Marquee (1400x560) - Wide banner for store listing
 
-1. **screenshot-1-main.png** - Main popup showing all tools
-2. **screenshot-2-pesticide.png** - DOM Outliner in action
-3. **screenshot-3-spacing.png** - Spacing Visualizer
-4. **screenshot-4-color.png** - Color Picker
-5. **screenshot-5-css.png** - CSS Inspector
+### Demo Video
+- [ ] 30-60 second demo video showing key features
+- [ ] Format: MP4, max 100MB
 
-### Promotional Images (Optional but recommended)
+## Asset Generation
 
-- **promo-small.png** (440×280px) - Small promo tile
-- **promo-large.png** (920×680px) - Large promo tile
-- **marquee.png** (1400×560px) - Marquee promo tile
+### Screenshot Guidelines
+1. Use clean, high-contrast backgrounds
+2. Show real-world usage examples
+3. Include the extension icon in action
+4. Highlight key features with subtle annotations
 
-## Store Listing Text
+### Recommended Screenshots Content
 
-### Name
-FrontendDevHelper - Developer Tools
+1. **Popup Overview**
+   - Show the tabbed interface
+   - Highlight categorized tools
+   - Include keyboard shortcut badges
 
-### Short Description (up to 132 characters)
-All-in-one developer toolkit: DOM inspector, color picker, spacing visualizer, font analyzer, and more.
+2. **DevTools Panel**
+   - Element selection mode
+   - Computed styles view
+   - Box model visualization
 
-### Detailed Description
+3. **CSS Variable Inspector**
+   - Color palette view
+   - Edit mode active
+   - Export options visible
+
+4. **Smart Element Picker**
+   - Unified inspection panel
+   - WCAG badges visible
+   - Element highlighting
+
+5. **Responsive Testing**
+   - Side-by-side breakpoint comparison
+   - Issue indicators
+   - Device frames
+
+6. **Dashboard**
+   - Stats overview
+   - Activity feed
+   - Tool usage chart
+
+## Asset Naming Convention
 ```
-FrontendDevHelper is the ultimate browser extension for frontend developers. Replace your collection of separate extensions with one powerful, modern tool.
+screenshots/
+  screenshot-1-popup-tools.png          (1280x800)
+  screenshot-2-devtools-panel.png       (1280x800)
+  screenshot-3-css-inspector.png        (1280x800)
+  screenshot-4-element-picker.png       (1280x800)
+  screenshot-5-responsive-testing.png   (1280x800)
+  screenshot-6-dashboard.png            (1280x800)
 
-🚀 FEATURES:
+promotional/
+  promo-small.png                       (440x280)
+  promo-large.png                       (920x680)
+  promo-marquee.png                     (1400x560)
 
-🕸️ DOM Outliner (Pesticide Reborn)
-• Color-coded outlines for every element
-• Instantly see page structure
-• Hover labels with tag names and classes
-
-📐 Spacing Visualizer
-• Click any element to see margins & padding
-• Blue = padding, Orange = margin
-• Exact pixel values displayed
-
-🔤 Font Inspector
-• Hover to analyze any text
-• Font family, size, weight, line-height
-• Detect Google Fonts, Adobe Fonts, etc.
-
-🎨 Color Picker
-• Pick colors from anywhere
-• HEX, RGB, HSL formats
-• Page palette extraction
-
-📏 Pixel Ruler
-• Measure distances precisely
-• Element-to-element measurement
-• px and rem display
-
-📱 Responsive Breakpoint Overlay
-• Current viewport size
-• Tailwind/Bootstrap breakpoints
-• One-click device resizing
-
-📝 CSS Inspector
-• View all computed properties
-• Filter by category
-• One-click CSS copy
-
-♿ Contrast Checker
-• WCAG AA/AAA compliance
-• Accessibility ratings
-• Color suggestions
-
-⊞ Flexbox & Grid Visualizer
-• Visualize layout structures
-• See gaps and tracks
-• Item properties display
-
-📚 Z-Index Visualizer
-• Stacking order overview
-• Detect z-index conflicts
-• 3D stacking view
-
-🔍 Tech Detector
-• Detect frameworks & libraries
-• Identify CSS frameworks
-• Analytics detection
-
-⌨️ KEYBOARD SHORTCUTS:
-• Alt+P - Toggle DOM Outliner
-• Alt+S - Toggle Spacing Visualizer
-• Alt+F - Toggle Font Inspector
-• Alt+C - Toggle Color Picker
-• Alt+M - Toggle Pixel Ruler
-• Alt+B - Toggle Breakpoint Overlay
-
-🛡️ PRIVACY:
-• Zero data collection
-• Everything runs locally
-• No external servers
-
-Open source and free forever!
+video/
+  demo-video.mp4                        (Max 100MB)
 ```
 
-### Category
-Developer Tools
+## Using the HTML Generator
 
-### Language
-English
+Run the following to generate placeholder screenshots:
 
-### Website
-https://github.com/rejisterjack/frontend-dev-helper
+```bash
+# Generate screenshot HTML pages
+npm run generate:screenshots
 
-### Support Email
-(Your support email)
+# Capture screenshots using Playwright
+npm run capture:screenshots
+```
 
-### Privacy Policy
-See PRIVACY.md in the repository
+## Design Guidelines
+
+### Colors
+- Primary: #3B82F6 (Blue 500)
+- Secondary: #8B5CF6 (Purple 500)
+- Background: #F8FAFC (Slate 50)
+- Text: #0F172A (Slate 900)
+
+### Typography
+- Font: Inter, -apple-system, BlinkMacSystemFont, sans-serif
+- Headings: 600 weight
+- Body: 400 weight
+
+### Chrome Store Listing Copy
+
+**Title:** FrontendDevHelper - All-in-One Frontend Toolkit
+
+**Summary:** 18+ powerful tools for frontend developers. Inspect, debug, analyze, and optimize your web apps.
+
+**Description:**
+FrontendDevHelper is a comprehensive browser extension designed for modern frontend developers. It combines 18+ essential development tools into one seamless experience.
+
+Key Features:
+• DOM Outliner - Visualize page structure with ease
+• CSS Variable Inspector - Detect, edit, and export CSS custom properties
+• Smart Element Picker - Unified inspection panel for CSS, spacing, fonts, and more
+• Responsive Testing - Auto-capture screenshots at multiple breakpoints
+• Session Recording - Record and replay debugging sessions
+• Performance Budget - Track Core Web Vitals with alerts
+• Multi-Framework Support - React, Vue, Angular, Svelte detection
+• Cross-Tab Sync - Global or per-tab tool state management
+• Dashboard - Historical tracking and team collaboration
+
+Perfect for:
+- Frontend developers
+- UI/UX designers
+- QA engineers
+- Performance engineers
+
+Privacy-focused: All processing happens locally. No data leaves your browser.
+
+**Category:** Developer Tools
+
+**Language:** English (US)
+
+**Non-trader Note:** This developer has not identified itself as a trader. For consumers in the European Union, please note that consumer rights do not apply to contracts between you and this developer.
+
+**Support URL:** https://github.com/yourusername/frontend-dev-helper/issues
+
+**Privacy Policy:** See PRIVACY.md
+
+## Monetization Setup
+
+### Pricing Tiers
+- Free: Core tools (5 AI analyses/day)
+- Pro ($4.99/month): Unlimited AI, priority support
+- Team ($19.99/month): Collaboration features, admin panel
+
+### License Server
+- URL: https://api.frontenddevhelper.com/v1/license
+- Validation: JWT-based
+- Grace period: 7 days
+
+See `/monetization/` for server implementation.

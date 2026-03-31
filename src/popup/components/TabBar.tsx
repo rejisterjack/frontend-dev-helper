@@ -1,41 +1,57 @@
 /**
- * Tab Bar Component
+ * FrontendDevHelper - Tab Bar Component
+ *
+ * Tab navigation for the popup.
  */
 
 import type React from 'react';
-import type { UITab } from '@/types';
 
-interface TabBarProps {
-  tabs: UITab[];
-  activeTab: string;
-  onChange: (tabId: string) => void;
+export interface TabBarProps {
+  /** Currently active tab */
+  activeTab: 'tools' | 'performance' | 'inspector' | 'settings';
+  /** Callback when tab is changed */
+  onTabChange: (tab: 'tools' | 'performance' | 'inspector' | 'settings') => void;
 }
 
-export const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onChange }) => {
+const TABS: Array<{
+  id: 'tools' | 'performance' | 'inspector' | 'settings';
+  label: string;
+  icon: string;
+}> = [
+  { id: 'tools', label: 'Tools', icon: '🔧' },
+  { id: 'performance', label: 'Performance', icon: '⚡' },
+  { id: 'inspector', label: 'Inspector', icon: '🔍' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
+];
+
+export const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
   return (
-    <div className="flex border-b border-dev-border bg-dev-surface">
-      {tabs.map((tab) => (
+    <nav className="flex items-center border-b border-slate-700/50 bg-slate-800/50 px-1">
+      {TABS.map((tab) => (
         <button
           type="button"
           key={tab.id}
-          onClick={() => onChange(tab.id)}
-          disabled={tab.disabled}
-          className={`relative flex flex-1 flex-col items-center py-2 text-xs transition-colors ${
-            activeTab === tab.id ? 'text-primary-400' : 'text-dev-muted hover:text-dev-text'
-          } ${tab.disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+          onClick={() => onTabChange(tab.id)}
+          className={`
+            flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2
+            text-xs font-medium transition-all relative
+            ${
+              activeTab === tab.id
+                ? 'text-indigo-400'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30'
+            }
+          `}
+          aria-current={activeTab === tab.id ? 'page' : undefined}
         >
-          <span className="mb-1 text-base">{tab.icon}</span>
-          <span>{tab.label}</span>
+          <span className="text-sm">{tab.icon}</span>
+          <span className="hidden sm:inline">{tab.label}</span>
           {activeTab === tab.id && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500" />
-          )}
-          {tab.badge && (
-            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-dev-error px-1 text-[10px] text-white">
-              {tab.badge}
-            </span>
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-t-full" />
           )}
         </button>
       ))}
-    </div>
+    </nav>
   );
 };
+
+export default TabBar;

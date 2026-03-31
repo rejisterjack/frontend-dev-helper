@@ -358,7 +358,8 @@ export function extractDominantColors(
     if (merged.has(color)) continue;
 
     let totalCount = count;
-    const rgb1 = hexToRgb(color)!;
+    const rgb1 = hexToRgb(color);
+    if (!rgb1) continue;
 
     for (const [otherColor, otherCount] of sorted) {
       if (color === otherColor || merged.has(otherColor)) continue;

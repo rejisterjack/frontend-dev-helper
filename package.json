@@ -17,6 +17,10 @@
     "format": "biome format src --write",
     "check": "biome check src",
     "check:fix": "biome check src --write",
+    "type-check": "tsc --noEmit",
+    "format:check": "biome format src",
+    "test:unit": "vitest --run",
+    "size": "size-limit",
     "release": "./scripts/build-release.sh",
     "release:win": "node scripts/build-release.js"
   },

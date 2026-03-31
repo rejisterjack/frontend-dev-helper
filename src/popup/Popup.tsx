@@ -1,419 +1,321 @@
+/**
+ * FrontendDevHelper - Tabbed Popup Component
+ *
+ * New tabbed interface with:
+ * - Tools Tab: Categorized tool cards
+ * - Performance Tab: Performance metrics
+ * - Inspector Tab: Element inspection
+ * - Settings Tab: Quick settings
+ */
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AISuggestions } from '../components/AISuggestions';
 import { ComponentTree } from '../components/ComponentTree';
 import { FlameGraph } from '../components/FlameGraph';
 import { VisualRegression } from '../components/VisualRegression';
-import { type ToolMeta, type ToolsState, ToolType } from '../types';
+import { TOOL_IDS, TOOL_METADATA, type ToolId } from '../constants';
+import { DEFAULT_FEATURE_TOGGLES } from '../types';
+import type { ToolMeta, ToolsState } from '../types';
 import { logger } from '../utils/logger';
-import { clearAllStates } from '../utils/storage';
+import { clearAllStates, getAllToolStates, setToolState } from '../utils/storage';
 import { ColorLegend } from './components/ColorLegend';
+import { TabBar } from './components/TabBar';
 import { ToolCard } from './components/ToolCard';
+import { InspectorTab } from './tabs/InspectorTab';
+import { PerformanceTab } from './tabs/PerformanceTab';
+import { SettingsTab } from './tabs/SettingsTab';
 import './popup.css';
+
+// ============================================
+// Tool Categories Configuration
+// ============================================
+
+const TOOL_CATEGORIES: Array<{
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  tools: ToolId[];
+}> = [
+  {
+    id: 'inspection',
+    name: 'Inspection',
+    icon: '🔍',
+    color: '#3b82f6',
+    tools: [
+      TOOL_IDS.DOM_OUTLINER,
+      TOOL_IDS.SPACING_VISUALIZER,
+      TOOL_IDS.FONT_INSPECTOR,
+      TOOL_IDS.TECH_DETECTOR,
+      TOOL_IDS.ACCESSIBILITY_AUDIT,
+      TOOL_IDS.ELEMENT_INSPECTOR,
+      TOOL_IDS.SMART_ELEMENT_PICKER,
+      TOOL_IDS.FRAMEWORK_DEVTOOLS,
+    ],
+  },
+  {
+    id: 'css',
+    name: 'CSS & Design',
+    icon: '🎨',
+    color: '#ec4899',
+    tools: [
+      TOOL_IDS.COLOR_PICKER,
+      TOOL_IDS.CONTRAST_CHECKER,
+      TOOL_IDS.LAYOUT_VISUALIZER,
+      TOOL_IDS.ZINDEX_VISUALIZER,
+      TOOL_IDS.CSS_INSPECTOR,
+      TOOL_IDS.CSS_EDITOR,
+      TOOL_IDS.CSS_SCANNER,
+      TOOL_IDS.CSS_VARIABLE_INSPECTOR,
+      TOOL_IDS.ANIMATION_INSPECTOR,
+      TOOL_IDS.GRID_OVERLAY,
+      TOOL_IDS.DESIGN_SYSTEM_VALIDATOR,
+      // Beast Mode: Next-Gen Features
+      TOOL_IDS.CONTAINER_QUERY_INSPECTOR,
+      TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER,
+      TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER,
+    ],
+  },
+  {
+    id: 'responsive',
+    name: 'Responsive',
+    icon: '📱',
+    color: '#06b6d4',
+    tools: [TOOL_IDS.RESPONSIVE_BREAKPOINT, TOOL_IDS.RESPONSIVE_PREVIEW, TOOL_IDS.PIXEL_RULER],
+  },
+  {
+    id: 'performance',
+    name: 'Performance',
+    icon: '⚡',
+    color: '#f59e0b',
+    tools: [TOOL_IDS.NETWORK_ANALYZER, TOOL_IDS.FLAME_GRAPH, TOOL_IDS.PERFORMANCE_BUDGET],
+  },
+  {
+    id: 'ai',
+    name: 'AI & Analysis',
+    icon: '🤖',
+    color: '#8b5cf6',
+    tools: [TOOL_IDS.SMART_SUGGESTIONS, TOOL_IDS.SITE_REPORT],
+  },
+  {
+    id: 'utility',
+    name: 'Utilities',
+    icon: '🛠️',
+    color: '#6366f1',
+    tools: [
+      TOOL_IDS.COMMAND_PALETTE,
+      TOOL_IDS.SESSION_RECORDER,
+      TOOL_IDS.SCREENSHOT_STUDIO,
+      TOOL_IDS.STORAGE_INSPECTOR,
+      TOOL_IDS.COMPONENT_TREE,
+      TOOL_IDS.VISUAL_REGRESSION,
+      TOOL_IDS.FOCUS_DEBUGGER,
+      TOOL_IDS.FORM_DEBUGGER,
+      TOOL_IDS.MEASUREMENT_TOOL,
+    ],
+  },
+];
+
+// ============================================
+// Tool Metadata with Colors
+// ============================================
+
+const TOOL_META_OVERRIDES: Record<ToolId, { color: string }> = {
+  [TOOL_IDS.DOM_OUTLINER]: { color: '#f97316' },
+  [TOOL_IDS.SPACING_VISUALIZER]: { color: '#8b5cf6' },
+  [TOOL_IDS.FONT_INSPECTOR]: { color: '#3b82f6' },
+  [TOOL_IDS.COLOR_PICKER]: { color: '#ec4899' },
+  [TOOL_IDS.PIXEL_RULER]: { color: '#f59e0b' },
+  [TOOL_IDS.RESPONSIVE_BREAKPOINT]: { color: '#06b6d4' },
+  [TOOL_IDS.CSS_INSPECTOR]: { color: '#10b981' },
+  [TOOL_IDS.CONTRAST_CHECKER]: { color: '#84cc16' },
+  [TOOL_IDS.LAYOUT_VISUALIZER]: { color: '#8b5cf6' },
+  [TOOL_IDS.ZINDEX_VISUALIZER]: { color: '#f43f5e' },
+  [TOOL_IDS.TECH_DETECTOR]: { color: '#0ea5e9' },
+  [TOOL_IDS.ACCESSIBILITY_AUDIT]: { color: '#a855f7' },
+  [TOOL_IDS.SITE_REPORT]: { color: '#f43f5e' },
+  [TOOL_IDS.CSS_EDITOR]: { color: '#ec4899' },
+  [TOOL_IDS.SCREENSHOT_STUDIO]: { color: '#14b8a6' },
+  [TOOL_IDS.ANIMATION_INSPECTOR]: { color: '#f59e0b' },
+  [TOOL_IDS.RESPONSIVE_PREVIEW]: { color: '#06b6d4' },
+  [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: { color: '#8b5cf6' },
+  [TOOL_IDS.NETWORK_ANALYZER]: { color: '#22c55e' },
+  [TOOL_IDS.COMMAND_PALETTE]: { color: '#6366f1' },
+  [TOOL_IDS.STORAGE_INSPECTOR]: { color: '#0891b2' },
+  [TOOL_IDS.FOCUS_DEBUGGER]: { color: '#ea580c' },
+  [TOOL_IDS.FORM_DEBUGGER]: { color: '#7c3aed' },
+  [TOOL_IDS.COMPONENT_TREE]: { color: '#16a34a' },
+  [TOOL_IDS.FLAME_GRAPH]: { color: '#dc2626' },
+  [TOOL_IDS.VISUAL_REGRESSION]: { color: '#db2777' },
+  [TOOL_IDS.SMART_SUGGESTIONS]: { color: '#f59e0b' },
+  [TOOL_IDS.ELEMENT_INSPECTOR]: { color: '#6366f1' },
+  [TOOL_IDS.MEASUREMENT_TOOL]: { color: '#64748b' },
+  [TOOL_IDS.GRID_OVERLAY]: { color: '#475569' },
+  [TOOL_IDS.CSS_SCANNER]: { color: '#64748b' },
+  [TOOL_IDS.CSS_VARIABLE_INSPECTOR]: { color: '#a855f7' },
+  [TOOL_IDS.SMART_ELEMENT_PICKER]: { color: '#06b6d4' },
+  [TOOL_IDS.SESSION_RECORDER]: { color: '#ef4444' },
+  [TOOL_IDS.PERFORMANCE_BUDGET]: { color: '#f97316' },
+  [TOOL_IDS.FRAMEWORK_DEVTOOLS]: { color: '#14b8a6' },
+};
+
+/** Generate tool metadata for popup */
+function getToolMeta(toolId: ToolId): ToolMeta {
+  const meta = TOOL_METADATA[toolId];
+  const override = TOOL_META_OVERRIDES[toolId];
+  return {
+    ...meta,
+    color: override?.color || '#6366f1',
+  };
+}
 
 // ============================================
 // Message Type Mapping (Unified System)
 // ============================================
 
 /**
- * Maps ToolType to the message prefix used by content script handlers.
- * This creates the unified message system - the popup sends messages
- * that match what the handler registry expects.
+ * Maps ToolId to the message prefix used by content script handlers.
  */
-const TOOL_MESSAGE_PREFIXES: Record<ToolType, string> = {
-  [ToolType.DOM_OUTLINER]: 'PESTICIDE',
-  [ToolType.SPACING_VISUALIZER]: 'SPACING',
-  [ToolType.FONT_INSPECTOR]: 'FONT_INSPECTOR',
-  [ToolType.COLOR_PICKER]: 'COLOR_PICKER',
-  [ToolType.PIXEL_RULER]: 'PIXEL_RULER',
-  [ToolType.RESPONSIVE_BREAKPOINT]: 'BREAKPOINT_OVERLAY',
-  [ToolType.CSS_INSPECTOR]: 'CSS_INSPECTOR',
-  [ToolType.CSS_EDITOR]: 'CSS_EDITOR',
-  [ToolType.CONTRAST_CHECKER]: 'CONTRAST_CHECKER',
-  [ToolType.LAYOUT_VISUALIZER]: 'LAYOUT_VISUALIZER',
-  [ToolType.ZINDEX_VISUALIZER]: 'ZINDEX_VISUALIZER',
-  [ToolType.TECH_DETECTOR]: 'TECH_DETECTOR',
-  [ToolType.ACCESSIBILITY_AUDIT]: 'ACCESSIBILITY_AUDIT',
-  [ToolType.SITE_REPORT]: 'SITE_REPORT',
-  [ToolType.SCREENSHOT_STUDIO]: 'SCREENSHOT_STUDIO',
-  [ToolType.ANIMATION_INSPECTOR]: 'ANIMATION_INSPECTOR',
-  [ToolType.RESPONSIVE_PREVIEW]: 'RESPONSIVE_PREVIEW',
-  [ToolType.DESIGN_SYSTEM_VALIDATOR]: 'DESIGN_SYSTEM_VALIDATOR',
-  [ToolType.NETWORK_ANALYZER]: 'NETWORK_ANALYZER',
-  [ToolType.COMMAND_PALETTE]: 'COMMAND_PALETTE',
-  [ToolType.STORAGE_INSPECTOR]: 'STORAGE_INSPECTOR',
-  [ToolType.FOCUS_DEBUGGER]: 'FOCUS_DEBUGGER',
-  [ToolType.FORM_DEBUGGER]: 'FORM_DEBUGGER',
-  [ToolType.COMPONENT_TREE]: 'COMPONENT_TREE',
-  [ToolType.FLAME_GRAPH]: 'FLAME_GRAPH',
-  [ToolType.VISUAL_REGRESSION]: 'VISUAL_REGRESSION',
-  [ToolType.AI_SUGGESTIONS]: 'AI_SUGGESTIONS',
+const TOOL_MESSAGE_PREFIXES: Record<ToolId, string> = {
+  [TOOL_IDS.DOM_OUTLINER]: 'PESTICIDE',
+  [TOOL_IDS.SPACING_VISUALIZER]: 'SPACING',
+  [TOOL_IDS.FONT_INSPECTOR]: 'FONT_INSPECTOR',
+  [TOOL_IDS.COLOR_PICKER]: 'COLOR_PICKER',
+  [TOOL_IDS.PIXEL_RULER]: 'PIXEL_RULER',
+  [TOOL_IDS.RESPONSIVE_BREAKPOINT]: 'BREAKPOINT_OVERLAY',
+  [TOOL_IDS.CSS_INSPECTOR]: 'CSS_INSPECTOR',
+  [TOOL_IDS.CSS_EDITOR]: 'CSS_EDITOR',
+  [TOOL_IDS.CONTRAST_CHECKER]: 'CONTRAST_CHECKER',
+  [TOOL_IDS.LAYOUT_VISUALIZER]: 'LAYOUT_VISUALIZER',
+  [TOOL_IDS.ZINDEX_VISUALIZER]: 'ZINDEX_VISUALIZER',
+  [TOOL_IDS.TECH_DETECTOR]: 'TECH_DETECTOR',
+  [TOOL_IDS.ACCESSIBILITY_AUDIT]: 'ACCESSIBILITY_AUDIT',
+  [TOOL_IDS.SITE_REPORT]: 'SITE_REPORT',
+  [TOOL_IDS.SCREENSHOT_STUDIO]: 'SCREENSHOT_STUDIO',
+  [TOOL_IDS.ANIMATION_INSPECTOR]: 'ANIMATION_INSPECTOR',
+  [TOOL_IDS.RESPONSIVE_PREVIEW]: 'RESPONSIVE_PREVIEW',
+  [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: 'DESIGN_SYSTEM_VALIDATOR',
+  [TOOL_IDS.NETWORK_ANALYZER]: 'NETWORK_ANALYZER',
+  [TOOL_IDS.COMMAND_PALETTE]: 'COMMAND_PALETTE',
+  [TOOL_IDS.STORAGE_INSPECTOR]: 'STORAGE_INSPECTOR',
+  [TOOL_IDS.FOCUS_DEBUGGER]: 'FOCUS_DEBUGGER',
+  [TOOL_IDS.FORM_DEBUGGER]: 'FORM_DEBUGGER',
+  [TOOL_IDS.COMPONENT_TREE]: 'COMPONENT_TREE',
+  [TOOL_IDS.FLAME_GRAPH]: 'FLAME_GRAPH',
+  [TOOL_IDS.VISUAL_REGRESSION]: 'VISUAL_REGRESSION',
+  [TOOL_IDS.SMART_SUGGESTIONS]: 'SMART_SUGGESTIONS',
+  [TOOL_IDS.ELEMENT_INSPECTOR]: 'INSPECTOR',
+  [TOOL_IDS.MEASUREMENT_TOOL]: 'MEASUREMENT',
+  [TOOL_IDS.GRID_OVERLAY]: 'GRID',
+  [TOOL_IDS.CSS_SCANNER]: 'CSS_SCANNER',
+  [TOOL_IDS.CSS_VARIABLE_INSPECTOR]: 'CSS_VARIABLE_INSPECTOR',
+  [TOOL_IDS.SMART_ELEMENT_PICKER]: 'SMART_ELEMENT_PICKER',
+  [TOOL_IDS.SESSION_RECORDER]: 'SESSION_RECORDER',
+  [TOOL_IDS.PERFORMANCE_BUDGET]: 'PERFORMANCE_BUDGET',
+  [TOOL_IDS.FRAMEWORK_DEVTOOLS]: 'FRAMEWORK_DEVTOOLS',
+  [TOOL_IDS.CONTAINER_QUERY_INSPECTOR]: 'CONTAINER_QUERY_INSPECTOR',
+  [TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER]: 'VIEW_TRANSITIONS_DEBUGGER',
+  [TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER]: 'SCROLL_ANIMATIONS_DEBUGGER',
 };
 
 /**
  * Generates the message type for a tool action.
- * This replaces the legacy hardcoded TOOL_MESSAGE_MAP.
  */
-function getToolMessageType(tool: ToolType, action: 'ENABLE' | 'DISABLE'): string {
-  const prefix = TOOL_MESSAGE_PREFIXES[tool];
+function getToolMessageType(toolId: ToolId, action: 'ENABLE' | 'DISABLE'): string {
+  const prefix = TOOL_MESSAGE_PREFIXES[toolId];
   if (!prefix) {
-    logger.warn(`Unknown tool type: ${tool}`);
+    logger.warn(`Unknown tool ID: ${toolId}`);
     return '';
   }
   return `${prefix}_${action}`;
 }
 
-// ============================================
-// FrontendDevHelper - Main Popup Component
-// ============================================
-
-/** Tool metadata configuration */
-const TOOLS: ToolMeta[] = [
-  {
-    type: ToolType.DOM_OUTLINER,
-    name: 'DOM Outliner',
-    description: 'Visualize page structure with color-coded outlines',
-    icon: '🕸️',
-    hasSettings: true,
-    color: '#f97316',
-  },
-  {
-    type: ToolType.SPACING_VISUALIZER,
-    name: 'Spacing Visualizer',
-    description: 'See margins, padding, and gaps in real-time',
-    icon: '📐',
-    hasSettings: true,
-    color: '#8b5cf6',
-  },
-  {
-    type: ToolType.FONT_INSPECTOR,
-    name: 'Font Inspector',
-    description: 'Analyze typography and font stacks',
-    icon: '🔤',
-    hasSettings: true,
-    color: '#3b82f6',
-  },
-  {
-    type: ToolType.COLOR_PICKER,
-    name: 'Color Picker',
-    description: 'Pick colors from anywhere on the page',
-    icon: '🎨',
-    hasSettings: true,
-    color: '#ec4899',
-  },
-  {
-    type: ToolType.PIXEL_RULER,
-    name: 'Pixel Ruler',
-    description: 'Measure distances and dimensions precisely',
-    icon: '📏',
-    hasSettings: true,
-    color: '#f59e0b',
-  },
-  {
-    type: ToolType.RESPONSIVE_BREAKPOINT,
-    name: 'Breakpoint Overlay',
-    description: 'Show current viewport size and breakpoints',
-    icon: '📱',
-    hasSettings: true,
-    color: '#06b6d4',
-  },
-  {
-    type: ToolType.CSS_INSPECTOR,
-    name: 'CSS Inspector',
-    description: 'View all computed CSS properties by category',
-    icon: '📝',
-    hasSettings: true,
-    color: '#10b981',
-  },
-  {
-    type: ToolType.CONTRAST_CHECKER,
-    name: 'Contrast Checker',
-    description: 'Check WCAG AA/AAA color contrast compliance',
-    icon: '♿',
-    hasSettings: true,
-    color: '#84cc16',
-  },
-  {
-    type: ToolType.LAYOUT_VISUALIZER,
-    name: 'Flex/Grid Visualizer',
-    description: 'Visualize flexbox and grid layouts',
-    icon: '⊞',
-    hasSettings: true,
-    color: '#8b5cf6',
-  },
-  {
-    type: ToolType.ZINDEX_VISUALIZER,
-    name: 'Z-Index Visualizer',
-    description: 'See stacking order and z-index hierarchy',
-    icon: '📚',
-    hasSettings: true,
-    color: '#f43f5e',
-  },
-  {
-    type: ToolType.TECH_DETECTOR,
-    name: 'Tech Detector',
-    description: 'Detect frameworks, libraries, and tools',
-    icon: '🔍',
-    hasSettings: true,
-    color: '#0ea5e9',
-  },
-  {
-    type: ToolType.ACCESSIBILITY_AUDIT,
-    name: 'Accessibility Audit',
-    description: 'WCAG compliance checker with ARIA validation',
-    icon: '♿',
-    hasSettings: true,
-    color: '#a855f7',
-  },
-  {
-    type: ToolType.SITE_REPORT,
-    name: 'Site Report Generator',
-    description: 'Comprehensive site analysis with scores & recommendations',
-    icon: '📊',
-    hasSettings: true,
-    color: '#f43f5e',
-  },
-  {
-    type: ToolType.CSS_EDITOR,
-    name: 'Live CSS Editor',
-    description: 'Edit CSS in real-time with live preview',
-    icon: '✏️',
-    hasSettings: true,
-    color: '#ec4899',
-  },
-  {
-    type: ToolType.SCREENSHOT_STUDIO,
-    name: 'Screenshot Studio',
-    description: 'Capture and annotate screenshots',
-    icon: '📸',
-    hasSettings: true,
-    color: '#14b8a6',
-  },
-  {
-    type: ToolType.ANIMATION_INSPECTOR,
-    name: 'Animation Inspector',
-    description: 'Debug CSS animations and transitions',
-    icon: '🎬',
-    hasSettings: true,
-    color: '#f59e0b',
-  },
-  {
-    type: ToolType.RESPONSIVE_PREVIEW,
-    name: 'Responsive Preview',
-    description: 'Multi-device preview side-by-side',
-    icon: '📱',
-    hasSettings: true,
-    color: '#06b6d4',
-  },
-  {
-    type: ToolType.DESIGN_SYSTEM_VALIDATOR,
-    name: 'Design System Validator',
-    description: 'Check consistency with design tokens',
-    icon: '🎨',
-    hasSettings: true,
-    color: '#8b5cf6',
-  },
-  {
-    type: ToolType.NETWORK_ANALYZER,
-    name: 'Network Analyzer',
-    description: 'Monitor network requests and waterfall',
-    icon: '🌐',
-    hasSettings: true,
-    color: '#22c55e',
-  },
-  // New "Best of the Best" Tools
-  {
-    type: ToolType.COMMAND_PALETTE,
-    name: 'Command Palette',
-    description: 'Quick access to all tools via keyboard (Ctrl+Shift+P)',
-    icon: '⌨️',
-    hasSettings: true,
-    color: '#6366f1',
-  },
-  {
-    type: ToolType.STORAGE_INSPECTOR,
-    name: 'Storage Inspector',
-    description: 'Inspect LocalStorage, IndexedDB, Cookies, and Cache',
-    icon: '💾',
-    hasSettings: true,
-    color: '#0891b2',
-  },
-  {
-    type: ToolType.FOCUS_DEBUGGER,
-    name: 'Focus Debugger',
-    description: 'Visualize focus order and detect focus traps',
-    icon: '🎯',
-    hasSettings: true,
-    color: '#ea580c',
-  },
-  {
-    type: ToolType.FORM_DEBUGGER,
-    name: 'Form Debugger',
-    description: 'Debug form validation, autofill, and accessibility',
-    icon: '📝',
-    hasSettings: true,
-    color: '#7c3aed',
-  },
-  {
-    type: ToolType.COMPONENT_TREE,
-    name: 'Component Tree',
-    description: 'Visualize React, Vue, Angular, Svelte components',
-    icon: '🌳',
-    hasSettings: true,
-    color: '#16a34a',
-  },
-  {
-    type: ToolType.FLAME_GRAPH,
-    name: 'Performance Flame Graph',
-    description: 'Visualize JavaScript execution performance',
-    icon: '🔥',
-    hasSettings: true,
-    color: '#dc2626',
-  },
-  {
-    type: ToolType.VISUAL_REGRESSION,
-    name: 'Visual Regression',
-    description: 'Capture baselines and compare screenshots',
-    icon: '👁️',
-    hasSettings: true,
-    color: '#db2777',
-  },
-  {
-    type: ToolType.AI_SUGGESTIONS,
-    name: 'AI Suggestions',
-    description: 'Smart analysis with one-click fixes',
-    icon: '✨',
-    hasSettings: true,
-    color: '#f59e0b',
-  },
-];
-
 /** Extension version - read from manifest */
 const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 
+// ============================================
+// Main Popup Component
+// ============================================
+
 export const Popup: React.FC = () => {
-  // Tool states
-  const [toolsState, setToolsState] = useState<ToolsState>({
-    [ToolType.DOM_OUTLINER]: { enabled: false },
-    [ToolType.SPACING_VISUALIZER]: { enabled: false },
-    [ToolType.FONT_INSPECTOR]: { enabled: false },
-    [ToolType.COLOR_PICKER]: { enabled: false },
-    [ToolType.PIXEL_RULER]: { enabled: false },
-    [ToolType.RESPONSIVE_BREAKPOINT]: { enabled: false },
-    [ToolType.CSS_INSPECTOR]: { enabled: false },
-    [ToolType.CONTRAST_CHECKER]: { enabled: false },
-    [ToolType.LAYOUT_VISUALIZER]: { enabled: false },
-    [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
-    [ToolType.TECH_DETECTOR]: { enabled: false },
-    [ToolType.ACCESSIBILITY_AUDIT]: { enabled: false },
-    [ToolType.SITE_REPORT]: { enabled: false },
-    [ToolType.CSS_EDITOR]: { enabled: false },
-    [ToolType.SCREENSHOT_STUDIO]: { enabled: false },
-    [ToolType.ANIMATION_INSPECTOR]: { enabled: false },
-    [ToolType.RESPONSIVE_PREVIEW]: { enabled: false },
-    [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enabled: false },
-    [ToolType.NETWORK_ANALYZER]: { enabled: false },
-    // New "Best of the Best" Tools
-    [ToolType.COMMAND_PALETTE]: { enabled: true },
-    [ToolType.STORAGE_INSPECTOR]: { enabled: false },
-    [ToolType.FOCUS_DEBUGGER]: { enabled: false },
-    [ToolType.FORM_DEBUGGER]: { enabled: false },
-    [ToolType.COMPONENT_TREE]: { enabled: false },
-    [ToolType.FLAME_GRAPH]: { enabled: false },
-    [ToolType.VISUAL_REGRESSION]: { enabled: false },
-    [ToolType.AI_SUGGESTIONS]: { enabled: true },
-  } as unknown as ToolsState);
+  // Active tab state
+  const [activeTab, setActiveTab] = useState<'tools' | 'performance' | 'inspector' | 'settings'>(
+    'tools'
+  );
+
+  // Tool states (using unified ToolId)
+  const [toolsState, setToolsState] = useState<ToolsState>({} as ToolsState);
+  const [isLoading, setIsLoading] = useState(true);
 
   // UI states
-  const [isLoading, setIsLoading] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
+    // Default to all expanded
+    return new Set(TOOL_CATEGORIES.map((c) => c.id));
+  });
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Panel state for React component integration
-  const [openPanel, setOpenPanel] = useState<ToolType | null>(null);
+  const [openPanel, setOpenPanel] = useState<ToolId | null>(null);
   const [currentTabUrl, setCurrentTabUrl] = useState<string>('');
 
-  // Load initial state from content script
+  // Load initial state from service worker (not content script)
   useEffect(() => {
     const loadState = async () => {
       try {
-        // Get the active tab
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.id) {
-          // Get all tool states from content script
-          const response = await chrome.tabs.sendMessage(tab.id, { type: 'GET_ALL_STATES' });
-          if (response?.success && response.states) {
-            setToolsState({
-              [ToolType.DOM_OUTLINER]: response.states.pesticide || { enabled: false },
-              [ToolType.SPACING_VISUALIZER]: response.states.spacing || { enabled: false },
-              [ToolType.FONT_INSPECTOR]: response.states.fontInspector || { enabled: false },
-              [ToolType.COLOR_PICKER]: response.states.colorPicker || { enabled: false },
-              [ToolType.PIXEL_RULER]: response.states.pixelRuler || { enabled: false },
-              [ToolType.RESPONSIVE_BREAKPOINT]: response.states.breakpointOverlay || {
-                enabled: false,
-              },
-              [ToolType.CSS_INSPECTOR]: response.states.cssInspector || { enabled: false },
-              [ToolType.CONTRAST_CHECKER]: response.states.contrastChecker || { enabled: false },
-              [ToolType.LAYOUT_VISUALIZER]: response.states.layoutVisualizer || { enabled: false },
-              [ToolType.ZINDEX_VISUALIZER]: response.states.zIndexVisualizer || { enabled: false },
-              [ToolType.TECH_DETECTOR]: response.states.techDetector || { enabled: false },
-              [ToolType.ACCESSIBILITY_AUDIT]: response.states.accessibilityAudit || {
-                enabled: false,
-              },
-              [ToolType.SITE_REPORT]: response.states.siteReportGenerator || { enabled: false },
-              [ToolType.CSS_EDITOR]: response.states.cssEditor || { enabled: false },
-              [ToolType.SCREENSHOT_STUDIO]: response.states.screenshotStudio || { enabled: false },
-              [ToolType.ANIMATION_INSPECTOR]: response.states.animationInspector || {
-                enabled: false,
-              },
-              [ToolType.RESPONSIVE_PREVIEW]: response.states.responsivePreview || {
-                enabled: false,
-              },
-              [ToolType.DESIGN_SYSTEM_VALIDATOR]: response.states.designSystemValidator || {
-                enabled: false,
-              },
-              [ToolType.NETWORK_ANALYZER]: response.states.networkAnalyzer || { enabled: false },
-              // New "Best of the Best" Tools
-              [ToolType.COMMAND_PALETTE]: response.states.commandPalette || { enabled: true },
-              [ToolType.STORAGE_INSPECTOR]: response.states.storageInspector || { enabled: false },
-              [ToolType.FOCUS_DEBUGGER]: response.states.focusDebugger || { enabled: false },
-              [ToolType.FORM_DEBUGGER]: response.states.formDebugger || { enabled: false },
-              [ToolType.COMPONENT_TREE]: response.states.componentTree || { enabled: false },
-              [ToolType.FLAME_GRAPH]: response.states.flameGraph || { enabled: false },
-              [ToolType.VISUAL_REGRESSION]: response.states.visualRegression || { enabled: false },
-              [ToolType.AI_SUGGESTIONS]: response.states.aiSuggestions || { enabled: true },
-            } as unknown as ToolsState);
-          }
-        }
+        // Get all tool states from service worker via storage
+        const states = await getAllToolStates();
+        setToolsState(states);
         setIsLoading(false);
       } catch (err) {
         logger.error('Failed to load state:', err);
-        // Use default state (don't fall back to localStorage for security)
         setIsLoading(false);
       }
     };
 
     loadState();
-  }, []);
 
-  // Note: State is persisted to chrome.storage, not localStorage (security)
+    // Listen for state changes from service worker
+    const handleMessage = (message: { type: string; payload?: Record<string, unknown> }) => {
+      if (message.type === 'TOOL_STATE_CHANGED') {
+        const toolId = message.payload?.toolId as ToolId | undefined;
+        const enabled = message.payload?.enabled as boolean | undefined;
+        if (toolId && typeof enabled === 'boolean') {
+          setToolsState((prev) => ({
+            ...prev,
+            [toolId]: { ...prev[toolId], enabled },
+          }));
+        }
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, []);
 
   /**
    * Toggle a tool on/off
-   * Uses the unified message system - generates message types dynamically
-   * from TOOL_MESSAGE_PREFIXES instead of hardcoded mappings.
    */
-  const handleToggleTool = useCallback(async (tool: ToolType, enabled: boolean) => {
+  const handleToggleTool = useCallback(async (toolId: ToolId, enabled: boolean) => {
+    // Update local state
     setToolsState((prev) => ({
       ...prev,
-      [tool]: { ...prev[tool], enabled },
+      [toolId]: { ...prev[toolId], enabled },
     }));
 
-    // Send message to content script
+    // Persist to storage
+    try {
+      await setToolState(toolId, { enabled, settings: toolsState[toolId]?.settings || {} });
+    } catch (err) {
+      logger.error('Failed to persist tool state:', err);
+    }
+
+    // Send message to content script via service worker
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
 
-    const messageType = getToolMessageType(tool, enabled ? 'ENABLE' : 'DISABLE');
+    const messageType = getToolMessageType(toolId, enabled ? 'ENABLE' : 'DISABLE');
     if (!messageType) return;
 
     try {
@@ -421,26 +323,25 @@ export const Popup: React.FC = () => {
     } catch (err) {
       logger.error('Failed to send message:', err);
     }
-  }, []);
+  }, [toolsState]);
 
   /**
    * Open settings for a tool
    */
-  const handleOpenSettings = useCallback((tool: ToolType) => {
-    // Open the options page with the tool pre-selected
-    const url = chrome.runtime.getURL(`options.html#tool=${tool}`);
+  const handleOpenSettings = useCallback((toolId: ToolId) => {
+    const url = chrome.runtime.getURL(`options.html#tool=${toolId}`);
     chrome.tabs.create({ url });
   }, []);
 
   /**
    * Open panel for a tool (for React component integration)
    */
-  const handleOpenPanel = useCallback(async (tool: ToolType) => {
+  const handleOpenPanel = useCallback(async (toolId: ToolId) => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.url) {
       setCurrentTabUrl(tab.url);
     }
-    setOpenPanel(tool);
+    setOpenPanel(toolId);
   }, []);
 
   /**
@@ -453,36 +354,12 @@ export const Popup: React.FC = () => {
       return;
     }
 
-    const resetState: ToolsState = {
-      [ToolType.DOM_OUTLINER]: { enabled: false },
-      [ToolType.SPACING_VISUALIZER]: { enabled: false },
-      [ToolType.FONT_INSPECTOR]: { enabled: false },
-      [ToolType.COLOR_PICKER]: { enabled: false },
-      [ToolType.PIXEL_RULER]: { enabled: false },
-      // New "Best of the Best" Tools - reset to defaults
-      [ToolType.COMMAND_PALETTE]: { enabled: true },
-      [ToolType.STORAGE_INSPECTOR]: { enabled: false },
-      [ToolType.FOCUS_DEBUGGER]: { enabled: false },
-      [ToolType.FORM_DEBUGGER]: { enabled: false },
-      [ToolType.COMPONENT_TREE]: { enabled: false },
-      [ToolType.FLAME_GRAPH]: { enabled: false },
-      [ToolType.VISUAL_REGRESSION]: { enabled: false },
-      [ToolType.AI_SUGGESTIONS]: { enabled: true },
-      [ToolType.RESPONSIVE_BREAKPOINT]: { enabled: false },
-      [ToolType.CSS_INSPECTOR]: { enabled: false },
-      [ToolType.CONTRAST_CHECKER]: { enabled: false },
-      [ToolType.LAYOUT_VISUALIZER]: { enabled: false },
-      [ToolType.ZINDEX_VISUALIZER]: { enabled: false },
-      [ToolType.TECH_DETECTOR]: { enabled: false },
-      [ToolType.ACCESSIBILITY_AUDIT]: { enabled: false },
-      [ToolType.SITE_REPORT]: { enabled: false },
-      [ToolType.CSS_EDITOR]: { enabled: false },
-      [ToolType.SCREENSHOT_STUDIO]: { enabled: false },
-      [ToolType.ANIMATION_INSPECTOR]: { enabled: false },
-      [ToolType.RESPONSIVE_PREVIEW]: { enabled: false },
-      [ToolType.DESIGN_SYSTEM_VALIDATOR]: { enabled: false },
-      [ToolType.NETWORK_ANALYZER]: { enabled: false },
-    } as unknown as ToolsState;
+    // Reset state to defaults using DEFAULT_FEATURE_TOGGLES
+    const resetState = {} as ToolsState;
+    for (const toolId of Object.values(TOOL_IDS)) {
+      const defaultEnabled = DEFAULT_FEATURE_TOGGLES[toolId] ?? false;
+      resetState[toolId] = { enabled: defaultEnabled, settings: {} };
+    }
 
     setToolsState(resetState);
     setShowResetConfirm(false);
@@ -497,7 +374,7 @@ export const Popup: React.FC = () => {
       }
     }
 
-    // Clear chrome.storage to persist the reset
+    // Clear storage
     try {
       await clearAllStates();
     } catch (err) {
@@ -506,22 +383,46 @@ export const Popup: React.FC = () => {
   }, [showResetConfirm]);
 
   /**
+   * Toggle category expansion
+   */
+  const toggleCategory = useCallback((categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  }, []);
+
+  /**
    * Get count of active tools
    */
-  const activeToolsCount = Object.values(toolsState).filter((s) => s.enabled).length;
+  const activeToolsCount = useMemo(
+    () => Object.values(toolsState).filter((s) => s?.enabled).length,
+    [toolsState]
+  );
 
   /**
    * Filter tools based on search query
    */
-  const filteredTools = useMemo(() => {
-    if (!searchQuery.trim()) return TOOLS;
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return TOOL_CATEGORIES;
+
     const query = searchQuery.toLowerCase().trim();
-    return TOOLS.filter(
-      (tool) =>
-        tool.name.toLowerCase().includes(query) ||
-        tool.description.toLowerCase().includes(query) ||
-        tool.type.toLowerCase().includes(query)
-    );
+    return TOOL_CATEGORIES.map((category) => ({
+      ...category,
+      tools: category.tools.filter((toolId) => {
+        const meta = getToolMeta(toolId);
+        return (
+          meta.name.toLowerCase().includes(query) ||
+          meta.description.toLowerCase().includes(query) ||
+          toolId.toLowerCase().includes(query)
+        );
+      }),
+    })).filter((category) => category.tools.length > 0);
   }, [searchQuery]);
 
   /**
@@ -529,12 +430,10 @@ export const Popup: React.FC = () => {
    */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Focus search on '/' key, but not when typing in an input
       if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
-      // Clear search on Escape when search is focused
       if (e.key === 'Escape' && searchInputRef.current === document.activeElement) {
         setSearchQuery('');
         searchInputRef.current?.blur();
@@ -547,7 +446,7 @@ export const Popup: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-[380px] min-h-[200px] bg-slate-900 flex items-center justify-center">
+      <div className="w-[420px] min-h-[300px] bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent" />
       </div>
     );
@@ -555,7 +454,7 @@ export const Popup: React.FC = () => {
 
   return (
     <>
-      <div className="w-[380px] bg-slate-900 text-slate-100 flex flex-col min-h-[200px] max-h-[600px]">
+      <div className="w-[420px] bg-slate-900 text-slate-100 flex flex-col h-[580px]">
         {/* Header */}
         <header className="popup-header px-4 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -591,12 +490,11 @@ export const Popup: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleResetAll}
-              className={`
+          {/* Reset Button */}
+          <button
+            type="button"
+            onClick={handleResetAll}
+            className={`
               btn-icon text-xs px-2 w-auto gap-1
               ${
                 showResetConfirm
@@ -604,41 +502,17 @@ export const Popup: React.FC = () => {
                   : 'text-slate-400 hover:text-slate-200'
               }
             `}
-              title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
-            >
-              {showResetConfirm ? (
-                <>
-                  <span>⚠️</span>
-                  <span>Confirm</span>
-                </>
-              ) : (
-                <svg
-                  aria-hidden="true"
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-3 space-y-2">
-          {/* Search Bar */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
+          >
+            {showResetConfirm ? (
+              <>
+                <span>⚠️</span>
+                <span>Confirm</span>
+              </>
+            ) : (
               <svg
                 aria-hidden="true"
-                className="h-4 w-4 text-slate-500"
+                className="w-4 h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -647,114 +521,191 @@ export const Popup: React.FC = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-            </div>
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tools..."
-              aria-label="Search tools"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  searchInputRef.current?.focus();
-                }}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
-                title="Clear search"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
             )}
-            {!searchQuery && (
-              <kbd className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-[10px] text-slate-600 border border-slate-700 rounded px-1.5 py-0.5">
-                  /
-                </span>
-              </kbd>
-            )}
-          </div>
+          </button>
+        </header>
 
-          {/* Tool Cards */}
-          {filteredTools.map((tool, index) => (
-            <React.Fragment key={tool.type}>
-              <ToolCard
-                type={tool.type}
-                name={tool.name}
-                description={tool.description}
-                icon={tool.icon}
-                enabled={toolsState[tool.type].enabled}
-                hasSettings={tool.hasSettings}
-                color={tool.color}
-                onToggle={(enabled) => handleToggleTool(tool.type, enabled)}
-                onSettingsClick={() => handleOpenSettings(tool.type)}
-                onView={
-                  // Only 4 tools have React panel components
-                  [
-                    ToolType.AI_SUGGESTIONS,
-                    ToolType.VISUAL_REGRESSION,
-                    ToolType.FLAME_GRAPH,
-                    ToolType.COMPONENT_TREE,
-                  ].includes(tool.type)
-                    ? () => handleOpenPanel(tool.type)
-                    : undefined
-                }
-                animationDelay={`stagger-${index + 1}`}
-              />
+        {/* Tab Bar */}
+        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {/* Show color legend below DOM Outliner when enabled */}
-              {tool.type === ToolType.DOM_OUTLINER && toolsState[tool.type].enabled && (
-                <div className="animate-fade-in stagger-1">
-                  <ColorLegend />
+        {/* Main Content */}
+        <main className="flex-1 overflow-hidden">
+          {activeTab === 'tools' && (
+            <div className="h-full overflow-y-auto p-3 space-y-3">
+              {/* Search Bar */}
+              <div className="relative sticky top-0 z-10">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    aria-hidden="true"
+                    className="h-4 w-4 text-slate-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tools..."
+                  aria-label="Search tools"
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                    title="Clear search"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                ) : (
+                  <kbd className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span className="text-[10px] text-slate-600 border border-slate-700 rounded px-1.5 py-0.5">
+                      /
+                    </span>
+                  </kbd>
+                )}
+              </div>
+
+              {/* Tool Categories */}
+              {filteredCategories.map((category) => (
+                <div key={category.id} className="space-y-2">
+                  {/* Category Header */}
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className="flex items-center justify-between w-full text-left group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{category.icon}</span>
+                      <span className="font-medium text-sm text-slate-200">{category.name}</span>
+                      <span className="text-xs text-slate-500">({category.tools.length})</span>
+                    </div>
+                    <svg
+                      className={`w-4 h-4 text-slate-500 transition-transform ${
+                        expandedCategories.has(category.id) ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Category Tools */}
+                  {expandedCategories.has(category.id) && (
+                    <div className="space-y-2 pl-2">
+                      {category.tools.map((toolId, index) => {
+                        const meta = getToolMeta(toolId);
+                        const state = toolsState[toolId] || { enabled: false };
+                        return (
+                          <React.Fragment key={toolId}>
+                            <ToolCard
+                              toolId={toolId}
+                              name={meta.name}
+                              description={meta.description}
+                              icon={meta.icon}
+                              enabled={state.enabled}
+                              hasSettings={meta.hasSettings}
+                              color={meta.color}
+                              shortcut={meta.shortcut}
+                              onToggle={(enabled) => handleToggleTool(toolId, enabled)}
+                              onSettingsClick={() => handleOpenSettings(toolId)}
+                              onView={
+                                (
+                                  [
+                                    TOOL_IDS.SMART_SUGGESTIONS,
+                                    TOOL_IDS.VISUAL_REGRESSION,
+                                    TOOL_IDS.FLAME_GRAPH,
+                                    TOOL_IDS.COMPONENT_TREE,
+                                  ] as ToolId[]
+                                ).includes(toolId)
+                                  ? () => handleOpenPanel(toolId)
+                                  : undefined
+                              }
+                              animationDelay={`stagger-${index + 1}`}
+                            />
+                            {/* Show color legend below DOM Outliner when enabled */}
+                            {toolId === TOOL_IDS.DOM_OUTLINER && state.enabled && (
+                              <div className="animate-fade-in stagger-1">
+                                <ColorLegend />
+                              </div>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Empty State */}
+              {filteredCategories.length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <div className="text-4xl mb-2">🔍</div>
+                  <p className="text-sm font-medium">No tools match your search</p>
+                  <p className="text-xs mt-1">Try a different keyword or press Escape to clear</p>
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    Clear search
+                  </button>
                 </div>
               )}
-            </React.Fragment>
-          ))}
 
-          {/* Empty State (when no tools match search) */}
-          {filteredTools.length === 0 && (
-            <div className="text-center py-8 text-slate-500">
-              <div className="text-4xl mb-2">🔍</div>
-              <p className="text-sm font-medium">No tools match your search</p>
-              <p className="text-xs mt-1">Try a different keyword or press Escape to clear</p>
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-              >
-                Clear search
-              </button>
+              {/* Pro Tips Section */}
+              <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                  <span>💡</span>
+                  Pro Tip
+                </h4>
+                <p className="text-[11px] text-slate-400">
+                  Use{' '}
+                  <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">
+                    Ctrl+Shift+F
+                  </kbd>{' '}
+                  to open the popup,{' '}
+                  <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">/</kbd> to search
+                  tools.
+                </p>
+              </div>
             </div>
           )}
 
-          {/* Pro Tips Section */}
-          <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-            <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-              <span>💡</span>
-              Pro Tip
-            </h4>
-            <p className="text-[11px] text-slate-400">
-              Use{' '}
-              <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd> to
-              open the popup,{' '}
-              <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Esc</kbd> to disable
-              all tools.
-            </p>
-          </div>
+          {activeTab === 'performance' && <PerformanceTab />}
+          {activeTab === 'inspector' && <InspectorTab />}
+          {activeTab === 'settings' && <SettingsTab />}
         </main>
 
         {/* Footer */}
@@ -788,7 +739,7 @@ export const Popup: React.FC = () => {
                 chrome.tabs.create({ url });
               }}
             >
-              Settings
+              Full Settings
             </button>
             <span className="text-slate-600">•</span>
             <a
@@ -803,20 +754,20 @@ export const Popup: React.FC = () => {
         </footer>
 
         {/* Panel Overlays for React Component Integration */}
-        {openPanel === ToolType.AI_SUGGESTIONS && (
+        {openPanel === TOOL_IDS.SMART_SUGGESTIONS && (
           <AISuggestions isOpen={true} onClose={() => setOpenPanel(null)} />
         )}
-        {openPanel === ToolType.VISUAL_REGRESSION && (
+        {openPanel === TOOL_IDS.VISUAL_REGRESSION && (
           <VisualRegression
             isOpen={true}
             onClose={() => setOpenPanel(null)}
             currentUrl={currentTabUrl}
           />
         )}
-        {openPanel === ToolType.FLAME_GRAPH && (
+        {openPanel === TOOL_IDS.FLAME_GRAPH && (
           <FlameGraph isOpen={true} onClose={() => setOpenPanel(null)} />
         )}
-        {openPanel === ToolType.COMPONENT_TREE && (
+        {openPanel === TOOL_IDS.COMPONENT_TREE && (
           <ComponentTree isOpen={true} onClose={() => setOpenPanel(null)} />
         )}
       </div>

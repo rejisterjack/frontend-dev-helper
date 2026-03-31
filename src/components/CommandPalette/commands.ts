@@ -5,8 +5,8 @@
  * This includes tools, actions, settings, and navigation commands.
  */
 
-import type { Command } from '@/types';
-import { ToolType } from '@/types';
+import { TOOL_IDS } from '@/constants';
+import type { Command, ToolId } from '@/types';
 import { logger } from '@/utils/logger';
 
 // Track command execution history
@@ -41,16 +41,21 @@ export function clearRecentCommands(): void {
 /**
  * Toggle a tool by sending message to content script
  */
-async function toggleTool(toolType: ToolType): Promise<void> {
+async function toggleTool(toolId: ToolId): Promise<void> {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
+      // Convert toolId to message prefix
+      const prefix = toolId
+        .replace(/([A-Z])/g, '_$1')
+        .toUpperCase()
+        .replace(/^_/, '');
       await chrome.tabs.sendMessage(tab.id, {
-        type: `${toolType.toUpperCase()}_TOGGLE`,
+        type: `${prefix}_TOGGLE`,
       });
     }
   } catch (error) {
-    logger.error(`[CommandPalette] Failed to toggle tool ${toolType}:`, error);
+    logger.error(`[CommandPalette] Failed to toggle tool ${toolId}:`, error);
   }
 }
 
@@ -70,7 +75,7 @@ export function getAllCommands(): Command[] {
       icon: '🕸️',
       category: 'tool',
       keywords: ['dom', 'outline', 'pesticide', 'structure', 'border'],
-      execute: () => toggleTool(ToolType.DOM_OUTLINER),
+      execute: () => toggleTool(TOOL_IDS.DOM_OUTLINER),
     },
     {
       id: 'toggle-spacing-visualizer',
@@ -80,7 +85,7 @@ export function getAllCommands(): Command[] {
       icon: '📐',
       category: 'tool',
       keywords: ['spacing', 'margin', 'padding', 'gap', 'layout'],
-      execute: () => toggleTool(ToolType.SPACING_VISUALIZER),
+      execute: () => toggleTool(TOOL_IDS.SPACING_VISUALIZER),
     },
     {
       id: 'toggle-font-inspector',
@@ -90,7 +95,7 @@ export function getAllCommands(): Command[] {
       icon: '🔤',
       category: 'tool',
       keywords: ['font', 'typography', 'text', 'family', 'size'],
-      execute: () => toggleTool(ToolType.FONT_INSPECTOR),
+      execute: () => toggleTool(TOOL_IDS.FONT_INSPECTOR),
     },
     {
       id: 'toggle-color-picker',
@@ -100,7 +105,7 @@ export function getAllCommands(): Command[] {
       icon: '🎨',
       category: 'tool',
       keywords: ['color', 'picker', 'eyedropper', 'palette', 'hex'],
-      execute: () => toggleTool(ToolType.COLOR_PICKER),
+      execute: () => toggleTool(TOOL_IDS.COLOR_PICKER),
     },
     {
       id: 'toggle-pixel-ruler',
@@ -110,7 +115,7 @@ export function getAllCommands(): Command[] {
       icon: '📏',
       category: 'tool',
       keywords: ['ruler', 'measure', 'distance', 'pixel', 'px'],
-      execute: () => toggleTool(ToolType.PIXEL_RULER),
+      execute: () => toggleTool(TOOL_IDS.PIXEL_RULER),
     },
     {
       id: 'toggle-breakpoint-overlay',
@@ -120,7 +125,7 @@ export function getAllCommands(): Command[] {
       icon: '📱',
       category: 'tool',
       keywords: ['breakpoint', 'responsive', 'viewport', 'media query'],
-      execute: () => toggleTool(ToolType.RESPONSIVE_BREAKPOINT),
+      execute: () => toggleTool(TOOL_IDS.RESPONSIVE_BREAKPOINT),
     },
     {
       id: 'toggle-css-inspector',
@@ -129,7 +134,7 @@ export function getAllCommands(): Command[] {
       icon: '📝',
       category: 'tool',
       keywords: ['css', 'styles', 'computed', 'properties', 'inspector'],
-      execute: () => toggleTool(ToolType.CSS_INSPECTOR),
+      execute: () => toggleTool(TOOL_IDS.CSS_INSPECTOR),
     },
     {
       id: 'toggle-contrast-checker',
@@ -138,7 +143,7 @@ export function getAllCommands(): Command[] {
       icon: '♿',
       category: 'tool',
       keywords: ['contrast', 'accessibility', 'wcag', 'color', 'a11y'],
-      execute: () => toggleTool(ToolType.CONTRAST_CHECKER),
+      execute: () => toggleTool(TOOL_IDS.CONTRAST_CHECKER),
     },
     {
       id: 'toggle-layout-visualizer',
@@ -147,7 +152,7 @@ export function getAllCommands(): Command[] {
       icon: '⊞',
       category: 'tool',
       keywords: ['flexbox', 'grid', 'layout', 'css', 'container'],
-      execute: () => toggleTool(ToolType.LAYOUT_VISUALIZER),
+      execute: () => toggleTool(TOOL_IDS.LAYOUT_VISUALIZER),
     },
     {
       id: 'toggle-zindex-visualizer',
@@ -156,7 +161,7 @@ export function getAllCommands(): Command[] {
       icon: '📚',
       category: 'tool',
       keywords: ['z-index', 'stacking', 'layer', '3d', 'context'],
-      execute: () => toggleTool(ToolType.ZINDEX_VISUALIZER),
+      execute: () => toggleTool(TOOL_IDS.ZINDEX_VISUALIZER),
     },
     {
       id: 'toggle-tech-detector',
@@ -165,7 +170,7 @@ export function getAllCommands(): Command[] {
       icon: '🔍',
       category: 'tool',
       keywords: ['tech', 'framework', 'library', 'detect', 'stack'],
-      execute: () => toggleTool(ToolType.TECH_DETECTOR),
+      execute: () => toggleTool(TOOL_IDS.TECH_DETECTOR),
     },
     {
       id: 'toggle-accessibility-audit',
@@ -174,7 +179,7 @@ export function getAllCommands(): Command[] {
       icon: '🛡️',
       category: 'tool',
       keywords: ['accessibility', 'audit', 'wcag', 'aria', 'a11y'],
-      execute: () => toggleTool(ToolType.ACCESSIBILITY_AUDIT),
+      execute: () => toggleTool(TOOL_IDS.ACCESSIBILITY_AUDIT),
     },
     {
       id: 'toggle-site-report',
@@ -183,7 +188,7 @@ export function getAllCommands(): Command[] {
       icon: '📊',
       category: 'tool',
       keywords: ['report', 'analysis', 'score', 'audit', 'performance'],
-      execute: () => toggleTool(ToolType.SITE_REPORT),
+      execute: () => toggleTool(TOOL_IDS.SITE_REPORT),
     },
     {
       id: 'toggle-css-editor',
@@ -192,7 +197,7 @@ export function getAllCommands(): Command[] {
       icon: '✏️',
       category: 'tool',
       keywords: ['css', 'editor', 'live', 'edit', 'styles'],
-      execute: () => toggleTool(ToolType.CSS_EDITOR),
+      execute: () => toggleTool(TOOL_IDS.CSS_EDITOR),
     },
     {
       id: 'toggle-screenshot-studio',
@@ -201,7 +206,7 @@ export function getAllCommands(): Command[] {
       icon: '📸',
       category: 'tool',
       keywords: ['screenshot', 'capture', 'image', 'annotate'],
-      execute: () => toggleTool(ToolType.SCREENSHOT_STUDIO),
+      execute: () => toggleTool(TOOL_IDS.SCREENSHOT_STUDIO),
     },
     {
       id: 'toggle-animation-inspector',
@@ -210,7 +215,7 @@ export function getAllCommands(): Command[] {
       icon: '🎬',
       category: 'tool',
       keywords: ['animation', 'css', 'transition', 'keyframes', 'timeline'],
-      execute: () => toggleTool(ToolType.ANIMATION_INSPECTOR),
+      execute: () => toggleTool(TOOL_IDS.ANIMATION_INSPECTOR),
     },
     {
       id: 'toggle-responsive-preview',
@@ -219,7 +224,7 @@ export function getAllCommands(): Command[] {
       icon: '📲',
       category: 'tool',
       keywords: ['responsive', 'preview', 'device', 'mobile', 'tablet'],
-      execute: () => toggleTool(ToolType.RESPONSIVE_PREVIEW),
+      execute: () => toggleTool(TOOL_IDS.RESPONSIVE_PREVIEW),
     },
     {
       id: 'toggle-design-system-validator',
@@ -228,7 +233,7 @@ export function getAllCommands(): Command[] {
       icon: '🎨',
       category: 'tool',
       keywords: ['design', 'system', 'tokens', 'consistency', 'validation'],
-      execute: () => toggleTool(ToolType.DESIGN_SYSTEM_VALIDATOR),
+      execute: () => toggleTool(TOOL_IDS.DESIGN_SYSTEM_VALIDATOR),
     },
     {
       id: 'toggle-network-analyzer',
@@ -237,7 +242,7 @@ export function getAllCommands(): Command[] {
       icon: '🌐',
       category: 'tool',
       keywords: ['network', 'requests', 'performance', 'waterfall', 'api'],
-      execute: () => toggleTool(ToolType.NETWORK_ANALYZER),
+      execute: () => toggleTool(TOOL_IDS.NETWORK_ANALYZER),
     },
 
     // ============================================
@@ -251,7 +256,7 @@ export function getAllCommands(): Command[] {
       icon: '⌨️',
       category: 'tool',
       keywords: ['command', 'palette', 'search', 'quick', 'access', 'keyboard'],
-      execute: () => toggleTool(ToolType.COMMAND_PALETTE),
+      execute: () => toggleTool(TOOL_IDS.COMMAND_PALETTE),
     },
     {
       id: 'toggle-storage-inspector',
@@ -260,7 +265,7 @@ export function getAllCommands(): Command[] {
       icon: '💾',
       category: 'tool',
       keywords: ['storage', 'localstorage', 'indexeddb', 'cookies', 'cache'],
-      execute: () => toggleTool(ToolType.STORAGE_INSPECTOR),
+      execute: () => toggleTool(TOOL_IDS.STORAGE_INSPECTOR),
     },
     {
       id: 'toggle-focus-debugger',
@@ -269,7 +274,7 @@ export function getAllCommands(): Command[] {
       icon: '🎯',
       category: 'tool',
       keywords: ['focus', 'accessibility', 'tab', 'keyboard', 'trap'],
-      execute: () => toggleTool(ToolType.FOCUS_DEBUGGER),
+      execute: () => toggleTool(TOOL_IDS.FOCUS_DEBUGGER),
     },
     {
       id: 'toggle-form-debugger',
@@ -278,7 +283,7 @@ export function getAllCommands(): Command[] {
       icon: '📝',
       category: 'tool',
       keywords: ['form', 'validation', 'input', 'autofill', 'field'],
-      execute: () => toggleTool(ToolType.FORM_DEBUGGER),
+      execute: () => toggleTool(TOOL_IDS.FORM_DEBUGGER),
     },
     {
       id: 'toggle-component-tree',
@@ -287,7 +292,7 @@ export function getAllCommands(): Command[] {
       icon: '🌳',
       category: 'tool',
       keywords: ['component', 'tree', 'react', 'vue', 'angular', 'svelte'],
-      execute: () => toggleTool(ToolType.COMPONENT_TREE),
+      execute: () => toggleTool(TOOL_IDS.COMPONENT_TREE),
     },
     {
       id: 'toggle-flame-graph',
@@ -296,7 +301,7 @@ export function getAllCommands(): Command[] {
       icon: '🔥',
       category: 'tool',
       keywords: ['performance', 'flame', 'profile', 'javascript', 'execution'],
-      execute: () => toggleTool(ToolType.FLAME_GRAPH),
+      execute: () => toggleTool(TOOL_IDS.FLAME_GRAPH),
     },
     {
       id: 'toggle-visual-regression',
@@ -305,16 +310,16 @@ export function getAllCommands(): Command[] {
       icon: '👁️',
       category: 'tool',
       keywords: ['visual', 'regression', 'screenshot', 'baseline', 'diff'],
-      execute: () => toggleTool(ToolType.VISUAL_REGRESSION),
+      execute: () => toggleTool(TOOL_IDS.VISUAL_REGRESSION),
     },
     {
-      id: 'toggle-ai-suggestions',
+      id: 'toggle-smart-suggestions',
       title: 'Toggle AI Suggestions',
       description: 'Smart analysis with one-click fixes',
       icon: '✨',
       category: 'tool',
       keywords: ['ai', 'suggestions', 'smart', 'fix', 'analysis'],
-      execute: () => toggleTool(ToolType.AI_SUGGESTIONS),
+      execute: () => toggleTool(TOOL_IDS.SMART_SUGGESTIONS),
     },
 
     // ============================================
@@ -357,7 +362,7 @@ export function getAllCommands(): Command[] {
       icon: '📋',
       category: 'action',
       keywords: ['report', 'analysis', 'generate', 'audit', 'export'],
-      execute: () => toggleTool(ToolType.SITE_REPORT),
+      execute: () => toggleTool(TOOL_IDS.SITE_REPORT),
     },
     {
       id: 'export-report-json',

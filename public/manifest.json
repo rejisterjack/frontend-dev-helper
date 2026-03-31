@@ -109,6 +109,79 @@
         "mac": "Command+Shift+P"
       },
       "description": "Open Command Palette"
+    },
+    "toggle-inspector": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+I",
+        "mac": "Command+Shift+I"
+      },
+      "description": "Toggle Element Inspector"
+    },
+    "toggle-css-inspector": {
+      "description": "Toggle CSS Inspector"
+    },
+    "toggle-contrast-checker": {
+      "suggested_key": {
+        "default": "Alt+T"
+      },
+      "description": "Toggle Contrast Checker"
+    },
+    "toggle-layout-visualizer": {
+      "description": "Toggle Flex/Grid Visualizer"
+    },
+    "toggle-zindex-visualizer": {
+      "description": "Toggle Z-Index Visualizer"
+    },
+    "toggle-tech-detector": {
+      "description": "Toggle Tech Detector"
+    },
+    "toggle-accessibility-audit": {
+      "suggested_key": {
+        "default": "Alt+A"
+      },
+      "description": "Toggle Accessibility Audit"
+    },
+    "toggle-network-analyzer": {
+      "suggested_key": {
+        "default": "Alt+N"
+      },
+      "description": "Toggle Network Analyzer"
+    },
+    "toggle-screenshot-studio": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Toggle Screenshot Studio"
+    },
+    "toggle-ai-suggestions": {
+      "suggested_key": {
+        "default": "Alt+I"
+      },
+      "description": "Toggle AI Suggestions"
+    },
+    "toggle-component-tree": {
+      "description": "Toggle Component Tree"
+    },
+    "toggle-flame-graph": {
+      "description": "Toggle Performance Flame Graph"
+    },
+    "toggle-storage-inspector": {
+      "description": "Toggle Storage Inspector"
+    },
+    "toggle-focus-debugger": {
+      "description": "Toggle Focus Debugger"
+    },
+    "toggle-form-debugger": {
+      "description": "Toggle Form Debugger"
+    },
+    "toggle-visual-regression": {
+      "description": "Toggle Visual Regression"
+    },
+    "disable-all-tools": {
+      "suggested_key": {
+        "default": "Esc"
+      },
+      "description": "Disable All Tools"
     }
   },
   "minimum_chrome_version": "91",

@@ -122,7 +122,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
         })) as MessageResponse;
 
         if (response?.baseline) {
-          setBaselines((prev) => [response.baseline!, ...prev]);
+          setBaselines((prev) => [response.baseline, ...prev]);
           setSelectedBaselineId(response.baseline.id);
           logger.log('[VisualRegression] Baseline captured:', response.baseline.id);
         }
@@ -179,7 +179,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
         })) as MessageResponse;
 
         if (response?.test) {
-          setTests((prev) => [response.test!, ...prev]);
+          setTests((prev) => [response.test, ...prev]);
           setComparisonResult({
             test: response.test,
             baseline,

@@ -31,7 +31,7 @@ export const toolIdSchema = z.enum([
   'designMode',
   'whatFont',
   'visualRegression',
-  'aiSuggestions',
+  'smartSuggestions',
 ]);
 
 // Tool state schema

@@ -81,7 +81,7 @@ test.describe('New Features - Best of the Best', () => {
     test('should run AI analysis', async ({ page }) => {
       // Enable AI suggestions
       await page.evaluate(() => {
-        chrome.runtime.sendMessage({ type: 'AI_SUGGESTIONS_ENABLE' });
+        chrome.runtime.sendMessage({ type: 'SMART_SUGGESTIONS_ENABLE' });
       });
       
       await page.waitForTimeout(1000);

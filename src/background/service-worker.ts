@@ -54,6 +54,21 @@ const COMMAND_TO_TOOL_ID: Record<string, ToolId> = {
   'toggle-breakpoint': TOOL_IDS.RESPONSIVE_BREAKPOINT,
   'toggle-inspector': TOOL_IDS.ELEMENT_INSPECTOR,
   'open-command-palette': TOOL_IDS.COMMAND_PALETTE,
+  'toggle-css-inspector': TOOL_IDS.CSS_INSPECTOR,
+  'toggle-contrast-checker': TOOL_IDS.CONTRAST_CHECKER,
+  'toggle-layout-visualizer': TOOL_IDS.LAYOUT_VISUALIZER,
+  'toggle-zindex-visualizer': TOOL_IDS.ZINDEX_VISUALIZER,
+  'toggle-tech-detector': TOOL_IDS.TECH_DETECTOR,
+  'toggle-accessibility-audit': TOOL_IDS.ACCESSIBILITY_AUDIT,
+  'toggle-network-analyzer': TOOL_IDS.NETWORK_ANALYZER,
+  'toggle-screenshot-studio': TOOL_IDS.SCREENSHOT_STUDIO,
+  'toggle-smart-suggestions': TOOL_IDS.SMART_SUGGESTIONS,
+  'toggle-component-tree': TOOL_IDS.COMPONENT_TREE,
+  'toggle-flame-graph': TOOL_IDS.FLAME_GRAPH,
+  'toggle-storage-inspector': TOOL_IDS.STORAGE_INSPECTOR,
+  'toggle-focus-debugger': TOOL_IDS.FOCUS_DEBUGGER,
+  'toggle-form-debugger': TOOL_IDS.FORM_DEBUGGER,
+  'toggle-visual-regression': TOOL_IDS.VISUAL_REGRESSION,
 };
 
 // ============================================
@@ -422,8 +437,39 @@ async function handleCommand(command: string, tab?: chrome.tabs.Tab): Promise<vo
       // Default action - opens popup, no handling needed
       break;
 
+    case 'disable-all-tools':
+      if (tab?.id) {
+        await disableAllToolsOnTab(tab.id);
+      }
+      break;
+
     default:
       logger.warn(`[${EXTENSION_NAME}] Unknown command:`, command);
+  }
+}
+
+/**
+ * Disable all tools on a specific tab
+ */
+async function disableAllToolsOnTab(tabId: number): Promise<void> {
+  try {
+    // Send disable all message to content script
+    await chrome.tabs.sendMessage(tabId, { type: 'DISABLE_ALL_TOOLS' });
+
+    // Clear tool states for this tab
+    const states = await getAllToolStates(tabId);
+    for (const toolId of Object.keys(states) as ToolId[]) {
+      await setToolState(
+        toolId,
+        { enabled: false, settings: states[toolId]?.settings || {} },
+        tabId
+      );
+    }
+
+    await updateBadge(tabId);
+    logger.log(`[${EXTENSION_NAME}] All tools disabled on tab:`, tabId);
+  } catch (error) {
+    logger.error(`[${EXTENSION_NAME}] Failed to disable all tools:`, error);
   }
 }
 

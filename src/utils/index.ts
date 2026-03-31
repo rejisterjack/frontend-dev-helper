@@ -15,7 +15,7 @@ export function generateId(): string {
  * Format a number with commas
  */
 export function formatNumber(num: number): string {
-  return num.toLocaleString();
+  return num.toLocaleString('en-US');
 }
 
 /**

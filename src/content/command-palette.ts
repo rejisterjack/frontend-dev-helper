@@ -283,7 +283,9 @@ function renderCommands(commands: ReturnType<typeof getAllCommands>): void {
 
   if (!resultsContainer) return;
 
-  countLabel!.textContent = `${commands.length} command${commands.length !== 1 ? 's' : ''}`;
+  if (countLabel) {
+    countLabel.textContent = `${commands.length} command${commands.length !== 1 ? 's' : ''}`;
+  }
 
   if (commands.length === 0) {
     resultsContainer.innerHTML = `

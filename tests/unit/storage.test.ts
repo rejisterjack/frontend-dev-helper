@@ -263,7 +263,7 @@ describe('Storage Utils', () => {
 
   describe('getActiveToolsCount', () => {
     it('should return default enabled tools count when no explicit state', async () => {
-      // COMMAND_PALETTE and AI_SUGGESTIONS have defaultEnabled: true
+      // COMMAND_PALETTE and SMART_SUGGESTIONS have defaultEnabled: true
       const count = await getActiveToolsCount();
       expect(count).toBeGreaterThanOrEqual(2);
     });
@@ -292,7 +292,7 @@ describe('Storage Utils', () => {
 
   describe('hasActiveTools', () => {
     it('should return true when default-enabled tools exist', async () => {
-      // COMMAND_PALETTE and AI_SUGGESTIONS have defaultEnabled: true
+      // COMMAND_PALETTE and SMART_SUGGESTIONS have defaultEnabled: true
       const hasActive = await hasActiveTools();
       expect(hasActive).toBe(true);
     });

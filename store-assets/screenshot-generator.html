@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FrontendDevHelper - Screenshot Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 40px;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 32px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 30px;
+    }
+    
+    .controls {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .canvas-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(660px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+    
+    .screenshot-item {
+      text-align: center;
+    }
+    
+    .screenshot-item h3 {
+      margin-bottom: 10px;
+      color: #94a3b8;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    canvas {
+      border-radius: 8px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .download-links {
+      margin-top: 15px;
+    }
+    
+    .download-links a {
+      color: #3b82f6;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 14px;
+    }
+    
+    .download-links a:hover {
+      text-decoration: underline;
+    }
+    
+    .progress {
+      text-align: center;
+      margin: 20px 0;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <h1>📸 FrontendDevHelper Screenshot Generator</h1>
+  <p class="subtitle">Generates Chrome Web Store screenshots (1280x800)</p>
+  
+  <div class="controls">
+    <button class="btn" onclick="generateAllScreenshots()">Generate All Screenshots</button>
+    <button class="btn" onclick="generatePromotionalImages()">Generate Promotional Images</button>
+  </div>
+  
+  <div class="progress" id="progress"></div>
+  
+  <div class="canvas-container" id="canvasContainer"></div>
+
+  <script>
+    // Canvas dimensions
+    const WIDTH = 1280;
+    const HEIGHT = 800;
+    
+    // Colors
+    const COLORS = {
+      bg: '#1e1e2e',
+      surface: '#313244',
+      surfaceLight: '#45475a',
+      text: '#cdd6f4',
+      textMuted: '#6c7086',
+      accent: '#a855f7',
+      accentBlue: '#6366f1',
+      success: '#a6e3a1',
+      warning: '#f9e2af',
+      error: '#f38ba8'
+    };
+    
+    function createCanvas(id, title) {
+      const container = document.createElement('div');
+      container.className = 'screenshot-item';
+      
+      const heading = document.createElement('h3');
+      heading.textContent = title;
+      container.appendChild(heading);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = WIDTH;
+      canvas.height = HEIGHT;
+      canvas.id = id;
+      container.appendChild(canvas);
+      
+      const links = document.createElement('div');
+      links.className = 'download-links';
+      links.id = `${id}-links`;
+      container.appendChild(links);
+      
+      document.getElementById('canvasContainer').appendChild(container);
+      return canvas;
+    }
+    
+    function addDownloadLink(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const links = document.getElementById(`${canvasId}-links`);
+      
+      const pngLink = document.createElement('a');
+      pngLink.href = canvas.toDataURL('image/png');
+      pngLink.download = `${filename}.png`;
+      pngLink.textContent = 'Download PNG';
+      
+      const jpgLink = document.createElement('a');
+      jpgLink.href = canvas.toDataURL('image/jpeg', 0.9);
+      jpgLink.download = `${filename}.jpg`;
+      jpgLink.textContent = 'Download JPG';
+      
+      links.innerHTML = '';
+      links.appendChild(pngLink);
+      links.appendChild(jpgLink);
+    }
+    
+    // Screenshot 1: Popup Tools Tab
+    function drawPopupTools() {
+      const canvas = createCanvas('screenshot1', 'Screenshot 1: Popup Tools Tab');
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      const gradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+      gradient.addColorStop(0, '#1e1e2e');
+      gradient.addColorStop(1, '#313244');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Left side - Browser mockup
+      ctx.fillStyle = '#181825';
+      ctx.fillRect(50, 50, 700, 600);
+      ctx.strokeStyle = '#45475a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(50, 50, 700, 600);
+      
+      // Browser toolbar
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(50, 50, 700, 50);
+      
+      // URL bar
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(150, 60, 500, 30);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('example.com', 170, 80);
+      
+      // Right side - Extension Popup
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(800, 100, 400, 600);
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(800, 100, 400, 600);
+      
+      // Popup header
+      const headerGrad = ctx.createLinearGradient(800, 100, 1200, 150);
+      headerGrad.addColorStop(0, '#a855f7');
+      headerGrad.addColorStop(1, '#6366f1');
+      ctx.fillStyle = headerGrad;
+      ctx.fillRect(800, 100, 400, 60);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('🔬 FrontendDevHelper', 820, 140);
+      
+      // Tabs
+      const tabs = ['Tools', 'Performance', 'Inspector', 'Settings'];
+      tabs.forEach((tab, i) => {
+        ctx.fillStyle = i === 0 ? '#313244' : '#1e1e2e';
+        ctx.fillRect(800 + i * 100, 160, 100, 40);
+        ctx.fillStyle = i === 0 ? '#cdd6f4' : '#6c7086';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(tab, 820 + i * 100, 185);
+      });
+      
+      // Categories
+      const categories = [
+        { name: '🔍 Inspection', color: '#3b82f6', tools: ['DOM Outliner', 'Font Inspector', 'Tech Detector'] },
+        { name: '🎨 CSS & Design', color: '#ec4899', tools: ['Color Picker', 'Layout Visualizer', 'CSS Inspector'] },
+        { name: '⚡ Performance', color: '#f59e0b', tools: ['Network Analyzer', 'Flame Graph'] }
+      ];
+      
+      let y = 220;
+      categories.forEach(cat => {
+        // Category header
+        ctx.fillStyle = cat.color;
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(cat.name, 820, y);
+        y += 25;
+        
+        // Tools
+        cat.tools.forEach(tool => {
+          ctx.fillStyle = '#313244';
+          ctx.fillRect(820, y, 360, 35);
+          ctx.fillStyle = '#cdd6f4';
+          ctx.font = '13px sans-serif';
+          ctx.fillText(tool, 835, y + 23);
+          
+          // Toggle switch
+          ctx.fillStyle = '#a855f7';
+          ctx.beginPath();
+          ctx.arc(1150, y + 17, 12, 0, Math.PI * 2);
+          ctx.fill();
+          
+          y += 45;
+        });
+        y += 10;
+      });
+      
+      // Caption
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('35+ Professional Tools', 50, 700);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '18px sans-serif';
+      ctx.fillText('Organized by category for quick access', 50, 730);
+      
+      addDownloadLink('screenshot1', 'screenshot-1-popup-tools');
+    }
+    
+    // Screenshot 2: Performance Tab
+    function drawPerformance() {
+      const canvas = createCanvas('screenshot2', 'Screenshot 2: Performance Tab');
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Header
+      const headerGrad = ctx.createLinearGradient(0, 0, WIDTH, 100);
+      headerGrad.addColorStop(0, '#a855f7');
+      headerGrad.addColorStop(1, '#6366f1');
+      ctx.fillStyle = headerGrad;
+      ctx.fillRect(0, 0, WIDTH, 100);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText('⚡ Performance', 50, 65);
+      
+      // Core Web Vitals
+      const vitals = [
+        { name: 'LCP', value: '1.2s', score: 95, color: '#a6e3a1' },
+        { name: 'INP', value: '58ms', score: 98, color: '#a6e3a1' },
+        { name: 'CLS', value: '0.02', score: 100, color: '#a6e3a1' },
+        { name: 'FCP', value: '0.8s', score: 92, color: '#a6e3a1' }
+      ];
+      
+      let x = 50;
+      vitals.forEach(vital => {
+        ctx.fillStyle = '#313244';
+        ctx.fillRect(x, 130, 280, 150);
+        
+        ctx.fillStyle = vital.color;
+        ctx.font = 'bold 48px sans-serif';
+        ctx.fillText(vital.value, x + 20, 200);
+        
+        ctx.fillStyle = '#6c7086';
+        ctx.font = '16px sans-serif';
+        ctx.fillText(vital.name, x + 20, 230);
+        
+        // Score badge
+        ctx.fillStyle = vital.color + '40';
+        ctx.fillRect(x + 180, 150, 80, 35);
+        ctx.fillStyle = vital.color;
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(vital.score, x + 205, 175);
+        
+        x += 300;
+      });
+      
+      // Resource Analysis
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(50, 310, 600, 450);
+      
+      ctx.fillStyle = '#cdd6f4';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('Resource Analysis', 80, 350);
+      
+      // Resource bars
+      const resources = [
+        { type: 'JavaScript', size: '245 KB', color: '#f9e2af' },
+        { type: 'CSS', size: '89 KB', color: '#89b4fa' },
+        { type: 'Images', size: '1.2 MB', color: '#a6e3a1' },
+        { type: 'Fonts', size: '156 KB', color: '#f5c2e7' }
+      ];
+      
+      let ry = 380;
+      resources.forEach(res => {
+        ctx.fillStyle = '#45475a';
+        ctx.fillRect(80, ry, 540, 40);
+        
+        ctx.fillStyle = res.color;
+        ctx.fillRect(80, ry, Math.random() * 400 + 100, 40);
+        
+        ctx.fillStyle = '#cdd6f4';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(res.type, 90, ry + 26);
+        ctx.fillText(res.size, 500, ry + 26);
+        
+        ry += 60;
+      });
+      
+      // Recommendations
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(680, 310, 550, 450);
+      
+      ctx.fillStyle = '#cdd6f4';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('💡 Recommendations', 710, 350);
+      
+      const tips = [
+        'Enable text compression for JS/CSS',
+        'Optimize images (WebP format)',
+        'Remove unused JavaScript',
+        'Preload critical resources'
+      ];
+      
+      let ty = 380;
+      tips.forEach(tip => {
+        ctx.fillStyle = '#45475a';
+        ctx.fillRect(710, ty, 500, 50);
+        ctx.fillStyle = '#a6e3a1';
+        ctx.fillText('✓', 725, ty + 32);
+        ctx.fillStyle = '#cdd6f4';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(tip, 750, ty + 32);
+        ty += 70;
+      });
+      
+      addDownloadLink('screenshot2', 'screenshot-2-performance');
+    }
+    
+    // Screenshot 3: Smart Suggestions
+    function drawSmartSuggestions() {
+      const canvas = createCanvas('screenshot3', 'Screenshot 3: Smart Suggestions');
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Browser mockup
+      ctx.fillStyle = '#181825';
+      ctx.fillRect(50, 50, 1180, 700);
+      
+      // Smart Suggestions Panel
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(780, 80, 420, 620);
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(780, 80, 420, 620);
+      
+      // Header
+      const headerGrad = ctx.createLinearGradient(780, 80, 1200, 140);
+      headerGrad.addColorStop(0, '#a855f7');
+      headerGrad.addColorStop(1, '#6366f1');
+      ctx.fillStyle = headerGrad;
+      ctx.fillRect(780, 80, 420, 60);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('✨ Smart Suggestions', 800, 120);
+      
+      // Stats
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(800, 160, 380, 60);
+      
+      ctx.fillStyle = '#a6e3a1';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('12', 820, 200);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Issues Found', 820, 215);
+      
+      ctx.fillStyle = '#f9e2af';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('5', 920, 200);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Auto-fixable', 920, 215);
+      
+      // Categories
+      const issues = [
+        { cat: '♿ Accessibility', title: 'Missing alt text on 3 images', color: '#f38ba8', fix: true },
+        { cat: '⚡ Performance', title: 'Large DOM size (2,400 nodes)', color: '#f9e2af', fix: false },
+        { cat: '🔍 SEO', title: 'Missing meta description', color: '#89b4fa', fix: true },
+        { cat: '♿ Accessibility', title: 'Low contrast ratio on buttons', color: '#f38ba8', fix: true },
+        { cat: '⚡ Performance', title: 'Render-blocking resources', color: '#f9e2af', fix: false }
+      ];
+      
+      let y = 240;
+      issues.forEach(issue => {
+        ctx.fillStyle = '#313244';
+        ctx.fillRect(800, y, 380, 80);
+        
+        ctx.fillStyle = issue.color;
+        ctx.font = '11px sans-serif';
+        ctx.fillText(issue.cat, 815, y + 20);
+        
+        ctx.fillStyle = '#cdd6f4';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(issue.title, 815, y + 45);
+        
+        if (issue.fix) {
+          ctx.fillStyle = '#a6e3a1';
+          ctx.fillRect(1050, y + 45, 120, 28);
+          ctx.fillStyle = '#1e1e2e';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText('Auto-Fix', 1080, y + 63);
+        }
+        
+        y += 95;
+      });
+      
+      // Caption
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('50+ Detection Patterns', 100, 620);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Intelligent analysis with one-click auto-fixes', 100, 650);
+      
+      addDownloadLink('screenshot3', 'screenshot-3-smart-suggestions');
+    }
+    
+    // Screenshot 4: Container Query Inspector
+    function drawContainerQueries() {
+      const canvas = createCanvas('screenshot4', 'Screenshot 4: Container Query Inspector');
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Mock website
+      ctx.fillStyle = '#181825';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Card grid layout
+      const cards = [
+        { x: 50, y: 100, w: 380, h: 250, container: true, name: 'card-grid' },
+        { x: 450, y: 100, w: 380, h: 250, container: false },
+        { x: 850, y: 100, w: 380, h: 250, container: false },
+        { x: 50, y: 380, w: 380, h: 250, container: false },
+        { x: 450, y: 380, w: 380, h: 250, container: true, name: 'sidebar' },
+        { x: 850, y: 380, w: 380, h: 250, container: false }
+      ];
+      
+      cards.forEach(card => {
+        // Card
+        ctx.fillStyle = '#313244';
+        ctx.fillRect(card.x, card.y, card.w, card.h);
+        
+        if (card.container) {
+          // Container outline
+          ctx.strokeStyle = '#a855f7';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([8, 4]);
+          ctx.strokeRect(card.x - 5, card.y - 5, card.w + 10, card.h + 10);
+          ctx.setLineDash([]);
+          
+          // Label
+          ctx.fillStyle = '#a855f7';
+          ctx.fillRect(card.x, card.y - 28, 180, 28);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText(`@container (${card.name})`, card.x + 10, card.y - 10);
+          
+          // Size badge
+          ctx.fillStyle = '#a855f7';
+          ctx.fillRect(card.x + card.w - 100, card.y + card.h - 30, 95, 25);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '11px monospace';
+          ctx.fillText(`${card.w}×${card.h}`, card.x + card.w - 90, card.y + card.h - 13);
+        }
+      });
+      
+      // Panel
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(900, 50, 350, 300);
+      ctx.strokeStyle = '#45475a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(900, 50, 350, 300);
+      
+      ctx.fillStyle = '#a855f7';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('Container Query Inspector', 920, 85);
+      
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('2 containers detected', 920, 110);
+      
+      // Container list
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(920, 130, 310, 60);
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(930, 145, 8, 30);
+      ctx.fillStyle = '#cdd6f4';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('.card-grid', 950, 165);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('inline-size • 3 @container rules', 950, 182);
+      
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(920, 200, 310, 60);
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(930, 215, 8, 30);
+      ctx.fillStyle = '#cdd6f4';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('.sidebar', 950, 235);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('size • 1 @container rule', 950, 252);
+      
+      // Caption
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('Debug CSS Container Queries', 50, 700);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Visualize container-type, container-name, and @container rules', 50, 730);
+      
+      addDownloadLink('screenshot4', 'screenshot-4-container-queries');
+    }
+    
+    // Screenshot 5: View Transitions Debugger
+    function drawViewTransitions() {
+      const canvas = createCanvas('screenshot5', 'Screenshot 5: View Transitions Debugger');
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Website content
+      ctx.fillStyle = '#181825';
+      ctx.fillRect(50, 50, 800, 700);
+      
+      // Transition overlay (simulating view transition)
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.1)';
+      ctx.fillRect(50, 50, 800, 700);
+      
+      // Old snapshot
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(100, 100, 300, 200);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('::view-transition-old(root)', 120, 130);
+      
+      // New snapshot
+      ctx.fillStyle = '#45475a';
+      ctx.fillRect(500, 350, 300, 200);
+      ctx.fillStyle = '#a6e3a1';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('::view-transition-new(root)', 520, 380);
+      
+      // Transition group labels
+      ctx.strokeStyle = '#f9e2af';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(90, 90, 320, 220);
+      ctx.strokeRect(490, 340, 320, 220);
+      ctx.setLineDash([]);
+      
+      // Debugger Panel
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(900, 50, 330, 700);
+      ctx.strokeStyle = '#f9e2af';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(900, 50, 330, 700);
+      
+      ctx.fillStyle = '#f9e2af';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('View Transitions Debugger', 920, 85);
+      
+      // Status badge
+      ctx.fillStyle = '#a6e3a1';
+      ctx.fillRect(1080, 65, 130, 30);
+      ctx.fillStyle = '#1e1e2e';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('animating', 1100, 85);
+      
+      // Phase
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Phase', 920, 120);
+      ctx.fillStyle = '#a6e3a1';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('animating', 920, 145);
+      
+      // Pseudo-elements
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Pseudo-Elements', 920, 185);
+      
+      const pseudos = [
+        '::view-transition',
+        '::view-transition-group(root)',
+        '::view-transition-image-pair(root)',
+        '::view-transition-old(root)',
+        '::view-transition-new(root)'
+      ];
+      
+      let y = 210;
+      pseudos.forEach((pseudo, i) => {
+        ctx.fillStyle = '#313244';
+        ctx.fillRect(920, y, 290, 40);
+        ctx.fillStyle = i < 2 ? '#f5c2e7' : '#89b4fa';
+        ctx.font = '13px monospace';
+        ctx.fillText(pseudo, 935, y + 25);
+        y += 50;
+      });
+      
+      // Captured elements
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Captured Elements', 920, 480);
+      
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(920, 495, 290, 60);
+      ctx.fillStyle = '#cdd6f4';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('header', 940, 520);
+      ctx.fillStyle = '#6c7086';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('view-transition-name: header', 940, 540);
+      
+      // Caption
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('Debug the View Transitions API', 50, 780);
+      
+      addDownloadLink('screenshot5', 'screenshot-5-view-transitions');
+    }
+    
+    // Screenshot 6: Beast Mode Features Overview
+    function drawBeastMode() {
+      const canvas = createCanvas('screenshot6', 'Screenshot 6: Beast Mode Features');
+      const ctx = canvas.getContext('2d');
+      
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+      grad.addColorStop(0, '#1e1e2e');
+      grad.addColorStop(0.5, '#313244');
+      grad.addColorStop(1, '#1e1e2e');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      
+      // Header
+      ctx.fillStyle = '#a855f7';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('🔥 BEAST MODE', WIDTH/2 - 60, 60);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 42px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Next-Gen Debugging Tools', WIDTH/2, 110);
+      
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Features no other extension has', WIDTH/2, 145);
+      ctx.textAlign = 'left';
+      
+      // Feature cards
+      const features = [
+        {
+          icon: '📦',
+          title: 'Container Query Inspector',
+          desc: 'Debug @container rules, visualize container-type and container-name properties',
+          color: '#a855f7'
+        },
+        {
+          icon: '🎬',
+          title: 'View Transitions Debugger',
+          desc: 'Debug the View Transitions API, visualize pseudo-elements and snapshots',
+          color: '#f9e2af'
+        },
+        {
+          icon: '📜',
+          title: 'Scroll-Driven Animations',
+          desc: 'Debug scroll() and view() timelines with live progress visualization',
+          color: '#a6e3a1'
+        }
+      ];
+      
+      let x = 80;
+      features.forEach(feature => {
+        // Card background
+        ctx.fillStyle = '#181825';
+        ctx.fillRect(x, 200, 360, 450);
+        ctx.strokeStyle = feature.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, 200, 360, 450);
+        
+        // Icon
+        ctx.font = '64px sans-serif';
+        ctx.fillText(feature.icon, x + 148, 300);
+        
+        // Title
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(feature.title, x + 20, 350);
+        
+        // Description
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '15px sans-serif';
+        const words = feature.desc.split(' ');
+        let line = '';
+        let y = 390;
+        words.forEach(word => {
+          const testLine = line + word + ' ';
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > 320 && line !== '') {
+            ctx.fillText(line, x + 20, y);
+            line = word + ' ';
+            y += 25;
+          } else {
+            line = testLine;
+          }
+        });
+        ctx.fillText(line, x + 20, y);
+        
+        // "Exclusive" badge
+        ctx.fillStyle = feature.color + '30';
+        ctx.fillRect(x + 20, 560, 100, 30);
+        ctx.fillStyle = feature.color;
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('EXCLUSIVE', x + 35, 580);
+        
+        x += 400;
+      });
+      
+      // Bottom stats
+      ctx.fillStyle = '#313244';
+      ctx.fillRect(80, 680, 1120, 80);
+      
+      const stats = [
+        { value: '35+', label: 'Total Tools' },
+        { value: '3', label: 'Beast Mode Features' },
+        { value: '0', label: 'Competitors Have These' }
+      ];
+      
+      let sx = 150;
+      stats.forEach(stat => {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillText(stat.value, sx, 730);
+        ctx.fillStyle = '#6c7086';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(stat.label, sx, 750);
+        sx += 400;
+      });
+      
+      addDownloadLink('screenshot6', 'screenshot-6-beast-mode');
+    }
+    
+    // Promotional Images
+    function drawPromoSmall() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 440;
+      canvas.height = 280;
+      canvas.id = 'promo-small';
+      
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 440, 280);
+      grad.addColorStop(0, '#1e1e2e');
+      grad.addColorStop(1, '#313244');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 440, 280);
+      
+      // Logo placeholder
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.arc(220, 100, 50, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 40px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🔬', 220, 115);
+      
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('35+ DevTools', 220, 190);
+      ctx.fillText('in One Extension', 220, 220);
+      
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('The ultimate frontend toolkit', 220, 250);
+      
+      document.body.appendChild(canvas);
+      
+      const link = document.createElement('div');
+      link.className = 'download-links';
+      link.innerHTML = `<a href="${canvas.toDataURL()}" download="promo-small.png">Download Small Promo (440x280)</a>`;
+      document.body.appendChild(link);
+    }
+    
+    function drawPromoLarge() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 920;
+      canvas.height = 680;
+      canvas.id = 'promo-large';
+      
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 920, 680);
+      grad.addColorStop(0, '#1e1e2e');
+      grad.addColorStop(1, '#313244');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 920, 680);
+      
+      // Header
+      ctx.fillStyle = '#a855f7';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('FRONTENDDEVHELPER', 460, 60);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 42px sans-serif';
+      ctx.fillText('Supercharge Your', 460, 120);
+      ctx.fillText('Frontend Workflow', 460, 170);
+      
+      // Feature highlights
+      const features = [
+        { icon: '🔍', title: 'Inspect', desc: 'DOM, CSS, Accessibility' },
+        { icon: '⚡', title: 'Performance', desc: 'Web Vitals, Network' },
+        { icon: '🎨', title: 'Design', desc: 'Colors, Spacing, Typography' },
+        { icon: '🔥', title: 'Beast Mode', desc: 'Container Queries, Transitions' }
+      ];
+      
+      let fx = 80;
+      features.forEach(f => {
+        ctx.fillStyle = '#181825';
+        ctx.fillRect(fx, 250, 180, 200);
+        ctx.strokeStyle = '#45475a';
+        ctx.strokeRect(fx, 250, 180, 200);
+        
+        ctx.font = '48px sans-serif';
+        ctx.fillText(f.icon, fx + 90, 310);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(f.title, fx + 90, 360);
+        
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '13px sans-serif';
+        ctx.fillText(f.desc, fx + 90, 390);
+        
+        fx += 200;
+      });
+      
+      // CTA
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(310, 520, 300, 60);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('Free on Chrome Web Store', 460, 558);
+      
+      document.body.appendChild(canvas);
+      
+      const link = document.createElement('div');
+      link.className = 'download-links';
+      link.innerHTML = `<a href="${canvas.toDataURL()}" download="promo-large.png">Download Large Promo (920x680)</a>`;
+      document.body.appendChild(link);
+    }
+    
+    function drawPromoMarquee() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1400;
+      canvas.height = 560;
+      canvas.id = 'promo-marquee';
+      
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 1400, 560);
+      grad.addColorStop(0, '#1e1e2e');
+      grad.addColorStop(0.5, '#313244');
+      grad.addColorStop(1, '#1e1e2e');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1400, 560);
+      
+      // Left: Logo and text
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.arc(150, 200, 60, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px sans-serif';
+      ctx.fillText('🔬', 135, 220);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText('FrontendDevHelper', 50, 320);
+      
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('The Ultimate Frontend', 50, 360);
+      ctx.fillText('Developer Toolkit', 50, 390);
+      
+      // Center: Tool screenshots
+      const screenshots = [
+        { icon: '📦', color: '#a855f7', label: 'Container Queries' },
+        { icon: '🎬', color: '#f9e2af', label: 'View Transitions' },
+        { icon: '📜', color: '#a6e3a1', label: 'Scroll Animations' },
+        { icon: '✨', color: '#89b4fa', label: 'Smart Analysis' }
+      ];
+      
+      let sx = 450;
+      screenshots.forEach(s => {
+        ctx.fillStyle = '#181825';
+        ctx.fillRect(sx, 120, 220, 320);
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sx, 120, 220, 320);
+        
+        ctx.font = '80px sans-serif';
+        ctx.fillText(s.icon, sx + 110, 250);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.label, sx + 110, 380);
+        ctx.textAlign = 'left';
+        
+        sx += 250;
+      });
+      
+      // Right: CTA
+      ctx.fillStyle = '#a855f7';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillText('35+ Tools', 1250, 200);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('Free', 1250, 250);
+      
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(1220, 300, 160, 50);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Get It Now', 1300, 332);
+      
+      document.body.appendChild(canvas);
+      
+      const link = document.createElement('div');
+      link.className = 'download-links';
+      link.innerHTML = `<a href="${canvas.toDataURL()}" download="promo-marquee.png">Download Marquee Promo (1400x560)</a>`;
+      document.body.appendChild(link);
+    }
+    
+    // Main functions
+    function generateAllScreenshots() {
+      document.getElementById('progress').textContent = 'Generating screenshots...';
+      
+      setTimeout(() => {
+        drawPopupTools();
+        drawPerformance();
+        drawSmartSuggestions();
+        drawContainerQueries();
+        drawViewTransitions();
+        drawBeastMode();
+        
+        document.getElementById('progress').textContent = 'All 6 screenshots generated! Click Download links below each image.';
+      }, 100);
+    }
+    
+    function generatePromotionalImages() {
+      document.getElementById('progress').textContent = 'Generating promotional images...';
+      
+      setTimeout(() => {
+        drawPromoSmall();
+        drawPromoLarge();
+        drawPromoMarquee();
+        
+        document.getElementById('progress').textContent = 'All promotional images generated!';
+      }, 100);
+    }
+  </script>
+</body>
+</html>

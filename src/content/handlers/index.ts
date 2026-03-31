@@ -36,6 +36,15 @@ import { storageInspector } from '../storage-inspector';
 import { techDetector } from '../tech-detector';
 import { visualRegression } from '../visual-regression';
 import { zIndexVisualizer } from '../zindex-visualizer';
+import * as sessionRecorder from '../session-recorder';
+import * as responsiveTesting from '../responsive-testing';
+import * as cssVariableInspector from '../css-variable-inspector';
+import * as smartElementPicker from '../smart-element-picker';
+import * as performanceBudget from '../performance-budget';
+import * as frameworkDevtools from '../framework-devtools';
+import * as containerQueryInspector from '../container-query-inspector';
+import * as viewTransitionsDebugger from '../view-transitions-debugger';
+import * as scrollAnimationsDebugger from '../scroll-animations-debugger';
 
 /** Helper to create standard tool handlers */
 function createToolHandlers(
@@ -83,7 +92,7 @@ function createToolHandlers(
 /** Handler registry */
 export const registry: Record<string, ContentHandler> = {
   // Pesticide (DOM Outliner)
-  ...createToolHandlers('PESTICIDE', pesticide, 'domOutlinerEnabled'),
+  ...createToolHandlers('PESTICIDE', pesticide, 'isDomOutlinerActive'),
   PESTICIDE_SET_TAG_VISIBILITY: (payload, _state, sendResponse) => {
     if (payload?.tag !== undefined && payload?.visible !== undefined) {
       pesticide.toggleTag(String(payload.tag), Boolean(payload.visible));
@@ -94,10 +103,10 @@ export const registry: Record<string, ContentHandler> = {
   },
 
   // Spacing Visualizer
-  ...createToolHandlers('SPACING', spacingVisualizer, 'spacingVisualizerEnabled'),
+  ...createToolHandlers('SPACING', spacingVisualizer, 'isSpacingVisualizerActive'),
 
   // Font Inspector
-  ...createToolHandlers('FONT_INSPECTOR', fontInspector, 'fontInspectorEnabled'),
+  ...createToolHandlers('FONT_INSPECTOR', fontInspector, 'isFontInspectorActive'),
 
   // Color Picker
   ...createToolHandlers('COLOR_PICKER', colorPicker, 'isColorPickerActive'),
@@ -115,14 +124,14 @@ export const registry: Record<string, ContentHandler> = {
   },
 
   // Pixel Ruler
-  ...createToolHandlers('PIXEL_RULER', pixelRuler, 'pixelRulerEnabled'),
+  ...createToolHandlers('PIXEL_RULER', pixelRuler, 'isPixelRulerActive'),
   PIXEL_RULER_CLEAR: (_payload, _state, sendResponse) => {
     pixelRuler.clearAllMeasurements();
     sendResponse({ success: true });
   },
 
   // Breakpoint Overlay
-  ...createToolHandlers('BREAKPOINT_OVERLAY', breakpointOverlay, 'breakpointOverlayEnabled'),
+  ...createToolHandlers('BREAKPOINT_OVERLAY', breakpointOverlay, 'isBreakpointOverlayActive'),
   BREAKPOINT_OVERLAY_SET_FRAMEWORK: (payload, _state, sendResponse) => {
     if (payload?.framework) {
       breakpointOverlay.setFramework(payload.framework as 'tailwind' | 'bootstrap');
@@ -133,7 +142,7 @@ export const registry: Record<string, ContentHandler> = {
   },
 
   // Responsive Preview
-  ...createToolHandlers('RESPONSIVE_PREVIEW', responsivePreview, 'responsivePreviewEnabled'),
+  ...createToolHandlers('RESPONSIVE_PREVIEW', responsivePreview, 'isResponsivePreviewActive'),
   RESPONSIVE_PREVIEW_SET_SYNC_SCROLL: (payload, _state, sendResponse) => {
     if (payload?.enabled !== undefined) {
       responsivePreview.setSyncScroll(Boolean(payload.enabled));
@@ -304,11 +313,179 @@ export const registry: Record<string, ContentHandler> = {
   // Visual Regression
   ...createToolHandlers('VISUAL_REGRESSION', visualRegression, 'isVisualRegressionActive'),
 
-  // AI Suggestions
-  ...createToolHandlers('AI_SUGGESTIONS', aiSuggestions, 'isAiSuggestionsActive'),
-  AI_SUGGESTIONS_RUN_ANALYSIS: (_payload, _state, sendResponse) => {
+  // Smart Suggestions
+  ...createToolHandlers('SMART_SUGGESTIONS', aiSuggestions, 'isSmartSuggestionsActive'),
+  SMART_SUGGESTIONS_RUN_ANALYSIS: (_payload, _state, sendResponse) => {
     aiSuggestions.runAnalysis();
     sendResponse({ success: true });
+  },
+
+  // Session Recorder
+  SESSION_RECORDER_START: (payload, _state, sendResponse) => {
+    const { name, description } = (payload as { name?: string; description?: string }) || {};
+    try {
+      const session = sessionRecorder.startRecording(name || 'Session', description);
+      sendResponse({ success: true, session });
+    } catch (error) {
+      sendResponse({ success: false, error: (error as Error).message });
+    }
+  },
+  SESSION_RECORDER_STOP: (_payload, _state, sendResponse) => {
+    const session = sessionRecorder.stopRecording();
+    sendResponse({ success: true, session });
+  },
+  SESSION_RECORDER_GET_STATE: (_payload, _state, sendResponse) => {
+    sendResponse({ success: true, state: sessionRecorder.getState() });
+  },
+  SESSION_RECORDER_GET_SESSIONS: (_payload, _state, sendResponse) => {
+    sessionRecorder.getSessions().then((sessions) => {
+      sendResponse({ success: true, sessions });
+    });
+    return true;
+  },
+  SESSION_RECORDER_DELETE: (payload, _state, sendResponse) => {
+    const { id } = payload as { id: string };
+    sessionRecorder.deleteSession(id).then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  },
+  SESSION_RECORDER_REPLAY: (payload, _state, sendResponse) => {
+    const { id } = payload as { id: string };
+    sessionRecorder.replaySession(id).then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  },
+  SESSION_RECORDER_EXPORT: (payload, _state, sendResponse) => {
+    const { session } = payload as { session: sessionRecorder.DebuggingSession };
+    const json = sessionRecorder.exportSession(session);
+    sendResponse({ success: true, json });
+  },
+  SESSION_RECORDER_IMPORT: (payload, _state, sendResponse) => {
+    const { json } = payload as { json: string };
+    try {
+      const session = sessionRecorder.importSession(json);
+      sendResponse({ success: true, session });
+    } catch (error) {
+      sendResponse({ success: false, error: (error as Error).message });
+    }
+  },
+  SESSION_RECORDER_SHARE: (payload, _state, sendResponse) => {
+    const { id } = payload as { id: string };
+    sessionRecorder.shareSession(id).then((url) => {
+      sendResponse({ success: true, url });
+    });
+    return true;
+  },
+  SESSION_RECORDER_ADD_ANNOTATION: (payload, _state, sendResponse) => {
+    const { text, selector } = payload as { text: string; selector?: string };
+    sessionRecorder.addAnnotation(text, selector);
+    sendResponse({ success: true });
+  },
+
+  // Responsive Testing
+  RESPONSIVE_TESTING_RUN: (payload, _state, sendResponse) => {
+    const { breakpoints } = payload as { breakpoints?: responsiveTesting.Breakpoint[] };
+    responsiveTesting.runResponsiveTesting(breakpoints).then((report) => {
+      sendResponse({ success: true, report });
+    });
+    return true;
+  },
+  RESPONSIVE_TESTING_GET_REPORTS: (_payload, _state, sendResponse) => {
+    responsiveTesting.getReports().then((reports) => {
+      sendResponse({ success: true, reports });
+    });
+    return true;
+  },
+  RESPONSIVE_TESTING_GET_REPORT: (payload, _state, sendResponse) => {
+    const { id } = payload as { id: string };
+    responsiveTesting.getReport(id).then((report) => {
+      sendResponse({ success: true, report });
+    });
+    return true;
+  },
+  RESPONSIVE_TESTING_DELETE: (payload, _state, sendResponse) => {
+    const { id } = payload as { id: string };
+    responsiveTesting.deleteReport(id).then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  },
+  RESPONSIVE_TESTING_EXPORT_HTML: (payload, _state, sendResponse) => {
+    const { report } = payload as { report: responsiveTesting.ResponsiveReport };
+    const html = responsiveTesting.generateHTMLReport(report);
+    sendResponse({ success: true, html });
+  },
+
+  // CSS Variable Inspector
+  ...createToolHandlers('CSS_VARIABLE_INSPECTOR', cssVariableInspector, 'isCssVariableInspectorActive'),
+  CSS_VARIABLE_INSPECTOR_SCAN: (_payload, _state, sendResponse) => {
+    const variables = cssVariableInspector.detectCSSVariables();
+    sendResponse({ success: true, variables });
+  },
+  CSS_VARIABLE_INSPECTOR_EXPORT: (payload, _state, sendResponse) => {
+    const { format } = payload as { format: 'json' | 'css' | 'figma' };
+    const data = cssVariableInspector.exportVariables(format);
+    sendResponse({ success: true, data });
+  },
+
+  // Smart Element Picker
+  ...createToolHandlers('SMART_ELEMENT_PICKER', smartElementPicker, 'isSmartElementPickerActive'),
+  SMART_ELEMENT_PICKER_INSPECT: (payload, _state, sendResponse) => {
+    const { selector } = payload as { selector: string };
+    const element = document.querySelector(selector) as HTMLElement | null;
+    if (element) {
+      const info = smartElementPicker.inspectElement(element);
+      sendResponse({ success: true, info });
+    } else {
+      sendResponse({ success: false, error: 'Element not found' });
+    }
+  },
+
+  // Performance Budget
+  ...createToolHandlers('PERFORMANCE_BUDGET', performanceBudget, 'isPerformanceBudgetActive'),
+  PERFORMANCE_BUDGET_CHECK: (_payload, _state, sendResponse) => {
+    const metrics = performanceBudget.collectMetrics();
+    const violations = performanceBudget.checkBudgets();
+    sendResponse({ success: true, metrics, violations });
+  },
+  PERFORMANCE_BUDGET_SET_BUDGET: (payload, _state, sendResponse) => {
+    const { metric, value } = payload as { metric: string; value: number };
+    performanceBudget.setBudget(metric, value);
+    sendResponse({ success: true });
+  },
+
+  // Framework DevTools
+  ...createToolHandlers('FRAMEWORK_DEVTOOLS', frameworkDevtools, 'isFrameworkDevtoolsActive'),
+  FRAMEWORK_DEVTOOLS_DETECT: (_payload, _state, sendResponse) => {
+    const frameworks = frameworkDevtools.detectAll();
+    sendResponse({ success: true, frameworks });
+  },
+  FRAMEWORK_DEVTOOLS_GET_COMPONENT_TREE: (_payload, _state, sendResponse) => {
+    const tree = frameworkDevtools.getReactComponentTree();
+    sendResponse({ success: true, tree });
+  },
+
+  // Beast Mode: Container Query Inspector
+  ...createToolHandlers('CONTAINER_QUERY_INSPECTOR', containerQueryInspector, 'isContainerQueryInspectorActive'),
+  CONTAINER_QUERY_INSPECTOR_GET_SUMMARY: (_payload, _state, sendResponse) => {
+    const summary = containerQueryInspector.getContainerSummary();
+    sendResponse({ success: true, summary });
+  },
+
+  // Beast Mode: View Transitions Debugger
+  ...createToolHandlers('VIEW_TRANSITIONS_DEBUGGER', viewTransitionsDebugger, 'isViewTransitionsDebuggerActive'),
+  VIEW_TRANSITIONS_DEBUGGER_GET_STATE: (_payload, _state, sendResponse) => {
+    const state = viewTransitionsDebugger.getState();
+    sendResponse({ success: true, state });
+  },
+
+  // Beast Mode: Scroll Animations Debugger
+  ...createToolHandlers('SCROLL_ANIMATIONS_DEBUGGER', scrollAnimationsDebugger, 'isScrollAnimationsDebuggerActive'),
+  SCROLL_ANIMATIONS_DEBUGGER_GET_SUMMARY: (_payload, _state, sendResponse) => {
+    const summary = scrollAnimationsDebugger.getAnimationSummary();
+    sendResponse({ success: true, summary });
   },
 
   // Legacy message types
@@ -415,13 +592,13 @@ export const registry: Record<string, ContentHandler> = {
     visualRegression.disable();
     aiSuggestions.disable();
 
-    // Update state flags
-    state.domOutlinerEnabled = false;
-    state.spacingVisualizerEnabled = false;
-    state.fontInspectorEnabled = false;
+    // Update state flags (unified naming convention)
+    state.isDomOutlinerActive = false;
+    state.isSpacingVisualizerActive = false;
+    state.isFontInspectorActive = false;
     state.isColorPickerActive = false;
-    state.pixelRulerEnabled = false;
-    state.breakpointOverlayEnabled = false;
+    state.isPixelRulerActive = false;
+    state.isBreakpointOverlayActive = false;
     state.isCssInspectorActive = false;
     state.isCssEditorActive = false;
     state.isContrastCheckerActive = false;
@@ -434,7 +611,7 @@ export const registry: Record<string, ContentHandler> = {
     state.isScreenshotStudioActive = false;
     state.isAnimationInspectorActive = false;
     state.isDesignSystemValidatorActive = false;
-    state.responsivePreviewEnabled = false;
+    state.isResponsivePreviewActive = false;
     state.isFlameGraphActive = false;
     state.isFocusDebuggerActive = false;
     state.isFormDebuggerActive = false;

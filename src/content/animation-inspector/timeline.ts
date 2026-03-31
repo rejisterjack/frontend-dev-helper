@@ -170,7 +170,8 @@ export function pauseAnimation(animationId: string): void {
     if (!originalStates.has(anim.element)) {
       originalStates.set(anim.element, new Map());
     }
-    const states = originalStates.get(anim.element)!;
+    const states = originalStates.get(anim.element);
+    if (!states) return;
     if (!states.has('animationPlayState')) {
       states.set('animationPlayState', anim.element.style.animationPlayState);
     }

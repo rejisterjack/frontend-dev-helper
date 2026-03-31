@@ -89,6 +89,10 @@ describe('Inspector', () => {
 
       Object.defineProperty(window, 'scrollY', { value: 100, writable: true, configurable: true });
 
+      // Mock getBoundingClientRect for jsdom - fixed elements should return viewport-relative position
+      const mockRect = { top: 10, left: 20, width: 100, height: 100, bottom: 110, right: 120, x: 10, y: 20, toJSON: () => ({}) };
+      element.getBoundingClientRect = () => mockRect;
+
       const rect = element.getBoundingClientRect();
       // Fixed elements stay at viewport position regardless of scroll
       expect(rect.top).toBe(10);

@@ -1,64 +1,50 @@
+/**
+ * FrontendDevHelper - TypeScript Types
+ *
+ * Central type definitions for the extension.
+ * For tool-specific types, see src/types/tools.ts
+ */
+
 // ============================================
-// FrontendDevHelper - TypeScript Types
+// Re-exports from tools.ts (Unified Tool Types)
 // ============================================
 
-/** Available tool types in the extension */
-export enum ToolType {
-  DOM_OUTLINER = 'domOutliner',
-  SPACING_VISUALIZER = 'spacingVisualizer',
-  FONT_INSPECTOR = 'fontInspector',
-  COLOR_PICKER = 'colorPicker',
-  PIXEL_RULER = 'pixelRuler',
-  RESPONSIVE_BREAKPOINT = 'responsiveBreakpoint',
-  CSS_INSPECTOR = 'cssInspector',
-  CSS_EDITOR = 'cssEditor',
-  CONTRAST_CHECKER = 'contrastChecker',
-  LAYOUT_VISUALIZER = 'layoutVisualizer',
-  ZINDEX_VISUALIZER = 'zIndexVisualizer',
-  TECH_DETECTOR = 'techDetector',
-  ACCESSIBILITY_AUDIT = 'accessibilityAudit',
-  SITE_REPORT = 'siteReport',
-  SCREENSHOT_STUDIO = 'screenshotStudio',
-  ANIMATION_INSPECTOR = 'animationInspector',
-  RESPONSIVE_PREVIEW = 'responsivePreview',
-  DESIGN_SYSTEM_VALIDATOR = 'designSystemValidator',
-  NETWORK_ANALYZER = 'networkAnalyzer',
-  // New tools for "Best of the Best"
-  COMMAND_PALETTE = 'commandPalette',
-  STORAGE_INSPECTOR = 'storageInspector',
-  FOCUS_DEBUGGER = 'focusDebugger',
-  FORM_DEBUGGER = 'formDebugger',
-  COMPONENT_TREE = 'componentTree',
-  FLAME_GRAPH = 'flameGraph',
-  VISUAL_REGRESSION = 'visualRegression',
-  AI_SUGGESTIONS = 'aiSuggestions',
-}
+export type {
+  SmartSuggestionsSettings,
+  AnimationInspectorSettings,
+  CategorizedTool,
+  ColorPickerSettings,
+  CSSInspectorSettings,
+  // Settings types
+  DOMOutlinerSettings,
+  ElementInspectorSettings,
+  FontInspectorSettings,
+  LayoutVisualizerSettings,
+  PixelRulerSettings,
+  ResponsiveBreakpointSettings,
+  SpacingVisualizerSettings,
+  // Message types
+  ToggleToolPayload,
+  // Category types
+  ToolCategory,
+  ToolCategoryMeta,
+  // Registry types
+  ToolHandler,
+  // Core tool types
+  ToolId,
+  ToolMeta,
+  ToolRegistration,
+  ToolRegistry,
+  ToolSettings,
+  ToolState,
+  ToolStateChangeEvent,
+  ToolsState,
+  ToolType,
+  ZIndexVisualizerSettings,
+} from './tools';
 
-// ToolId is defined in constants but we re-export it here for convenience
-// Using import type to avoid circular dependencies
-import type { ToolId as ToolIdFromConstants } from '@/constants';
-export type ToolId = ToolIdFromConstants;
-
-/** State of an individual tool */
-export interface ToolState {
-  /** Whether the tool is currently active */
-  enabled: boolean;
-  /** Tool-specific settings */
-  settings?: Record<string, unknown>;
-}
-
-/** Map of all tool states */
-export type ToolsState = Record<ToolId, ToolState> & Record<string, ToolState>;
-
-/** Tool metadata for display */
-export interface ToolMeta {
-  type: ToolType;
-  name: string;
-  description: string;
-  icon: string;
-  hasSettings: boolean;
-  color: string;
-}
+// Import ToolId for use in this file
+import type { ToolId } from './tools';
 
 // ============================================
 // Message Types for Extension Communication
@@ -69,10 +55,17 @@ export interface BaseMessage {
   type: string;
 }
 
-/** Message to toggle a tool on/off */
+/** Message to toggle a tool on/off (using unified ToolId) */
 export interface ToggleToolMessage extends BaseMessage {
   type: 'TOGGLE_TOOL';
-  tool: ToolType;
+  toolId: ToolId;
+  enabled: boolean;
+}
+
+/** @deprecated Use TOGGLE_TOOL with toolId instead */
+export interface LegacyToggleToolMessage extends BaseMessage {
+  type: 'TOGGLE_TOOL';
+  tool: string;
   enabled: boolean;
 }
 
@@ -84,20 +77,20 @@ export interface GetStateMessage extends BaseMessage {
 /** Message with current state response */
 export interface StateResponseMessage extends BaseMessage {
   type: 'STATE_RESPONSE';
-  state: ToolsState;
+  state: import('./tools').ToolsState;
 }
 
 /** Message to update tool settings */
 export interface UpdateSettingsMessage extends BaseMessage {
   type: 'UPDATE_SETTINGS';
-  tool: ToolType;
+  toolId: ToolId;
   settings: Record<string, unknown>;
 }
 
 /** Message to open settings panel */
 export interface OpenSettingsMessage extends BaseMessage {
   type: 'OPEN_SETTINGS';
-  tool: ToolType;
+  toolId: ToolId;
 }
 
 /** Message to reset all tools */
@@ -146,80 +139,18 @@ export interface MessageResponse<T = unknown> {
 // Settings Types
 // ============================================
 
-/** DOM Outliner settings */
-export interface DOMOutlinerSettings {
-  showLabels: boolean;
-  opacity: number;
-  outlineWidth: number;
-}
-
-/** Spacing Visualizer settings */
-export interface SpacingVisualizerSettings {
-  showMargins: boolean;
-  showPadding: boolean;
-  showGaps: boolean;
-  color: string;
-}
-
-/** Font Inspector settings */
-export interface FontInspectorSettings {
-  showComputed: boolean;
-  showFallbacks: boolean;
-  highlightIssues: boolean;
-}
-
-/** Color Picker settings */
-export interface ColorPickerSettings {
-  format: 'hex' | 'rgb' | 'hsl';
-  showContrast: boolean;
-  copyOnPick: boolean;
-}
-
-/** Pixel Ruler settings */
-export interface PixelRulerSettings {
-  showGuides: boolean;
-  snapToElements: boolean;
-  showCoordinates: boolean;
-}
-
-/** Responsive Breakpoint settings */
-export interface ResponsiveBreakpointSettings {
-  showOverlay: boolean;
-  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  customBreakpoints: number[];
-}
-
-/** Element Inspector settings */
-export interface ElementInspectorSettings {
-  showTooltips: boolean;
-  highlightStyles: boolean;
-}
-
-/** Union of all tool settings */
-export type ToolSettings =
-  | DOMOutlinerSettings
-  | SpacingVisualizerSettings
-  | FontInspectorSettings
-  | ColorPickerSettings
-  | PixelRulerSettings
-  | ResponsiveBreakpointSettings
-  | ElementInspectorSettings;
-
-// ============================================
-// Extension Settings
-// ============================================
-
 /**
  * Feature toggles - maps tool IDs to their enabled state
- * Uses the canonical ToolId type from constants for type safety
+ * Uses the canonical ToolId type for type safety
  */
 export type FeatureToggles = Record<ToolId, boolean>;
 
 /**
  * Default feature toggles - aligned with TOOL_IDS
+ * Note: These are now imported from constants to maintain single source of truth
  */
 export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
-  // Core tools (matching TOOL_IDS)
+  // Core tools
   domOutliner: true,
   spacingVisualizer: true,
   fontInspector: true,
@@ -236,6 +167,12 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   measurementTool: true,
   gridOverlay: false,
   cssScanner: false,
+  // Advanced tools
+  cssVariableInspector: false,
+  smartElementPicker: false,
+  sessionRecorder: false,
+  performanceBudget: false,
+  frameworkDevtools: false,
   // New "Best of the Best" Tools
   commandPalette: true,
   storageInspector: false,
@@ -244,7 +181,7 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   componentTree: false,
   flameGraph: false,
   visualRegression: false,
-  aiSuggestions: true,
+  smartSuggestions: true,
   // Additional tools
   accessibilityAudit: false,
   siteReport: false,
@@ -253,6 +190,10 @@ export const DEFAULT_FEATURE_TOGGLES: FeatureToggles = {
   animationInspector: false,
   responsivePreview: false,
   designSystemValidator: false,
+  // Beast Mode: Next-Gen Features
+  containerQueryInspector: false,
+  viewTransitionsDebugger: false,
+  scrollAnimationsDebugger: false,
 };
 
 /** Extension settings */
@@ -263,6 +204,17 @@ export interface ExtensionSettings {
   autoSave: boolean;
   autoOpenDevTools: boolean;
   experimentalFeatures?: boolean;
+  ai?: {
+    enabled: boolean;
+    autoAnalyze: boolean;
+    categories: {
+      accessibility: boolean;
+      performance: boolean;
+      seo: boolean;
+      bestPractice: boolean;
+      security: boolean;
+    };
+  };
 }
 
 // ============================================
@@ -471,28 +423,15 @@ export interface TechStackInfo {
   detected: Record<string, string | boolean>;
 }
 
-/** Comprehensive site report */
-export interface SiteReport {
-  id: string;
-  timestamp: number;
-  url: string;
-  title: string;
-  scores: {
-    performance: number;
-    accessibility: number;
-    seo: number;
-    bestPractices: number;
-    overall: number;
-  };
-  performance: PerformanceReportData | null;
-  accessibility: AccessibilityReport | null;
-  colors: ColorReportData | null;
-  seo: SEOReportData | null;
-  techStack: TechStackInfo | null;
-  bestPractices: BestPracticesReport | null;
-  recommendations: SiteReportRecommendation[];
+/** Metric score */
+export interface MetricScore {
+  value: number | null;
+  unit: string;
+  score: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
 }
 
+/** Performance report data */
 export interface PerformanceReportData {
   webVitals: {
     lcp: MetricScore;
@@ -538,13 +477,7 @@ export interface PerformanceReportData {
   }>;
 }
 
-export interface MetricScore {
-  value: number | null;
-  unit: string;
-  score: number;
-  rating: 'good' | 'needs-improvement' | 'poor';
-}
-
+/** Color report data */
 export interface ColorReportData {
   totalColors: number;
   dominant: Array<{
@@ -576,6 +509,15 @@ export interface ColorReportData {
   contrastIssues: ContrastIssue[];
 }
 
+/** SEO issue */
+export interface SEOIssue {
+  type: 'error' | 'warning' | 'info';
+  message: string;
+  element?: string;
+  recommendation: string;
+}
+
+/** SEO report data */
 export interface SEOReportData {
   score: number;
   meta: {
@@ -634,13 +576,15 @@ export interface SEOReportData {
   };
 }
 
-export interface SEOIssue {
-  type: 'error' | 'warning' | 'info';
+/** Best practice issue */
+export interface BestPracticeIssue {
+  severity: 'error' | 'warning' | 'info';
+  category: string;
   message: string;
-  element?: string;
   recommendation: string;
 }
 
+/** Best practices report */
 export interface BestPracticesReport {
   https: boolean;
   deprecatedAPIs: string[];
@@ -652,13 +596,7 @@ export interface BestPracticesReport {
   issues: BestPracticeIssue[];
 }
 
-export interface BestPracticeIssue {
-  severity: 'error' | 'warning' | 'info';
-  category: string;
-  message: string;
-  recommendation: string;
-}
-
+/** Site report recommendation */
 export interface SiteReportRecommendation {
   priority: 'high' | 'medium' | 'low';
   category: string;
@@ -666,6 +604,28 @@ export interface SiteReportRecommendation {
   description: string;
   impact: string;
   effort: 'easy' | 'medium' | 'hard';
+}
+
+/** Comprehensive site report */
+export interface SiteReport {
+  id: string;
+  timestamp: number;
+  url: string;
+  title: string;
+  scores: {
+    performance: number;
+    accessibility: number;
+    seo: number;
+    bestPractices: number;
+    overall: number;
+  };
+  performance: PerformanceReportData | null;
+  accessibility: AccessibilityReport | null;
+  colors: ColorReportData | null;
+  seo: SEOReportData | null;
+  techStack: TechStackInfo | null;
+  bestPractices: BestPracticesReport | null;
+  recommendations: SiteReportRecommendation[];
 }
 
 export type ReportFormat = 'html' | 'pdf' | 'json' | 'markdown';
@@ -850,6 +810,13 @@ export interface LLMConfig {
   model: string;
   enabled: boolean;
   useFreeModelsOnly: boolean;
+  categories?: {
+    accessibility: boolean;
+    performance: boolean;
+    seo: boolean;
+    bestPractice: boolean;
+    security: boolean;
+  };
 }
 
 /** LLM request message */
@@ -1171,23 +1138,23 @@ export interface VisualRegressionImportResponse {
 // Content Script Handler Types
 // ============================================
 
-/** Content script state interface */
+/** Content script state interface - Unified naming convention */
 export interface ContentScriptState {
   inspector: unknown;
   measureTool: unknown;
   gridOverlay: unknown;
+  // Unified is{ToolName}Active naming
   isInspectorActive: boolean;
   isColorPickerActive: boolean;
   isMeasureToolActive: boolean;
   isGridVisible: boolean;
   isScreenshotStudioActive: boolean;
-  domOutlinerEnabled: boolean;
-  spacingVisualizerEnabled: boolean;
-  fontInspectorEnabled: boolean;
-  pixelRulerEnabled: boolean;
-  breakpointOverlayEnabled: boolean;
-  responsivePreviewEnabled: boolean;
-  // Additional tool states for handler registry
+  isDomOutlinerActive: boolean;
+  isSpacingVisualizerActive: boolean;
+  isFontInspectorActive: boolean;
+  isPixelRulerActive: boolean;
+  isBreakpointOverlayActive: boolean;
+  isResponsivePreviewActive: boolean;
   isCssInspectorActive: boolean;
   isCssEditorActive: boolean;
   isContrastCheckerActive: boolean;
@@ -1206,7 +1173,17 @@ export interface ContentScriptState {
   isStorageInspectorActive: boolean;
   isComponentTreeActive: boolean;
   isVisualRegressionActive: boolean;
-  isAiSuggestionsActive: boolean;
+  isSmartSuggestionsActive: boolean;
+  // Advanced tools
+  isCssVariableInspectorActive: boolean;
+  isSmartElementPickerActive: boolean;
+  isSessionRecorderActive: boolean;
+  isPerformanceBudgetActive: boolean;
+  isFrameworkDevtoolsActive: boolean;
+  // Beast Mode: Next-Gen Features
+  isContainerQueryInspectorActive: boolean;
+  isViewTransitionsDebuggerActive: boolean;
+  isScrollAnimationsDebuggerActive: boolean;
 }
 
 /**
@@ -1222,3 +1199,28 @@ export type ContentHandler = (
 
 /** Handler registry type */
 export type HandlerRegistry = Record<string, ContentHandler>;
+
+// ============================================
+// Popup Tab Types
+// ============================================
+
+/** Popup tab ID */
+export type PopupTabId = 'tools' | 'performance' | 'inspector' | 'settings';
+
+/** Popup tab configuration */
+export interface PopupTabConfig {
+  id: PopupTabId;
+  label: string;
+  icon: string;
+  badge?: number;
+}
+
+// ============================================
+// Favorites/Quick Access Types
+// ============================================
+
+/** User favorites storage */
+export interface UserFavorites {
+  pinnedTools: ToolId[];
+  recentTools: Array<{ toolId: ToolId; timestamp: number }>;
+}

@@ -73,14 +73,16 @@ export async function getToolState(toolId: ToolId, tabId?: number): Promise<Tool
     const storage: ToolStatesStorage = result[storageKey] || { global: {}, tabs: {} };
 
     // Check for tab-specific state first
-    if (tabId !== undefined && storage.tabs[tabId]?.[toolId]) {
-      const { enabled, settings } = storage.tabs[tabId][toolId]!;
+    const tabState = tabId !== undefined ? storage.tabs[tabId]?.[toolId] : undefined;
+    if (tabState) {
+      const { enabled, settings } = tabState;
       return { enabled, settings };
     }
 
     // Fall back to global state
-    if (storage.global[toolId]) {
-      const { enabled, settings } = storage.global[toolId]!;
+    const globalState = storage.global[toolId];
+    if (globalState) {
+      const { enabled, settings } = globalState;
       return { enabled, settings };
     }
 

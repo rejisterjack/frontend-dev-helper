@@ -8,10 +8,6 @@ import {
   getCommandById,
   searchCommands,
 } from '../../src/components/CommandPalette/commands';
-import { ToolType } from '../../src/types';
-
-// Ensure ToolType is used (for future test expansion)
-void ToolType;
 
 describe('Command Palette', () => {
   describe('getAllCommands', () => {
@@ -82,8 +78,8 @@ describe('Command Palette', () => {
       const storageCmd = getCommandById('toggle-storage-inspector');
       expect(storageCmd).toBeDefined();
 
-      const aiCmd = getCommandById('toggle-ai-suggestions');
-      expect(aiCmd).toBeDefined();
+      const smartCmd = getCommandById('toggle-smart-suggestions');
+      expect(smartCmd).toBeDefined();
     });
   });
 

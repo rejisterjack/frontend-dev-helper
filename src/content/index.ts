@@ -13,71 +13,30 @@
  * - Grid overlay
  */
 
+import type { ContentScriptState } from '../types';
 import { logger } from '../utils/logger';
-import type { GridOverlay } from './grid-overlay';
 import { registry } from './handlers';
-import type { Inspector } from './inspector';
-import type { MeasureTool } from './measure-tool';
 
 // ============================================
-// State Management
+// State Management (Unified Naming Convention)
 // ============================================
-
-interface ContentScriptState {
-  inspector: Inspector | null;
-  measureTool: MeasureTool | null;
-  gridOverlay: GridOverlay | null;
-  isInspectorActive: boolean;
-  isColorPickerActive: boolean;
-  isMeasureToolActive: boolean;
-  isGridVisible: boolean;
-  isScreenshotStudioActive: boolean;
-  // Tool states
-  domOutlinerEnabled: boolean;
-  spacingVisualizerEnabled: boolean;
-  fontInspectorEnabled: boolean;
-  pixelRulerEnabled: boolean;
-  breakpointOverlayEnabled: boolean;
-  responsivePreviewEnabled: boolean;
-  // Additional tool states for handler registry
-  isCssInspectorActive: boolean;
-  isCssEditorActive: boolean;
-  isContrastCheckerActive: boolean;
-  isLayoutVisualizerActive: boolean;
-  isZIndexVisualizerActive: boolean;
-  isTechDetectorActive: boolean;
-  isAccessibilityAuditActive: boolean;
-  isNetworkAnalyzerActive: boolean;
-  isSiteReportActive: boolean;
-  isScreenshotStudioHandlerActive: boolean;
-  isAnimationInspectorActive: boolean;
-  isResponsivePreviewActive: boolean;
-  isDesignSystemValidatorActive: boolean;
-  isFlameGraphActive: boolean;
-  isFocusDebuggerActive: boolean;
-  isFormDebuggerActive: boolean;
-  isCommandPaletteActive: boolean;
-  isStorageInspectorActive: boolean;
-  isComponentTreeActive: boolean;
-  isVisualRegressionActive: boolean;
-  isAiSuggestionsActive: boolean;
-}
 
 const state: ContentScriptState = {
   inspector: null,
   measureTool: null,
   gridOverlay: null,
+  // Unified is{ToolName}Active naming convention
   isInspectorActive: false,
   isColorPickerActive: false,
   isMeasureToolActive: false,
   isGridVisible: false,
   isScreenshotStudioActive: false,
-  domOutlinerEnabled: false,
-  spacingVisualizerEnabled: false,
-  fontInspectorEnabled: false,
-  pixelRulerEnabled: false,
-  breakpointOverlayEnabled: false,
-  responsivePreviewEnabled: false,
+  isDomOutlinerActive: false,
+  isSpacingVisualizerActive: false,
+  isFontInspectorActive: false,
+  isPixelRulerActive: false,
+  isBreakpointOverlayActive: false,
+  isResponsivePreviewActive: false,
   isCssInspectorActive: false,
   isCssEditorActive: false,
   isContrastCheckerActive: false,
@@ -87,9 +46,7 @@ const state: ContentScriptState = {
   isAccessibilityAuditActive: false,
   isNetworkAnalyzerActive: false,
   isSiteReportActive: false,
-  isScreenshotStudioHandlerActive: false,
   isAnimationInspectorActive: false,
-  isResponsivePreviewActive: false,
   isDesignSystemValidatorActive: false,
   isFlameGraphActive: false,
   isFocusDebuggerActive: false,
@@ -99,15 +56,35 @@ const state: ContentScriptState = {
   isComponentTreeActive: false,
   isVisualRegressionActive: false,
   isAiSuggestionsActive: false,
+  // Advanced tools
+  isCssVariableInspectorActive: false,
+  isSmartElementPickerActive: false,
+  isSessionRecorderActive: false,
+  isPerformanceBudgetActive: false,
+  isFrameworkDevtoolsActive: false,
 };
 
 // ============================================
-// Message Handler
+// Unified Message Handler
 // ============================================
 
 chrome.runtime.onMessage.addListener(
   (message: { type: string; payload?: Record<string, unknown> }, _sender, sendResponse) => {
     logger.log('[Content] Received message:', message.type);
+
+    // Handle TOOL_STATE_CHANGED for real-time sync
+    if (message.type === 'TOOL_STATE_CHANGED') {
+      const { toolId, enabled } = message.payload || {};
+      if (toolId && typeof enabled === 'boolean') {
+        const stateKey = getStateKeyForTool(toolId as string);
+        if (stateKey) {
+          (state as unknown as Record<string, boolean>)[stateKey] = enabled;
+          logger.log(`[Content] Tool state updated via broadcast: ${toolId} = ${enabled}`);
+        }
+      }
+      sendResponse({ success: true });
+      return false;
+    }
 
     const handler = registry[message.type];
     if (!handler) {
@@ -127,8 +104,156 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
+/**
+ * Map toolId to the corresponding state key
+ */
+function getStateKeyForTool(toolId: string): keyof ContentScriptState | null {
+  const keyMap: Record<string, keyof ContentScriptState> = {
+    domOutliner: 'isDomOutlinerActive',
+    spacingVisualizer: 'isSpacingVisualizerActive',
+    fontInspector: 'isFontInspectorActive',
+    colorPicker: 'isColorPickerActive',
+    pixelRuler: 'isPixelRulerActive',
+    responsiveBreakpoint: 'isBreakpointOverlayActive',
+    responsivePreview: 'isResponsivePreviewActive',
+    cssInspector: 'isCssInspectorActive',
+    cssEditor: 'isCssEditorActive',
+    cssScanner: 'isCssEditorActive',
+    contrastChecker: 'isContrastCheckerActive',
+    layoutVisualizer: 'isLayoutVisualizerActive',
+    zIndexVisualizer: 'isZIndexVisualizerActive',
+    techDetector: 'isTechDetectorActive',
+    accessibilityAudit: 'isAccessibilityAuditActive',
+    networkAnalyzer: 'isNetworkAnalyzerActive',
+    siteReport: 'isSiteReportActive',
+    screenshotStudio: 'isScreenshotStudioActive',
+    animationInspector: 'isAnimationInspectorActive',
+    designSystemValidator: 'isDesignSystemValidatorActive',
+    flameGraph: 'isFlameGraphActive',
+    focusDebugger: 'isFocusDebuggerActive',
+    formDebugger: 'isFormDebuggerActive',
+    commandPalette: 'isCommandPaletteActive',
+    storageInspector: 'isStorageInspectorActive',
+    componentTree: 'isComponentTreeActive',
+    visualRegression: 'isVisualRegressionActive',
+    smartSuggestions: 'isSmartSuggestionsActive',
+    elementInspector: 'isInspectorActive',
+    measurementTool: 'isMeasureToolActive',
+    gridOverlay: 'isGridVisible',
+    // Advanced tools
+    cssVariableInspector: 'isCssVariableInspectorActive',
+    smartElementPicker: 'isSmartElementPickerActive',
+    sessionRecorder: 'isSessionRecorderActive',
+    performanceBudget: 'isPerformanceBudgetActive',
+    frameworkDevtools: 'isFrameworkDevtoolsActive',
+    // Beast Mode: Next-Gen Features
+    containerQueryInspector: 'isContainerQueryInspectorActive',
+    viewTransitionsDebugger: 'isViewTransitionsDebuggerActive',
+    scrollAnimationsDebugger: 'isScrollAnimationsDebuggerActive',
+  };
+  return keyMap[toolId] || null;
+}
+
+// ============================================
+// In-App Hotkeys
+// ============================================
+
+/**
+ * Setup in-app hotkey listeners
+ * These are custom shortcuts configured in Options > In-App Hotkeys
+ */
+function setupInAppHotkeys(): void {
+  let inAppShortcuts: Record<string, string> = {};
+
+  // Load shortcuts from storage
+  chrome.storage.local.get('fdh_settings').then((result) => {
+    const settings = result.fdh_settings;
+    if (settings?.shortcuts) {
+      inAppShortcuts = settings.shortcuts;
+    }
+  });
+
+  // Listen for storage changes to update shortcuts
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.fdh_settings?.newValue?.shortcuts) {
+      inAppShortcuts = changes.fdh_settings.newValue.shortcuts;
+    }
+  });
+
+  // Global keydown listener for in-app hotkeys
+  document.addEventListener('keydown', (e) => {
+    // Don't trigger if user is typing in an input
+    if (e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement)?.isContentEditable) {
+      return;
+    }
+
+    const keys: string[] = [];
+    if (e.ctrlKey) keys.push('Ctrl');
+    if (e.altKey) keys.push('Alt');
+    if (e.shiftKey) keys.push('Shift');
+    if (e.metaKey) keys.push('Command');
+    if (e.key && !['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+      keys.push(e.key.toUpperCase());
+    }
+
+    const pressedCombo = keys.join('+');
+
+    // Check against configured shortcuts
+    for (const [action, shortcut] of Object.entries(inAppShortcuts)) {
+      if (shortcut === pressedCombo) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleInAppHotkey(action);
+        break;
+      }
+    }
+  });
+}
+
+/**
+ * Handle in-app hotkey actions
+ */
+function handleInAppHotkey(action: string): void {
+  logger.log('[Content] In-app hotkey triggered:', action);
+
+  switch (action) {
+    case 'openPopup':
+      // Send message to background to open popup
+      chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
+      break;
+
+    case 'toggleInspector':
+      // Toggle element inspector
+      chrome.runtime.sendMessage({
+        type: 'TOGGLE_TOOL',
+        payload: { toolId: 'elementInspector' }
+      });
+      break;
+
+    case 'takeScreenshot':
+      // Trigger screenshot
+      chrome.runtime.sendMessage({
+        type: 'SCREENSHOT_STUDIO_ENABLE'
+      });
+      break;
+
+    case 'openCommandPalette':
+      // Open command palette
+      chrome.runtime.sendMessage({
+        type: 'COMMAND_PALETTE_ENABLE'
+      });
+      break;
+
+    default:
+      logger.warn('[Content] Unknown in-app hotkey action:', action);
+  }
+}
+
 // ============================================
 // Initialization
 // ============================================
 
+setupInAppHotkeys();
 logger.log('[Content] FrontendDevHelper content script initialized');

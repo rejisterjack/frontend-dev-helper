@@ -7,8 +7,8 @@ import type React from 'react';
 import type { FeatureToggles } from '@/types';
 
 interface InspectorTabProps {
-  features: FeatureToggles | null;
-  onToggleFeature: (feature: keyof FeatureToggles) => void;
+  features?: FeatureToggles | null;
+  onToggleFeature?: (feature: keyof FeatureToggles) => void;
 }
 
 export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFeature }) => {
@@ -63,28 +63,28 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
           label="Element Inspector"
           description="Hover to inspect elements"
           enabled={features?.elementInspector ?? false}
-          onChange={() => onToggleFeature('elementInspector' as keyof FeatureToggles)}
+          onChange={() => onToggleFeature?.('elementInspector' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="CSS Scanner"
           description="Scan and highlight CSS issues"
           enabled={features?.cssScanner ?? false}
-          onChange={() => onToggleFeature('cssScanner' as keyof FeatureToggles)}
+          onChange={() => onToggleFeature?.('cssScanner' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Grid Overlay"
           description="Visualize grid and box model"
           enabled={features?.gridOverlay ?? false}
-          onChange={() => onToggleFeature('gridOverlay' as keyof FeatureToggles)}
+          onChange={() => onToggleFeature?.('gridOverlay' as keyof FeatureToggles)}
         />
 
         <FeatureToggle
           label="Measure Tool"
           description="Measure distances on the page"
           enabled={features?.measurementTool ?? false}
-          onChange={() => onToggleFeature('measurementTool' as keyof FeatureToggles)}
+          onChange={() => onToggleFeature?.('measurementTool' as keyof FeatureToggles)}
         />
       </div>
 

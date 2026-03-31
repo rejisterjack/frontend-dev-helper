@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: {
         popup: resolve(__dirname, 'index.html'),
+        dashboard: resolve(__dirname, 'dashboard.html'),
       },
       output: {
         entryFileNames: 'assets/[name].js',

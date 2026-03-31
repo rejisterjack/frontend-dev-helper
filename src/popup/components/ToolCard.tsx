@@ -1,15 +1,21 @@
+/**
+ * FrontendDevHelper - Tool Card Component
+ *
+ * Reusable card component for each tool in the popup.
+ * Displays tool info, keyboard shortcut, and controls.
+ */
+
 import type React from 'react';
-import type { ToolType } from '../../types';
+import type { ToolId } from '../../constants';
 import { ToggleSwitch } from './ToggleSwitch';
 
 // ============================================
 // Tool Card Component
-// Reusable card component for each tool in the popup
 // ============================================
 
 interface ToolCardProps {
-  /** Tool type identifier */
-  type: ToolType;
+  /** Tool ID identifier */
+  toolId: ToolId;
   /** Tool display name */
   name: string;
   /** Brief description of what the tool does */
@@ -22,6 +28,8 @@ interface ToolCardProps {
   hasSettings: boolean;
   /** Accent color for the tool icon */
   color: string;
+  /** Keyboard shortcut if available */
+  shortcut?: string;
   /** Callback when toggle is changed */
   onToggle: (enabled: boolean) => void;
   /** Callback when settings button is clicked */
@@ -35,13 +43,14 @@ interface ToolCardProps {
 }
 
 export const ToolCard: React.FC<ToolCardProps> = ({
-  type,
+  toolId,
   name,
   description,
   icon,
   enabled,
   hasSettings,
   color,
+  shortcut,
   onToggle,
   onSettingsClick,
   onView,
@@ -51,7 +60,11 @@ export const ToolCard: React.FC<ToolCardProps> = ({
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't toggle if clicking on the toggle switch or settings button
     const target = e.target as HTMLElement;
-    if (target.closest('.toggle-switch') || target.closest('.settings-btn')) {
+    if (
+      target.closest('.toggle-switch') ||
+      target.closest('.settings-btn') ||
+      target.closest('.view-btn')
+    ) {
       return;
     }
     onToggle(!enabled);
@@ -83,7 +96,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
       role="button"
       tabIndex={0}
       aria-pressed={enabled}
-      data-tool={type}
+      data-tool={toolId}
     >
       {/* Active Indicator */}
       {enabled && (
@@ -104,7 +117,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
 
       {/* Tool Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h3
             className={`
             font-semibold text-sm truncate
@@ -116,8 +129,16 @@ export const ToolCard: React.FC<ToolCardProps> = ({
           {enabled && (
             <span className="flex-shrink-0 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           )}
+          {/* Keyboard Shortcut Badge */}
+          {shortcut && (
+            <kbd className="hidden group-hover:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-700/50 rounded border border-slate-600/50">
+              {shortcut}
+            </kbd>
+          )}
         </div>
         <p className="text-xs text-slate-400 truncate mt-0.5">{description}</p>
+        {/* Show shortcut below on mobile/hover */}
+        {shortcut && <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{shortcut}</p>}
       </div>
 
       {/* Controls */}
