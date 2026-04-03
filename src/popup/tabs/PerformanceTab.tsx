@@ -196,7 +196,8 @@ export const PerformanceTab: React.FC = () => {
     );
   }
 
-  const { webVitals, navigation, resources, memory, imageOptimizations, renderBlocking } = metrics;
+  const { webVitals, navigation, resources, memory, imageOptimizations, renderBlocking, longTasks } =
+    metrics;
 
   return (
     <div className="space-y-4 p-4">
@@ -237,10 +238,18 @@ export const PerformanceTab: React.FC = () => {
 
       <div className="rounded-lg border border-dev-border bg-dev-surface/50 px-3 py-2 text-[11px] text-dev-text leading-snug">
         <span className="font-semibold text-dev-muted">Performance summary · </span>
-        LCP {webVitals.lcp != null ? `${Math.round(webVitals.lcp)}ms` : '—'} · CLS{' '}
+        LCP {webVitals.lcp != null ? `${Math.round(webVitals.lcp)}ms` : '—'} · FCP{' '}
+        {webVitals.fcp != null ? `${Math.round(webVitals.fcp)}ms` : '—'} · TTFB{' '}
+        {webVitals.ttfb != null ? `${Math.round(webVitals.ttfb)}ms` : '—'} · CLS{' '}
         {webVitals.cls != null ? webVitals.cls.toFixed(3) : '—'} · INP{' '}
         {webVitals.inp != null ? `${Math.round(webVitals.inp)}ms` : '—'} · Requests{' '}
         {resources.totalRequests}
+        {renderBlocking?.length ? ` · Render-blocking ${renderBlocking.length}` : ''}
+        {imageOptimizations?.length ? ` · Image hints ${imageOptimizations.length}` : ''}
+        {longTasks?.length ? ` · Long tasks ${longTasks.length}` : ''}
+        <span className="block mt-1 text-[10px] text-dev-muted">
+          For JS profiling, enable the Flame Graph tool on the page from the popup.
+        </span>
       </div>
 
       {/* Core Web Vitals Section */}

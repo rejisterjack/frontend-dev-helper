@@ -81,33 +81,11 @@ test.describe('Content Script Tools', () => {
   });
 
   test('DOM Outliner injects outline styles', async ({ page }) => {
-    // Simulate enabling the DOM Outliner via content script message interface
-    await page.evaluate(() => {
-      // Dispatch a custom event that the content script listens for
-      window.postMessage({
-        type: 'TOGGLE_TOOL',
-        toolId: 'domOutliner',
-        enabled: true,
-      }, '*');
+    await page.evaluate(async () => {
+      await chrome.runtime.sendMessage({ type: 'PESTICIDE_ENABLE' });
     });
-    
-    // Wait a bit for the content script to process
-    await page.waitForTimeout(100);
-    
-    // Check if outline styles are injected (the content script adds a specific class or style)
-    const hasOutlineStyles = await page.evaluate(() => {
-      // Check for our extension's outline styles
-      const style = document.getElementById('fdh-dom-outliner-style');
-      const hasOutlineClass = document.body.classList.contains('fdh-dom-outliner-active');
-      return style !== null || hasOutlineClass;
-    });
-    
-    // Note: This test will only pass if the extension is loaded in the browser
-    // In CI, we may need to mock the content script injection
-    if (!hasOutlineStyles) {
-      test.skip('Content script not injected - skipping');
-    }
-    
-    expect(hasOutlineStyles).toBeTruthy();
+    await page.waitForTimeout(400);
+    const hasOutlineStyles = await page.evaluate(() => document.getElementById('pesticide-outlines') !== null);
+    expect(hasOutlineStyles).toBe(true);
   });
 });

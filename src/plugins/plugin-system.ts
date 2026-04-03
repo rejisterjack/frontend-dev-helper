@@ -3,7 +3,8 @@
  *
  * In-repo API types and registry helpers for a possible future third-party tool story.
  * This module is not wired into the popup, background, or manifest yet—shipping tools use
- * the standard handler registry instead.
+ * the standard handler registry instead. Do not advertise a public plugin API in store listings;
+ * see `ARCHITECTURE.md` (third-party plugin surface).
  */
 
 import { logger } from '@/utils/logger';

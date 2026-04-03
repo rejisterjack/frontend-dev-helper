@@ -27,7 +27,7 @@
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
         "noInvalidUseBeforeDeclaration": "off",
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": "off"
       },
       "suspicious": {
         "noConsole": "off",

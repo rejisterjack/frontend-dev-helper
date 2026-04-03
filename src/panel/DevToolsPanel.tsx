@@ -257,6 +257,22 @@ export const DevToolsPanel: React.FC = () => {
     }
   }, []);
 
+  const copyComputedSnippet = useCallback(() => {
+    if (!selectedElement || Object.keys(computedStyles).length === 0) return;
+    const raw =
+      selectedElement.selector ||
+      `${selectedElement.tag.toLowerCase()}${selectedElement.id ? `#${selectedElement.id}` : ''}`;
+    const safeComment = raw.replace(/\*\//g, '').slice(0, 180);
+    const lines = Object.entries(computedStyles)
+      .filter(
+        ([, value]) => value && value !== 'none' && value !== '0px' && value !== 'normal'
+      )
+      .map(([prop, value]) => `  ${prop}: ${value};`)
+      .join('\n');
+    const snippet = `/* Computed styles — ${safeComment} */\n${raw} {\n${lines}\n}`;
+    void navigator.clipboard.writeText(snippet);
+  }, [computedStyles, selectedElement]);
+
   const copyElementDescriptor = useCallback(() => {
     chrome.devtools.inspectedWindow.eval(
       `(() => {
@@ -406,6 +422,14 @@ export const DevToolsPanel: React.FC = () => {
               >
                 Copy $0 descriptor
               </button>
+              <span className="text-slate-600">·</span>
+              <button
+                type="button"
+                onClick={copyComputedSnippet}
+                className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+              >
+                Copy computed CSS block
+              </button>
             </div>
             <p className="mt-2 text-[10px] text-slate-500">
               Popup tools (CSS Inspector, Layout, Contrast, etc.) use the same page context as DevTools—toggle
@@ -439,7 +463,9 @@ export const DevToolsPanel: React.FC = () => {
                 inlineStyles={selectedElement.inlineStyles || {}}
               />
             )}
-            {activeTab === 'computed' && <ComputedTab computedStyles={computedStyles} />}
+            {activeTab === 'computed' && (
+              <ComputedTab computedStyles={computedStyles} onCopyAll={copyComputedSnippet} />
+            )}
             {activeTab === 'layout' && boxModel && <LayoutTab boxModel={boxModel} />}
             {activeTab === 'accessibility' && (
               <AccessibilityTab aria={selectedElement.aria || {}} tagName={selectedElement.tag} />
@@ -507,10 +533,20 @@ const StylesTab: React.FC<{
 
 const ComputedTab: React.FC<{
   computedStyles: ComputedStyles;
-}> = ({ computedStyles }) => (
+  onCopyAll: () => void;
+}> = ({ computedStyles, onCopyAll }) => (
   <div>
-    <div className="mb-2 text-xs font-medium text-slate-500">
-      Computed Styles ({Object.keys(computedStyles).length} properties)
+    <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="text-xs font-medium text-slate-500">
+        Computed Styles ({Object.keys(computedStyles).length} properties)
+      </div>
+      <button
+        type="button"
+        onClick={onCopyAll}
+        className="rounded bg-slate-700 px-2 py-1 text-[10px] text-slate-200 hover:bg-slate-600"
+      >
+        Copy all as CSS block
+      </button>
     </div>
     <div className="space-y-1 max-h-[400px] overflow-y-auto">
       {Object.entries(computedStyles)

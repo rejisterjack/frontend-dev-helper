@@ -467,10 +467,22 @@ const ResponsiveTab: React.FC<{
     return (
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-6 border-b border-slate-200">
-          <button onClick={() => onSelect(null)} className="text-blue-600 hover:underline mb-4">
-            ← Back to reports
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <button type="button" onClick={() => onSelect(null)} className="text-blue-600 hover:underline">
+              ← Back to reports
+            </button>
+            <button
+              type="button"
+              onClick={() => onExport(selected)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export report
+            </button>
+          </div>
           <h2 className="text-xl font-bold text-slate-900">{selected.title}</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Exports include URL, breakpoints, and issue summaries for tickets or CI notes.
+          </p>
           <div className="flex gap-4 mt-4 text-sm text-slate-500">
             <span>URL: {selected.url}</span>
             <span>•</span>

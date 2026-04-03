@@ -34,15 +34,15 @@ This directory contains the monetization infrastructure for FrontendDevHelper.
 - Grace period handling
 - Feature gating
 
-Keep **marketing copy, store listings, and in-extension messaging** aligned with `src/background/licensing.ts` (plan IDs, quotas, and Pro/Team gates). If the server enables a feature the extension still treats as Pro-only, users will see confusing errors.
+Keep **marketing copy, store listings, and in-extension messaging** aligned with **`src/background/licensing.ts`** (authoritative `FEATURE_MATRIX`, plan IDs, and Pro/Team gates). If checkout or webhooks grant access the extension does not implement, users will see confusing errors.
 
-## Pricing Tiers
+## Pricing Tiers (illustrative — verify against Stripe products)
 
-| Tier | Price | Features |
-|------|-------|----------|
-| Free | $0 | Core tools, 5 AI analyses/day |
-| Pro | $4.99/mo | Unlimited AI, priority support, session sharing |
-| Team | $19.99/mo | Everything + team collaboration, admin panel, SSO |
+| Tier | Price | Features (must match extension `FEATURE_MATRIX`) |
+|------|-------|--------------------------------------------------|
+| Free | $0 | Core dev tools; **5 AI analyses per day** (`ai_analysis`: free = 5) |
+| Pro | $4.99/mo | Unlimited AI; session recording, visual regression, PDF export; email support |
+| Team | $19.99/mo | Pro + team collaboration, API access, priority support |
 
 ## API Endpoints
 

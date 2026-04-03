@@ -5,6 +5,9 @@
  * - Tracks usage quotas for free users
  * - Validates license keys
  * - Manages feature access control
+ *
+ * **Source of truth for feature gates and quotas.** Keep store copy and `monetization/README.md`
+ * (pricing table, Stripe tiers) aligned with `FEATURE_MATRIX` / `ai_analysis` limits here.
  */
 
 import { logger } from '@/utils/logger';

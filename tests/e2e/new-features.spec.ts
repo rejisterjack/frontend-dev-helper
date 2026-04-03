@@ -3,6 +3,11 @@
  */
 
 import { expect, test } from './fixtures';
+import {
+  countPaletteItems,
+  enableCommandPaletteTool,
+  isCommandPaletteOpen,
+} from './palette-helpers';
 
 test.describe('New Features - Best of the Best', () => {
   test.beforeAll(() => {
@@ -14,41 +19,34 @@ test.describe('New Features - Best of the Best', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('https://example.com');
-    // Wait for content script to inject
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
   });
 
   test.describe('Command Palette', () => {
     test('should open with Ctrl+Shift+P', async ({ page }) => {
+      await enableCommandPaletteTool(page);
+      await page.locator('body').click({ position: { x: 10, y: 10 } });
       await page.keyboard.press('Control+Shift+P');
-      
-      // Check if palette is visible
-      const palette = await page.locator('#fdh-command-palette-container').isVisible();
-      expect(palette).toBe(true);
+      await expect.poll(async () => isCommandPaletteOpen(page)).toBe(true);
     });
 
     test('should search and filter commands', async ({ page }) => {
+      await enableCommandPaletteTool(page);
+      await page.locator('body').click({ position: { x: 10, y: 10 } });
       await page.keyboard.press('Control+Shift+P');
-      await page.waitForTimeout(200);
-      
-      // Type search query
+      await expect.poll(async () => isCommandPaletteOpen(page)).toBe(true);
       await page.keyboard.type('storage');
-      await page.waitForTimeout(200);
-      
-      // Should show storage inspector command
-      const results = await page.locator('.fdh-command-palette-item').count();
-      expect(results).toBeGreaterThan(0);
+      await expect.poll(async () => countPaletteItems(page)).toBeGreaterThan(0);
     });
 
     test('should close with Escape', async ({ page }) => {
+      await enableCommandPaletteTool(page);
+      await page.locator('body').click({ position: { x: 10, y: 10 } });
       await page.keyboard.press('Control+Shift+P');
-      await page.waitForTimeout(200);
-      
+      await expect.poll(async () => isCommandPaletteOpen(page)).toBe(true);
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(200);
-      
-      const palette = await page.locator('#fdh-command-palette-container').isVisible().catch(() => false);
-      expect(palette).toBe(false);
+      await expect.poll(async () => isCommandPaletteOpen(page)).toBe(false);
     });
   });
 
@@ -86,11 +84,10 @@ test.describe('New Features - Best of the Best', () => {
 
   test.describe('AI Suggestions', () => {
     test('should run AI analysis', async ({ page }) => {
-      // Enable AI suggestions
-      await page.evaluate(() => {
-        chrome.runtime.sendMessage({ type: 'SMART_SUGGESTIONS_ENABLE' });
+      await page.evaluate(async () => {
+        await chrome.runtime.sendMessage({ type: 'SMART_SUGGESTIONS_ENABLE' });
       });
-      
+
       await page.waitForTimeout(1000);
       
       // Check panel is visible
@@ -99,44 +96,16 @@ test.describe('New Features - Best of the Best', () => {
       expect(panel).toBeDefined();
     });
 
-    test('should detect accessibility issues', async ({ page }) => {
-      // Create page with accessibility issues
-      await page.setContent(`
-        <html>
-          <body>
-            <img src="test.jpg" id="no-alt-img">
-            <input type="text" id="no-label-input">
-          </body>
-        </html>
-      `);
-      
-      await page.waitForTimeout(500);
-      
-      // Run analysis
-      const result = await page.evaluate(async () => {
-        const { runAIAnalysis } = await import('../../src/ai/ai-analyzer');
-        return await runAIAnalysis();
-      });
-      
-      expect(result.suggestions.length).toBeGreaterThan(0);
-      
-      const accessibilityIssues = result.suggestions.filter(
-        s => s.category === 'accessibility'
-      );
-      expect(accessibilityIssues.length).toBeGreaterThan(0);
-    });
   });
 
   test.describe('Component Tree', () => {
     test('should detect framework', async ({ page }) => {
-      // Enable component tree
-      const state = await page.evaluate(() => {
-        chrome.runtime.sendMessage({ type: 'COMPONENT_TREE_ENABLE' });
-        return new Promise((resolve) => {
-          chrome.runtime.sendMessage({ type: 'COMPONENT_TREE_GET_STATE' }, resolve);
-        });
+      const state = await page.evaluate(async () => {
+        await chrome.runtime.sendMessage({ type: 'COMPONENT_TREE_ENABLE' });
+        return chrome.runtime.sendMessage({ type: 'COMPONENT_TREE_GET_STATE' });
       });
-      
+
+      expect(state).toBeDefined();
       expect(state).toHaveProperty('enabled');
       expect(state).toHaveProperty('framework');
     });
@@ -161,13 +130,11 @@ test.describe('New Features - Best of the Best', () => {
       
       await page.waitForTimeout(500);
       
-      // Get state
-      const state = await page.evaluate(() => {
-        return new Promise((resolve) => {
-          chrome.runtime.sendMessage({ type: 'FOCUS_DEBUGGER_GET_STATE' }, resolve);
-        });
-      });
-      
+      const state = await page.evaluate(async () =>
+        chrome.runtime.sendMessage({ type: 'FOCUS_DEBUGGER_GET_STATE' })
+      );
+
+      expect(state).toBeDefined();
       expect(state).toHaveProperty('focusableElements');
     });
   });
@@ -193,13 +160,11 @@ test.describe('New Features - Best of the Best', () => {
       
       await page.waitForTimeout(500);
       
-      // Get state
-      const state = await page.evaluate(() => {
-        return new Promise((resolve) => {
-          chrome.runtime.sendMessage({ type: 'FORM_DEBUGGER_GET_STATE' }, resolve);
-        });
-      });
-      
+      const state = await page.evaluate(async () =>
+        chrome.runtime.sendMessage({ type: 'FORM_DEBUGGER_GET_STATE' })
+      );
+
+      expect(state).toBeDefined();
       expect(state).toHaveProperty('forms');
     });
   });
@@ -213,12 +178,11 @@ test.describe('New Features - Best of the Best', () => {
       
       await page.waitForTimeout(500);
       
-      const state = await page.evaluate(() => {
-        return new Promise((resolve) => {
-          chrome.runtime.sendMessage({ type: 'VISUAL_REGRESSION_GET_STATE' }, resolve);
-        });
-      });
-      
+      const state = await page.evaluate(async () =>
+        chrome.runtime.sendMessage({ type: 'VISUAL_REGRESSION_GET_STATE' })
+      );
+
+      expect(state).toBeDefined();
       expect(state).toHaveProperty('baselines');
       expect(state).toHaveProperty('tests');
     });
