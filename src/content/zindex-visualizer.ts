@@ -1,4 +1,5 @@
 import { escapeHtml } from '@/utils/sanitize';
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '../utils/logger';
 
 /**
@@ -94,9 +95,10 @@ function createsStackingContext(element: HTMLElement): { isContext: boolean; rea
  */
 function collectStackingElements(): StackingElement[] {
   const elements: StackingElement[] = [];
-  const allElements = document.querySelectorAll('*');
 
-  allElements.forEach((el) => {
+  walkElementsEfficiently(
+    document,
+    (el) => {
     if (el instanceof HTMLElement) {
       const computed = window.getComputedStyle(el);
       const position = computed.position;
@@ -117,7 +119,9 @@ function collectStackingElements(): StackingElement[] {
         });
       }
     }
-  });
+    },
+    (msg) => logger.log(msg)
+  );
 
   // Sort by z-index (descending)
   return elements.sort((a, b) => b.zIndex - a.zIndex);

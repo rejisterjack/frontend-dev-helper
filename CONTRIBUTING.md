@@ -7,7 +7,7 @@ Thank you for your interest in contributing to FrontendDevHelper! This document 
 ### Prerequisites
 
 - Node.js 18+
-- pnpm 8+ (preferred package manager)
+- pnpm 10+ (see `package.json` `packageManager`; this repo uses a pinned version)
 - Chrome or Firefox browser
 
 ### Installation

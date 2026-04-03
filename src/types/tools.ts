@@ -194,7 +194,7 @@ export type ToolSettings =
   | PixelRulerSettings
   | ResponsiveBreakpointSettings
   | ElementInspectorSettings
-  | AISuggestionsSettings
+  | SmartSuggestionsSettings
   | CSSInspectorSettings
   | LayoutVisualizerSettings
   | ZIndexVisualizerSettings

@@ -4,6 +4,7 @@
  * Controls animation playback, speed, highlighting, and progress updates.
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 import type { AnimationInfo } from './types';
 
@@ -88,14 +89,17 @@ export function setPlaybackSpeed(speed: number): void {
   }
 
   // Update Web Animations API speed
-  const allElements = document.querySelectorAll('*');
-  for (const el of allElements) {
-    const webAnimations =
-      (el as Element & { getAnimations?: () => Animation[] }).getAnimations?.() || [];
-    for (const anim of webAnimations) {
-      anim.playbackRate = speed;
-    }
-  }
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      const webAnimations =
+        (el as Element & { getAnimations?: () => Animation[] }).getAnimations?.() || [];
+      for (const anim of webAnimations) {
+        anim.playbackRate = speed;
+      }
+    },
+    (msg) => logger.log(msg)
+  );
 
   onStateChange?.();
 }
@@ -114,16 +118,19 @@ export function pauseAllAnimations(): void {
   }
 
   // Pause Web Animations API animations
-  const allElements = document.querySelectorAll('*');
-  for (const el of allElements) {
-    const webAnimations =
-      (el as Element & { getAnimations?: () => Animation[] }).getAnimations?.() || [];
-    for (const anim of webAnimations) {
-      if (anim.playState === 'running') {
-        anim.pause();
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      const webAnimations =
+        (el as Element & { getAnimations?: () => Animation[] }).getAnimations?.() || [];
+      for (const anim of webAnimations) {
+        if (anim.playState === 'running') {
+          anim.pause();
+        }
       }
-    }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   isPausedRef = true;
   onStateChange?.();
@@ -143,16 +150,19 @@ export function playAllAnimations(): void {
   }
 
   // Play Web Animations API animations
-  const allElements = document.querySelectorAll('*');
-  for (const el of allElements) {
-    const webAnimations =
-      (el as Element & { getAnimations?: () => Animation[] }).getAnimations?.() || [];
-    for (const anim of webAnimations) {
-      if (anim.playState === 'paused') {
-        anim.play();
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      const webAnimations =
+        (el as Element & { getAnimations?: () => Animation[] }).getAnimations?.() || [];
+      for (const anim of webAnimations) {
+        if (anim.playState === 'paused') {
+          anim.play();
+        }
       }
-    }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   isPausedRef = false;
   onStateChange?.();

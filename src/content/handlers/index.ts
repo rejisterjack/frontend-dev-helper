@@ -591,6 +591,13 @@ export const registry: Record<string, ContentHandler> = {
     componentTree.disable();
     visualRegression.disable();
     aiSuggestions.disable();
+    cssVariableInspector.disable();
+    smartElementPicker.disable();
+    performanceBudget.disable();
+    frameworkDevtools.disable();
+    containerQueryInspector.disable();
+    viewTransitionsDebugger.disable();
+    scrollAnimationsDebugger.disable();
 
     // Update state flags (unified naming convention)
     state.isDomOutlinerActive = false;
@@ -619,7 +626,18 @@ export const registry: Record<string, ContentHandler> = {
     state.isStorageInspectorActive = false;
     state.isComponentTreeActive = false;
     state.isVisualRegressionActive = false;
-    state.isAiSuggestionsActive = false;
+    state.isSmartSuggestionsActive = false;
+    state.isCssVariableInspectorActive = false;
+    state.isSmartElementPickerActive = false;
+    state.isSessionRecorderActive = false;
+    state.isPerformanceBudgetActive = false;
+    state.isFrameworkDevtoolsActive = false;
+    state.isContainerQueryInspectorActive = false;
+    state.isViewTransitionsDebuggerActive = false;
+    state.isScrollAnimationsDebuggerActive = false;
+    state.isInspectorActive = false;
+    state.isMeasureToolActive = false;
+    state.isGridVisible = false;
 
     sendResponse({ success: true });
   },

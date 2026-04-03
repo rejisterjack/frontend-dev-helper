@@ -25,6 +25,8 @@ export default defineConfig({
           text: 'Advanced',
           items: [
             { text: 'Beast Mode Features', link: '/guide/beast-mode' },
+            { text: 'Large DOM, shadow DOM & iframes', link: '/guide/large-dom-shadow-iframes' },
+            { text: 'Dogfooding checklist', link: '/guide/dogfooding-checklist' },
           ]
         }
       ],

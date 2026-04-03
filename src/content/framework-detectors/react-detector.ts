@@ -6,6 +6,7 @@
  */
 
 import type { ComponentNode, FrameworkType } from '@/types';
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 
 // ============================================
@@ -138,18 +139,19 @@ export function extractComponentTree(): ComponentNode | null {
 function findReactRoots(): HTMLElement[] {
   const roots: HTMLElement[] = [];
 
-  // Look for elements with React internal properties
-  const allElements = document.querySelectorAll('*');
-  for (const el of Array.from(allElements)) {
-    // Check for React internal property
-    const keys = Object.keys(el);
-    for (const key of keys) {
-      if (key.startsWith('__reactContainer$') || key.startsWith('__reactFiber$')) {
-        roots.push(el as HTMLElement);
-        break;
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      const keys = Object.keys(el);
+      for (const key of keys) {
+        if (key.startsWith('__reactContainer$') || key.startsWith('__reactFiber$')) {
+          roots.push(el as HTMLElement);
+          break;
+        }
       }
-    }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   // Fallback: look for data attributes
   if (roots.length === 0) {

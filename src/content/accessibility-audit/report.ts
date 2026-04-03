@@ -4,7 +4,7 @@
 
 import { escapeHtml } from '@/utils/sanitize';
 import { COLORS } from './constants';
-import type { AccessibilityReport, IssueSeverity } from './types';
+import type { AccessibilityReport, ContrastIssue, IssueSeverity } from './types';
 
 // State references (set by core)
 let showFocusOrderRef = true;
@@ -36,33 +36,111 @@ function getSeverityColor(severity: IssueSeverity): string {
   return COLORS.info;
 }
 
-/**
- * Format issue list for display
- */
-function formatIssueList(
-  issues: Array<{ severity: IssueSeverity; message?: string; element?: string }>,
-  emptyMsg: string
+const SEVERITY_ORDER: IssueSeverity[] = ['error', 'warning', 'info'];
+const SEVERITY_GROUP_LABEL: Record<IssueSeverity, string> = {
+  error: 'Errors',
+  warning: 'Warnings',
+  info: 'Info',
+};
+
+function formatIssueRow(
+  i: { severity: IssueSeverity; message?: string; element?: string },
+  fontSize = '12px'
 ): string {
-  if (issues.length === 0) {
-    return `<div style="color: ${COLORS.success}; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px;">✓ ${escapeHtml(emptyMsg)}</div>`;
-  }
-  return issues
-    .map(
-      (i) => `
+  return `
       <div style="
         padding: 10px 12px;
         margin-bottom: 8px;
         background: ${COLORS.bgPanelLight};
         border-left: 3px solid ${getSeverityColor(i.severity)};
         border-radius: 0 8px 8px 0;
-        font-size: 12px;
+        font-size: ${fontSize};
       ">
         <span style="color: ${getSeverityColor(i.severity)}; margin-right: 6px;">${getSeverityIcon(i.severity)}</span>
         <span style="color: ${COLORS.textSecondary};">${escapeHtml(i.element || 'element')}:</span> ${escapeHtml(i.message || 'Issue detected')}
       </div>
-    `
-    )
-    .join('');
+    `;
+}
+
+/**
+ * Format issues grouped by severity (errors first, then warnings, then info).
+ */
+function formatIssuesGroupedBySeverity(
+  issues: Array<{ severity: IssueSeverity; message?: string; element?: string }>,
+  emptyMsg: string
+): string {
+  if (issues.length === 0) {
+    return `<div style="color: ${COLORS.success}; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px;">✓ ${escapeHtml(emptyMsg)}</div>`;
+  }
+  const bySev = new Map<IssueSeverity, typeof issues>();
+  for (const s of SEVERITY_ORDER) {
+    bySev.set(s, []);
+  }
+  for (const i of issues) {
+    bySev.get(i.severity)?.push(i);
+  }
+  const parts: string[] = [];
+  for (const sev of SEVERITY_ORDER) {
+    const list = bySev.get(sev) ?? [];
+    if (list.length === 0) continue;
+    parts.push(`
+      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: ${getSeverityColor(sev)}; margin: 12px 0 6px 0;">
+        ${SEVERITY_GROUP_LABEL[sev]} (${list.length})
+      </div>
+      ${list.map((row) => formatIssueRow(row)).join('')}
+    `);
+  }
+  return parts.join('');
+}
+
+function formatContrastIssuesGrouped(issues: ContrastIssue[], maxVisible: number): string {
+  if (issues.length === 0) {
+    return '';
+  }
+  const rank = (s: IssueSeverity) => SEVERITY_ORDER.indexOf(s);
+  const sorted = [...issues].sort((a, b) => rank(a.severity) - rank(b.severity));
+  const parts: string[] = [];
+  let shown = 0;
+  for (const sev of SEVERITY_ORDER) {
+    const group = sorted.filter((i) => i.severity === sev);
+    if (group.length === 0) continue;
+    parts.push(`
+      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: ${getSeverityColor(sev)}; margin: 12px 0 6px 0;">
+        ${SEVERITY_GROUP_LABEL[sev]} (${group.length})
+      </div>
+    `);
+    for (const i of group) {
+      if (shown >= maxVisible) break;
+      parts.push(`
+            <div style="
+              padding: 10px 12px;
+              margin-bottom: 8px;
+              background: ${COLORS.bgPanelLight};
+              border-left: 3px solid ${getSeverityColor(i.severity)};
+              border-radius: 0 8px 8px 0;
+              font-size: 11px;
+            ">
+              <div style="margin-bottom: 4px;">
+                <span style="color: ${getSeverityColor(i.severity)};">${getSeverityIcon(i.severity)}</span>
+                <span style="color: ${COLORS.textSecondary};">${escapeHtml(i.element)}:</span> ${i.ratio}:1 (needs ${i.requiredRatio}:1)
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="padding: 2px 8px; background: ${escapeHtml(i.foreground)}; color: ${escapeHtml(i.background)}; border-radius: 4px; font-size: 10px;">Aa</span>
+                <span style="color: ${COLORS.textMuted}; font-size: 10px;">${escapeHtml(i.foreground)} on ${escapeHtml(i.background)}</span>
+              </div>
+            </div>
+          `);
+      shown++;
+    }
+    if (shown >= maxVisible) break;
+  }
+  const more = issues.length - shown;
+  if (more > 0) {
+    parts.push(
+      `<div style="text-align: center; color: ${COLORS.textMuted}; font-size: 11px;">...and ${more} more</div>`
+    );
+  }
+  return parts.join('');
 }
 
 /**
@@ -192,7 +270,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         <span style="color: ${COLORS.textMuted};">▼</span>
       </div>
       <div class="fdh-section-content fdh-section-aria" style="display: block;">
-        ${formatIssueList(report.aria.issues, 'No ARIA issues found')}
+        ${formatIssuesGroupedBySeverity(report.aria.issues, 'No ARIA issues found')}
       </div>
     </div>
 
@@ -247,35 +325,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         ${
           report.contrast.issues.length === 0
             ? `<div style="color: ${COLORS.success}; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px;">✓ All text meets contrast requirements</div>`
-            : report.contrast.issues
-                .slice(0, 10)
-                .map(
-                  (i) => `
-            <div style="
-              padding: 10px 12px;
-              margin-bottom: 8px;
-              background: ${COLORS.bgPanelLight};
-              border-left: 3px solid ${getSeverityColor(i.severity)};
-              border-radius: 0 8px 8px 0;
-              font-size: 11px;
-            ">
-              <div style="margin-bottom: 4px;">
-                <span style="color: ${getSeverityColor(i.severity)};">${getSeverityIcon(i.severity)}</span>
-                <span style="color: ${COLORS.textSecondary};">${escapeHtml(i.element)}:</span> ${i.ratio}:1 (needs ${i.requiredRatio}:1)
-              </div>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <span style="padding: 2px 8px; background: ${escapeHtml(i.foreground)}; color: ${escapeHtml(i.background)}; border-radius: 4px; font-size: 10px;">Aa</span>
-                <span style="color: ${COLORS.textMuted}; font-size: 10px;">${escapeHtml(i.foreground)} on ${escapeHtml(i.background)}</span>
-              </div>
-            </div>
-          `
-                )
-                .join('') +
-              (
-                report.contrast.issues.length > 10
-                  ? `<div style="text-align: center; color: ${COLORS.textMuted}; font-size: 11px;">...and ${report.contrast.issues.length - 10} more</div>`
-                  : ''
-              )
+            : formatContrastIssuesGrouped(report.contrast.issues, 10)
         }
       </div>
     </div>
@@ -296,7 +346,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         <span style="color: ${COLORS.textMuted};">▼</span>
       </div>
       <div class="fdh-section-content fdh-section-alt" style="display: block;">
-        ${formatIssueList(
+        ${formatIssuesGroupedBySeverity(
           report.altText.issues.map((i) => ({ ...i, message: `Missing alt: ${i.src}` })),
           'All images have alt text'
         )}
@@ -319,7 +369,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         <span style="color: ${COLORS.textMuted};">▼</span>
       </div>
       <div class="fdh-section-content fdh-section-labels" style="display: block;">
-        ${formatIssueList(
+        ${formatIssuesGroupedBySeverity(
           report.formLabels.issues.map((i) => ({ ...i, element: i.inputType })),
           'All form inputs are properly labeled'
         )}
@@ -342,7 +392,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         <span style="color: ${COLORS.textMuted};">▼</span>
       </div>
       <div class="fdh-section-content fdh-section-keyboard" style="display: block;">
-        ${formatIssueList(
+        ${formatIssuesGroupedBySeverity(
           report.keyboardNav.issues.map((i) => ({ ...i, element: i.element })),
           'No keyboard navigation issues'
         )}
@@ -368,7 +418,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         <span style="color: ${COLORS.textMuted};">▼</span>
       </div>
       <div class="fdh-section-content fdh-section-headings" style="display: block;">
-        ${formatIssueList(
+        ${formatIssuesGroupedBySeverity(
           report.headings.issues.map((i) => ({ ...i, message: i.message })),
           'Heading structure is valid'
         )}
@@ -397,7 +447,7 @@ export function buildReportContent(report: AccessibilityReport): string {
         <span style="color: ${COLORS.textMuted};">▼</span>
       </div>
       <div class="fdh-section-content fdh-section-landmarks" style="display: block;">
-        ${formatIssueList(
+        ${formatIssuesGroupedBySeverity(
           report.landmarks.issues.map((i) => ({ ...i, message: i.message })),
           'Landmark structure is valid'
         )}
@@ -429,6 +479,30 @@ export function buildReportContent(report: AccessibilityReport): string {
           cursor: pointer;
           transition: all 0.2s;
         ">📋 Copy Report</button>
+        <button
+          type="button" class="fdh-export-json-report" style="
+          margin-left: 8px;
+          background: rgba(34, 197, 94, 0.15);
+          border: 1px solid rgba(34, 197, 94, 0.35);
+          border-radius: 6px;
+          padding: 8px 16px;
+          color: #86efac;
+          font-size: 11px;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">⬇ JSON</button>
+        <button
+          type="button" class="fdh-export-md-report" style="
+          margin-left: 8px;
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid rgba(59, 130, 246, 0.35);
+          border-radius: 6px;
+          padding: 8px 16px;
+          color: #93c5fd;
+          font-size: 11px;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">⬇ Markdown</button>
       </div>
       <div style="margin-top: 12px;">
         Press <kbd style="background: rgba(99, 102, 241, 0.2); padding: 2px 6px; border-radius: 4px;">ESC</kbd> to close
@@ -493,4 +567,81 @@ ${report.landmarks.issues.map((i) => `[${i.severity.toUpperCase()}] ${i.element}
 `
     : ''
 }`.trim();
+}
+
+function mdGroupedList<T extends { severity: IssueSeverity }>(issues: T[], line: (i: T) => string): string[] {
+  const out: string[] = [];
+  if (issues.length === 0) {
+    out.push('_None_');
+    return out;
+  }
+  const bySev = new Map<IssueSeverity, T[]>();
+  for (const s of SEVERITY_ORDER) {
+    bySev.set(s, []);
+  }
+  for (const i of issues) {
+    bySev.get(i.severity)?.push(i);
+  }
+  for (const sev of SEVERITY_ORDER) {
+    const list = bySev.get(sev) ?? [];
+    if (list.length === 0) continue;
+    out.push(`### ${SEVERITY_GROUP_LABEL[sev]} (${list.length})`);
+    for (const i of list) {
+      out.push(`- ${line(i)}`);
+    }
+  }
+  return out;
+}
+
+/** Markdown export (grouped by severity within each section). */
+export function generateMarkdownReport(report: AccessibilityReport): string {
+  const lines: string[] = [
+    '# Accessibility audit',
+    '',
+    `- **URL:** ${report.url}`,
+    `- **Date:** ${new Date(report.timestamp).toLocaleString()}`,
+    '',
+    '## Summary',
+    `- Total issues: ${report.summary.totalIssues}`,
+    `- Errors: ${report.summary.errors}`,
+    `- Warnings: ${report.summary.warnings}`,
+    `- Info: ${report.summary.info}`,
+    '',
+    '## ARIA',
+    ...mdGroupedList(report.aria.issues, (i) => `**${i.element}**: ${i.message}`),
+    '',
+    '## Focus order',
+    ...(report.focusOrder.issues.length === 0
+      ? ['_No issues_']
+      : report.focusOrder.issues.map(
+          (i) =>
+            `- #${i.index} **${i.element}** — ${i.visible ? 'custom tabindex' : 'not visible'}`
+        )),
+    '',
+    '## Color contrast',
+    ...mdGroupedList(report.contrast.issues, (i) => {
+      return `**${i.element}**: ${i.ratio}:1 (needs ${i.requiredRatio}:1) — ${i.foreground} on ${i.background}`;
+    }),
+    '',
+    '## Alt text',
+    ...mdGroupedList(
+      report.altText.issues,
+      (i) => `**${i.element}**: missing alt (\`${i.src}\`)`
+    ),
+    '',
+    '## Form labels',
+    ...mdGroupedList(report.formLabels.issues, (i) => `**${i.inputType}**: ${i.message}`),
+    '',
+    '## Keyboard navigation',
+    ...mdGroupedList(report.keyboardNav.issues, (i) => `**${i.element}**: ${i.issue}`),
+  ];
+
+  if (report.headings) {
+    lines.push('', '## Headings', ...mdGroupedList(report.headings.issues, (i) => `**${i.element}**: ${i.message}`));
+  }
+  if (report.landmarks) {
+    lines.push('', '## Landmarks', ...mdGroupedList(report.landmarks.issues, (i) => `**${i.element}**: ${i.message}`));
+  }
+
+  return lines.join('\n');
 }

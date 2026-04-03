@@ -14,6 +14,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { TOOL_IDS, TOOL_METADATA, type ToolId } from '@/constants';
 import type { ExtensionSettings, LLMConfig } from '@/types';
 import { OPENROUTER_FREE_MODELS } from '@/types';
+import {
+  clearDiagnosticCounts,
+  getDiagnosticCounts,
+  getUiPrefs,
+  setUiPrefs,
+} from '../utils/storage';
 import { logger } from '@/utils/logger';
 
 export const Options: React.FC = () => {
@@ -377,8 +383,11 @@ const AISection: React.FC<{
           <>
             {/* Provider Selection */}
             <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
-              <label className="block font-medium mb-2">AI Provider</label>
+              <label htmlFor="fdh-ai-provider" className="block font-medium mb-2">
+                AI Provider
+              </label>
               <select
+                id="fdh-ai-provider"
                 value={localConfig.provider}
                 onChange={(e) =>
                   setLocalConfig({
@@ -395,9 +404,12 @@ const AISection: React.FC<{
 
             {/* API Key Input */}
             <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
-              <label className="block font-medium mb-2">API Key</label>
+              <label htmlFor="fdh-ai-api-key" className="block font-medium mb-2">
+                API Key
+              </label>
               <div className="flex gap-2">
                 <input
+                  id="fdh-ai-api-key"
                   type="password"
                   value={localConfig.apiKey}
                   onChange={(e) => setLocalConfig({ ...localConfig, apiKey: e.target.value })}
@@ -440,8 +452,11 @@ const AISection: React.FC<{
 
             {/* Model Selection */}
             <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
-              <label className="block font-medium mb-2">Model</label>
+              <label htmlFor="fdh-ai-model" className="block font-medium mb-2">
+                Model
+              </label>
               <select
+                id="fdh-ai-model"
                 value={localConfig.model}
                 onChange={(e) => setLocalConfig({ ...localConfig, model: e.target.value })}
                 className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-slate-200 focus:border-indigo-500 focus:outline-none"
@@ -784,6 +799,13 @@ const ShortcutsSection: React.FC<{
         </p>
       </div>
 
+      <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-600/30">
+        <p className="text-sm text-amber-200">
+          <strong>Conflicts:</strong> The command palette shortcut (Ctrl+Shift+P / ⌘⇧P) matches VS Code when the
+          page has focus. Rebind it under chrome://extensions/shortcuts if it gets in the way.
+        </p>
+      </div>
+
       <div className="space-y-3">
         {shortcuts.map(({ key, label }) => (
           <div
@@ -846,11 +868,93 @@ const ShortcutsSection: React.FC<{
 // Advanced Section
 // ============================================
 
-const AdvancedSection: React.FC = () => (
+const AdvancedSection: React.FC = () => {
+  const [diagOn, setDiagOn] = useState(false);
+  const [hudOn, setHudOn] = useState(false);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    void (async () => {
+      const p = await getUiPrefs();
+      setDiagOn(p.diagnosticsOptIn);
+      setHudOn(p.showActiveToolsHud);
+      setCounts(await getDiagnosticCounts());
+    })();
+  }, []);
+
+  const toggleDiag = async (on: boolean) => {
+    setDiagOn(on);
+    await setUiPrefs({ diagnosticsOptIn: on });
+  };
+
+  const toggleHud = async (on: boolean) => {
+    setHudOn(on);
+    await setUiPrefs({ showActiveToolsHud: on });
+  };
+
+  const refreshCounts = async () => {
+    setCounts(await getDiagnosticCounts());
+  };
+
+  return (
   <div className="space-y-6">
     <h2 className="text-xl font-semibold">Advanced Settings</h2>
 
     <div className="space-y-4">
+      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+        <h3 className="mb-2 font-medium">On-page active tools HUD</h3>
+        <p className="mb-3 text-sm text-slate-400">
+          Small corner badge listing enabled tool names and a disable-all control. Reload pages after toggling.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={hudOn}
+            onChange={(e) => void toggleHud(e.target.checked)}
+            className="rounded border-slate-600"
+          />
+          Show active tools HUD on web pages
+        </label>
+      </div>
+
+      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+        <h3 className="mb-2 font-medium">Local diagnostics (opt-in)</h3>
+        <p className="mb-3 text-sm text-slate-400">
+          Count error events on this device only. Nothing is sent to a server. Useful when debugging the
+          extension yourself.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-300 mb-3">
+          <input
+            type="checkbox"
+            checked={diagOn}
+            onChange={(e) => void toggleDiag(e.target.checked)}
+            className="rounded border-slate-600"
+          />
+          Record local diagnostic counts
+        </label>
+        <pre className="text-xs bg-slate-950 p-3 rounded-md text-slate-400 overflow-x-auto mb-3">
+          {Object.keys(counts).length ? JSON.stringify(counts, null, 2) : '{}'}
+        </pre>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => void refreshCounts()}
+            className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
+          >
+            Refresh counts
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void clearDiagnosticCounts().then(() => refreshCounts());
+            }}
+            className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
+          >
+            Clear counts
+          </button>
+        </div>
+      </div>
+
       <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
         <h3 className="mb-2 font-medium">Export Settings</h3>
         <p className="mb-3 text-sm text-slate-400">
@@ -926,7 +1030,8 @@ const AdvancedSection: React.FC = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // ============================================
 // Shared Components

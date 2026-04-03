@@ -29,8 +29,7 @@ describe('Container Query Inspector', () => {
 
   describe('Detection', () => {
     it('should detect container-type property', () => {
-      const style = window.getComputedStyle(container);
-      // Note: JSDOM may not fully support container-type
+      // Note: JSDOM may not fully support container-type on computed styles
       expect(container.style.containerType).toBe('inline-size');
     });
 
@@ -75,8 +74,9 @@ describe('Container Query Inspector', () => {
       const rect = overlay.getBoundingClientRect();
       expect(rect.left).toBe(0);
       expect(rect.top).toBe(0);
-      expect(rect.width).toBe(100);
-      expect(rect.height).toBe(100);
+      // jsdom often reports 0×0 layout boxes; styles still encode intent
+      expect(overlay.style.width).toBe('100px');
+      expect(overlay.style.height).toBe('100px');
     });
 
     it('should add label to overlay', () => {

@@ -34,7 +34,6 @@ interface CapturedElementInfo {
 let isActive = false;
 let debugPanel: HTMLElement | null = null;
 let transitionObserver: MutationObserver | null = null;
-let currentTransition: ViewTransition | null = null;
 
 /**
  * Check if View Transitions API is supported
@@ -216,7 +215,7 @@ function createDebugPanel(info: ViewTransitionInfo): HTMLElement {
   phaseSection.style.cssText = 'margin-bottom: 16px;';
   phaseSection.innerHTML = `
     <div style="color: #6c7086; font-size: 11px; text-transform: uppercase; margin-bottom: 4px;">Phase</div>
-    <div style="font-family: monospace; color: ${getPhaseColor(info.phase)};">${info.phase}</div>
+    <div style="font-family: monospace; color: ${getPhaseColor(info.phase)};">${escapeHtml(info.phase)}</div>
   `;
   panel.appendChild(phaseSection);
 
@@ -246,7 +245,7 @@ function createDebugPanel(info: ViewTransitionInfo): HTMLElement {
         font-size: 12px;
       `;
       elItem.innerHTML = `
-        <div style="color: #89b4fa; font-weight: 600;">${el.name}</div>
+        <div style="color: #89b4fa; font-weight: 600;">${escapeHtml(el.name)}</div>
         ${el.rect
           ? `<div style="color: #6c7086; font-size: 11px; margin-top: 2px;">
               ${Math.round(el.rect.width)}×${Math.round(el.rect.height)}
@@ -285,8 +284,8 @@ function createDebugPanel(info: ViewTransitionInfo): HTMLElement {
         font-size: 11px;
       `;
       pseudoItem.innerHTML = `
-        <div style="color: #f5c2e7;">${pseudo.name}</div>
-        <div style="color: #6c7086; margin-top: 2px;">type: ${pseudo.type}</div>
+        <div style="color: #f5c2e7;">${escapeHtml(pseudo.name)}</div>
+        <div style="color: #6c7086; margin-top: 2px;">type: ${escapeHtml(pseudo.type)}</div>
       `;
       pseudoSection.appendChild(pseudoItem);
     });

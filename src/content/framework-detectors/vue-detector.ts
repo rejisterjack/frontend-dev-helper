@@ -6,6 +6,7 @@
  */
 
 import type { ComponentNode, FrameworkType } from '@/types';
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 
 // ============================================
@@ -305,13 +306,20 @@ function extractVue2Tree(): ComponentNode | null {
     return extractTreeFromDOM();
   }
 
-  // Find root Vue instances in DOM
-  const vueElements = document.querySelectorAll('*');
-  for (const el of Array.from(vueElements)) {
-    const htmlEl = el as HTMLElement & { __vue__?: VueInstance };
-    if (htmlEl.__vue__) {
-      return buildVue2ComponentTree(htmlEl.__vue__, 0);
-    }
+  let found: ComponentNode | null = null;
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      if (found) return;
+      const htmlEl = el as HTMLElement & { __vue__?: VueInstance };
+      if (htmlEl.__vue__) {
+        found = buildVue2ComponentTree(htmlEl.__vue__, 0);
+      }
+    },
+    (msg) => logger.log(msg)
+  );
+  if (found) {
+    return found;
   }
 
   return extractTreeFromDOM();

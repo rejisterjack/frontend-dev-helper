@@ -17,7 +17,20 @@ import { TOOL_IDS, TOOL_METADATA, type ToolId } from '../constants';
 import { DEFAULT_FEATURE_TOGGLES } from '../types';
 import type { ToolMeta, ToolsState } from '../types';
 import { logger } from '../utils/logger';
-import { clearAllStates, getAllToolStates, setToolState } from '../utils/storage';
+import { applyBuiltinPreset, applyUserPreset } from '../utils/apply-preset';
+import { BUILTIN_TOOL_PRESETS, isStarterTool } from '../utils/tool-catalog';
+import { collectPageHints, recommendedToolsFromHints } from '../utils/page-hints';
+import type { UserToolPreset } from '../utils/storage';
+import {
+  addUserToolPreset,
+  clearAllStates,
+  getAllToolStates,
+  getUiPrefs,
+  getUserToolPresets,
+  removeUserToolPreset,
+  setUiPrefs,
+} from '../utils/storage';
+import { applyToolEnabledInTab } from '../utils/tool-toggle';
 import { ColorLegend } from './components/ColorLegend';
 import { TabBar } from './components/TabBar';
 import { ToolCard } from './components/ToolCard';
@@ -157,6 +170,9 @@ const TOOL_META_OVERRIDES: Record<ToolId, { color: string }> = {
   [TOOL_IDS.SESSION_RECORDER]: { color: '#ef4444' },
   [TOOL_IDS.PERFORMANCE_BUDGET]: { color: '#f97316' },
   [TOOL_IDS.FRAMEWORK_DEVTOOLS]: { color: '#14b8a6' },
+  [TOOL_IDS.CONTAINER_QUERY_INSPECTOR]: { color: '#c026d3' },
+  [TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER]: { color: '#7c3aed' },
+  [TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER]: { color: '#0d9488' },
 };
 
 /** Generate tool metadata for popup */
@@ -167,67 +183,6 @@ function getToolMeta(toolId: ToolId): ToolMeta {
     ...meta,
     color: override?.color || '#6366f1',
   };
-}
-
-// ============================================
-// Message Type Mapping (Unified System)
-// ============================================
-
-/**
- * Maps ToolId to the message prefix used by content script handlers.
- */
-const TOOL_MESSAGE_PREFIXES: Record<ToolId, string> = {
-  [TOOL_IDS.DOM_OUTLINER]: 'PESTICIDE',
-  [TOOL_IDS.SPACING_VISUALIZER]: 'SPACING',
-  [TOOL_IDS.FONT_INSPECTOR]: 'FONT_INSPECTOR',
-  [TOOL_IDS.COLOR_PICKER]: 'COLOR_PICKER',
-  [TOOL_IDS.PIXEL_RULER]: 'PIXEL_RULER',
-  [TOOL_IDS.RESPONSIVE_BREAKPOINT]: 'BREAKPOINT_OVERLAY',
-  [TOOL_IDS.CSS_INSPECTOR]: 'CSS_INSPECTOR',
-  [TOOL_IDS.CSS_EDITOR]: 'CSS_EDITOR',
-  [TOOL_IDS.CONTRAST_CHECKER]: 'CONTRAST_CHECKER',
-  [TOOL_IDS.LAYOUT_VISUALIZER]: 'LAYOUT_VISUALIZER',
-  [TOOL_IDS.ZINDEX_VISUALIZER]: 'ZINDEX_VISUALIZER',
-  [TOOL_IDS.TECH_DETECTOR]: 'TECH_DETECTOR',
-  [TOOL_IDS.ACCESSIBILITY_AUDIT]: 'ACCESSIBILITY_AUDIT',
-  [TOOL_IDS.SITE_REPORT]: 'SITE_REPORT',
-  [TOOL_IDS.SCREENSHOT_STUDIO]: 'SCREENSHOT_STUDIO',
-  [TOOL_IDS.ANIMATION_INSPECTOR]: 'ANIMATION_INSPECTOR',
-  [TOOL_IDS.RESPONSIVE_PREVIEW]: 'RESPONSIVE_PREVIEW',
-  [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: 'DESIGN_SYSTEM_VALIDATOR',
-  [TOOL_IDS.NETWORK_ANALYZER]: 'NETWORK_ANALYZER',
-  [TOOL_IDS.COMMAND_PALETTE]: 'COMMAND_PALETTE',
-  [TOOL_IDS.STORAGE_INSPECTOR]: 'STORAGE_INSPECTOR',
-  [TOOL_IDS.FOCUS_DEBUGGER]: 'FOCUS_DEBUGGER',
-  [TOOL_IDS.FORM_DEBUGGER]: 'FORM_DEBUGGER',
-  [TOOL_IDS.COMPONENT_TREE]: 'COMPONENT_TREE',
-  [TOOL_IDS.FLAME_GRAPH]: 'FLAME_GRAPH',
-  [TOOL_IDS.VISUAL_REGRESSION]: 'VISUAL_REGRESSION',
-  [TOOL_IDS.SMART_SUGGESTIONS]: 'SMART_SUGGESTIONS',
-  [TOOL_IDS.ELEMENT_INSPECTOR]: 'INSPECTOR',
-  [TOOL_IDS.MEASUREMENT_TOOL]: 'MEASUREMENT',
-  [TOOL_IDS.GRID_OVERLAY]: 'GRID',
-  [TOOL_IDS.CSS_SCANNER]: 'CSS_SCANNER',
-  [TOOL_IDS.CSS_VARIABLE_INSPECTOR]: 'CSS_VARIABLE_INSPECTOR',
-  [TOOL_IDS.SMART_ELEMENT_PICKER]: 'SMART_ELEMENT_PICKER',
-  [TOOL_IDS.SESSION_RECORDER]: 'SESSION_RECORDER',
-  [TOOL_IDS.PERFORMANCE_BUDGET]: 'PERFORMANCE_BUDGET',
-  [TOOL_IDS.FRAMEWORK_DEVTOOLS]: 'FRAMEWORK_DEVTOOLS',
-  [TOOL_IDS.CONTAINER_QUERY_INSPECTOR]: 'CONTAINER_QUERY_INSPECTOR',
-  [TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER]: 'VIEW_TRANSITIONS_DEBUGGER',
-  [TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER]: 'SCROLL_ANIMATIONS_DEBUGGER',
-};
-
-/**
- * Generates the message type for a tool action.
- */
-function getToolMessageType(toolId: ToolId, action: 'ENABLE' | 'DISABLE'): string {
-  const prefix = TOOL_MESSAGE_PREFIXES[toolId];
-  if (!prefix) {
-    logger.warn(`Unknown tool ID: ${toolId}`);
-    return '';
-  }
-  return `${prefix}_${action}`;
 }
 
 /** Extension version - read from manifest */
@@ -250,6 +205,9 @@ export const Popup: React.FC = () => {
   // UI states
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [recommendedIds, setRecommendedIds] = useState<ToolId[]>([]);
+  const [userPresets, setUserPresets] = useState<UserToolPreset[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
     // Default to all expanded
     return new Set(TOOL_CATEGORIES.map((c) => c.id));
@@ -267,6 +225,9 @@ export const Popup: React.FC = () => {
         // Get all tool states from service worker via storage
         const states = await getAllToolStates();
         setToolsState(states);
+        const prefs = await getUiPrefs();
+        setShowAdvancedTools(prefs.showAdvancedTools);
+        setUserPresets(await getUserToolPresets());
         setIsLoading(false);
       } catch (err) {
         logger.error('Failed to load state:', err);
@@ -280,7 +241,16 @@ export const Popup: React.FC = () => {
     const handleMessage = (message: { type: string; payload?: Record<string, unknown> }) => {
       if (message.type === 'TOOL_STATE_CHANGED') {
         const toolId = message.payload?.toolId as ToolId | undefined;
-        const enabled = message.payload?.enabled as boolean | undefined;
+        const payload = message.payload as {
+          enabled?: boolean;
+          state?: { enabled?: boolean };
+        };
+        const enabled =
+          typeof payload?.enabled === 'boolean'
+            ? payload.enabled
+            : typeof payload?.state?.enabled === 'boolean'
+              ? payload.state.enabled
+              : undefined;
         if (toolId && typeof enabled === 'boolean') {
           setToolsState((prev) => ({
             ...prev,
@@ -294,36 +264,72 @@ export const Popup: React.FC = () => {
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id || tab.url?.startsWith('chrome://') || cancelled) return;
+      const hints = await collectPageHints(tab.id);
+      if (!cancelled) setRecommendedIds(recommendedToolsFromHints(hints));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   /**
    * Toggle a tool on/off
    */
   const handleToggleTool = useCallback(async (toolId: ToolId, enabled: boolean) => {
-    // Update local state
-    setToolsState((prev) => ({
-      ...prev,
-      [toolId]: { ...prev[toolId], enabled },
-    }));
-
-    // Persist to storage
-    try {
-      await setToolState(toolId, { enabled, settings: toolsState[toolId]?.settings || {} });
-    } catch (err) {
-      logger.error('Failed to persist tool state:', err);
-    }
-
-    // Send message to content script via service worker
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
 
-    const messageType = getToolMessageType(toolId, enabled ? 'ENABLE' : 'DISABLE');
-    if (!messageType) return;
-
     try {
-      await chrome.tabs.sendMessage(tab.id, { type: messageType });
+      await applyToolEnabledInTab(tab.id, toolId, enabled);
     } catch (err) {
-      logger.error('Failed to send message:', err);
+      logger.error('Failed to toggle tool:', err);
+    }
+
+    const all = await getAllToolStates();
+    setToolsState(all);
+  }, []);
+
+  const handleApplyPreset = useCallback(async (presetId: string) => {
+    const ok = await applyBuiltinPreset(presetId);
+    if (ok) {
+      const all = await getAllToolStates();
+      setToolsState(all);
+    }
+  }, []);
+
+  const handleApplyUserPreset = useCallback(async (presetId: string) => {
+    const ok = await applyUserPreset(presetId);
+    if (ok) {
+      const all = await getAllToolStates();
+      setToolsState(all);
+    }
+  }, []);
+
+  const handleSaveUserPreset = useCallback(async () => {
+    const name = window.prompt('Name this preset');
+    if (!name?.trim()) return;
+    const toolIds = (Object.entries(toolsState) as [ToolId, { enabled?: boolean }][])
+      .filter(([, s]) => s.enabled)
+      .map(([id]) => id);
+    if (toolIds.length === 0) {
+      window.alert('Enable at least one tool first.');
+      return;
+    }
+    const created = await addUserToolPreset(name.trim(), toolIds);
+    if (created) {
+      setUserPresets(await getUserToolPresets());
     }
   }, [toolsState]);
+
+  const handleDeleteUserPreset = useCallback(async (id: string) => {
+    await removeUserToolPreset(id);
+    setUserPresets(await getUserToolPresets());
+  }, []);
 
   /**
    * Open settings for a tool
@@ -409,9 +415,18 @@ export const Popup: React.FC = () => {
    * Filter tools based on search query
    */
   const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return TOOL_CATEGORIES;
+    const q = searchQuery.trim();
+    if (!q) {
+      if (!showAdvancedTools) {
+        return TOOL_CATEGORIES.map((cat) => ({
+          ...cat,
+          tools: cat.tools.filter((id) => isStarterTool(id)),
+        })).filter((c) => c.tools.length > 0);
+      }
+      return TOOL_CATEGORIES;
+    }
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = q.toLowerCase();
     return TOOL_CATEGORIES.map((category) => ({
       ...category,
       tools: category.tools.filter((toolId) => {
@@ -423,7 +438,7 @@ export const Popup: React.FC = () => {
         );
       }),
     })).filter((category) => category.tools.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, showAdvancedTools]);
 
   /**
    * Handle keyboard shortcut to focus search
@@ -588,6 +603,102 @@ export const Popup: React.FC = () => {
                     </span>
                   </kbd>
                 )}
+              </div>
+
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showAdvancedTools}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setShowAdvancedTools(next);
+                      void setUiPrefs({ showAdvancedTools: next });
+                    }}
+                    className="rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+                  />
+                  Show all tools
+                </label>
+                <span className="text-[10px] text-slate-500">
+                  Starter set when off · search always finds everything
+                </span>
+              </div>
+
+              {recommendedIds.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                    Suggested for this page
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recommendedIds.map((id) => {
+                      const meta = getToolMeta(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => void handleToggleTool(id, true)}
+                          className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-indigo-500/50 hover:text-white transition-colors"
+                        >
+                          {meta.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                  Presets
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {BUILTIN_TOOL_PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => void handleApplyPreset(p.id)}
+                      className="text-[11px] px-2 py-1 rounded-md bg-indigo-950/80 border border-indigo-800/60 text-indigo-100 hover:bg-indigo-900/80 transition-colors"
+                      title={p.description}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                  My presets
+                </p>
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveUserPreset()}
+                    className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-amber-500/50"
+                  >
+                    Save current
+                  </button>
+                  {userPresets.map((p) => (
+                    <span key={p.id} className="inline-flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => void handleApplyUserPreset(p.id)}
+                        className="text-[11px] px-2 py-1 rounded-md bg-amber-950/80 border border-amber-800/50 text-amber-100 hover:bg-amber-900/80"
+                        title={`${p.toolIds.length} tools`}
+                      >
+                        {p.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteUserPreset(p.id)}
+                        className="text-[10px] px-1 text-slate-500 hover:text-rose-400"
+                        aria-label={`Delete ${p.name}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
               {/* Tool Categories */}

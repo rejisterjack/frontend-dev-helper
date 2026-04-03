@@ -34,6 +34,8 @@ This directory contains the monetization infrastructure for FrontendDevHelper.
 - Grace period handling
 - Feature gating
 
+Keep **marketing copy, store listings, and in-extension messaging** aligned with `src/background/licensing.ts` (plan IDs, quotas, and Pro/Team gates). If the server enables a feature the extension still treats as Pro-only, users will see confusing errors.
+
 ## Pricing Tiers
 
 | Tier | Price | Features |

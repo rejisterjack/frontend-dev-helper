@@ -4,7 +4,7 @@
  * Tests keyboard shortcut functionality using Playwright.
  */
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test.describe('Keyboard Shortcuts', () => {
   test.beforeEach(async ({ context }) => {

@@ -82,6 +82,7 @@ describe('MessageRouter', () => {
       
       // Wait for async handler
       await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+      expect(handler).toHaveBeenCalledWith(message, sender);
       // Router wraps handler result in { success: true, data: <result>, id: ... }
       expect(sendResponse).toHaveBeenCalledWith(
         expect.objectContaining({ success: true, data: { success: true, data: 'test' } })
@@ -152,7 +153,7 @@ describe('MessageRouter', () => {
       const pingHandler = router.getHandler('PING');
       expect(pingHandler).toBeDefined();
       
-      const result = await pingHandler?.({ type: 'PING' });
+      const result = await pingHandler?.({ type: 'PING' }, {} as chrome.runtime.MessageSender);
       expect(result).toEqual(expect.objectContaining({ pong: true }));
     });
 

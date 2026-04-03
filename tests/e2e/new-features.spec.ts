@@ -2,9 +2,16 @@
  * E2E Tests for New "Best of the Best" Features
  */
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test.describe('New Features - Best of the Best', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto('https://example.com');
     // Wait for content script to inject

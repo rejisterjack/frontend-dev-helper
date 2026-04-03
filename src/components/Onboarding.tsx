@@ -7,6 +7,10 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import {
+  getOnboardingCatalogTools,
+  getOnboardingShortcutRows,
+} from '@/utils/tool-catalog';
 
 // ============================================
 // Types
@@ -25,20 +29,6 @@ export interface OnboardingProps {
   forceShow?: boolean;
 }
 
-/** Tool information for the tools grid */
-interface ToolInfo {
-  name: string;
-  icon: string;
-  color: string;
-  description: string;
-}
-
-/** Keyboard shortcut information */
-interface ShortcutInfo {
-  key: string;
-  description: string;
-}
-
 /** Getting started tip */
 interface TipInfo {
   icon: string;
@@ -53,42 +43,9 @@ interface TipInfo {
 /** Default storage key for onboarding completion */
 const DEFAULT_STORAGE_KEY = 'frontendDevHelper_onboardingCompleted';
 
-/** Tool data for the tools overview step */
-const TOOLS: ToolInfo[] = [
-  { name: 'DOM Outliner', icon: '🕸️', color: '#f97316', description: 'Visualize page structure' },
-  {
-    name: 'Spacing Visualizer',
-    icon: '📐',
-    color: '#8b5cf6',
-    description: 'See margins & padding',
-  },
-  { name: 'Font Inspector', icon: '🔤', color: '#3b82f6', description: 'Analyze typography' },
-  { name: 'Color Picker', icon: '🎨', color: '#ec4899', description: 'Pick colors anywhere' },
-  { name: 'Pixel Ruler', icon: '📏', color: '#f59e0b', description: 'Measure distances' },
-  {
-    name: 'Breakpoint Overlay',
-    icon: '📱',
-    color: '#06b6d4',
-    description: 'Viewport & breakpoints',
-  },
-  { name: 'CSS Inspector', icon: '📝', color: '#10b981', description: 'View computed CSS' },
-  { name: 'Contrast Checker', icon: '♿', color: '#84cc16', description: 'WCAG compliance' },
-  { name: 'Layout Visualizer', icon: '⊞', color: '#8b5cf6', description: 'Flexbox & grid' },
-  { name: 'Z-Index Visualizer', icon: '📚', color: '#f43f5e', description: 'Stacking order' },
-  { name: 'Tech Detector', icon: '🔍', color: '#0ea5e9', description: 'Detect frameworks' },
-];
-
-/** Keyboard shortcuts data */
-const SHORTCUTS: ShortcutInfo[] = [
-  { key: 'Ctrl+Shift+F', description: 'Open popup' },
-  { key: 'Alt+P', description: 'Toggle DOM Outliner' },
-  { key: 'Alt+S', description: 'Toggle Spacing Visualizer' },
-  { key: 'Alt+F', description: 'Toggle Font Inspector' },
-  { key: 'Alt+C', description: 'Toggle Color Picker' },
-  { key: 'Alt+M', description: 'Toggle Pixel Ruler' },
-  { key: 'Alt+B', description: 'Toggle Breakpoint Overlay' },
-  { key: 'Esc', description: 'Disable all tools' },
-];
+const ONBOARDING_TOOLS = getOnboardingCatalogTools();
+const ONBOARDING_SHORTCUTS = getOnboardingShortcutRows();
+const ONBOARDING_TOOL_COUNT = ONBOARDING_TOOLS.length;
 
 /** Getting started tips */
 const TIPS: TipInfo[] = [
@@ -440,8 +397,8 @@ const WelcomeStep: React.FC = () => (
 
     {/* Feature highlights */}
     <div className="flex items-center gap-4 text-xs text-slate-500">
-      <span className="flex items-center gap-1">
-        <span className="text-emerald-400">●</span> 27 Powerful Tools
+        <span className="flex items-center gap-1">
+        <span className="text-emerald-400">●</span> {ONBOARDING_TOOL_COUNT} tools
       </span>
       <span className="flex items-center gap-1">
         <span className="text-blue-400">●</span> Keyboard Shortcuts
@@ -456,16 +413,16 @@ const WelcomeStep: React.FC = () => (
 /** Step 2: Tools Overview Grid */
 const ToolsStep: React.FC = () => (
   <div className="flex-1 flex flex-col animate-fade-in">
-    <h3 className="text-lg font-semibold text-white mb-1">27 Powerful Tools</h3>
+    <h3 className="text-lg font-semibold text-white mb-1">{ONBOARDING_TOOL_COUNT} tools</h3>
     <p className="text-slate-400 text-xs mb-4">
-      Everything you need to debug and inspect frontend code
+      Everything you need to debug and inspect frontend code (synced with the extension catalog)
     </p>
 
     {/* Tools Grid */}
     <div className="grid grid-cols-4 gap-2 overflow-y-auto max-h-[280px] pr-1 custom-scrollbar">
-      {TOOLS.map((tool, index) => (
+      {ONBOARDING_TOOLS.map((tool, index) => (
         <div
-          key={tool.name}
+          key={tool.toolId}
           className="
             flex flex-col items-center p-2 rounded-lg
             bg-slate-800/50 border border-slate-700/30
@@ -513,9 +470,9 @@ const ShortcutsStep: React.FC = () => (
 
     {/* Shortcuts List */}
     <div className="space-y-2 overflow-y-auto max-h-[280px] pr-1 custom-scrollbar">
-      {SHORTCUTS.map((shortcut, index) => (
+      {ONBOARDING_SHORTCUTS.map((shortcut, index) => (
         <div
-          key={shortcut.key}
+          key={`${shortcut.key}-${shortcut.description}`}
           className="
             flex items-center justify-between
             px-3 py-2 rounded-lg

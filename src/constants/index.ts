@@ -95,7 +95,7 @@ export interface ToolMetadata {
   name: string;
   description: string;
   icon: string;
-  category: 'inspection' | 'css' | 'responsive' | 'performance' | 'utility';
+  category: 'inspection' | 'css' | 'responsive' | 'performance' | 'utility' | 'ai';
   hasSettings: boolean;
   defaultEnabled: boolean;
   shortcut?: string;
@@ -943,6 +943,10 @@ export const STORAGE_KEYS = {
   SETTINGS: 'fdh_settings',
   TOOL_STATES: 'fdh_tool_states',
   TAB_STATES: 'fdh_tab_states',
+  /** Popup / UX preferences (advanced tool list, optional diagnostics). */
+  UI_PREFS: 'fdh_ui_prefs',
+  /** User-defined tool bundles (save/apply from popup). */
+  USER_TOOL_PRESETS: 'fdh_user_tool_presets',
 
   // Tool-specific
   DOM_OUTLINER_STATE: 'fdh_dom_outliner',
@@ -974,6 +978,10 @@ export const MESSAGE_TYPES = {
   GET_TOOL_STATE: 'GET_TOOL_STATE',
   SET_TOOL_STATE: 'SET_TOOL_STATE',
   GET_ALL_TOOL_STATES: 'GET_ALL_TOOL_STATES',
+  /** Content asks background to disable all tools on the sender tab (sync storage). */
+  DISABLE_ALL_ON_ACTIVE_TAB: 'DISABLE_ALL_ON_ACTIVE_TAB',
+  /** DevTools → background → content: hint for inspected element (optional highlight). */
+  FDH_INSPECTED_HINT: 'FDH_INSPECTED_HINT',
 
   // Tab management
   TAB_CHANGED: 'TAB_CHANGED',

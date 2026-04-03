@@ -6,6 +6,7 @@
  * Generate a responsive testing report.
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 
 export interface Breakpoint {
@@ -136,31 +137,33 @@ function analyzeResponsiveIssues(breakpoint: Breakpoint): ResponsiveIssue[] {
   }
 
   // Check elements for overflow
-  const elements = document.querySelectorAll('*');
-  for (const el of elements) {
-    const rect = el.getBoundingClientRect();
-    if (rect.width > breakpoint.width) {
-      issues.push({
-        type: 'overflow',
-        severity: 'warning',
-        element: generateSelector(el as HTMLElement),
-        description: `Element width (${Math.round(rect.width)}px) exceeds viewport`,
-      });
-    }
-
-    // Check for text truncation
-    if (el.children.length === 0 && el.textContent) {
-      const style = window.getComputedStyle(el);
-      if (style.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth) {
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > breakpoint.width) {
         issues.push({
-          type: 'truncation',
+          type: 'overflow',
           severity: 'warning',
           element: generateSelector(el as HTMLElement),
-          description: 'Text may be truncated',
+          description: `Element width (${Math.round(rect.width)}px) exceeds viewport`,
         });
       }
-    }
-  }
+
+      if (el.children.length === 0 && el.textContent) {
+        const style = window.getComputedStyle(el);
+        if (style.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth) {
+          issues.push({
+            type: 'truncation',
+            severity: 'warning',
+            element: generateSelector(el as HTMLElement),
+            description: 'Text may be truncated',
+          });
+        }
+      }
+    },
+    (msg) => logger.log(msg)
+  );
 
   // Limit issues to avoid overwhelming reports
   return issues.slice(0, 20);

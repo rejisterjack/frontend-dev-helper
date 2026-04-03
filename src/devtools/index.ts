@@ -4,7 +4,19 @@
  * Creates the DevTools panel for the extension.
  */
 
+import { MESSAGE_TYPES } from '@/constants';
 import { logger } from '@/utils/logger';
+
+let inspectedHintTimer: ReturnType<typeof setTimeout> | null = null;
+
+function sendInspectedElementHint(selector: string): void {
+  const tabId = chrome.devtools.inspectedWindow.tabId;
+  if (tabId === undefined || !selector) return;
+  void chrome.runtime.sendMessage({
+    type: MESSAGE_TYPES.FDH_INSPECTED_HINT,
+    payload: { tabId, selector },
+  });
+}
 
 // Create the DevTools panel
 chrome.devtools.panels.create('FrontendDevHelper', 'icons/icon-32.png', 'panel.html', (panel) => {
@@ -57,7 +69,20 @@ chrome.devtools.panels.elements.createSidebarPane('FrontendDevHelper', (sidebar)
   };
 
   // Listen for selection changes
-  chrome.devtools.panels.elements.onSelectionChanged.addListener(updateSidebar);
+  chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
+    updateSidebar();
+    if (inspectedHintTimer) clearTimeout(inspectedHintTimer);
+    inspectedHintTimer = setTimeout(() => {
+      inspectedHintTimer = null;
+      chrome.devtools.inspectedWindow.eval(
+        `(() => { const el = $0; if (!el) return ''; try { if (el.id) return '#' + CSS.escape(el.id); return el.tagName.toLowerCase(); } catch (e) { return ''; } })()`,
+        (result, isException) => {
+          if (isException || typeof result !== 'string' || !result) return;
+          sendInspectedElementHint(result);
+        }
+      );
+    }, 250);
+  });
 
   // Initial update
   updateSidebar();

@@ -85,6 +85,7 @@ export { validateLandmarks } from './audits/landmarks';
 
 export {
   buildReportContent,
+  generateMarkdownReport,
   generateTextReport,
   setReportState,
 } from './report';

@@ -13,7 +13,7 @@ import { detectMissingAltText } from './audits/images';
 import { testKeyboardNav } from './audits/keyboard';
 import { validateLandmarks } from './audits/landmarks';
 import { COLORS, FOCUSABLE_SELECTOR, Z_INDEX } from './constants';
-import { buildReportContent, generateTextReport, setReportState } from './report';
+import { buildReportContent, generateMarkdownReport, generateTextReport, setReportState } from './report';
 import type {
   AccessibilityAuditState,
   AccessibilityReport,
@@ -560,6 +560,47 @@ function setupOverlayControls(): void {
         btn.textContent = '✓ Copied!';
         setTimeout(() => (btn.textContent = '📋 Copy Report'), 1500);
       });
+    });
+  }
+
+  const exportJsonBtn = overlayPanel.querySelector('.fdh-export-json-report');
+  if (exportJsonBtn) {
+    exportJsonBtn.addEventListener('click', () => {
+      if (!lastReport) return;
+      const blob = new Blob([JSON.stringify(lastReport, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fdh-a11y-audit-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      const btn = exportJsonBtn as HTMLButtonElement;
+      const prev = btn.textContent;
+      btn.textContent = '✓ Saved';
+      setTimeout(() => {
+        btn.textContent = prev;
+      }, 1500);
+    });
+  }
+
+  const exportMdBtn = overlayPanel.querySelector('.fdh-export-md-report');
+  if (exportMdBtn) {
+    exportMdBtn.addEventListener('click', () => {
+      if (!lastReport) return;
+      const md = generateMarkdownReport(lastReport);
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fdh-a11y-audit-${Date.now()}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      const btn = exportMdBtn as HTMLButtonElement;
+      const prev = btn.textContent;
+      btn.textContent = '✓ Saved';
+      setTimeout(() => {
+        btn.textContent = prev;
+      }, 1500);
     });
   }
 }

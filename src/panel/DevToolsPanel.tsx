@@ -257,6 +257,27 @@ export const DevToolsPanel: React.FC = () => {
     }
   }, []);
 
+  const copyElementDescriptor = useCallback(() => {
+    chrome.devtools.inspectedWindow.eval(
+      `(() => {
+        const el = $0;
+        if (!el || el.nodeType !== 1) return '';
+        const tag = el.tagName.toLowerCase();
+        const id = el.id ? '#' + el.id : '';
+        const cls =
+          el.className && typeof el.className === 'string'
+            ? '.' + el.className.trim().split(/\\s+/).slice(0, 4).join('.')
+            : '';
+        return tag + id + cls;
+      })()`,
+      (result) => {
+        if (result && typeof result === 'string' && result.length > 0) {
+          void navigator.clipboard.writeText(result);
+        }
+      }
+    );
+  }, []);
+
   // Listen for element selection changes in DevTools
   useEffect(() => {
     // Initial load
@@ -371,13 +392,25 @@ export const DevToolsPanel: React.FC = () => {
                 </span>
               )}
             </div>
-            <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
+            <div className="mt-1 text-xs text-slate-400 flex items-center gap-3 flex-wrap">
               <span>
                 {selectedElement.dimensions.width} × {selectedElement.dimensions.height}
               </span>
               <span>•</span>
               <span>{selectedElement.children} children</span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={copyElementDescriptor}
+                className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+              >
+                Copy $0 descriptor
+              </button>
             </div>
+            <p className="mt-2 text-[10px] text-slate-500">
+              Popup tools (CSS Inspector, Layout, Contrast, etc.) use the same page context as DevTools—toggle
+              them from the extension popup while inspecting here.
+            </p>
           </div>
 
           {/* Tabs */}

@@ -4,6 +4,7 @@
  * Animation detection logic for CSS animations and transitions.
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 import type { AnimationInfo } from './types';
 
@@ -68,16 +69,24 @@ export function parseTime(time: string): number {
  * Get all elements with animations
  */
 export function getAnimatedElements(): HTMLElement[] {
-  const allElements = Array.from(document.querySelectorAll('*')) as HTMLElement[];
-  return allElements.filter((el) => {
-    const style = window.getComputedStyle(el);
-    const hasAnimation = style.animationName && style.animationName !== 'none';
-    const hasTransition =
-      style.transitionProperty &&
-      style.transitionProperty !== 'all 0s ease 0s' &&
-      style.transitionDuration !== '0s';
-    return hasAnimation || hasTransition;
-  });
+  const out: HTMLElement[] = [];
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      if (!(el instanceof HTMLElement)) return;
+      const style = window.getComputedStyle(el);
+      const hasAnimation = style.animationName && style.animationName !== 'none';
+      const hasTransition =
+        style.transitionProperty &&
+        style.transitionProperty !== 'all 0s ease 0s' &&
+        style.transitionDuration !== '0s';
+      if (hasAnimation || hasTransition) {
+        out.push(el);
+      }
+    },
+    (msg) => logger.log(msg)
+  );
+  return out;
 }
 
 /**

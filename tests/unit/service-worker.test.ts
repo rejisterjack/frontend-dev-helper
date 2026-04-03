@@ -2,7 +2,7 @@
  * Service Worker Tests
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock chrome API
 const mockChrome = {
@@ -16,10 +16,16 @@ const mockChrome = {
     onStartup: {
       addListener: vi.fn(),
     },
+    onConnect: {
+      addListener: vi.fn(),
+    },
     sendMessage: vi.fn(),
+    getURL: vi.fn((path: string) => `chrome-extension://test/${path}`),
+    getManifest: vi.fn(() => ({ manifest_version: 3, name: 'Test', version: '1.0.0' })),
   },
   tabs: {
     query: vi.fn(),
+    create: vi.fn(),
     sendMessage: vi.fn(),
     onActivated: {
       addListener: vi.fn(),
@@ -27,8 +33,18 @@ const mockChrome = {
     onUpdated: {
       addListener: vi.fn(),
     },
+    onRemoved: {
+      addListener: vi.fn(),
+    },
   },
   storage: {
+    onChanged: {
+      addListener: vi.fn(),
+    },
+    session: {
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue(undefined),
+    },
     local: {
       get: vi.fn(),
       set: vi.fn(),
@@ -46,6 +62,9 @@ const mockChrome = {
   },
   contextMenus: {
     create: vi.fn(),
+    removeAll: vi.fn((cb?: () => void) => {
+      cb?.();
+    }),
     onClicked: {
       addListener: vi.fn(),
     },
@@ -53,44 +72,62 @@ const mockChrome = {
   action: {
     setBadgeText: vi.fn(),
     setBadgeBackgroundColor: vi.fn(),
+    setTitle: vi.fn(),
+  },
+  notifications: {
+    create: vi.fn(),
   },
 };
 
 // Setup global chrome mock
 vi.stubGlobal('chrome', mockChrome);
 
+/** Captured after SW init; global afterEach clearAllMocks wipes call history between tests. */
+let swRegistration: {
+  onMessage: boolean;
+  onInstalled: boolean;
+  onStartup: boolean;
+  tabActivated: boolean;
+  tabUpdated: boolean;
+  onCommand: boolean;
+  contextMenuCreate: boolean;
+  contextMenuClick: boolean;
+};
+
 describe('Service Worker', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  beforeAll(async () => {
+    mockChrome.storage.local.get.mockResolvedValue({});
+    mockChrome.storage.local.set.mockResolvedValue(undefined);
+    mockChrome.tabs.query.mockResolvedValue([]);
+    mockChrome.notifications.create.mockResolvedValue(undefined);
+    await import('@/background/service-worker');
+    await vi.waitFor(() =>
+      expect(mockChrome.runtime.onMessage.addListener).toHaveBeenCalled()
+    );
+    swRegistration = {
+      onMessage: mockChrome.runtime.onMessage.addListener.mock.calls.length > 0,
+      onInstalled: mockChrome.runtime.onInstalled.addListener.mock.calls.length > 0,
+      onStartup: mockChrome.runtime.onStartup.addListener.mock.calls.length > 0,
+      tabActivated: mockChrome.tabs.onActivated.addListener.mock.calls.length > 0,
+      tabUpdated: mockChrome.tabs.onUpdated.addListener.mock.calls.length > 0,
+      onCommand: mockChrome.commands.onCommand.addListener.mock.calls.length > 0,
+      contextMenuCreate: mockChrome.contextMenus.create.mock.calls.length > 0,
+      contextMenuClick: mockChrome.contextMenus.onClicked.addListener.mock.calls.length > 0,
+    };
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  beforeEach(() => {
+    mockChrome.tabs.query.mockResolvedValue([]);
   });
 
   describe('Initialization', () => {
-    it('should register install listener', () => {
-      expect(mockChrome.runtime.onInstalled.addListener).toHaveBeenCalled();
-    });
-
-    it('should register message listener', () => {
-      expect(mockChrome.runtime.onMessage.addListener).toHaveBeenCalled();
-    });
-
-    it('should register startup listener', () => {
-      expect(mockChrome.runtime.onStartup.addListener).toHaveBeenCalled();
-    });
-
-    it('should register tab activation listener', () => {
-      expect(mockChrome.tabs.onActivated.addListener).toHaveBeenCalled();
-    });
-
-    it('should register tab update listener', () => {
-      expect(mockChrome.tabs.onUpdated.addListener).toHaveBeenCalled();
-    });
-
-    it('should register command listener', () => {
-      expect(mockChrome.commands.onCommand.addListener).toHaveBeenCalled();
+    it('registers core Chrome listeners during module init', () => {
+      expect(swRegistration.onInstalled).toBe(true);
+      expect(swRegistration.onMessage).toBe(true);
+      expect(swRegistration.onStartup).toBe(true);
+      expect(swRegistration.tabActivated).toBe(true);
+      expect(swRegistration.tabUpdated).toBe(true);
+      expect(swRegistration.onCommand).toBe(true);
     });
   });
 
@@ -100,26 +137,11 @@ describe('Service Worker', () => {
       mockChrome.tabs.query.mockResolvedValue([mockTab]);
       mockChrome.tabs.sendMessage.mockResolvedValue({ success: true });
 
-      const sendResponse = vi.fn();
-      const message = {
-        type: 'TOGGLE_TOOL',
-        payload: { toolId: 'domOutliner', enabled: true },
-      };
-
-      // Simulate message handling
-      const handlers = mockChrome.runtime.onMessage.addListener.mock.calls;
-      expect(handlers.length).toBeGreaterThan(0);
+      expect(swRegistration.onMessage).toBe(true);
     });
 
     it('should handle GET_TOOL_STATE message', () => {
-      const sendResponse = vi.fn();
-      const message = {
-        type: 'GET_TOOL_STATE',
-        payload: { toolId: 'domOutliner' },
-      };
-
-      const handlers = mockChrome.runtime.onMessage.addListener.mock.calls;
-      expect(handlers.length).toBeGreaterThan(0);
+      expect(swRegistration.onMessage).toBe(true);
     });
 
     it('should handle GET_SETTINGS message', async () => {
@@ -143,15 +165,7 @@ describe('Service Worker', () => {
     });
 
     it('should handle unknown message types', () => {
-      const sendResponse = vi.fn();
-      const message = {
-        type: 'UNKNOWN_MESSAGE',
-        payload: {},
-      };
-
-      // Handler should be called but may not process unknown types
-      const handlers = mockChrome.runtime.onMessage.addListener.mock.calls;
-      expect(handlers.length).toBeGreaterThan(0);
+      expect(swRegistration.onMessage).toBe(true);
     });
   });
 
@@ -176,13 +190,11 @@ describe('Service Worker', () => {
     });
 
     it('should handle tab activation', () => {
-      const handlers = mockChrome.tabs.onActivated.addListener.mock.calls;
-      expect(handlers.length).toBeGreaterThan(0);
+      expect(swRegistration.tabActivated).toBe(true);
     });
 
     it('should handle tab updates', () => {
-      const handlers = mockChrome.tabs.onUpdated.addListener.mock.calls;
-      expect(handlers.length).toBeGreaterThan(0);
+      expect(swRegistration.tabUpdated).toBe(true);
     });
   });
 
@@ -253,26 +265,24 @@ describe('Service Worker', () => {
 
   describe('Command Handling', () => {
     it('should register command handler', () => {
-      const handlers = mockChrome.commands.onCommand.addListener.mock.calls;
-      expect(handlers.length).toBeGreaterThan(0);
+      expect(swRegistration.onCommand).toBe(true);
     });
 
     it('should handle keyboard commands', async () => {
       const mockTab = { id: 123 };
       mockChrome.tabs.query.mockResolvedValue([mockTab]);
 
-      // Command handlers are registered
-      expect(mockChrome.commands.onCommand.addListener).toHaveBeenCalled();
+      expect(swRegistration.onCommand).toBe(true);
     });
   });
 
   describe('Context Menus', () => {
     it('should create context menu items', () => {
-      expect(mockChrome.contextMenus.create).toHaveBeenCalled();
+      expect(swRegistration.contextMenuCreate).toBe(true);
     });
 
     it('should register context menu click handler', () => {
-      expect(mockChrome.contextMenus.onClicked.addListener).toHaveBeenCalled();
+      expect(swRegistration.contextMenuClick).toBe(true);
     });
   });
 

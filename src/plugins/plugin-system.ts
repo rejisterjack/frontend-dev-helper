@@ -1,8 +1,9 @@
 /**
- * Plugin System
+ * Plugin System (experimental)
  *
- * Third-party tool registration API
- * Allow users to create and register custom tools
+ * In-repo API types and registry helpers for a possible future third-party tool story.
+ * This module is not wired into the popup, background, or manifest yet—shipping tools use
+ * the standard handler registry instead.
  */
 
 import { logger } from '@/utils/logger';

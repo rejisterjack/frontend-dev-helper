@@ -99,9 +99,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 ## 🚀 Installation
 
 ### From Chrome Web Store
-> 🚀 **Coming soon to the Chrome Web Store!**
->
-> The extension is currently available via manual installation (see below). Chrome Web Store submission is in progress.
+Publish via the [Chrome Web Developer Dashboard](https://chrome.google.com/webstore/devconsole) using a zip of `dist/`. Store builds rely on `update_url` in `public/manifest.json`; for day-to-day work, use **Load unpacked** on `dist/` and skip store update flow.
 
 ### From Firefox Add-ons
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox%20Add--ons-Install-orange?style=for-the-badge&logo=firefox)](https://addons.mozilla.org/en-US/firefox/addon/frontenddevhelper/)
@@ -150,23 +148,25 @@ pnpm run build
 
 ```bash
 # Start development server
-npm run dev
+pnpm run dev
 
 # Run tests
-npm test
+pnpm test
 
 # Run E2E tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Build for production
-npm run build
+pnpm run build
 
 # Lint code
-npm run lint
+pnpm run lint
 
 # Format code
-npm run format
+pnpm run format
 ```
+
+Weekly manual smoke checks: [docs/guide/dogfooding-checklist.md](docs/guide/dogfooding-checklist.md).
 
 ---
 
@@ -199,6 +199,14 @@ frontend-dev-helper/
 | Testing | Vitest + Playwright |
 
 ---
+
+## Security and privacy
+
+- **Local-first**: Tooling runs in your browser; we do not operate a default telemetry backend.
+- **Permissions**: Broad host access is required so debugging tools can run on the sites you choose. Review `public/manifest.json` before installing.
+- **Optional AI**: When you add an OpenRouter API key in settings, requests go to [OpenRouter](https://openrouter.ai/) from the extension only when you use AI features. Page-derived content may be included in those requests—keep keys private and disable AI if you do not want network calls.
+
+Firefox vs Chromium differences: [docs/firefox-parity.md](docs/firefox-parity.md).
 
 ## 🤝 Contributing
 

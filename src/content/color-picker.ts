@@ -4,6 +4,8 @@
  * Provides color picking functionality from the page.
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
+import { logger } from '@/utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
 
 export interface ColorPickerOptions {
@@ -341,20 +343,13 @@ export class ColorPicker {
 
   private extractPageColors(): Map<string, number> {
     const colors = new Map<string, number>();
-    const elements = document.querySelectorAll('*');
 
-    // Performance: Sample elements on large DOMs to avoid freezing the UI
-    // Cap at 500 elements, sample every Nth element for larger DOMs
-    const maxElements = 500;
-    const totalElements = elements.length;
-    const samplingRate = totalElements > maxElements ? Math.ceil(totalElements / maxElements) : 1;
-
-    for (let i = 0; i < totalElements; i += samplingRate) {
-      const el = elements[i];
-      if (el instanceof HTMLElement) {
+    walkElementsEfficiently(
+      document,
+      (el) => {
+        if (!(el instanceof HTMLElement)) return;
         const computed = window.getComputedStyle(el);
 
-        // Extract colors from various properties
         const colorProps = [
           'color',
           'backgroundColor',
@@ -375,8 +370,9 @@ export class ColorPicker {
             }
           }
         });
-      }
-    }
+      },
+      (msg) => logger.log(msg)
+    );
 
     return colors;
   }

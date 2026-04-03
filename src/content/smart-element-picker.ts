@@ -425,23 +425,23 @@ function createInfoPanel(analysis: ElementAnalysis): void {
       <!-- Element Info -->
       <div class="fdh-sep-section">
         <div class="fdh-sep-tag">
-          <span class="fdh-sep-tag-name">${info.tag}</span>
-          ${info.id ? `<span class="fdh-sep-tag-id">#${info.id}</span>` : ''}
+          <span class="fdh-sep-tag-name">${escapeHtml(info.tag)}</span>
+          ${info.id ? `<span class="fdh-sep-tag-id">#${escapeHtml(info.id)}</span>` : ''}
           ${
             info.classes
               ?.slice(0, 3)
-              .map((c) => `<span class="fdh-sep-tag-class">.${c}</span>`)
+              .map((c) => `<span class="fdh-sep-tag-class">.${escapeHtml(c)}</span>`)
               .join('') || ''
           }
         </div>
         <div class="fdh-sep-dimensions">
           <div class="fdh-sep-dim">
             <span class="fdh-sep-dim-label">Size</span>
-            <span class="fdh-sep-dim-value">${info.dimensions.width} × ${info.dimensions.height}</span>
+            <span class="fdh-sep-dim-value">${escapeHtml(String(info.dimensions.width))} × ${escapeHtml(String(info.dimensions.height))}</span>
           </div>
           <div class="fdh-sep-dim">
             <span class="fdh-sep-dim-label">Position</span>
-            <span class="fdh-sep-dim-value">${info.dimensions.left}, ${info.dimensions.top}</span>
+            <span class="fdh-sep-dim-value">${escapeHtml(String(info.dimensions.left))}, ${escapeHtml(String(info.dimensions.top))}</span>
           </div>
         </div>
       </div>
@@ -575,13 +575,13 @@ function createInfoPanel(analysis: ElementAnalysis): void {
               : ''
           }
         </div>
-        ${accessibility.ariaLabel ? `<div style="margin-top: 8px; font-size: 11px; color: #a6e3a1;">ARIA Label: "${accessibility.ariaLabel}"</div>` : ''}
+        ${accessibility.ariaLabel ? `<div style="margin-top: 8px; font-size: 11px; color: #a6e3a1;">ARIA Label: "${escapeHtml(accessibility.ariaLabel)}"</div>` : ''}
       </div>
 
       <!-- Selector -->
       <div class="fdh-sep-section">
         <div class="fdh-sep-section-title">Selector</div>
-        <div class="fdh-sep-copy">${info.selector}</div>
+        <div class="fdh-sep-copy">${escapeHtml(info.selector)}</div>
       </div>
     </div>
     <div class="fdh-sep-actions">

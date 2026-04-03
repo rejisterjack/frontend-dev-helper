@@ -2,24 +2,31 @@
  * E2E Tests - Extension Loading
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { getChromeExtensionId } from './extension-helpers';
 
 test.describe('Extension Loading', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForLoadState('domcontentloaded');
+  });
+
   test('extension popup loads correctly', async ({ page }) => {
-    // Navigate to popup
-    await page.goto('chrome-extension://[extension-id]/popup.html');
-    
-    // Check that popup content is visible
-    await expect(page.locator('body')).toBeVisible();
-    
-    // Check for main elements
+    const id = await getChromeExtensionId(page.context());
+    await page.goto(`chrome-extension://${id}/index.html`);
     await expect(page.locator('text=FrontendDevHelper')).toBeVisible();
   });
 
   test('options page loads correctly', async ({ page }) => {
-    await page.goto('chrome-extension://[extension-id]/options.html');
-    
-    await expect(page.locator('body')).toBeVisible();
+    const id = await getChromeExtensionId(page.context());
+    await page.goto(`chrome-extension://${id}/options.html`);
     await expect(page.locator('h1, h2')).toContainText(/settings|options/i);
   });
 
@@ -30,6 +37,13 @@ test.describe('Extension Loading', () => {
 });
 
 test.describe('Content Script Injection', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test('content script injects on web pages', async ({ page, context }) => {
     // Navigate to a test page
     await page.goto('https://example.com');
@@ -66,6 +80,13 @@ test.describe('Content Script Injection', () => {
 });
 
 test.describe('Tool Activation', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test('pesticide tool can be enabled', async ({ page }) => {
     await page.goto('https://example.com');
     
@@ -102,6 +123,13 @@ test.describe('Tool Activation', () => {
 });
 
 test.describe('Security', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test('XSS payloads are sanitized in messages', async ({ page }) => {
     await page.goto('https://example.com');
     

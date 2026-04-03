@@ -448,6 +448,120 @@ export async function updateSettings(settings: Partial<typeof DEFAULT_SETTINGS>)
 }
 
 // ============================================
+// UI preferences (popup progressive disclosure, diagnostics)
+// ============================================
+
+export interface UiPrefs {
+  showAdvancedTools: boolean;
+  diagnosticsOptIn: boolean;
+  /** Small on-page badge listing active tool names (content script). */
+  showActiveToolsHud: boolean;
+}
+
+const DEFAULT_UI_PREFS: UiPrefs = {
+  showAdvancedTools: false,
+  diagnosticsOptIn: false,
+  showActiveToolsHud: false,
+};
+
+export async function getUiPrefs(): Promise<UiPrefs> {
+  try {
+    const result = await chrome.storage.local.get(STORAGE_KEYS.UI_PREFS);
+    const stored = result[STORAGE_KEYS.UI_PREFS] as Partial<UiPrefs> | undefined;
+    return { ...DEFAULT_UI_PREFS, ...stored };
+  } catch (error) {
+    logger.error('[Storage] Failed to get UI prefs:', error);
+    return DEFAULT_UI_PREFS;
+  }
+}
+
+export async function setUiPrefs(prefs: Partial<UiPrefs>): Promise<void> {
+  const current = await getUiPrefs();
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.UI_PREFS]: { ...current, ...prefs },
+  });
+}
+
+// ============================================
+// User-defined tool presets (bundles)
+// ============================================
+
+export interface UserToolPreset {
+  id: string;
+  name: string;
+  toolIds: ToolId[];
+}
+
+const MAX_USER_PRESETS = 30;
+
+export async function getUserToolPresets(): Promise<UserToolPreset[]> {
+  try {
+    const r = await chrome.storage.local.get(STORAGE_KEYS.USER_TOOL_PRESETS);
+    const raw = r[STORAGE_KEYS.USER_TOOL_PRESETS];
+    if (!Array.isArray(raw)) return [];
+    return raw.filter(
+      (x): x is UserToolPreset =>
+        typeof x === 'object' &&
+        x !== null &&
+        typeof (x as UserToolPreset).id === 'string' &&
+        typeof (x as UserToolPreset).name === 'string' &&
+        Array.isArray((x as UserToolPreset).toolIds)
+    );
+  } catch (error) {
+    logger.error('[Storage] getUserToolPresets failed:', error);
+    return [];
+  }
+}
+
+export async function saveUserToolPresets(presets: UserToolPreset[]): Promise<void> {
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.USER_TOOL_PRESETS]: presets.slice(0, MAX_USER_PRESETS),
+  });
+}
+
+export async function addUserToolPreset(name: string, toolIds: ToolId[]): Promise<UserToolPreset | null> {
+  const trimmed = name.trim();
+  if (!trimmed || toolIds.length === 0) return null;
+  const list = await getUserToolPresets();
+  const id =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `up_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const next = [...list, { id, name: trimmed, toolIds }];
+  await saveUserToolPresets(next);
+  return { id, name: trimmed, toolIds };
+}
+
+export async function removeUserToolPreset(id: string): Promise<void> {
+  const list = await getUserToolPresets();
+  await saveUserToolPresets(list.filter((p) => p.id !== id));
+}
+
+const DIAGNOSTICS_COUNTS_KEY = 'fdh_diagnostics_counts';
+
+export async function recordDiagnosticEvent(kind: string): Promise<void> {
+  const prefs = await getUiPrefs();
+  if (!prefs.diagnosticsOptIn) return;
+  try {
+    const result = await chrome.storage.local.get(DIAGNOSTICS_COUNTS_KEY);
+    const counts = (result[DIAGNOSTICS_COUNTS_KEY] as Record<string, number>) || {};
+    counts[kind] = (counts[kind] || 0) + 1;
+    await chrome.storage.local.set({ [DIAGNOSTICS_COUNTS_KEY]: counts });
+  } catch (error) {
+    logger.error('[Storage] recordDiagnosticEvent failed:', error);
+  }
+}
+
+export async function getDiagnosticCounts(): Promise<Record<string, number>> {
+  const result = await chrome.storage.local.get(DIAGNOSTICS_COUNTS_KEY);
+  return (result[DIAGNOSTICS_COUNTS_KEY] as Record<string, number>) || {};
+}
+
+export async function clearDiagnosticCounts(): Promise<void> {
+  await chrome.storage.local.remove(DIAGNOSTICS_COUNTS_KEY);
+}
+
+// ============================================
 // Utility Functions
 // ============================================
 

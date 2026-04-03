@@ -54,8 +54,13 @@ const toggleFeaturePayloadSchema = z.object({
  * - Error handling and logging
  * - Type-safe message processing
  */
+export type MessageHandler = (
+  message: ExtensionMessage,
+  sender: chrome.runtime.MessageSender
+) => Promise<unknown>;
+
 export class MessageRouter {
-  private handlers: Map<string, (message: ExtensionMessage) => Promise<unknown>> = new Map();
+  private handlers: Map<string, MessageHandler> = new Map();
 
   /**
    * Creates a new MessageRouter instance.
@@ -126,7 +131,7 @@ export class MessageRouter {
           return;
         }
 
-        const result = await handler(message);
+        const result = await handler(message, sender);
 
         sendResponse({
           success: true,
@@ -161,7 +166,7 @@ export class MessageRouter {
    * });
    * ```
    */
-  registerHandler(type: string, handler: (message: ExtensionMessage) => Promise<unknown>): void {
+  registerHandler(type: string, handler: MessageHandler): void {
     this.handlers.set(type, handler);
   }
 
@@ -180,7 +185,7 @@ export class MessageRouter {
    * @param type - The message type to get handler for
    * @returns The handler function, or undefined if not found
    */
-  getHandler(type: string): ((message: ExtensionMessage) => Promise<unknown>) | undefined {
+  getHandler(type: string): MessageHandler | undefined {
     return this.handlers.get(type);
   }
 

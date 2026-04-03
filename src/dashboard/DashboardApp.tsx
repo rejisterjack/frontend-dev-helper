@@ -406,8 +406,16 @@ const SessionsTab: React.FC<{
           {sessions.map((session) => (
             <div
               key={session.id}
+              role="button"
+              tabIndex={0}
               className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => onSelect(session)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelect(session);
+                }
+              }}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -501,9 +509,9 @@ const ResponsiveTab: React.FC<{
               />
               {screenshot.issues && screenshot.issues.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  {screenshot.issues.map((issue, i) => (
+                  {screenshot.issues.map((issue) => (
                     <div
-                      key={i}
+                      key={`${screenshot.breakpoint.name}-${issue.type}-${issue.severity}-${issue.description}-${issue.element ?? ''}`}
                       className={`p-3 rounded-lg text-sm ${
                         issue.severity === 'error' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
                       }`}
@@ -538,8 +546,16 @@ const ResponsiveTab: React.FC<{
           {reports.map((report) => (
             <div
               key={report.id}
+              role="button"
+              tabIndex={0}
               className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => onSelect(report)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelect(report);
+                }
+              }}
             >
               <div className="flex items-start justify-between">
                 <div>

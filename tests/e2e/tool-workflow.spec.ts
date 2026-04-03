@@ -2,9 +2,16 @@
  * E2E Tests - Tool Workflow
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test.describe('Tool Activation Workflow', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test('complete pesticide tool workflow', async ({ page, context }) => {
     await page.goto('https://example.com');
     await page.waitForLoadState('networkidle');

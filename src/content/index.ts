@@ -13,8 +13,12 @@
  * - Grid overlay
  */
 
+import { MESSAGE_TYPES } from '../constants';
 import type { ContentScriptState } from '../types';
+import { showContentErrorToast } from '../utils/content-notify';
 import { logger } from '../utils/logger';
+import { recordDiagnosticEvent } from '../utils/storage';
+import { initActiveToolsHudIfEnabled } from './active-tools-hud';
 import { registry } from './handlers';
 
 // ============================================
@@ -55,13 +59,16 @@ const state: ContentScriptState = {
   isStorageInspectorActive: false,
   isComponentTreeActive: false,
   isVisualRegressionActive: false,
-  isAiSuggestionsActive: false,
+  isSmartSuggestionsActive: false,
   // Advanced tools
   isCssVariableInspectorActive: false,
   isSmartElementPickerActive: false,
   isSessionRecorderActive: false,
   isPerformanceBudgetActive: false,
   isFrameworkDevtoolsActive: false,
+  isContainerQueryInspectorActive: false,
+  isViewTransitionsDebuggerActive: false,
+  isScrollAnimationsDebuggerActive: false,
 };
 
 // ============================================
@@ -71,6 +78,27 @@ const state: ContentScriptState = {
 chrome.runtime.onMessage.addListener(
   (message: { type: string; payload?: Record<string, unknown> }, _sender, sendResponse) => {
     logger.log('[Content] Received message:', message.type);
+
+    if (message.type === MESSAGE_TYPES.FDH_INSPECTED_HINT) {
+      const sel = message.payload?.selector as string | undefined;
+      if (sel) {
+        try {
+          const el = document.querySelector(sel);
+          if (el instanceof HTMLElement) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const prev = el.style.outline;
+            el.style.outline = '3px solid #6366f1';
+            window.setTimeout(() => {
+              el.style.outline = prev;
+            }, 2000);
+          }
+        } catch {
+          // Invalid selector
+        }
+      }
+      sendResponse({ success: true });
+      return false;
+    }
 
     // Handle TOOL_STATE_CHANGED for real-time sync
     if (message.type === 'TOOL_STATE_CHANGED') {
@@ -98,6 +126,10 @@ chrome.runtime.onMessage.addListener(
       return isAsync === true;
     } catch (error) {
       logger.error('[Content] Handler error for', message.type, error);
+      void recordDiagnosticEvent('content_handler_error');
+      showContentErrorToast(
+        'FrontendDevHelper: something went wrong running that action. Details are in the page console.'
+      );
       sendResponse({ success: false, error: String(error) });
       return false;
     }
@@ -256,4 +288,5 @@ function handleInAppHotkey(action: string): void {
 // ============================================
 
 setupInAppHotkeys();
+void initActiveToolsHudIfEnabled();
 logger.log('[Content] FrontendDevHelper content script initialized');

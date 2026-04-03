@@ -9,6 +9,7 @@
  * - Export as design tokens (JSON, CSS, Figma tokens format)
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 
 export interface CSSVariable {
@@ -59,7 +60,7 @@ function getStylesheetVariables(): Map<string, { value: string; source: string }
           }
         }
       }
-    } catch (e) {
+    } catch {
       // Cross-origin stylesheet - skip
     }
   }
@@ -137,9 +138,10 @@ function detectVariableType(value: string): CSSVariable['type'] {
  */
 function scanVariableUsage(): Map<string, VariableUsage[]> {
   const usage = new Map<string, VariableUsage[]>();
-  const allElements = document.querySelectorAll('*');
 
-  for (const el of allElements) {
+  walkElementsEfficiently(
+    document,
+    (el) => {
     const computed = getComputedStyle(el as HTMLElement);
     const styles = computed.cssText || '';
 
@@ -155,7 +157,9 @@ function scanVariableUsage(): Map<string, VariableUsage[]> {
         }
       }
     }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   return usage;
 }

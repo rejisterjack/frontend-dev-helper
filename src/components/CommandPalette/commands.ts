@@ -1,28 +1,25 @@
 /**
  * Command Palette Commands Registry
  *
- * Defines all available commands for the FrontendDevHelper command palette.
- * This includes tools, actions, settings, and navigation commands.
+ * Tool toggles are generated from TOOL_METADATA (see tool-catalog).
+ * Presets and global actions are defined here.
  */
 
-import { TOOL_IDS } from '@/constants';
+import { MESSAGE_TYPES, TOOL_IDS } from '@/constants';
+import { getToolMessagePrefix } from '@/constants/tool-messages';
 import type { Command, ToolId } from '@/types';
+import { applyBuiltinPreset, applyUserPreset } from '@/utils/apply-preset';
 import { logger } from '@/utils/logger';
+import { BUILTIN_TOOL_PRESETS, buildToolToggleCommands } from '@/utils/tool-catalog';
+import { getUserToolPresets } from '@/utils/storage';
 
-// Track command execution history
 const MAX_RECENT_COMMANDS = 10;
 let recentCommandIds: string[] = [];
 
-/**
- * Get recent commands
- */
 export function getRecentCommands(): string[] {
   return [...recentCommandIds];
 }
 
-/**
- * Add command to recent history
- */
 export function addRecentCommand(commandId: string): void {
   recentCommandIds = recentCommandIds.filter((id) => id !== commandId);
   recentCommandIds.unshift(commandId);
@@ -31,300 +28,54 @@ export function addRecentCommand(commandId: string): void {
   }
 }
 
-/**
- * Clear recent commands
- */
 export function clearRecentCommands(): void {
   recentCommandIds = [];
 }
 
-/**
- * Toggle a tool by sending message to content script
- */
 async function toggleTool(toolId: ToolId): Promise<void> {
+  const prefix = getToolMessagePrefix(toolId);
+  if (!prefix) return;
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      // Convert toolId to message prefix
-      const prefix = toolId
-        .replace(/([A-Z])/g, '_$1')
-        .toUpperCase()
-        .replace(/^_/, '');
-      await chrome.tabs.sendMessage(tab.id, {
-        type: `${prefix}_TOGGLE`,
-      });
-    }
+    await chrome.runtime.sendMessage({
+      type: MESSAGE_TYPES.TOGGLE_TOOL,
+      payload: { toolId },
+    });
   } catch (error) {
     logger.error(`[CommandPalette] Failed to toggle tool ${toolId}:`, error);
   }
 }
 
-/**
- * Get all registered commands
- */
-export function getAllCommands(): Command[] {
-  const commands: Command[] = [
-    // ============================================
-    // Tools - Core
-    // ============================================
-    {
-      id: 'toggle-dom-outliner',
-      title: 'Toggle DOM Outliner',
-      description: 'Show/hide color-coded element outlines',
-      shortcut: 'Alt+P',
-      icon: '🕸️',
-      category: 'tool',
-      keywords: ['dom', 'outline', 'pesticide', 'structure', 'border'],
-      execute: () => toggleTool(TOOL_IDS.DOM_OUTLINER),
+function buildPresetCommands(): Command[] {
+  return BUILTIN_TOOL_PRESETS.map((p) => ({
+    id: `preset-${p.id}`,
+    title: `Preset: ${p.name}`,
+    description: p.description,
+    category: 'action' as const,
+    icon: '📋',
+    keywords: ['preset', 'bundle', 'profile', ...p.name.toLowerCase().split(/\s+/), p.id],
+    execute: () => {
+      void applyBuiltinPreset(p.id);
     },
-    {
-      id: 'toggle-spacing-visualizer',
-      title: 'Toggle Spacing Visualizer',
-      description: 'Show margins, padding, and gaps',
-      shortcut: 'Alt+S',
-      icon: '📐',
-      category: 'tool',
-      keywords: ['spacing', 'margin', 'padding', 'gap', 'layout'],
-      execute: () => toggleTool(TOOL_IDS.SPACING_VISUALIZER),
-    },
-    {
-      id: 'toggle-font-inspector',
-      title: 'Toggle Font Inspector',
-      description: 'Inspect typography and font stacks',
-      shortcut: 'Alt+F',
-      icon: '🔤',
-      category: 'tool',
-      keywords: ['font', 'typography', 'text', 'family', 'size'],
-      execute: () => toggleTool(TOOL_IDS.FONT_INSPECTOR),
-    },
-    {
-      id: 'toggle-color-picker',
-      title: 'Toggle Color Picker',
-      description: 'Pick colors from any element',
-      shortcut: 'Alt+C',
-      icon: '🎨',
-      category: 'tool',
-      keywords: ['color', 'picker', 'eyedropper', 'palette', 'hex'],
-      execute: () => toggleTool(TOOL_IDS.COLOR_PICKER),
-    },
-    {
-      id: 'toggle-pixel-ruler',
-      title: 'Toggle Pixel Ruler',
-      description: 'Measure distances in pixels',
-      shortcut: 'Alt+M',
-      icon: '📏',
-      category: 'tool',
-      keywords: ['ruler', 'measure', 'distance', 'pixel', 'px'],
-      execute: () => toggleTool(TOOL_IDS.PIXEL_RULER),
-    },
-    {
-      id: 'toggle-breakpoint-overlay',
-      title: 'Toggle Breakpoint Overlay',
-      description: 'Show responsive breakpoint indicators',
-      shortcut: 'Alt+B',
-      icon: '📱',
-      category: 'tool',
-      keywords: ['breakpoint', 'responsive', 'viewport', 'media query'],
-      execute: () => toggleTool(TOOL_IDS.RESPONSIVE_BREAKPOINT),
-    },
-    {
-      id: 'toggle-css-inspector',
-      title: 'Toggle CSS Inspector',
-      description: 'View computed CSS properties by category',
-      icon: '📝',
-      category: 'tool',
-      keywords: ['css', 'styles', 'computed', 'properties', 'inspector'],
-      execute: () => toggleTool(TOOL_IDS.CSS_INSPECTOR),
-    },
-    {
-      id: 'toggle-contrast-checker',
-      title: 'Toggle Contrast Checker',
-      description: 'Check WCAG color contrast compliance',
-      icon: '♿',
-      category: 'tool',
-      keywords: ['contrast', 'accessibility', 'wcag', 'color', 'a11y'],
-      execute: () => toggleTool(TOOL_IDS.CONTRAST_CHECKER),
-    },
-    {
-      id: 'toggle-layout-visualizer',
-      title: 'Toggle Flex/Grid Visualizer',
-      description: 'Visualize flexbox and grid layouts',
-      icon: '⊞',
-      category: 'tool',
-      keywords: ['flexbox', 'grid', 'layout', 'css', 'container'],
-      execute: () => toggleTool(TOOL_IDS.LAYOUT_VISUALIZER),
-    },
-    {
-      id: 'toggle-zindex-visualizer',
-      title: 'Toggle Z-Index Visualizer',
-      description: 'See stacking order and 3D view',
-      icon: '📚',
-      category: 'tool',
-      keywords: ['z-index', 'stacking', 'layer', '3d', 'context'],
-      execute: () => toggleTool(TOOL_IDS.ZINDEX_VISUALIZER),
-    },
-    {
-      id: 'toggle-tech-detector',
-      title: 'Toggle Tech Detector',
-      description: 'Detect frameworks and libraries',
-      icon: '🔍',
-      category: 'tool',
-      keywords: ['tech', 'framework', 'library', 'detect', 'stack'],
-      execute: () => toggleTool(TOOL_IDS.TECH_DETECTOR),
-    },
-    {
-      id: 'toggle-accessibility-audit',
-      title: 'Toggle Accessibility Audit',
-      description: 'WCAG compliance checker with ARIA validation',
-      icon: '🛡️',
-      category: 'tool',
-      keywords: ['accessibility', 'audit', 'wcag', 'aria', 'a11y'],
-      execute: () => toggleTool(TOOL_IDS.ACCESSIBILITY_AUDIT),
-    },
-    {
-      id: 'toggle-site-report',
-      title: 'Toggle Site Report Generator',
-      description: 'Comprehensive site analysis and scoring',
-      icon: '📊',
-      category: 'tool',
-      keywords: ['report', 'analysis', 'score', 'audit', 'performance'],
-      execute: () => toggleTool(TOOL_IDS.SITE_REPORT),
-    },
-    {
-      id: 'toggle-css-editor',
-      title: 'Toggle Live CSS Editor',
-      description: 'Edit CSS in real-time with live preview',
-      icon: '✏️',
-      category: 'tool',
-      keywords: ['css', 'editor', 'live', 'edit', 'styles'],
-      execute: () => toggleTool(TOOL_IDS.CSS_EDITOR),
-    },
-    {
-      id: 'toggle-screenshot-studio',
-      title: 'Toggle Screenshot Studio',
-      description: 'Capture and annotate screenshots',
-      icon: '📸',
-      category: 'tool',
-      keywords: ['screenshot', 'capture', 'image', 'annotate'],
-      execute: () => toggleTool(TOOL_IDS.SCREENSHOT_STUDIO),
-    },
-    {
-      id: 'toggle-animation-inspector',
-      title: 'Toggle Animation Inspector',
-      description: 'Debug CSS animations and transitions',
-      icon: '🎬',
-      category: 'tool',
-      keywords: ['animation', 'css', 'transition', 'keyframes', 'timeline'],
-      execute: () => toggleTool(TOOL_IDS.ANIMATION_INSPECTOR),
-    },
-    {
-      id: 'toggle-responsive-preview',
-      title: 'Toggle Responsive Preview',
-      description: 'Multi-device preview side-by-side',
-      icon: '📲',
-      category: 'tool',
-      keywords: ['responsive', 'preview', 'device', 'mobile', 'tablet'],
-      execute: () => toggleTool(TOOL_IDS.RESPONSIVE_PREVIEW),
-    },
-    {
-      id: 'toggle-design-system-validator',
-      title: 'Toggle Design System Validator',
-      description: 'Check design token consistency',
-      icon: '🎨',
-      category: 'tool',
-      keywords: ['design', 'system', 'tokens', 'consistency', 'validation'],
-      execute: () => toggleTool(TOOL_IDS.DESIGN_SYSTEM_VALIDATOR),
-    },
-    {
-      id: 'toggle-network-analyzer',
-      title: 'Toggle Network Analyzer',
-      description: 'Monitor network requests and waterfall',
-      icon: '🌐',
-      category: 'tool',
-      keywords: ['network', 'requests', 'performance', 'waterfall', 'api'],
-      execute: () => toggleTool(TOOL_IDS.NETWORK_ANALYZER),
-    },
+  }));
+}
 
-    // ============================================
-    // Tools - New "Best of the Best"
-    // ============================================
-    {
-      id: 'toggle-command-palette',
-      title: 'Toggle Command Palette',
-      description: 'Quick access to all tools via keyboard',
-      shortcut: 'Ctrl+Shift+P',
-      icon: '⌨️',
-      category: 'tool',
-      keywords: ['command', 'palette', 'search', 'quick', 'access', 'keyboard'],
-      execute: () => toggleTool(TOOL_IDS.COMMAND_PALETTE),
+async function buildUserPresetCommands(): Promise<Command[]> {
+  const presets = await getUserToolPresets();
+  return presets.map((p) => ({
+    id: `user-preset-${p.id}`,
+    title: `My preset: ${p.name}`,
+    description: `${p.toolIds.length} tools`,
+    category: 'action' as const,
+    icon: '⭐',
+    keywords: ['preset', 'user', 'bundle', ...p.name.toLowerCase().split(/\s+/), p.id],
+    execute: () => {
+      void applyUserPreset(p.id);
     },
-    {
-      id: 'toggle-storage-inspector',
-      title: 'Toggle Storage Inspector',
-      description: 'Inspect LocalStorage, IndexedDB, Cookies, and Cache',
-      icon: '💾',
-      category: 'tool',
-      keywords: ['storage', 'localstorage', 'indexeddb', 'cookies', 'cache'],
-      execute: () => toggleTool(TOOL_IDS.STORAGE_INSPECTOR),
-    },
-    {
-      id: 'toggle-focus-debugger',
-      title: 'Toggle Focus Debugger',
-      description: 'Visualize focus order and detect focus traps',
-      icon: '🎯',
-      category: 'tool',
-      keywords: ['focus', 'accessibility', 'tab', 'keyboard', 'trap'],
-      execute: () => toggleTool(TOOL_IDS.FOCUS_DEBUGGER),
-    },
-    {
-      id: 'toggle-form-debugger',
-      title: 'Toggle Form Debugger',
-      description: 'Debug form validation and autofill',
-      icon: '📝',
-      category: 'tool',
-      keywords: ['form', 'validation', 'input', 'autofill', 'field'],
-      execute: () => toggleTool(TOOL_IDS.FORM_DEBUGGER),
-    },
-    {
-      id: 'toggle-component-tree',
-      title: 'Toggle Component Tree',
-      description: 'Visualize React, Vue, Angular, Svelte components',
-      icon: '🌳',
-      category: 'tool',
-      keywords: ['component', 'tree', 'react', 'vue', 'angular', 'svelte'],
-      execute: () => toggleTool(TOOL_IDS.COMPONENT_TREE),
-    },
-    {
-      id: 'toggle-flame-graph',
-      title: 'Toggle Performance Flame Graph',
-      description: 'Visualize JavaScript execution performance',
-      icon: '🔥',
-      category: 'tool',
-      keywords: ['performance', 'flame', 'profile', 'javascript', 'execution'],
-      execute: () => toggleTool(TOOL_IDS.FLAME_GRAPH),
-    },
-    {
-      id: 'toggle-visual-regression',
-      title: 'Toggle Visual Regression',
-      description: 'Capture baselines and compare screenshots',
-      icon: '👁️',
-      category: 'tool',
-      keywords: ['visual', 'regression', 'screenshot', 'baseline', 'diff'],
-      execute: () => toggleTool(TOOL_IDS.VISUAL_REGRESSION),
-    },
-    {
-      id: 'toggle-smart-suggestions',
-      title: 'Toggle AI Suggestions',
-      description: 'Smart analysis with one-click fixes',
-      icon: '✨',
-      category: 'tool',
-      keywords: ['ai', 'suggestions', 'smart', 'fix', 'analysis'],
-      execute: () => toggleTool(TOOL_IDS.SMART_SUGGESTIONS),
-    },
+  }));
+}
 
-    // ============================================
-    // Actions
-    // ============================================
+function buildStaticCommands(): Command[] {
+  return [
     {
       id: 'reset-all-tools',
       title: 'Reset All Tools',
@@ -335,7 +86,7 @@ export function getAllCommands(): Command[] {
       execute: async () => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab?.id) {
-          await chrome.tabs.sendMessage(tab.id, { type: 'RESET_ALL_TOOLS' });
+          await chrome.tabs.sendMessage(tab.id, { type: 'DISABLE_ALL_TOOLS' });
         }
       },
     },
@@ -348,7 +99,6 @@ export function getAllCommands(): Command[] {
       keywords: ['screenshot', 'capture', 'image', 'save'],
       execute: async () => {
         const dataUrl = await chrome.tabs.captureVisibleTab();
-        // Download or copy to clipboard
         const link = document.createElement('a');
         link.download = `screenshot-${Date.now()}.png`;
         link.href = dataUrl;
@@ -362,7 +112,9 @@ export function getAllCommands(): Command[] {
       icon: '📋',
       category: 'action',
       keywords: ['report', 'analysis', 'generate', 'audit', 'export'],
-      execute: () => toggleTool(TOOL_IDS.SITE_REPORT),
+      execute: () => {
+        void toggleTool(TOOL_IDS.SITE_REPORT);
+      },
     },
     {
       id: 'export-report-json',
@@ -407,10 +159,6 @@ export function getAllCommands(): Command[] {
         }
       },
     },
-
-    // ============================================
-    // Settings
-    // ============================================
     {
       id: 'open-settings',
       title: 'Open Settings',
@@ -430,7 +178,6 @@ export function getAllCommands(): Command[] {
       category: 'setting',
       keywords: ['theme', 'dark', 'light', 'mode', 'appearance'],
       execute: async () => {
-        // Toggle theme in storage
         const result = await chrome.storage.local.get('settings');
         const settings = result.settings || {};
         settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
@@ -448,10 +195,6 @@ export function getAllCommands(): Command[] {
         chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
       },
     },
-
-    // ============================================
-    // Navigation
-    // ============================================
     {
       id: 'open-popup',
       title: 'Open Extension Popup',
@@ -461,7 +204,6 @@ export function getAllCommands(): Command[] {
       category: 'navigation',
       keywords: ['popup', 'open', 'main', 'window'],
       execute: () => {
-        // This is handled by the browser action
         chrome.action.openPopup();
       },
     },
@@ -473,7 +215,6 @@ export function getAllCommands(): Command[] {
       category: 'navigation',
       keywords: ['devtools', 'panel', 'developer', 'tools', 'inspect'],
       execute: () => {
-        // User needs to open DevTools manually, but we can guide them
         chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
           if (tab?.id) {
             chrome.scripting.executeScript({
@@ -513,19 +254,23 @@ export function getAllCommands(): Command[] {
       },
     },
   ];
-
-  return commands;
 }
 
-/**
- * Search commands by query string
- */
+export function getAllCommands(): Command[] {
+  return [...buildPresetCommands(), ...buildStaticCommands(), ...buildToolToggleCommands()];
+}
+
+/** Includes user-saved presets (async). */
+export async function getAllPaletteCommands(): Promise<Command[]> {
+  const user = await buildUserPresetCommands();
+  return [...getAllCommands(), ...user];
+}
+
 export function searchCommands(query: string): Command[] {
   const commands = getAllCommands();
   const normalizedQuery = query.toLowerCase().trim();
 
   if (!normalizedQuery) {
-    // Return recent commands first, then all others
     const recent = recentCommandIds
       .map((id) => commands.find((c) => c.id === id))
       .filter((c): c is Command => c !== undefined);
@@ -545,7 +290,6 @@ export function searchCommands(query: string): Command[] {
     })
     .filter(({ matchCount }) => matchCount > 0)
     .sort((a, b) => {
-      // Sort by match count (descending), then by title (ascending)
       if (b.matchCount !== a.matchCount) {
         return b.matchCount - a.matchCount;
       }
@@ -554,17 +298,23 @@ export function searchCommands(query: string): Command[] {
     .map(({ command }) => command);
 }
 
-/**
- * Get command by ID
- */
 export function getCommandById(id: string): Command | undefined {
   return getAllCommands().find((cmd) => cmd.id === id);
 }
 
-/**
- * Execute command by ID
- */
 export async function executeCommandById(id: string): Promise<boolean> {
+  if (id.startsWith('user-preset-')) {
+    const presetId = id.slice('user-preset-'.length);
+    try {
+      const ok = await applyUserPreset(presetId);
+      if (ok) addRecentCommand(id);
+      return ok;
+    } catch (error) {
+      logger.error('[CommandPalette] User preset failed:', error);
+      return false;
+    }
+  }
+
   const command = getCommandById(id);
   if (!command) return false;
 

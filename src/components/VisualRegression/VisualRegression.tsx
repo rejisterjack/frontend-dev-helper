@@ -121,10 +121,11 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
           options,
         })) as MessageResponse;
 
-        if (response?.baseline) {
-          setBaselines((prev) => [response.baseline, ...prev]);
-          setSelectedBaselineId(response.baseline.id);
-          logger.log('[VisualRegression] Baseline captured:', response.baseline.id);
+        const baseline = response?.baseline;
+        if (baseline) {
+          setBaselines((prev) => [baseline, ...prev]);
+          setSelectedBaselineId(baseline.id);
+          logger.log('[VisualRegression] Baseline captured:', baseline.id);
         }
       } catch (error) {
         logger.error('[VisualRegression] Failed to capture baseline:', error);
@@ -178,14 +179,15 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
           },
         })) as MessageResponse;
 
-        if (response?.test) {
-          setTests((prev) => [response.test, ...prev]);
+        const testResult = response?.test;
+        if (testResult) {
+          setTests((prev) => [testResult, ...prev]);
           setComparisonResult({
-            test: response.test,
+            test: testResult,
             baseline,
           });
           setActiveTab(TAB_TESTS);
-          logger.log('[VisualRegression] Test completed:', response.test.status);
+          logger.log('[VisualRegression] Test completed:', testResult.status);
         }
       } catch (error) {
         logger.error('[VisualRegression] Test failed:', error);
@@ -556,7 +558,8 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   <div className="mb-3 text-4xl">📸</div>
                   <p className="text-slate-400">No baselines for this page yet</p>
                   <p className="mt-1 text-sm text-slate-500">
-                    Capture a screenshot to create your first baseline
+                    Capture a screenshot to create your first baseline. Baselines are keyed by this page&apos;s
+                    URL (hash ignored) so the same path in another environment stays separate.
                   </p>
                 </div>
               ) : (

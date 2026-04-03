@@ -6,6 +6,7 @@
  */
 
 import type { ComponentNode, FrameworkType } from '@/types';
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 
 // ============================================
@@ -78,21 +79,28 @@ export function isSvelteDetected(): boolean {
  * Check if any elements have Svelte internal properties
  */
 function hasSvelteElements(): boolean {
-  // Look for elements with __svelte_meta
-  const elements = document.querySelectorAll('*');
-  for (const el of Array.from(elements).slice(0, 100)) {
-    if ((el as SvelteElement).__svelte_meta) {
-      return true;
-    }
-    // Check for $$ property on element
-    const keys = Object.keys(el);
-    for (const key of keys) {
-      if (key.startsWith('__svelte') || key === '__svelte_meta') {
-        return true;
+  let checked = 0;
+  let hit = false;
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      if (hit || checked >= 100) return;
+      checked++;
+      if ((el as SvelteElement).__svelte_meta) {
+        hit = true;
+        return;
       }
-    }
-  }
-  return false;
+      const keys = Object.keys(el);
+      for (const key of keys) {
+        if (key.startsWith('__svelte') || key === '__svelte_meta') {
+          hit = true;
+          return;
+        }
+      }
+    },
+    (msg) => logger.log(msg)
+  );
+  return hit;
 }
 
 /**
@@ -149,19 +157,20 @@ function findSvelteRoots(): SvelteComponent[] {
     if (roots.length > 0) return roots;
   }
 
-  // Search DOM for Svelte components
-  const elements = document.querySelectorAll('*');
-  for (const el of Array.from(elements)) {
-    // Check for Svelte internal properties
-    const svelteKeys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      const svelteKeys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
 
-    for (const key of svelteKeys) {
-      const value = (el as unknown as Record<string, SvelteComponent>)[key];
-      if (value && typeof value === 'object' && ('$$' in value || '$set' in value)) {
-        roots.push(value);
+      for (const key of svelteKeys) {
+        const value = (el as unknown as Record<string, SvelteComponent>)[key];
+        if (value && typeof value === 'object' && ('$$' in value || '$set' in value)) {
+          roots.push(value);
+        }
       }
-    }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   return roots;
 }
@@ -295,27 +304,29 @@ function findChildComponents(component: SvelteComponent): SvelteComponent[] {
   const componentElement = findComponentElement(component);
   if (!componentElement) return children;
 
-  // Look for nested Svelte components
-  const childElements = componentElement.querySelectorAll('*');
   const seen = new Set<unknown>();
 
-  for (const el of Array.from(childElements)) {
-    const keys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
+  walkElementsEfficiently(
+    componentElement,
+    (el) => {
+      const keys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
 
-    for (const key of keys) {
-      const value = (el as unknown as Record<string, SvelteComponent>)[key];
-      if (
-        value &&
-        typeof value === 'object' &&
-        ('$$' in value || '$set' in value) &&
-        value !== component &&
-        !seen.has(value)
-      ) {
-        children.push(value);
-        seen.add(value);
+      for (const key of keys) {
+        const value = (el as unknown as Record<string, SvelteComponent>)[key];
+        if (
+          value &&
+          typeof value === 'object' &&
+          ('$$' in value || '$set' in value) &&
+          value !== component &&
+          !seen.has(value)
+        ) {
+          children.push(value);
+          seen.add(value);
+        }
       }
-    }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   return children;
 }
@@ -324,18 +335,23 @@ function findChildComponents(component: SvelteComponent): SvelteComponent[] {
  * Find DOM element associated with component
  */
 function findComponentElement(component: SvelteComponent): HTMLElement | null {
-  // Search all elements for this component reference
-  const elements = document.querySelectorAll('*');
-  for (const el of Array.from(elements)) {
-    const keys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
+  let match: HTMLElement | null = null;
+  walkElementsEfficiently(
+    document,
+    (el) => {
+      if (match) return;
+      const keys = Object.keys(el).filter((key) => key.startsWith('__svelte') || key === '$$');
 
-    for (const key of keys) {
-      if ((el as unknown as Record<string, SvelteComponent>)[key] === component) {
-        return el as HTMLElement;
+      for (const key of keys) {
+        if ((el as unknown as Record<string, SvelteComponent>)[key] === component) {
+          match = el as HTMLElement;
+          return;
+        }
       }
-    }
-  }
-  return null;
+    },
+    (msg) => logger.log(msg)
+  );
+  return match;
 }
 
 // ============================================

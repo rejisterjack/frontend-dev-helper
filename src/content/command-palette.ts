@@ -5,7 +5,8 @@
  * Uses a Shadow DOM to isolate styles from the host page.
  */
 
-import { executeCommandById, getAllCommands } from '@/components/CommandPalette/commands';
+import { executeCommandById, getAllPaletteCommands } from '@/components/CommandPalette/commands';
+import type { Command } from '@/types';
 import { logger } from '@/utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
 
@@ -75,7 +76,7 @@ export function getState(): { enabled: boolean; isOpen: boolean } {
 export function openPalette(): void {
   if (!isEnabled || isOpen) return;
   isOpen = true;
-  createPalette();
+  void createPalette();
 }
 
 /**
@@ -116,8 +117,11 @@ function handleKeyDown(e: KeyboardEvent): void {
 // UI Creation
 // ============================================
 
-function createPalette(): void {
+async function createPalette(): Promise<void> {
   if (paletteContainer) return;
+
+  allPaletteCommands = await getAllPaletteCommands();
+  filteredCommands = allPaletteCommands;
 
   // Create container
   paletteContainer = document.createElement('div');
@@ -200,7 +204,7 @@ function createPaletteUI(): HTMLElement {
   searchInput?.addEventListener('keydown', handlePaletteKeyDown);
 
   // Initial render
-  renderCommands(getAllCommands());
+  renderCommands(filteredCommands);
 
   return palette;
 }
@@ -209,17 +213,18 @@ function createPaletteUI(): HTMLElement {
 // Search & Navigation
 // ============================================
 
-let filteredCommands = getAllCommands();
+let allPaletteCommands: Command[] = [];
+let filteredCommands: Command[] = [];
 let selectedIndex = 0;
 
 function handleSearch(e: Event): void {
   const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
 
   if (!query) {
-    filteredCommands = getAllCommands();
+    filteredCommands = allPaletteCommands;
   } else {
     const queryTerms = query.split(/\s+/);
-    filteredCommands = getAllCommands()
+    filteredCommands = allPaletteCommands
       .map((command) => {
         const searchText =
           `${command.title} ${command.description} ${command.keywords.join(' ')}`.toLowerCase();
@@ -277,7 +282,7 @@ function updateSelection(): void {
   });
 }
 
-function renderCommands(commands: ReturnType<typeof getAllCommands>): void {
+function renderCommands(commands: Command[]): void {
   const resultsContainer = shadowRoot?.querySelector(`#${PREFIX}-results`);
   const countLabel = shadowRoot?.querySelector(`#${PREFIX}-count`);
 

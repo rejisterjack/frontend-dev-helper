@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 
 interface ScrollAnimationInfo {
   element: HTMLElement;
@@ -40,12 +40,13 @@ export function isSupported(): boolean {
  */
 function detectScrollAnimations(): ScrollAnimationInfo[] {
   const animations: ScrollAnimationInfo[] = [];
-  const allElements = document.querySelectorAll('*');
 
-  for (const el of allElements) {
+  walkElementsEfficiently(
+    document,
+    (el) => {
     const element = el as HTMLElement;
     const computedStyle = window.getComputedStyle(element);
-    const animationTimeline = computedStyle.animationTimeline;
+    const animationTimeline = computedStyle.getPropertyValue('animation-timeline').trim();
 
     // Check for scroll() or view() timeline
     if (animationTimeline && (animationTimeline.includes('scroll') || animationTimeline.includes('view'))) {
@@ -57,10 +58,11 @@ function detectScrollAnimations(): ScrollAnimationInfo[] {
       const source = parseSource(animationTimeline);
 
       // Get animation range if specified
-      const animationRange = computedStyle.animationRange;
-      const range = animationRange && animationRange !== 'normal'
-        ? parseRange(animationRange)
-        : undefined;
+      const animationRangeRaw = computedStyle.getPropertyValue('animation-range').trim();
+      const range =
+        animationRangeRaw && animationRangeRaw !== 'normal'
+          ? parseRange(animationRangeRaw)
+          : undefined;
 
       // Calculate current progress (approximation)
       const progress = calculateProgress(element, timelineType, axis, source);
@@ -75,7 +77,9 @@ function detectScrollAnimations(): ScrollAnimationInfo[] {
         currentProgress: progress,
       });
     }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   return animations;
 }
@@ -125,11 +129,13 @@ function calculateProgress(
       const scrollSource = getScrollSource(element, source);
       if (!scrollSource) return 0;
 
+      const root: HTMLElement =
+        scrollSource === window ? document.documentElement : (scrollSource as HTMLElement);
       const isHorizontal = axis === 'inline' || axis === 'x';
       const scrollSize = isHorizontal
-        ? scrollSource.scrollWidth - scrollSource.clientWidth
-        : scrollSource.scrollHeight - scrollSource.clientHeight;
-      const scrollPos = isHorizontal ? scrollSource.scrollLeft : scrollSource.scrollTop;
+        ? root.scrollWidth - root.clientWidth
+        : root.scrollHeight - root.clientHeight;
+      const scrollPos = isHorizontal ? root.scrollLeft : root.scrollTop;
 
       return scrollSize > 0 ? Math.min(100, Math.max(0, (scrollPos / scrollSize) * 100)) : 0;
     } else if (type === 'view') {

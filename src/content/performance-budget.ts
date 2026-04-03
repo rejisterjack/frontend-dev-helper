@@ -6,6 +6,7 @@
  * Badge turns red when performance degrades
  */
 
+import { estimateElementCount } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
 
@@ -245,7 +246,7 @@ function getResourceMetrics(): { size: number; count: number } {
  * Get DOM size
  */
 function getDOMSize(): number {
-  return document.querySelectorAll('*').length;
+  return estimateElementCount(document);
 }
 
 /**
@@ -420,10 +421,10 @@ function showViolationNotification(violations: BudgetViolation[]): void {
         .map(
           (v) => `
         <div class="fdh-budget-item">
-          <div class="fdh-budget-name">${v.budget.name}</div>
+          <div class="fdh-budget-name">${escapeHtml(v.budget.name)}</div>
           <div class="fdh-budget-values">
-            Current: <span class="fdh-budget-current">${formatValue(v.currentValue, v.budget.unit)}</span> |
-            Budget: ${formatValue(v.budget.threshold, v.budget.unit)}
+            Current: <span class="fdh-budget-current">${escapeHtml(formatValue(v.currentValue, v.budget.unit))}</span> |
+            Budget: ${escapeHtml(formatValue(v.budget.threshold, v.budget.unit))}
           </div>
         </div>
       `
@@ -611,7 +612,7 @@ export function collectMetrics(): { lcp: number | null; fid: number | null; cls:
     fcp: vitals.fcp ?? null,
     ttfb: vitals.ttfb ?? null,
     resourceCount: performance.getEntriesByType('resource').length,
-    domSize: document.querySelectorAll('*').length,
+    domSize: estimateElementCount(document),
   };
 }
 

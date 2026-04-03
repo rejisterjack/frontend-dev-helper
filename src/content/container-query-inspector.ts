@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 
 interface ContainerInfo {
   element: HTMLElement;
@@ -27,8 +27,7 @@ interface ContainerQueryInfo {
 
 // State
 let isActive = false;
-let overlayContainer: HTMLElement | null = null;
-let containerOverlays: Map<HTMLElement, HTMLElement> = new Map();
+const containerOverlays: Map<HTMLElement, HTMLElement> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 
 /**
@@ -36,9 +35,10 @@ let resizeObserver: ResizeObserver | null = null;
  */
 function detectContainers(): ContainerInfo[] {
   const containers: ContainerInfo[] = [];
-  const allElements = document.querySelectorAll('*');
 
-  for (const el of allElements) {
+  walkElementsEfficiently(
+    document,
+    (el) => {
     const element = el as HTMLElement;
     const computedStyle = window.getComputedStyle(element);
     const containerType = computedStyle.containerType;
@@ -57,7 +57,9 @@ function detectContainers(): ContainerInfo[] {
         queries,
       });
     }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   return containers;
 }
@@ -87,7 +89,6 @@ function getContainerQueriesForElement(element: HTMLElement): ContainerQueryInfo
       }
     } catch {
       // Cross-origin stylesheet - skip
-      continue;
     }
   }
 

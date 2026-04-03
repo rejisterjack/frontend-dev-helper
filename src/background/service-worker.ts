@@ -27,8 +27,8 @@ import {
   getToolState,
   migrateStorage,
   setToolState,
-  toggleToolState,
 } from '@/utils/storage';
+import { applyToolEnabledInTab, toggleToolInTab as runToggleToolInTab } from '@/utils/tool-toggle';
 import { logger } from '../utils/logger';
 import { ContextMenuManager } from './context-menu';
 import { llmService } from './llm-service';
@@ -251,13 +251,14 @@ async function initializeDefaultSettings(): Promise<void> {
  */
 function registerMessageHandlers(): void {
   // Tool management handlers with Zod validation
-  messageRouter.registerHandler(MESSAGE_TYPES.TOGGLE_TOOL, async (message) => {
+  messageRouter.registerHandler(MESSAGE_TYPES.TOGGLE_TOOL, async (message, sender) => {
     const validatedPayload = toggleToolPayloadSchema.safeParse(message.payload);
     if (!validatedPayload.success) {
       throw new Error(`Invalid TOGGLE_TOOL payload: ${validatedPayload.error.message}`);
     }
     return handleToggleTool(
-      validatedPayload.data as { toolId: ToolId; enabled?: boolean; tabId?: number }
+      validatedPayload.data as { toolId: ToolId; enabled?: boolean; tabId?: number },
+      sender
     );
   });
 
@@ -290,6 +291,28 @@ function registerMessageHandlers(): void {
   messageRouter.registerHandler(MESSAGE_TYPES.TOOL_STATE_CHANGED, async () => {
     await updateBadge();
     return { acknowledged: true };
+  });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.DISABLE_ALL_ON_ACTIVE_TAB, async (_message, sender) => {
+    const tabId = sender.tab?.id;
+    if (!tabId) return { ok: false };
+    await disableAllToolsOnTab(tabId);
+    return { ok: true };
+  });
+
+  messageRouter.registerHandler(MESSAGE_TYPES.FDH_INSPECTED_HINT, async (message) => {
+    const payload = message.payload as { tabId?: number; selector?: string } | undefined;
+    const { tabId, selector } = payload ?? {};
+    if (tabId === undefined || !selector) return { ok: false };
+    try {
+      await chrome.tabs.sendMessage(tabId, {
+        type: MESSAGE_TYPES.FDH_INSPECTED_HINT,
+        payload: { selector },
+      });
+    } catch {
+      // Content script may not be injected
+    }
+    return { ok: true };
   });
 
   // Settings handlers (these override the default handlers in MessageRouter)
@@ -334,24 +357,35 @@ function setupMessageListeners(): void {
 /**
  * Handle TOGGLE_TOOL message
  */
-async function handleToggleTool(payload: {
-  toolId: ToolId;
-  enabled?: boolean;
-  tabId?: number;
-}): Promise<{ toolId: ToolId; enabled: boolean }> {
-  const { toolId, enabled, tabId } = payload;
+async function handleToggleTool(
+  payload: {
+    toolId: ToolId;
+    enabled?: boolean;
+    tabId?: number;
+  },
+  sender?: chrome.runtime.MessageSender
+): Promise<{ toolId: ToolId; enabled: boolean }> {
+  const { toolId, enabled, tabId: payloadTabId } = payload;
+
+  let tabId = payloadTabId ?? sender?.tab?.id;
+  if (tabId === undefined) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    tabId = tab?.id;
+  }
+  if (tabId === undefined) {
+    throw new Error('TOGGLE_TOOL requires a target tab (payload.tabId, sender.tab, or active tab)');
+  }
 
   let newEnabled: boolean;
   if (enabled !== undefined) {
-    await setToolState(toolId, { enabled, settings: {} }, tabId);
+    await applyToolEnabledInTab(tabId, toolId, enabled);
     newEnabled = enabled;
   } else {
-    newEnabled = await toggleToolState(toolId, tabId);
+    newEnabled = await runToggleToolInTab(tabId, toolId);
   }
 
-  // Broadcast to content scripts
   await broadcastToolStateChange(toolId, newEnabled, tabId);
-  await updateBadge();
+  await updateBadge(tabId);
 
   return { toolId, enabled: newEnabled };
 }
@@ -619,7 +653,7 @@ async function handleStorageChanges(
  * Toggle a tool on a specific tab
  */
 async function toggleToolOnTab(toolId: ToolId, tabId: number): Promise<boolean> {
-  const newState = await toggleToolState(toolId, tabId);
+  const newState = await runToggleToolInTab(tabId, toolId);
   await broadcastToolStateChange(toolId, newState, tabId);
   await updateBadge(tabId);
   return newState;

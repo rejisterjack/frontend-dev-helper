@@ -4,6 +4,8 @@
  * Screenshot capture logic for the visual regression module.
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
+import { logger } from '@/utils/logger';
 import type { CaptureResponse, Html2CanvasOptions } from './types';
 
 /**
@@ -72,68 +74,65 @@ export async function html2canvas(
   ctx.fillStyle = getComputedStyle(element).backgroundColor || '#ffffff';
   ctx.fillRect(0, 0, options.width, options.height);
 
-  // Capture visible elements
-  const elements = element.querySelectorAll('*');
   const promises: Promise<void>[] = [];
 
-  for (const el of elements) {
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      const htmlEl = el as HTMLElement;
-      const computed = getComputedStyle(htmlEl);
+  walkElementsEfficiently(
+    element,
+    (el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const htmlEl = el as HTMLElement;
+        const computed = getComputedStyle(htmlEl);
 
-      // Skip invisible elements
-      if (computed.display === 'none' || computed.visibility === 'hidden') {
-        continue;
-      }
-
-      // Check if element is in capture area
-      if (
-        rect.right > options.x &&
-        rect.bottom > options.y &&
-        rect.left < options.x + options.width &&
-        rect.top < options.y + options.height
-      ) {
-        const drawX = rect.left - options.x;
-        const drawY = rect.top - options.y;
-
-        // Draw background
-        if (computed.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-          ctx.fillStyle = computed.backgroundColor;
-          ctx.fillRect(drawX, drawY, rect.width, rect.height);
+        if (computed.display === 'none' || computed.visibility === 'hidden') {
+          return;
         }
 
-        // Draw images
-        if (el.tagName === 'IMG') {
-          const img = el as HTMLImageElement;
-          if (img.complete) {
-            promises.push(
-              new Promise<void>((resolve) => {
-                ctx.drawImage(img, drawX, drawY, rect.width, rect.height);
-                resolve();
-              })
-            );
+        if (
+          rect.right > options.x &&
+          rect.bottom > options.y &&
+          rect.left < options.x + options.width &&
+          rect.top < options.y + options.height
+        ) {
+          const drawX = rect.left - options.x;
+          const drawY = rect.top - options.y;
+
+          if (computed.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            ctx.fillStyle = computed.backgroundColor;
+            ctx.fillRect(drawX, drawY, rect.width, rect.height);
           }
-        }
 
-        // Draw text
-        if (el.childNodes.length === 1 && el.firstChild?.nodeType === Node.TEXT_NODE) {
-          const text = el.textContent || '';
-          if (text.trim()) {
-            ctx.font = `${computed.fontWeight} ${computed.fontSize} ${computed.fontFamily}`;
-            ctx.fillStyle = computed.color;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            ctx.fillText(
-              text,
-              drawX + Number.parseInt(computed.paddingLeft || '0', 10),
-              drawY + Number.parseInt(computed.paddingTop || '0', 10)
-            );
+          if (el.tagName === 'IMG') {
+            const img = el as HTMLImageElement;
+            if (img.complete) {
+              promises.push(
+                new Promise<void>((resolve) => {
+                  ctx.drawImage(img, drawX, drawY, rect.width, rect.height);
+                  resolve();
+                })
+              );
+            }
+          }
+
+          if (el.childNodes.length === 1 && el.firstChild?.nodeType === Node.TEXT_NODE) {
+            const text = el.textContent || '';
+            if (text.trim()) {
+              ctx.font = `${computed.fontWeight} ${computed.fontSize} ${computed.fontFamily}`;
+              ctx.fillStyle = computed.color;
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+              ctx.fillText(
+                text,
+                drawX + Number.parseInt(computed.paddingLeft || '0', 10),
+                drawY + Number.parseInt(computed.paddingTop || '0', 10)
+              );
+            }
           }
         }
       }
-    }
-  }
+    },
+    (msg) => logger.log(msg)
+  );
 
   await Promise.all(promises);
   return canvas;

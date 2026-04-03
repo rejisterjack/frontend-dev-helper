@@ -2,6 +2,7 @@
  * Screenshot Capture Logic
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 import { STORAGE_KEY } from './constants';
 import type { ExportFormat } from './types';
@@ -117,39 +118,39 @@ async function renderDOMToCanvas(
   fullPage: boolean
 ): Promise<void> {
   return new Promise((resolve) => {
-    const elements = Array.from(document.body.querySelectorAll('*'));
     const offsetX = fullPage ? 0 : -window.scrollX;
     const offsetY = fullPage ? 0 : -window.scrollY;
 
-    for (const el of elements) {
-      const rect = el.getBoundingClientRect();
-      const style = window.getComputedStyle(el);
+    walkElementsEfficiently(
+      document.body,
+      (el) => {
+        const rect = el.getBoundingClientRect();
+        const style = window.getComputedStyle(el);
 
-      if (style.display !== 'none' && style.visibility !== 'hidden') {
-        const x = rect.left + offsetX + window.scrollX;
-        const y = rect.top + offsetY + window.scrollY;
-        const width = rect.width;
-        const height = rect.height;
+        if (style.display !== 'none' && style.visibility !== 'hidden') {
+          const x = rect.left + offsetX + window.scrollX;
+          const y = rect.top + offsetY + window.scrollY;
+          const width = rect.width;
+          const height = rect.height;
 
-        // Only draw if within canvas bounds
-        if (x < canvas.width && y < canvas.height && x + width > 0 && y + height > 0) {
-          // Draw background
-          const bgColor = style.backgroundColor;
-          if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-            ctx.fillStyle = bgColor;
-            ctx.fillRect(x, y, width, height);
-          }
+          if (x < canvas.width && y < canvas.height && x + width > 0 && y + height > 0) {
+            const bgColor = style.backgroundColor;
+            if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+              ctx.fillStyle = bgColor;
+              ctx.fillRect(x, y, width, height);
+            }
 
-          // Draw border
-          const borderWidth = parseFloat(style.borderWidth);
-          if (borderWidth > 0) {
-            ctx.strokeStyle = style.borderColor;
-            ctx.lineWidth = borderWidth;
-            ctx.strokeRect(x, y, width, height);
+            const borderWidth = parseFloat(style.borderWidth);
+            if (borderWidth > 0) {
+              ctx.strokeStyle = style.borderColor;
+              ctx.lineWidth = borderWidth;
+              ctx.strokeRect(x, y, width, height);
+            }
           }
         }
-      }
-    }
+      },
+      (msg) => logger.log(msg)
+    );
 
     resolve();
   });

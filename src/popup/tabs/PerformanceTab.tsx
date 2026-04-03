@@ -235,6 +235,14 @@ export const PerformanceTab: React.FC = () => {
         </div>
       </div>
 
+      <div className="rounded-lg border border-dev-border bg-dev-surface/50 px-3 py-2 text-[11px] text-dev-text leading-snug">
+        <span className="font-semibold text-dev-muted">Performance summary · </span>
+        LCP {webVitals.lcp != null ? `${Math.round(webVitals.lcp)}ms` : '—'} · CLS{' '}
+        {webVitals.cls != null ? webVitals.cls.toFixed(3) : '—'} · INP{' '}
+        {webVitals.inp != null ? `${Math.round(webVitals.inp)}ms` : '—'} · Requests{' '}
+        {resources.totalRequests}
+      </div>
+
       {/* Core Web Vitals Section */}
       <div className="rounded-lg bg-dev-surface overflow-hidden">
         <button

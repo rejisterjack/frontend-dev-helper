@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => ({
       input: {
         popup: resolve(__dirname, 'index.html'),
         dashboard: resolve(__dirname, 'dashboard.html'),
+        sidepanel: resolve(__dirname, 'sidepanel.html'),
       },
       output: {
         entryFileNames: 'assets/[name].js',

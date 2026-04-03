@@ -1,23 +1,34 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { getChromeExtensionId } from './extension-helpers';
 
 /**
  * E2E tests for FrontendDevHelper extension
- * 
- * Note: These tests require the extension to be built first.
- * Run `npm run build` before running these tests.
+ *
+ * Requires a built extension and `FDH_EXTENSION_PATH` (see `playwright.config.ts`).
  */
 
 test.describe('Extension Popup', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('https://example.com');
+    await page.waitForLoadState('domcontentloaded');
+  });
+
   test('popup loads successfully', async ({ page }) => {
-    // Load the popup HTML directly
-    await page.goto(`file://${process.cwd()}/dist/popup.html`);
-    
-    // Check that the popup title is visible
+    const id = await getChromeExtensionId(page.context());
+    await page.goto(`chrome-extension://${id}/index.html`);
     await expect(page.locator('text=FrontendDevHelper')).toBeVisible();
   });
 
   test('all tools are listed in popup', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/popup.html`);
+    const id = await getChromeExtensionId(page.context());
+    await page.goto(`chrome-extension://${id}/index.html`);
     
     // Check that all tools are present
     const tools = [
@@ -40,7 +51,8 @@ test.describe('Extension Popup', () => {
   });
 
   test('tool toggle switches work', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/popup.html`);
+    const id = await getChromeExtensionId(page.context());
+    await page.goto(`chrome-extension://${id}/index.html`);
     
     // Find the first tool card and click its toggle
     const firstToggle = page.locator('[role="switch"]').first();
@@ -56,9 +68,16 @@ test.describe('Extension Popup', () => {
 });
 
 test.describe('Content Script Tools', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test.beforeEach(async ({ page }) => {
-    // Load a test page
     await page.goto('https://example.com');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('DOM Outliner injects outline styles', async ({ page }) => {

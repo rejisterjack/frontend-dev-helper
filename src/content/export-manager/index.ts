@@ -8,6 +8,7 @@
  * - Generate shareable links
  */
 
+import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 import { formatBytes, generateId } from '../../utils/index.js';
 import {
@@ -233,39 +234,36 @@ export class ExportManager {
     // In a real implementation, this would use html2canvas or similar
 
     return new Promise((resolve) => {
-      // Get all visible elements
-      const elements = Array.from(document.body.querySelectorAll('*'));
-
-      // Draw a simplified representation
       ctx.fillStyle = '#f3f4f6';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw visible elements as rectangles
-      for (const el of elements) {
-        const rect = el.getBoundingClientRect();
-        const style = window.getComputedStyle(el);
+      walkElementsEfficiently(
+        document.body,
+        (el) => {
+          const rect = el.getBoundingClientRect();
+          const style = window.getComputedStyle(el);
 
-        if (style.display !== 'none' && style.visibility !== 'hidden') {
-          const x = rect.left;
-          const y = rect.top;
-          const width = rect.width;
-          const height = rect.height;
+          if (style.display !== 'none' && style.visibility !== 'hidden') {
+            const x = rect.left;
+            const y = rect.top;
+            const width = rect.width;
+            const height = rect.height;
 
-          // Only draw if within viewport
-          if (x < canvas.width && y < canvas.height && x + width > 0 && y + height > 0) {
-            ctx.fillStyle =
-              style.backgroundColor !== 'rgba(0, 0, 0, 0)' ? style.backgroundColor : '#ffffff';
-            ctx.fillRect(x, y, width, height);
+            if (x < canvas.width && y < canvas.height && x + width > 0 && y + height > 0) {
+              ctx.fillStyle =
+                style.backgroundColor !== 'rgba(0, 0, 0, 0)' ? style.backgroundColor : '#ffffff';
+              ctx.fillRect(x, y, width, height);
 
-            // Draw border if present
-            if (parseFloat(style.borderWidth) > 0) {
-              ctx.strokeStyle = style.borderColor;
-              ctx.lineWidth = parseFloat(style.borderWidth);
-              ctx.strokeRect(x, y, width, height);
+              if (parseFloat(style.borderWidth) > 0) {
+                ctx.strokeStyle = style.borderColor;
+                ctx.lineWidth = parseFloat(style.borderWidth);
+                ctx.strokeRect(x, y, width, height);
+              }
             }
           }
-        }
-      }
+        },
+        (msg) => logger.log(msg)
+      );
 
       resolve();
     });

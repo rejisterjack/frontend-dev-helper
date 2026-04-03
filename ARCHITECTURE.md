@@ -410,6 +410,10 @@ pnpm coverage     # Generate coverage report
 pnpm lint         # Run Biome linter
 ```
 
+## Third-party plugin surface
+
+There is **no supported third-party plugin SDK** for end users. Code under `src/plugins/` is experimental and is not wired to the manifest, options page, or background worker. Treat it as internal scaffolding unless a future release documents a supported integration path.
+
 ## Migration Notes
 
 ### From MessageType enum to MESSAGE_TYPES constant
