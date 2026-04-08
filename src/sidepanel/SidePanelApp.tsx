@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { ExtensionEmptyState } from '@/components/ui/ExtensionStates';
 import { MESSAGE_TYPES, TOOL_METADATA, type ToolId } from '@/constants';
 import { STARTER_TOOL_IDS } from '@/utils/tool-catalog';
 
@@ -48,9 +49,18 @@ const SidePanelApp: React.FC = () => {
         <p className="text-xs text-slate-400 mt-1">
           {activeIds.length > 0
             ? `${activeIds.length} active · ${activeIds.map((id) => TOOL_METADATA[id]?.name ?? id).join(', ')}`
-            : 'No tools active on this profile'}
+            : 'Nothing running yet'}
         </p>
       </header>
+
+      {activeIds.length === 0 ? (
+        <ExtensionEmptyState
+          icon="🧰"
+          title="No tools active"
+          description="Turn on tools from the popup or use quick toggles below. Active tools apply to the current tab only unless you use global presets."
+          className="py-4"
+        />
+      ) : null}
 
       <section>
         <h2 className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">Quick toggle (starter)</h2>

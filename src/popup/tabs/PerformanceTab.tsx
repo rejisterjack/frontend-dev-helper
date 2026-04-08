@@ -12,6 +12,10 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ExtensionEmptyState,
+  ExtensionLoadingState,
+} from '@/components/ui/ExtensionStates';
 import type { MemoryInfo, ResourceAnalysis, WebVitals } from '@/types';
 import { logger } from '@/utils/logger';
 
@@ -172,26 +176,29 @@ export const PerformanceTab: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="animate-pulse text-dev-muted">Loading metrics...</div>
+      <div className="p-4">
+        <ExtensionLoadingState label="Gathering Core Web Vitals and resource timing…" />
       </div>
     );
   }
 
   if (!metrics) {
     return (
-      <div className="flex h-64 items-center justify-center p-4 text-center">
-        <div>
-          <div className="mb-2 text-4xl">📊</div>
-          <div className="text-dev-muted">No performance data available</div>
+      <div className="p-4">
+        <ExtensionEmptyState
+          icon="📊"
+          title="No performance snapshot yet"
+          description="Open a tab, then refresh. We read metrics from the active page only—nothing leaves your machine except optional AI calls you configure in Options."
+          className="border-dev-border bg-dev-surface/50 text-dev-text max-w-md mx-auto"
+        >
           <button
             type="button"
             onClick={loadMetrics}
-            className="mt-4 rounded bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700"
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700"
           >
-            Refresh
+            Refresh metrics
           </button>
-        </div>
+        </ExtensionEmptyState>
       </div>
     );
   }

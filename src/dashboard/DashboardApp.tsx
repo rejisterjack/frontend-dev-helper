@@ -6,6 +6,7 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { ExtensionEmptyState, ExtensionLoadingState } from '@/components/ui/ExtensionStates';
 import { logger } from '@/utils/logger';
 import { TOOL_METADATA, type ToolId } from '@/constants';
 import type { DebuggingSession } from '@/content/session-recorder';
@@ -154,11 +155,8 @@ const DashboardApp: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading dashboard...</p>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <ExtensionLoadingState tone="light" label="Loading sessions and reports…" />
       </div>
     );
   }
@@ -396,11 +394,12 @@ const SessionsTab: React.FC<{
       </div>
 
       {sessions.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <div className="text-4xl mb-4">▶️</div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No sessions yet</h3>
-          <p className="text-slate-500">Start recording sessions to see them here.</p>
-        </div>
+        <ExtensionEmptyState
+          tone="light"
+          icon="▶️"
+          title="No sessions yet"
+          description="Record a debugging session from the extension, then open the dashboard again. Data stays in this browser profile."
+        />
       ) : (
         <div className="grid gap-4">
           {sessions.map((session) => (
@@ -548,11 +547,12 @@ const ResponsiveTab: React.FC<{
       </div>
 
       {reports.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <div className="text-4xl mb-4">📱</div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No reports yet</h3>
-          <p className="text-slate-500">Run responsive testing to generate reports.</p>
-        </div>
+        <ExtensionEmptyState
+          tone="light"
+          icon="📱"
+          title="No responsive reports yet"
+          description="Run responsive testing on a page from the extension. Export reports from here or from each card when you have data."
+        />
       ) : (
         <div className="grid gap-4">
           {reports.map((report) => (

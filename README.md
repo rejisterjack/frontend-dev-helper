@@ -31,15 +31,30 @@
 
 ## 🎯 Why FrontendDevHelper?
 
+**One sentence:** *It’s the “everything on the page at once” kit—overlays, audits, capture, and keyboard-first workflows that Chrome DevTools doesn’t ship as a single, cohesive extension.*
+
 Frontend developers rely on 8–12 separate browser extensions for visual debugging. Most are built on deprecated Manifest V2 and are now broken on modern browsers.
 
 **FrontendDevHelper is the unified, modern replacement.**
 
+### DevTools alone? A pile of extensions? Here’s the difference
+
+| | **Chrome DevTools** | **Many small extensions** | **FrontendDevHelper** |
+|---|---------------------|---------------------------|------------------------|
+| **Focus** | Incredible *inspector* & performance panels | One job each (color, ruler, a11y…) | **20+ visual/debug tools in one UX** (popup, palette, side panel, DevTools) |
+| **On-page overlays** | Mostly panel-driven | Fragmented | **Unified toggles, exclusivity rules, presets** |
+| **Keyboard flow** | DevTools-centric | Rarely consistent | **Command palette + shortcuts + same storage everywhere** |
+| **Shipping** | Built into Chrome | V2 rot, inconsistent updates | **Manifest V3**, one codebase, OSS |
+
+DevTools remains essential for deep debugging; this extension **complements** it with **product-style** workflows (capture, reports, responsive passes, regression baselines) without juggling installs.
+
 - ✅ **24 powerful tools** in one extension (more than any competitor!)
 - ✅ **Manifest V3** from day one
-- ✅ **Zero data collection** — everything runs locally
+- ✅ **Privacy-first by default** — tools run locally; optional AI calls only to providers you configure
 - ✅ **Open source** and free forever
-- ✅ **AI-powered** smart suggestions with auto-fixes
+- ✅ **AI-powered** smart suggestions with auto-fixes (optional)
+
+**Security & CSP notes for contributors:** [docs/guide/security-and-privacy.md](docs/guide/security-and-privacy.md)
 
 ---
 

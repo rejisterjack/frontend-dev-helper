@@ -11,6 +11,7 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { ExtensionEmptyState, ExtensionErrorState } from '@/components/ui/ExtensionStates';
 import type { ElementInfo } from '@/types';
 import { logger } from '@/utils/logger';
 
@@ -329,19 +330,13 @@ export const DevToolsPanel: React.FC = () => {
             <span className="font-medium">FrontendDevHelper</span>
           </div>
         </header>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl mb-2">⚠️</div>
-            <p className="text-red-400">Error loading element data</p>
-            <p className="text-sm text-slate-500 mt-2">{error}</p>
-            <button
-              type="button"
-              onClick={refreshSelection}
-              className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
-            >
-              Retry
-            </button>
-          </div>
+        <div className="flex flex-1 items-center justify-center p-4">
+          <ExtensionErrorState
+            title="Couldn’t read the selected element"
+            message={error}
+            onRetry={refreshSelection}
+            className="max-w-sm"
+          />
         </div>
       </div>
     );
@@ -473,21 +468,21 @@ export const DevToolsPanel: React.FC = () => {
           </div>
         </>
       ) : (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 text-4xl">🔍</div>
-            <p className="text-slate-400">Select an element to inspect</p>
-            <p className="mt-2 text-sm text-slate-500">
-              Use the Elements panel to select an element
-            </p>
+        <div className="flex flex-1 items-center justify-center p-4">
+          <ExtensionEmptyState
+            icon="🔍"
+            title="Select an element"
+            description="Choose a node in the Elements panel. This panel mirrors layout, computed styles, and a11y for that node—same product as the popup tools, DevTools-first."
+            className="max-w-sm"
+          >
             <button
               type="button"
               onClick={refreshSelection}
-              className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
             >
               Refresh
             </button>
-          </div>
+          </ExtensionEmptyState>
         </div>
       )}
     </div>

@@ -34,6 +34,10 @@
   ],
   "author": "FrontendDevHelper Team",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.10.0 <25",
+    "pnpm": ">=9"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.8",
     "@crxjs/vite-plugin": "^2.0.0-beta.23",

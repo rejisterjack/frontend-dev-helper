@@ -27,7 +27,7 @@
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
         "noInvalidUseBeforeDeclaration": "off",
-        "useExhaustiveDependencies": "off"
+        "useExhaustiveDependencies": "warn"
       },
       "suspicious": {
         "noConsole": "off",
@@ -35,7 +35,7 @@
         "useIterableCallbackReturn": "off"
       },
       "style": {
-        "noNonNullAssertion": "warn",
+        "noNonNullAssertion": "off",
         "useImportType": "warn"
       },
       "a11y": {
