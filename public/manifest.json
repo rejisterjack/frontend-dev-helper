@@ -34,6 +34,7 @@
   ],
   "permissions": [
     "activeTab",
+    "contextMenus",
     "storage",
     "scripting",
     "tabs",
@@ -57,7 +58,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; object-src 'self'; connect-src 'https://openrouter.ai'"
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; object-src 'self'; connect-src https://openrouter.ai"
   },
   "side_panel": {
     "default_path": "sidepanel.html"
@@ -71,42 +72,6 @@
       },
       "description": "Open FrontendDevHelper popup"
     },
-    "toggle-pesticide": {
-      "suggested_key": {
-        "default": "Alt+P"
-      },
-      "description": "Toggle DOM Outliner"
-    },
-    "toggle-spacing": {
-      "suggested_key": {
-        "default": "Alt+S"
-      },
-      "description": "Toggle Spacing Visualizer"
-    },
-    "toggle-font-inspector": {
-      "suggested_key": {
-        "default": "Alt+F"
-      },
-      "description": "Toggle Font Inspector"
-    },
-    "toggle-color-picker": {
-      "suggested_key": {
-        "default": "Alt+C"
-      },
-      "description": "Toggle Color Picker"
-    },
-    "toggle-pixel-ruler": {
-      "suggested_key": {
-        "default": "Alt+M"
-      },
-      "description": "Toggle Pixel Ruler"
-    },
-    "toggle-breakpoint": {
-      "suggested_key": {
-        "default": "Alt+B"
-      },
-      "description": "Toggle Breakpoint Overlay"
-    },
     "open-command-palette": {
       "suggested_key": {
         "default": "Ctrl+Shift+P",
@@ -114,20 +79,34 @@
       },
       "description": "Open Command Palette"
     },
-    "toggle-inspector": {
+    "toggle-pesticide": {
       "suggested_key": {
-        "default": "Ctrl+Shift+I",
-        "mac": "Command+Shift+I"
+        "default": "Alt+P"
       },
+      "description": "Toggle DOM Outliner"
+    },
+    "toggle-spacing": {
+      "description": "Toggle Spacing Visualizer"
+    },
+    "toggle-font-inspector": {
+      "description": "Toggle Font Inspector"
+    },
+    "toggle-color-picker": {
+      "description": "Toggle Color Picker"
+    },
+    "toggle-pixel-ruler": {
+      "description": "Toggle Pixel Ruler"
+    },
+    "toggle-breakpoint": {
+      "description": "Toggle Breakpoint Overlay"
+    },
+    "toggle-inspector": {
       "description": "Toggle Element Inspector"
     },
     "toggle-css-inspector": {
       "description": "Toggle CSS Inspector"
     },
     "toggle-contrast-checker": {
-      "suggested_key": {
-        "default": "Alt+T"
-      },
       "description": "Toggle Contrast Checker"
     },
     "toggle-layout-visualizer": {
@@ -140,27 +119,15 @@
       "description": "Toggle Tech Detector"
     },
     "toggle-accessibility-audit": {
-      "suggested_key": {
-        "default": "Alt+A"
-      },
       "description": "Toggle Accessibility Audit"
     },
     "toggle-network-analyzer": {
-      "suggested_key": {
-        "default": "Alt+N"
-      },
       "description": "Toggle Network Analyzer"
     },
     "toggle-screenshot-studio": {
-      "suggested_key": {
-        "default": "Alt+Shift+S"
-      },
       "description": "Toggle Screenshot Studio"
     },
     "toggle-ai-suggestions": {
-      "suggested_key": {
-        "default": "Alt+I"
-      },
       "description": "Toggle AI Suggestions"
     },
     "toggle-component-tree": {
@@ -183,7 +150,7 @@
     },
     "disable-all-tools": {
       "suggested_key": {
-        "default": "Esc"
+        "default": "Alt+Shift+D"
       },
       "description": "Disable All Tools"
     }

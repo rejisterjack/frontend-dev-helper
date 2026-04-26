@@ -57,14 +57,14 @@ export const SettingsTab: React.FC = () => {
 
   if (!settings) {
     return (
-      <div className="flex h-64 items-center justify-center p-4">
+      <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full items-center justify-center p-4">
         <div className="text-slate-500 text-sm">Loading settings...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 space-y-6">
+    <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full space-y-6 overflow-x-hidden overflow-y-auto p-4">
       {/* General Settings */}
       <div className="space-y-3">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">General</h3>
@@ -208,9 +208,9 @@ const SettingRow: React.FC<{
   label: string;
   children: React.ReactNode;
 }> = ({ label, children }) => (
-  <div className="flex items-center justify-between py-2">
-    <span className="text-sm text-slate-300">{label}</span>
-    {children}
+  <div className="flex min-w-0 items-center justify-between gap-3 py-2">
+    <span className="min-w-0 flex-1 text-sm text-slate-300">{label}</span>
+    <div className="shrink-0">{children}</div>
   </div>
 );
 
@@ -221,7 +221,7 @@ const Toggle: React.FC<{
   <button
     type="button"
     onClick={() => onChange(!checked)}
-    className={`relative h-5 w-9 rounded-full transition-colors ${
+    className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
       checked ? 'bg-indigo-600' : 'bg-slate-600'
     }`}
   >
@@ -237,9 +237,9 @@ const ShortcutRow: React.FC<{
   label: string;
   shortcut: string;
 }> = ({ label, shortcut }) => (
-  <div className="flex items-center justify-between py-1">
-    <span className="text-sm text-slate-400">{label}</span>
-    <kbd className="rounded bg-slate-700 px-2 py-1 font-mono text-xs text-slate-300">
+  <div className="flex min-w-0 items-center justify-between gap-2 py-1">
+    <span className="min-w-0 flex-1 text-sm text-slate-400">{label}</span>
+    <kbd className="max-w-[55%] shrink-0 break-words rounded bg-slate-700 px-2 py-1 text-right font-mono text-xs text-slate-300">
       {shortcut}
     </kbd>
   </div>

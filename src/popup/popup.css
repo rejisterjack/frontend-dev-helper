@@ -4,24 +4,40 @@
 
 /* Base popup styles */
 :root {
-  --popup-width: 380px;
+  --popup-width: 400px;
+  --popup-height: 580px;
   --popup-max-height: 600px;
 }
 
-/* Ensure popup has proper dimensions */
+/* Match extension popup to React layout; flex + min-h-0 so inner scrollers work */
 html {
   width: var(--popup-width);
-  min-height: 200px;
+  min-width: 0;
+  height: var(--popup-height);
+  max-height: var(--popup-max-height);
 }
 
 body {
   width: var(--popup-width);
-  min-height: 200px;
+  min-width: 0;
+  height: var(--popup-height);
   max-height: var(--popup-max-height);
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+#root {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Custom scrollbar for webkit browsers */
@@ -204,6 +220,7 @@ input:not(:checked):hover + .toggle-slider {
    ============================================ */
 
 .tool-card {
+  min-width: 0;
   transition: all 0.2s ease;
   border: 1px solid transparent;
 }

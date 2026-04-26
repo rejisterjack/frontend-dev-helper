@@ -20,7 +20,8 @@ This note summarizes how FrontendDevHelper handles **user pages**, **extension p
 - `default-src 'none'`
 - `script-src 'self'`
 - `style-src 'self' 'unsafe-inline'` (required for many inline UI patterns in extension HTML)
-- `connect-src` includes **`https://openrouter.ai`** for bundled AI features.
+- `connect-src` includes **https://openrouter.ai** (no extra quotes; quoted URLs in `connect-src` are invalid in CSP).
+- **`pnpm run dev`:** [vite.config.ts](../../vite.config.ts) only widens `connect-src` to `*` (MV3 does not allow `unsafe-inline` / `unsafe-eval` in manifest `script-src`). **`pnpm run build`** uses the manifest as-is.
 
 **Custom LLM / license server:** If you add `fetch()` to another HTTPS origin from an extension page or background, you **must** add that host to `connect-src` in the manifest or the browser will block the request.
 

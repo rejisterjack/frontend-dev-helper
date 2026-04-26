@@ -255,7 +255,7 @@ export function getOnboardingShortcutRows(): OnboardingShortcutRow[] {
   const rows: OnboardingShortcutRow[] = [
     { key: 'Ctrl+Shift+F · ⌘⇧F', description: 'Open extension popup' },
     { key: 'Ctrl+Shift+P · ⌘⇧P', description: 'Open command palette' },
-    { key: 'Esc', description: 'Disable all tools (when bound in extension shortcuts)' },
+    { key: 'Alt+Shift+D', description: 'Disable all tools' },
   ];
   const usedKeys = new Set(rows.map((r) => r.key));
   for (const id of Object.keys(TOOL_METADATA) as ToolId[]) {

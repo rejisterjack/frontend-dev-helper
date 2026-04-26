@@ -8,6 +8,7 @@ import { Router, raw } from 'express';
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 import { logger } from '../utils/logger';
+import { sendTransactionalEmail } from '../utils/notifyUser';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -197,7 +198,21 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     data: { status: 'PAST_DUE' },
   });
 
-  // TODO: Send email notification to user
+  const user = await prisma.user.findUnique({
+    where: { id: subscription.userId },
+  });
+  if (user?.email) {
+    try {
+      await sendTransactionalEmail({
+        to: user.email,
+        subject: 'FrontendDevHelper: payment issue with your subscription',
+        text: `We could not process a payment for your subscription (Stripe subscription ${subscriptionId}).\n\nPlease update your payment method in the customer portal to avoid interruption.\n\nIf you already fixed this, you can ignore this message.`,
+        kind: 'payment_failed',
+      });
+    } catch (e) {
+      logger.error('Failed to send payment-failed email:', e);
+    }
+  }
 
   logger.warn(`Payment failed for subscription ${subscriptionId}`);
 }
@@ -276,7 +291,24 @@ async function handleTrialEnding(subscription: Stripe.Subscription) {
     return;
   }
 
-  // TODO: Send trial ending email notification
+  const user = await prisma.user.findUnique({
+    where: { id: dbSubscription.userId },
+  });
+  if (user?.email) {
+    try {
+      const trialEnd = subscription.trial_end
+        ? new Date(subscription.trial_end * 1000).toISOString()
+        : 'soon';
+      await sendTransactionalEmail({
+        to: user.email,
+        subject: 'FrontendDevHelper: your trial is ending soon',
+        text: `Your FrontendDevHelper trial is ending (trial end: ${trialEnd}).\n\nAdd a payment method to keep Pro or Team features without interruption.\n\nSubscription id: ${subscription.id}`,
+        kind: 'trial_ending',
+      });
+    } catch (e) {
+      logger.error('Failed to send trial-ending email:', e);
+    }
+  }
 
   logger.info(`Trial ending soon for subscription: ${subscription.id}`);
 }

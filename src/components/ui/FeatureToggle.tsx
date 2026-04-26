@@ -21,11 +21,11 @@ export const FeatureToggle: React.FC<FeatureToggleProps> = ({
 }) => {
   return (
     <div
-      className={`flex items-start justify-between rounded-lg bg-dev-surface p-3 ${
+      className={`box-border flex w-full min-w-0 max-w-full items-start justify-between gap-3 rounded-lg bg-dev-surface p-3 ${
         disabled ? 'opacity-50' : ''
       }`}
     >
-      <div className="flex-1 pr-4">
+      <div className="min-w-0 flex-1 pr-0">
         <div className="text-sm font-medium text-dev-text">{label}</div>
         {description && <div className="mt-0.5 text-xs text-dev-muted">{description}</div>}
       </div>

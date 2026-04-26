@@ -1,24 +1,21 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import '../assets/css/globals.css';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { logger } from '../utils/logger';
+import { getOrCreatePopupRoot } from './mount-root';
 import { Popup } from './Popup';
 
 // ============================================
 // FrontendDevHelper - Popup Entry Point
+// Must match [index.html](../index.html) id="root" (manifest default_popup).
 // ============================================
 
-const container = document.getElementById('popup-root');
-
-if (container) {
-  const root = createRoot(container);
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <Popup />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
-} else {
-  logger.error('Popup root element not found');
-}
+const container = getOrCreatePopupRoot();
+const root = createRoot(container);
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <Popup />
+    </ErrorBoundary>
+  </React.StrictMode>
+);

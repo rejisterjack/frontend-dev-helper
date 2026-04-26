@@ -12,7 +12,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { TOOL_IDS, TOOL_METADATA, type ToolId } from '@/constants';
-import type { ExtensionSettings, LLMConfig } from '@/types';
+import { DEFAULT_LLM_CONFIG, type ExtensionSettings, type LLMConfig } from '@/types';
 import { OPENROUTER_FREE_MODELS } from '@/types';
 import {
   clearDiagnosticCounts,
@@ -48,8 +48,14 @@ export const Options: React.FC = () => {
       if (settingsRes?.success && settingsRes.data) {
         setSettings(settingsRes.data);
       }
-      if (llmRes?.config) {
-        setLLMConfig(llmRes.config);
+      // MessageRouter wraps the handler return value as { success, data: result }
+      const llmData = llmRes?.success
+        ? (llmRes.data as { config?: LLMConfig } | undefined)
+        : undefined;
+      if (llmData?.config) {
+        setLLMConfig(llmData.config);
+      } else {
+        setLLMConfig({ ...DEFAULT_LLM_CONFIG });
       }
     } catch (error) {
       logger.error('Failed to load data:', error);
@@ -829,34 +835,39 @@ const ShortcutsSection: React.FC<{
       </div>
 
       <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-800">
-        <h3 className="font-medium mb-2">Built-in Shortcuts</h3>
+        <h3 className="font-medium mb-2">Browser & extension shortcuts</h3>
         <p className="text-sm text-slate-400 mb-3">
-          These shortcuts are configured in the browser and cannot be changed here:
+          Chromium only allows <strong>four</strong> default keys in the extension manifest. Ours: open
+          popup, command palette, DOM outliner, and disable-all. Edit them in{' '}
+          <a
+            href="chrome://extensions/shortcuts"
+            onClick={(e) => {
+              e.preventDefault();
+              chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+            }}
+            className="text-indigo-400 underline hover:text-indigo-200"
+          >
+            chrome://extensions/shortcuts
+          </a>
+          . Assign the other commands (e.g. <kbd className="px-1 rounded bg-slate-800">Alt+S</kbd> for
+          Spacing) there—same list as the extension’s command names.
         </p>
         <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-slate-400">Open popup / extension</span>
+            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Ctrl+Shift+F · ⌘⇧F</kbd>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Command palette</span>
+            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Ctrl+Shift+P · ⌘⇧P</kbd>
+          </div>
           <div className="flex justify-between">
             <span className="text-slate-400">DOM Outliner</span>
             <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+P</kbd>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Spacing Visualizer</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+S</kbd>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Font Inspector</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+F</kbd>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Color Picker</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+C</kbd>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Pixel Ruler</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+M</kbd>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">Breakpoint Overlay</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+B</kbd>
+            <span className="text-slate-400">Disable all tools</span>
+            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+Shift+D</kbd>
           </div>
         </div>
       </div>

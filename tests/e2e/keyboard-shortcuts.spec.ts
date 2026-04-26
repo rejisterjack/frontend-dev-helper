@@ -7,6 +7,13 @@
 import { expect, test } from './fixtures';
 
 test.describe('Keyboard Shortcuts', () => {
+  test.beforeAll(() => {
+    test.skip(
+      !process.env.FDH_EXTENSION_PATH?.trim(),
+      'Set FDH_EXTENSION_PATH to the unpacked extension directory (e.g. dist/)'
+    );
+  });
+
   test.beforeEach(async ({ context }) => {
     // Grant permissions for extension
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -39,37 +46,58 @@ test.describe('Keyboard Shortcuts', () => {
     await page.keyboard.press('Alt+P');
   });
 
-  test('should toggle spacing visualizer with Alt+S', async ({ page }) => {
+  test('should toggle spacing visualizer (no default key — use messages)', async ({ page }) => {
     await page.goto('https://example.com');
-
-    await page.keyboard.press('Alt+S');
-
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'SPACING_ENABLE' }, () => resolve());
+        })
+    );
     const body = await page.locator('body');
     await expect(body).toBeVisible();
-
-    await page.keyboard.press('Alt+S');
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'SPACING_DISABLE' }, () => resolve());
+        })
+    );
   });
 
-  test('should toggle font inspector with Alt+F', async ({ page }) => {
+  test('should toggle font inspector (no default key — use messages)', async ({ page }) => {
     await page.goto('https://example.com');
-
-    await page.keyboard.press('Alt+F');
-
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'FONT_INSPECTOR_ENABLE' }, () => resolve());
+        })
+    );
     const body = await page.locator('body');
     await expect(body).toBeVisible();
-
-    await page.keyboard.press('Alt+F');
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'FONT_INSPECTOR_DISABLE' }, () => resolve());
+        })
+    );
   });
 
-  test('should toggle color picker with Alt+C', async ({ page }) => {
+  test('should toggle color picker (no default key — use messages)', async ({ page }) => {
     await page.goto('https://example.com');
-
-    await page.keyboard.press('Alt+C');
-
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'COLOR_PICKER_ENABLE' }, () => resolve());
+        })
+    );
     const body = await page.locator('body');
     await expect(body).toBeVisible();
-
-    await page.keyboard.press('Alt+C');
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          chrome.runtime.sendMessage({ type: 'COLOR_PICKER_DISABLE' }, () => resolve());
+        })
+    );
   });
 
   test('should open command palette with Ctrl+Shift+P', async ({ page }) => {
@@ -85,15 +113,14 @@ test.describe('Keyboard Shortcuts', () => {
     await page.keyboard.press('Escape');
   });
 
-  test('should disable all tools with Escape', async ({ page }) => {
+  test('should disable all tools with Alt+Shift+D', async ({ page }) => {
     await page.goto('https://example.com');
 
-    // Enable some tools first
+    // Enable a tool (manifest default) then try disable-all
     await page.keyboard.press('Alt+P');
-    await page.keyboard.press('Alt+S');
 
-    // Disable all
-    await page.keyboard.press('Escape');
+    // Disable all (manifest default; Esc is not valid in chrome.commands)
+    await page.keyboard.press('Alt+Shift+D');
 
     const body = await page.locator('body');
     await expect(body).toBeVisible();

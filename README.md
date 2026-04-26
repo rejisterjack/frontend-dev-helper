@@ -4,7 +4,7 @@
 > Built for Chrome, Brave & Firefox · Manifest V3 · Open Source
 
 [![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/rejisterjack/frontend-dev-helper)
-[![Tools](https://img.shields.io/badge/tools-24-success.svg)](FEATURES.md)
+[![Tools](https://img.shields.io/badge/tools-27-success.svg)](FEATURES.md)
 [![Code Size](https://img.shields.io/badge/code-50k%20lines-informational.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](public/manifest.json)
@@ -48,7 +48,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 DevTools remains essential for deep debugging; this extension **complements** it with **product-style** workflows (capture, reports, responsive passes, regression baselines) without juggling installs.
 
-- ✅ **24 powerful tools** in one extension (more than any competitor!)
+- ✅ **27 professional tools** in one extension (see [FEATURES.md](FEATURES.md))
 - ✅ **Manifest V3** from day one
 - ✅ **Privacy-first by default** — tools run locally; optional AI calls only to providers you configure
 - ✅ **Open source** and free forever
@@ -145,17 +145,23 @@ pnpm run build
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
+**Chrome’s extension API only allows 4 *default* shortcuts in the manifest**, so the extension pre-registers just these. Each command is still available under **Extensions → … → Shortcuts** (`chrome://extensions/shortcuts`) for you to assign.
+
+| Shortcut (built-in) | Action |
 |----------|--------|
+| `Ctrl+Shift+F` (⌘⇧F on Mac) | Open popup |
+| `Ctrl+Shift+P` (⌘⇧P on Mac) | Open Command Palette |
 | `Alt+P` | Toggle DOM Outliner |
+| `Alt+Shift+D` | Disable all tools |
+
+| Suggested (assign in **chrome://extensions/shortcuts**) | Action |
+|----------|--------|
 | `Alt+S` | Toggle Spacing Visualizer |
 | `Alt+F` | Toggle Font Inspector |
 | `Alt+C` | Toggle Color Picker |
 | `Alt+M` | Toggle Pixel Ruler |
 | `Alt+B` | Toggle Breakpoint Overlay |
-| `Ctrl+Shift+F` | Open popup |
-| `Ctrl+Shift+P` | Open Command Palette |
-| `Esc` | Disable all tools |
+| … | Other toggles in the list |
 
 ---
 

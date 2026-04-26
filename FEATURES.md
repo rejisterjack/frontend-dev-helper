@@ -4,14 +4,16 @@
 
 ### 27 Professional Tools in One Extension
 
+**Shortcuts:** Browsers only allow **four** built-in default shortcuts. This extension sets **Open popup (Ctrl+Shift+F)**, **Command palette (Ctrl+Shift+P)**, **DOM outliner (Alt+P)**, and **Disable all (Alt+Shift+D)**. Other keys in the table are **recommended** bindings—add them in **`chrome://extensions/shortcuts`**, or use the command palette.
+
 | Tool | What It Does | Keyboard Shortcut |
 |------|--------------|-------------------|
-| 🕸️ **DOM Outliner** | Color-coded element outlines (Pesticide reborn) | Alt+P |
-| 📐 **Spacing Visualizer** | Margin & padding overlays with pixel values | Alt+S |
-| 🔤 **Font Inspector** | Typography analysis with source detection | Alt+F |
-| 🎨 **Color Picker** | EyeDropper + palette extraction | Alt+C |
-| 📏 **Pixel Ruler** | Precise distance measurement | Alt+M |
-| 📱 **Breakpoint Overlay** | Viewport size & responsive breakpoints | Alt+B |
+| 🕸️ **DOM Outliner** | Color-coded element outlines (Pesticide reborn) | Alt+P (built-in) |
+| 📐 **Spacing Visualizer** | Margin & padding overlays with pixel values | Alt+S (recommended) |
+| 🔤 **Font Inspector** | Typography analysis with source detection | Alt+F (recommended) |
+| 🎨 **Color Picker** | EyeDropper + palette extraction | Alt+C (recommended) |
+| 📏 **Pixel Ruler** | Precise distance measurement | Alt+M (recommended) |
+| 📱 **Breakpoint Overlay** | Viewport size & responsive breakpoints | Alt+B (recommended) |
 | 📝 **CSS Inspector** | All computed properties by category | - |
 | ♿ **Contrast Checker** | WCAG AA/AAA color contrast compliance | - |
 | ⊞ **Layout Visualizer** | Flexbox & Grid visualization | - |
@@ -25,7 +27,7 @@
 | 📲 **Responsive Preview** | **Multi-device side-by-side** | - |
 | 🎨 **Design System Validator** | **Check design token consistency** | - |
 | 🌐 **Network Analyzer** | **Monitor requests & waterfall** | - |
-| ⌨️ **Command Palette** | **Quick access to all tools** | Ctrl+Shift+P |
+| ⌨️ **Command Palette** | **Quick access to all tools** | Ctrl+Shift+P (built-in) |
 | 💾 **Storage Inspector** | **Inspect LocalStorage, IndexedDB, Cookies** | - |
 | ✨ **AI Suggestions** | **Smart analysis with auto-fixes** | - |
 | 🌳 **Component Tree** | **React/Vue/Angular/Svelte visualization** | - |
@@ -320,16 +322,9 @@ Screenshot comparison testing:
 - GitHub issue reporting link
 
 ### Keyboard Shortcuts
-All tools accessible via keyboard:
-- `Alt+P` - DOM Outliner
-- `Alt+S` - Spacing Visualizer
-- `Alt+F` - Font Inspector
-- `Alt+C` - Color Picker
-- `Alt+M` - Pixel Ruler
-- `Alt+B` - Breakpoint Overlay
-- `Ctrl+Shift+F` - Open popup
-- `Ctrl+Shift+P` - Open Command Palette
-- `Esc` - Disable all tools
+**Built-in defaults (4, manifest limit):** `Ctrl+Shift+F` (popup), `Ctrl+Shift+P` (command palette), `Alt+P` (DOM outliner), `Alt+Shift+D` (disable all).
+
+**Common bindings to add under `chrome://extensions/shortcuts`:** `Alt+S`, `Alt+F`, `Alt+C`, `Alt+M`, `Alt+B` for the tools in the table above, and any other command from the list.
 
 ### Export & Share
 Generate comprehensive reports:

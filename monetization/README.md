@@ -94,6 +94,8 @@ EXTENSION_ID=...
 
 ## Deployment
 
+Step-by-step checklist (Stripe, Resend, hosting, CWS): **[DEPLOY.md](DEPLOY.md)**.
+
 ### License Server
 ```bash
 cd server

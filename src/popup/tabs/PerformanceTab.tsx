@@ -12,10 +12,7 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ExtensionEmptyState,
-  ExtensionLoadingState,
-} from '@/components/ui/ExtensionStates';
+import { ExtensionEmptyState, ExtensionLoadingState } from '@/components/ui/ExtensionStates';
 import type { MemoryInfo, ResourceAnalysis, WebVitals } from '@/types';
 import { logger } from '@/utils/logger';
 
@@ -76,7 +73,6 @@ export const PerformanceTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeVitalsTab, setActiveVitalsTab] = useState<'overview' | 'details'>('overview');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['vitals']));
-  const observerRef = useRef<PerformanceObserver | null>(null);
   const longTaskObserverRef = useRef<PerformanceObserver | null>(null);
 
   const toggleSection = (section: string) => {
@@ -142,20 +138,10 @@ export const PerformanceTab: React.FC = () => {
   useEffect(() => {
     loadMetrics();
 
-    // Set up Web Vitals observer in the popup context
+    // Optional dev logging: metrics come from the active tab via scripting; the popup page
+    // is not a real browsing context for site vitals. Do not use entryTypes: ['web-vitals']
+    // — that type is not supported in Chrome's PerformanceObserver.
     if ('PerformanceObserver' in window) {
-      try {
-        observerRef.current = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            logger.log('[Performance]', entry.name, (entry as { value?: number }).value);
-          }
-        });
-        observerRef.current.observe({ entryTypes: ['web-vitals'] });
-      } catch {
-        // Web Vitals API may not be available
-      }
-
-      // Observe long tasks
       try {
         longTaskObserverRef.current = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
@@ -164,19 +150,18 @@ export const PerformanceTab: React.FC = () => {
         });
         longTaskObserverRef.current.observe({ entryTypes: ['longtask'] });
       } catch {
-        // Long Task API may not be available
+        // longtask not supported
       }
     }
 
     return () => {
-      observerRef.current?.disconnect();
       longTaskObserverRef.current?.disconnect();
     };
   }, [loadMetrics]);
 
   if (loading) {
     return (
-      <div className="p-4">
+      <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full overflow-x-hidden overflow-y-auto p-4">
         <ExtensionLoadingState label="Gathering Core Web Vitals and resource timing…" />
       </div>
     );
@@ -184,7 +169,7 @@ export const PerformanceTab: React.FC = () => {
 
   if (!metrics) {
     return (
-      <div className="p-4">
+      <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full overflow-x-hidden overflow-y-auto p-4">
         <ExtensionEmptyState
           icon="📊"
           title="No performance snapshot yet"
@@ -203,14 +188,21 @@ export const PerformanceTab: React.FC = () => {
     );
   }
 
-  const { webVitals, navigation, resources, memory, imageOptimizations, renderBlocking, longTasks } =
-    metrics;
+  const {
+    webVitals,
+    navigation,
+    resources,
+    memory,
+    imageOptimizations,
+    renderBlocking,
+    longTasks,
+  } = metrics;
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full space-y-4 overflow-x-hidden overflow-y-auto p-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <div className="min-w-0">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-dev-muted">
             Performance Analysis
           </h3>
@@ -218,11 +210,11 @@ export const PerformanceTab: React.FC = () => {
             Last updated: {new Date(metrics.timestamp).toLocaleTimeString()}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={loadMetrics}
-            className="rounded p-1.5 text-dev-muted hover:text-dev-text hover:bg-dev-surface transition-colors"
+            className="shrink-0 rounded p-1.5 text-dev-muted transition-colors hover:bg-dev-surface hover:text-dev-text"
             title="Refresh metrics"
           >
             <svg
@@ -243,7 +235,7 @@ export const PerformanceTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-lg border border-dev-border bg-dev-surface/50 px-3 py-2 text-[11px] text-dev-text leading-snug">
+      <div className="max-w-full break-words rounded-lg border border-dev-border bg-dev-surface/50 px-3 py-2 text-[11px] leading-snug text-dev-text">
         <span className="font-semibold text-dev-muted">Performance summary · </span>
         LCP {webVitals.lcp != null ? `${Math.round(webVitals.lcp)}ms` : '—'} · FCP{' '}
         {webVitals.fcp != null ? `${Math.round(webVitals.fcp)}ms` : '—'} · TTFB{' '}
@@ -284,11 +276,11 @@ export const PerformanceTab: React.FC = () => {
         {expandedSections.has('vitals') && (
           <div className="p-3 pt-0 border-t border-dev-border">
             {/* Vitals Tabs */}
-            <div className="flex gap-1 mt-3 mb-3">
+            <div className="mt-3 mb-3 flex min-w-0 gap-1">
               <button
                 type="button"
                 onClick={() => setActiveVitalsTab('overview')}
-                className={`flex-1 py-1.5 px-2 text-xs rounded-md transition-colors ${
+                className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-xs transition-colors ${
                   activeVitalsTab === 'overview'
                     ? 'bg-primary-600 text-white'
                     : 'text-dev-muted hover:text-dev-text hover:bg-dev-border'
@@ -299,7 +291,7 @@ export const PerformanceTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveVitalsTab('details')}
-                className={`flex-1 py-1.5 px-2 text-xs rounded-md transition-colors ${
+                className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-xs transition-colors ${
                   activeVitalsTab === 'details'
                     ? 'bg-primary-600 text-white'
                     : 'text-dev-muted hover:text-dev-text hover:bg-dev-border'
@@ -310,7 +302,7 @@ export const PerformanceTab: React.FC = () => {
             </div>
 
             {activeVitalsTab === 'overview' ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid min-w-0 gap-2 [grid-template-columns:repeat(2,minmax(0,1fr))]">
                 <VitalCard
                   label="LCP"
                   value={webVitals.lcp}
@@ -469,14 +461,14 @@ export const PerformanceTab: React.FC = () => {
 
         {expandedSections.has('resources') && (
           <div className="p-3 pt-0 border-t border-dev-border space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded bg-dev-bg p-2">
+            <div className="grid min-w-0 gap-3 [grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="min-w-0 overflow-hidden rounded bg-dev-bg p-2">
                 <div className="text-[10px] text-dev-muted">Total Size</div>
                 <div className="text-sm font-medium text-dev-text">
                   {formatBytes(resources.totalSize)}
                 </div>
               </div>
-              <div className="rounded bg-dev-bg p-2">
+              <div className="min-w-0 overflow-hidden rounded bg-dev-bg p-2">
                 <div className="text-[10px] text-dev-muted">Transfer Size</div>
                 <div className="text-sm font-medium text-dev-text">
                   {formatBytes(resources.transferSize)}
@@ -707,11 +699,13 @@ const VitalCard: React.FC<{
   const isPoor = value !== null && value >= thresholds.poor;
 
   return (
-    <div className="rounded-lg bg-dev-bg p-3">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-medium text-dev-muted">{label}</span>
+    <div className="min-w-0 overflow-hidden rounded-lg bg-dev-bg p-3">
+      <div className="mb-1 flex min-w-0 items-center justify-between gap-1">
+        <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-dev-muted">
+          {label}
+        </span>
         <div
-          className={`w-2 h-2 rounded-full ${isGood ? 'bg-dev-success' : isPoor ? 'bg-dev-error' : 'bg-dev-warning'}`}
+          className={`h-2 w-2 shrink-0 rounded-full ${isGood ? 'bg-dev-success' : isPoor ? 'bg-dev-error' : 'bg-dev-warning'}`}
         />
       </div>
       <div
@@ -719,7 +713,7 @@ const VitalCard: React.FC<{
       >
         {value !== null ? `${Math.round(value)}${unit}` : '—'}
       </div>
-      <div className="text-[10px] text-dev-muted mt-0.5">{description}</div>
+      <div className="mt-0.5 min-w-0 break-words text-[10px] text-dev-muted">{description}</div>
     </div>
   );
 };
@@ -735,16 +729,16 @@ const VitalDetailRow: React.FC<{
   const isPoor = value !== null && value >= thresholds.poor;
 
   return (
-    <div className="flex items-center justify-between py-1">
-      <span className="text-dev-text">{name}</span>
-      <div className="flex items-center gap-3">
-        <span className="text-dev-muted">Target: {target}</span>
-        <span
-          className={`font-medium ${isGood ? 'text-dev-success' : isPoor ? 'text-dev-error' : 'text-dev-warning'}`}
-        >
-          {value !== null ? `${Math.round(value)}${unit}` : '—'}
-        </span>
+    <div className="flex min-w-0 items-start justify-between gap-2 py-1">
+      <div className="min-w-0 flex-1">
+        <div className="text-dev-text leading-tight">{name}</div>
+        <div className="text-[10px] text-dev-muted">Target: {target}</div>
       </div>
+      <span
+        className={`shrink-0 self-center font-medium tabular-nums ${isGood ? 'text-dev-success' : isPoor ? 'text-dev-error' : 'text-dev-warning'}`}
+      >
+        {value !== null ? `${Math.round(value)}${unit}` : '—'}
+      </span>
     </div>
   );
 };

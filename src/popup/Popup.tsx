@@ -14,11 +14,10 @@ import { ComponentTree } from '../components/ComponentTree';
 import { FlameGraph } from '../components/FlameGraph';
 import { VisualRegression } from '../components/VisualRegression';
 import { TOOL_IDS, TOOL_METADATA, type ToolId } from '../constants';
-import { DEFAULT_FEATURE_TOGGLES } from '../types';
 import type { ToolMeta, ToolsState } from '../types';
-import { logger } from '../utils/logger';
+import { DEFAULT_FEATURE_TOGGLES } from '../types';
 import { applyBuiltinPreset, applyUserPreset } from '../utils/apply-preset';
-import { BUILTIN_TOOL_PRESETS, isStarterTool } from '../utils/tool-catalog';
+import { logger } from '../utils/logger';
 import { collectPageHints, recommendedToolsFromHints } from '../utils/page-hints';
 import type { UserToolPreset } from '../utils/storage';
 import {
@@ -30,6 +29,7 @@ import {
   removeUserToolPreset,
   setUiPrefs,
 } from '../utils/storage';
+import { BUILTIN_TOOL_PRESETS, isStarterTool } from '../utils/tool-catalog';
 import { applyToolEnabledInTab } from '../utils/tool-toggle';
 import { ColorLegend } from './components/ColorLegend';
 import { TabBar } from './components/TabBar';
@@ -461,101 +461,263 @@ export const Popup: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-[420px] min-h-[300px] bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent" />
+      <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 items-center justify-center bg-slate-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <>
-      <div className="w-[420px] bg-slate-900 text-slate-100 flex flex-col h-[580px]">
-        {/* Header */}
-        <header className="popup-header px-4 py-3 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            {/* Logo */}
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <svg
-                aria-hidden="true"
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                />
-              </svg>
-            </div>
-
-            <div>
-              <h1 className="font-bold text-sm logo-text">FrontendDevHelper</h1>
-              <p className="text-[10px] text-slate-400">
-                {activeToolsCount > 0 ? (
-                  <span className="text-emerald-400">
-                    {activeToolsCount} tool{activeToolsCount !== 1 ? 's' : ''} active
-                  </span>
-                ) : (
-                  'All tools disabled'
-                )}
-              </p>
-            </div>
+    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-slate-900 text-slate-100">
+      {/* Header */}
+      <header className="popup-header flex min-w-0 shrink-0 items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          {/* Logo */}
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <svg
+              aria-hidden="true"
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+              />
+            </svg>
           </div>
 
-          {/* Reset Button */}
-          <button
-            type="button"
-            onClick={handleResetAll}
-            className={`
-              btn-icon text-xs px-2 w-auto gap-1
+          <div className="min-w-0">
+            <h1 className="truncate font-bold text-sm logo-text">FrontendDevHelper</h1>
+            <p className="text-[10px] text-slate-400">
+              {activeToolsCount > 0 ? (
+                <span className="text-emerald-400">
+                  {activeToolsCount} tool{activeToolsCount !== 1 ? 's' : ''} active
+                </span>
+              ) : (
+                'All tools disabled'
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Reset Button */}
+        <button
+          type="button"
+          onClick={handleResetAll}
+          className={`
+              btn-icon shrink-0 text-xs px-2 w-auto gap-1
               ${
                 showResetConfirm
                   ? 'text-red-400 bg-red-500/10'
                   : 'text-slate-400 hover:text-slate-200'
               }
             `}
-            title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
-          >
-            {showResetConfirm ? (
-              <>
-                <span>⚠️</span>
-                <span>Confirm</span>
-              </>
-            ) : (
-              <svg
-                aria-hidden="true"
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          title={showResetConfirm ? 'Click again to confirm' : 'Reset all tools'}
+        >
+          {showResetConfirm ? (
+            <>
+              <span>⚠️</span>
+              <span>Confirm</span>
+            </>
+          ) : (
+            <svg
+              aria-hidden="true"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          )}
+        </button>
+      </header>
+
+      {/* Tab Bar */}
+      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Main Content */}
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {activeTab === 'tools' && (
+          <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full space-y-3 overflow-x-hidden overflow-y-auto p-3">
+            {/* Search Bar */}
+            <div className="relative sticky top-0 z-10">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg
+                  aria-hidden="true"
+                  className="h-4 w-4 text-slate-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search tools..."
+                aria-label="Search tools"
+                className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    searchInputRef.current?.focus();
+                  }}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                  title="Clear search"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              ) : (
+                <kbd className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <span className="text-[10px] text-slate-600 border border-slate-700 rounded px-1.5 py-0.5">
+                    /
+                  </span>
+                </kbd>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showAdvancedTools}
+                  onChange={(e) => {
+                    const next = e.target.checked;
+                    setShowAdvancedTools(next);
+                    void setUiPrefs({ showAdvancedTools: next });
+                  }}
+                  className="rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
                 />
-              </svg>
+                Show all tools
+              </label>
+              <span className="text-[10px] text-slate-500">
+                Starter set when off · search always finds everything
+              </span>
+            </div>
+
+            {recommendedIds.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                  Suggested for this page
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {recommendedIds.map((id) => {
+                    const meta = getToolMeta(id);
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => void handleToggleTool(id, true)}
+                        className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-indigo-500/50 hover:text-white transition-colors"
+                      >
+                        {meta.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
-          </button>
-        </header>
 
-        {/* Tab Bar */}
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+            <div className="space-y-1">
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                Presets
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {BUILTIN_TOOL_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => void handleApplyPreset(p.id)}
+                    className="text-[11px] px-2 py-1 rounded-md bg-indigo-950/80 border border-indigo-800/60 text-indigo-100 hover:bg-indigo-900/80 transition-colors"
+                    title={p.description}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-hidden">
-          {activeTab === 'tools' && (
-            <div className="h-full overflow-y-auto p-3 space-y-3">
-              {/* Search Bar */}
-              <div className="relative sticky top-0 z-10">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="space-y-1">
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                My presets
+              </p>
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <button
+                  type="button"
+                  onClick={() => void handleSaveUserPreset()}
+                  className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-amber-500/50"
+                >
+                  Save current
+                </button>
+                {userPresets.map((p) => (
+                  <span key={p.id} className="inline-flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => void handleApplyUserPreset(p.id)}
+                      className="text-[11px] px-2 py-1 rounded-md bg-amber-950/80 border border-amber-800/50 text-amber-100 hover:bg-amber-900/80"
+                      title={`${p.toolIds.length} tools`}
+                    >
+                      {p.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteUserPreset(p.id)}
+                      className="text-[10px] px-1 text-slate-500 hover:text-rose-400"
+                      aria-label={`Delete ${p.name}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Tool Categories */}
+            {filteredCategories.map((category) => (
+              <div key={category.id} className="space-y-2">
+                {/* Category Header */}
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
+                  className="flex items-center justify-between w-full text-left group"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{category.icon}</span>
+                    <span className="font-medium text-sm text-slate-200">{category.name}</span>
+                    <span className="text-xs text-slate-500">({category.tools.length})</span>
+                  </div>
                   <svg
-                    aria-hidden="true"
-                    className="h-4 w-4 text-slate-500"
+                    className={`w-4 h-4 text-slate-500 transition-transform ${
+                      expandedCategories.has(category.id) ? 'rotate-180' : ''
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -564,325 +726,159 @@ export const Popup: React.FC = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      d="M19 9l-7 7-7-7"
                     />
                   </svg>
-                </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tools..."
-                  aria-label="Search tools"
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-                {searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery('');
-                      searchInputRef.current?.focus();
-                    }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
-                    title="Clear search"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                ) : (
-                  <kbd className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-[10px] text-slate-600 border border-slate-700 rounded px-1.5 py-0.5">
-                      /
-                    </span>
-                  </kbd>
-                )}
-              </div>
+                </button>
 
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showAdvancedTools}
-                    onChange={(e) => {
-                      const next = e.target.checked;
-                      setShowAdvancedTools(next);
-                      void setUiPrefs({ showAdvancedTools: next });
-                    }}
-                    className="rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
-                  />
-                  Show all tools
-                </label>
-                <span className="text-[10px] text-slate-500">
-                  Starter set when off · search always finds everything
-                </span>
-              </div>
-
-              {recommendedIds.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                    Suggested for this page
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {recommendedIds.map((id) => {
-                      const meta = getToolMeta(id);
+                {/* Category Tools */}
+                {expandedCategories.has(category.id) && (
+                  <div className="space-y-2 pl-2">
+                    {category.tools.map((toolId, index) => {
+                      const meta = getToolMeta(toolId);
+                      const state = toolsState[toolId] || { enabled: false };
                       return (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => void handleToggleTool(id, true)}
-                          className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-indigo-500/50 hover:text-white transition-colors"
-                        >
-                          {meta.name}
-                        </button>
+                        <React.Fragment key={toolId}>
+                          <ToolCard
+                            toolId={toolId}
+                            name={meta.name}
+                            description={meta.description}
+                            icon={meta.icon}
+                            enabled={state.enabled}
+                            hasSettings={meta.hasSettings}
+                            color={meta.color}
+                            shortcut={meta.shortcut}
+                            onToggle={(enabled) => handleToggleTool(toolId, enabled)}
+                            onSettingsClick={() => handleOpenSettings(toolId)}
+                            onView={
+                              (
+                                [
+                                  TOOL_IDS.SMART_SUGGESTIONS,
+                                  TOOL_IDS.VISUAL_REGRESSION,
+                                  TOOL_IDS.FLAME_GRAPH,
+                                  TOOL_IDS.COMPONENT_TREE,
+                                ] as ToolId[]
+                              ).includes(toolId)
+                                ? () => handleOpenPanel(toolId)
+                                : undefined
+                            }
+                            animationDelay={`stagger-${index + 1}`}
+                          />
+                          {/* Show color legend below DOM Outliner when enabled */}
+                          {toolId === TOOL_IDS.DOM_OUTLINER && state.enabled && (
+                            <div className="animate-fade-in stagger-1">
+                              <ColorLegend />
+                            </div>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </div>
-                </div>
-              )}
-
-              <div className="space-y-1">
-                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                  Presets
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {BUILTIN_TOOL_PRESETS.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => void handleApplyPreset(p.id)}
-                      className="text-[11px] px-2 py-1 rounded-md bg-indigo-950/80 border border-indigo-800/60 text-indigo-100 hover:bg-indigo-900/80 transition-colors"
-                      title={p.description}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
+                )}
               </div>
+            ))}
 
-              <div className="space-y-1">
-                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                  My presets
-                </p>
-                <div className="flex flex-wrap gap-1.5 items-center">
-                  <button
-                    type="button"
-                    onClick={() => void handleSaveUserPreset()}
-                    className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-amber-500/50"
-                  >
-                    Save current
-                  </button>
-                  {userPresets.map((p) => (
-                    <span key={p.id} className="inline-flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => void handleApplyUserPreset(p.id)}
-                        className="text-[11px] px-2 py-1 rounded-md bg-amber-950/80 border border-amber-800/50 text-amber-100 hover:bg-amber-900/80"
-                        title={`${p.toolIds.length} tools`}
-                      >
-                        {p.name}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleDeleteUserPreset(p.id)}
-                        className="text-[10px] px-1 text-slate-500 hover:text-rose-400"
-                        aria-label={`Delete ${p.name}`}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
+            {/* Empty State */}
+            {filteredCategories.length === 0 && (
+              <div className="text-center py-8 text-slate-500">
+                <div className="text-4xl mb-2">🔍</div>
+                <p className="text-sm font-medium">No tools match your search</p>
+                <p className="text-xs mt-1">Try a different keyword or press Escape to clear</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  Clear search
+                </button>
               </div>
+            )}
 
-              {/* Tool Categories */}
-              {filteredCategories.map((category) => (
-                <div key={category.id} className="space-y-2">
-                  {/* Category Header */}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(category.id)}
-                    className="flex items-center justify-between w-full text-left group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{category.icon}</span>
-                      <span className="font-medium text-sm text-slate-200">{category.name}</span>
-                      <span className="text-xs text-slate-500">({category.tools.length})</span>
-                    </div>
-                    <svg
-                      className={`w-4 h-4 text-slate-500 transition-transform ${
-                        expandedCategories.has(category.id) ? 'rotate-180' : ''
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-
-                  {/* Category Tools */}
-                  {expandedCategories.has(category.id) && (
-                    <div className="space-y-2 pl-2">
-                      {category.tools.map((toolId, index) => {
-                        const meta = getToolMeta(toolId);
-                        const state = toolsState[toolId] || { enabled: false };
-                        return (
-                          <React.Fragment key={toolId}>
-                            <ToolCard
-                              toolId={toolId}
-                              name={meta.name}
-                              description={meta.description}
-                              icon={meta.icon}
-                              enabled={state.enabled}
-                              hasSettings={meta.hasSettings}
-                              color={meta.color}
-                              shortcut={meta.shortcut}
-                              onToggle={(enabled) => handleToggleTool(toolId, enabled)}
-                              onSettingsClick={() => handleOpenSettings(toolId)}
-                              onView={
-                                (
-                                  [
-                                    TOOL_IDS.SMART_SUGGESTIONS,
-                                    TOOL_IDS.VISUAL_REGRESSION,
-                                    TOOL_IDS.FLAME_GRAPH,
-                                    TOOL_IDS.COMPONENT_TREE,
-                                  ] as ToolId[]
-                                ).includes(toolId)
-                                  ? () => handleOpenPanel(toolId)
-                                  : undefined
-                              }
-                              animationDelay={`stagger-${index + 1}`}
-                            />
-                            {/* Show color legend below DOM Outliner when enabled */}
-                            {toolId === TOOL_IDS.DOM_OUTLINER && state.enabled && (
-                              <div className="animate-fade-in stagger-1">
-                                <ColorLegend />
-                              </div>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Empty State */}
-              {filteredCategories.length === 0 && (
-                <div className="text-center py-8 text-slate-500">
-                  <div className="text-4xl mb-2">🔍</div>
-                  <p className="text-sm font-medium">No tools match your search</p>
-                  <p className="text-xs mt-1">Try a different keyword or press Escape to clear</p>
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    Clear search
-                  </button>
-                </div>
-              )}
-
-              {/* Pro Tips Section */}
-              <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-                <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-                  <span>💡</span>
-                  Pro Tip
-                </h4>
-                <p className="text-[11px] text-slate-400">
-                  Use{' '}
-                  <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">
-                    Ctrl+Shift+F
-                  </kbd>{' '}
-                  to open the popup,{' '}
-                  <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">/</kbd> to search
-                  tools.
-                </p>
-              </div>
+            {/* Pro Tips Section */}
+            <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+              <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                <span>💡</span>
+                Pro Tip
+              </h4>
+              <p className="text-[11px] text-slate-400">
+                Use{' '}
+                <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd>{' '}
+                to open the popup,{' '}
+                <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">/</kbd> to search
+                tools.
+              </p>
             </div>
-          )}
-
-          {activeTab === 'performance' && <PerformanceTab />}
-          {activeTab === 'inspector' && <InspectorTab />}
-          {activeTab === 'settings' && <SettingsTab />}
-        </main>
-
-        {/* Footer */}
-        <footer className="popup-footer px-3 py-2 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-500">v{EXTENSION_VERSION}</span>
-            <span className="text-slate-600">•</span>
-            <a
-              href="https://github.com/rejisterjack/frontend-dev-helper"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
-            >
-              <svg aria-hidden="true" className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  fillRule="evenodd"
-                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              GitHub
-            </a>
           </div>
+        )}
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-              onClick={() => {
-                const url = chrome.runtime.getURL('options.html');
-                chrome.tabs.create({ url });
-              }}
-            >
-              Full Settings
-            </button>
-            <span className="text-slate-600">•</span>
-            <a
-              href="https://github.com/rejisterjack/frontend-dev-helper#readme"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              Help
-            </a>
-          </div>
-        </footer>
+        {activeTab === 'performance' && <PerformanceTab />}
+        {activeTab === 'inspector' && <InspectorTab />}
+        {activeTab === 'settings' && <SettingsTab />}
+      </main>
 
-        {/* Panel Overlays for React Component Integration */}
-        {openPanel === TOOL_IDS.SMART_SUGGESTIONS && (
-          <AISuggestions isOpen={true} onClose={() => setOpenPanel(null)} />
-        )}
-        {openPanel === TOOL_IDS.VISUAL_REGRESSION && (
-          <VisualRegression
-            isOpen={true}
-            onClose={() => setOpenPanel(null)}
-            currentUrl={currentTabUrl}
-          />
-        )}
-        {openPanel === TOOL_IDS.FLAME_GRAPH && (
-          <FlameGraph isOpen={true} onClose={() => setOpenPanel(null)} />
-        )}
-        {openPanel === TOOL_IDS.COMPONENT_TREE && (
-          <ComponentTree isOpen={true} onClose={() => setOpenPanel(null)} />
-        )}
-      </div>
-    </>
+      {/* Footer */}
+      <footer className="popup-footer flex min-w-0 shrink-0 items-center justify-between gap-2 px-3 py-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="shrink-0 text-[10px] text-slate-500">v{EXTENSION_VERSION}</span>
+          <span className="text-slate-600">•</span>
+          <a
+            href="https://github.com/rejisterjack/frontend-dev-helper"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
+          >
+            <svg aria-hidden="true" className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fillRule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            GitHub
+          </a>
+        </div>
+
+        <div className="flex min-w-0 shrink-0 items-center gap-2">
+          <button
+            type="button"
+            className="whitespace-nowrap text-[10px] text-slate-500 transition-colors hover:text-slate-300"
+            onClick={() => {
+              const url = chrome.runtime.getURL('options.html');
+              chrome.tabs.create({ url });
+            }}
+          >
+            Full Settings
+          </button>
+          <span className="text-slate-600">•</span>
+          <a
+            href="https://github.com/rejisterjack/frontend-dev-helper#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            Help
+          </a>
+        </div>
+      </footer>
+
+      {/* Panel Overlays for React Component Integration */}
+      {openPanel === TOOL_IDS.SMART_SUGGESTIONS && (
+        <AISuggestions isOpen={true} onClose={() => setOpenPanel(null)} />
+      )}
+      {openPanel === TOOL_IDS.VISUAL_REGRESSION && (
+        <VisualRegression
+          isOpen={true}
+          onClose={() => setOpenPanel(null)}
+          currentUrl={currentTabUrl}
+        />
+      )}
+      {openPanel === TOOL_IDS.FLAME_GRAPH && (
+        <FlameGraph isOpen={true} onClose={() => setOpenPanel(null)} />
+      )}
+      {openPanel === TOOL_IDS.COMPONENT_TREE && (
+        <ComponentTree isOpen={true} onClose={() => setOpenPanel(null)} />
+      )}
+    </div>
   );
 };
 

@@ -28,7 +28,7 @@ export const InspectorTab: React.FC<InspectorTabProps> = ({ features, onToggleFe
   };
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full space-y-4 overflow-x-hidden overflow-y-auto p-4">
       <div className="rounded-lg bg-dev-surface p-3">
         <button
           type="button"

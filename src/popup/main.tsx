@@ -7,16 +7,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { Popup } from './Popup';
 import '../assets/css/globals.css';
+import { getOrCreatePopupRoot } from './mount-root';
+import { Popup } from './Popup';
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <Popup />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
-}
+/** Used by [popup.html](../../popup.html); [index.html](../index.html) uses [index.tsx](./index.tsx). */
+ReactDOM.createRoot(getOrCreatePopupRoot()).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <Popup />
+    </ErrorBoundary>
+  </React.StrictMode>
+);

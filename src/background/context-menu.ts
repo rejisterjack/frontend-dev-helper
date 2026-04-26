@@ -48,6 +48,13 @@ export class ContextMenuManager {
    * Initialize context menus
    */
   initialize(): void {
+    if (typeof chrome === 'undefined' || !chrome.contextMenus) {
+      logger.warn(
+        '[ContextMenu] chrome.contextMenus is unavailable. Add the "contextMenus" permission in manifest.json.'
+      );
+      return;
+    }
+
     // Remove existing menus
     chrome.contextMenus.removeAll(() => {
       this.createMenus();

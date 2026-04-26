@@ -545,7 +545,8 @@ export async function enable(): Promise<void> {
         // Debounce checks
         setTimeout(runBudgetCheck, 1000);
       });
-      observer.observe({ entryTypes: ['web-vitals', 'resource', 'navigation'] });
+      // 'web-vitals' is not a valid PerformanceObserver entryType in Chrome
+      observer.observe({ entryTypes: ['resource', 'navigation'] });
     } catch {
       // Fallback to periodic checks
       setInterval(runBudgetCheck, 5000);
@@ -603,7 +604,15 @@ export async function getRecentViolations(): Promise<BudgetViolation[]> {
 /**
  * Collect current performance metrics
  */
-export function collectMetrics(): { lcp: number | null; fid: number | null; cls: number | null; fcp: number | null; ttfb: number | null; resourceCount: number; domSize: number } {
+export function collectMetrics(): {
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  fcp: number | null;
+  ttfb: number | null;
+  resourceCount: number;
+  domSize: number;
+} {
   const vitals = getCurrentWebVitals();
   return {
     lcp: vitals.lcp ?? null,
@@ -620,7 +629,7 @@ export function collectMetrics(): { lcp: number | null; fid: number | null; cls:
  * Set a budget value
  */
 export function setBudget(metric: string, value: number): void {
-  const existing = budgets.find(b => b.metric === metric);
+  const existing = budgets.find((b) => b.metric === metric);
   if (existing) {
     existing.threshold = value;
   } else {

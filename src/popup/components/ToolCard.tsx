@@ -82,7 +82,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({
     <div
       className={`
         tool-card animate-fade-in
-        relative flex items-center gap-3 p-3 rounded-xl cursor-pointer
+        relative box-border flex w-full min-w-0 max-w-full items-center gap-3 p-3 rounded-xl cursor-pointer
         ${
           enabled
             ? 'bg-gradient-to-r from-slate-800 to-slate-800/80 border border-emerald-500/50'

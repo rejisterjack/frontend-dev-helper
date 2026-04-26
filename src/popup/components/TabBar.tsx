@@ -26,14 +26,17 @@ const TABS: Array<{
 
 export const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
   return (
-    <nav className="flex items-center border-b border-slate-700/50 bg-slate-800/50 px-1">
+    <nav
+      className="flex w-full min-w-0 items-center border-b border-slate-700/50 bg-slate-800/50 px-1"
+      aria-label="Popup sections"
+    >
       {TABS.map((tab) => (
         <button
           type="button"
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`
-            flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2
+            min-w-0 flex-1 flex items-center justify-center gap-1.5 py-2.5 px-1.5
             text-xs font-medium transition-all relative
             ${
               activeTab === tab.id

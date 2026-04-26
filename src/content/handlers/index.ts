@@ -11,6 +11,11 @@ import { logger } from '@/utils/logger';
 import { accessibilityAudit } from '../accessibility-audit';
 import { aiSuggestions } from '../ai-suggestions';
 import { animationInspector } from '../animation-inspector';
+import {
+  getContainerQueryInspector,
+  getScrollAnimationsDebugger,
+  getViewTransitionsDebugger,
+} from '../beast-mode-loader';
 import { breakpointOverlay } from '../breakpoint-overlay';
 import { colorPicker } from '../color-picker';
 import { commandPalette } from '../command-palette';
@@ -18,33 +23,30 @@ import { componentTree } from '../component-tree';
 import { contrastChecker } from '../contrast-checker';
 import { cssEditor } from '../css-editor';
 import { cssInspector } from '../css-inspector';
+import * as cssVariableInspector from '../css-variable-inspector';
 import designSystemValidator from '../design-system-validator';
 import { flameGraph } from '../flame-graph';
 import { focusDebugger } from '../focus-debugger';
 import { fontInspector } from '../font-inspector';
 import { formDebugger } from '../form-debugger';
+import * as frameworkDevtools from '../framework-devtools';
 import { layoutVisualizer } from '../layout-visualizer';
 import { networkAnalyzer } from '../network-analyzer';
+import * as performanceBudget from '../performance-budget';
 // Import tool modules
 import { pesticide } from '../pesticide';
 import { pixelRuler } from '../pixel-ruler';
 import { responsivePreview } from '../responsive-preview';
+import * as responsiveTesting from '../responsive-testing';
 import * as screenshotStudio from '../screenshot-studio';
+import * as sessionRecorder from '../session-recorder';
 import { siteReportGenerator } from '../site-report-generator';
+import * as smartElementPicker from '../smart-element-picker';
 import { spacingVisualizer } from '../spacing';
 import { storageInspector } from '../storage-inspector';
 import { techDetector } from '../tech-detector';
 import { visualRegression } from '../visual-regression';
 import { zIndexVisualizer } from '../zindex-visualizer';
-import * as sessionRecorder from '../session-recorder';
-import * as responsiveTesting from '../responsive-testing';
-import * as cssVariableInspector from '../css-variable-inspector';
-import * as smartElementPicker from '../smart-element-picker';
-import * as performanceBudget from '../performance-budget';
-import * as frameworkDevtools from '../framework-devtools';
-import * as containerQueryInspector from '../container-query-inspector';
-import * as viewTransitionsDebugger from '../view-transitions-debugger';
-import * as scrollAnimationsDebugger from '../scroll-animations-debugger';
 
 /** Helper to create standard tool handlers */
 function createToolHandlers(
@@ -419,7 +421,11 @@ export const registry: Record<string, ContentHandler> = {
   },
 
   // CSS Variable Inspector
-  ...createToolHandlers('CSS_VARIABLE_INSPECTOR', cssVariableInspector, 'isCssVariableInspectorActive'),
+  ...createToolHandlers(
+    'CSS_VARIABLE_INSPECTOR',
+    cssVariableInspector,
+    'isCssVariableInspectorActive'
+  ),
   CSS_VARIABLE_INSPECTOR_SCAN: (_payload, _state, sendResponse) => {
     const variables = cssVariableInspector.detectCSSVariables();
     sendResponse({ success: true, variables });
@@ -467,25 +473,143 @@ export const registry: Record<string, ContentHandler> = {
     sendResponse({ success: true, tree });
   },
 
-  // Beast Mode: Container Query Inspector
-  ...createToolHandlers('CONTAINER_QUERY_INSPECTOR', containerQueryInspector, 'isContainerQueryInspectorActive'),
+  // Beast Mode: lazy-loaded chunks (see beast-mode-loader.ts)
+  CONTAINER_QUERY_INSPECTOR_ENABLE: (_payload, state, sendResponse) => {
+    void getContainerQueryInspector()
+      .then((m) => {
+        m.enable();
+        state.isContainerQueryInspectorActive = true;
+        sendResponse({ success: true, active: true });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  CONTAINER_QUERY_INSPECTOR_DISABLE: (_payload, state, sendResponse) => {
+    void getContainerQueryInspector()
+      .then((m) => {
+        m.disable();
+        state.isContainerQueryInspectorActive = false;
+        sendResponse({ success: true, active: false });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  CONTAINER_QUERY_INSPECTOR_TOGGLE: (_payload, state, sendResponse) => {
+    void getContainerQueryInspector()
+      .then((m) => {
+        m.toggle();
+        const s = m.getState();
+        state.isContainerQueryInspectorActive = s.enabled;
+        sendResponse({ success: true, active: s.enabled });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  CONTAINER_QUERY_INSPECTOR_GET_STATE: (_payload, _state, sendResponse) => {
+    void getContainerQueryInspector()
+      .then((m) => {
+        sendResponse({ success: true, state: m.getState() });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
   CONTAINER_QUERY_INSPECTOR_GET_SUMMARY: (_payload, _state, sendResponse) => {
-    const summary = containerQueryInspector.getContainerSummary();
-    sendResponse({ success: true, summary });
+    void getContainerQueryInspector()
+      .then((m) => {
+        const summary = m.getContainerSummary();
+        sendResponse({ success: true, summary });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
   },
 
-  // Beast Mode: View Transitions Debugger
-  ...createToolHandlers('VIEW_TRANSITIONS_DEBUGGER', viewTransitionsDebugger, 'isViewTransitionsDebuggerActive'),
+  VIEW_TRANSITIONS_DEBUGGER_ENABLE: (_payload, state, sendResponse) => {
+    void getViewTransitionsDebugger()
+      .then((m) => {
+        m.enable();
+        state.isViewTransitionsDebuggerActive = true;
+        sendResponse({ success: true, active: true });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  VIEW_TRANSITIONS_DEBUGGER_DISABLE: (_payload, state, sendResponse) => {
+    void getViewTransitionsDebugger()
+      .then((m) => {
+        m.disable();
+        state.isViewTransitionsDebuggerActive = false;
+        sendResponse({ success: true, active: false });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  VIEW_TRANSITIONS_DEBUGGER_TOGGLE: (_payload, state, sendResponse) => {
+    void getViewTransitionsDebugger()
+      .then((m) => {
+        m.toggle();
+        const s = m.getState();
+        state.isViewTransitionsDebuggerActive = s.enabled;
+        sendResponse({ success: true, active: s.enabled });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
   VIEW_TRANSITIONS_DEBUGGER_GET_STATE: (_payload, _state, sendResponse) => {
-    const state = viewTransitionsDebugger.getState();
-    sendResponse({ success: true, state });
+    void getViewTransitionsDebugger()
+      .then((m) => {
+        sendResponse({ success: true, state: m.getState() });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
   },
 
-  // Beast Mode: Scroll Animations Debugger
-  ...createToolHandlers('SCROLL_ANIMATIONS_DEBUGGER', scrollAnimationsDebugger, 'isScrollAnimationsDebuggerActive'),
+  SCROLL_ANIMATIONS_DEBUGGER_ENABLE: (_payload, state, sendResponse) => {
+    void getScrollAnimationsDebugger()
+      .then((m) => {
+        m.enable();
+        state.isScrollAnimationsDebuggerActive = true;
+        sendResponse({ success: true, active: true });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  SCROLL_ANIMATIONS_DEBUGGER_DISABLE: (_payload, state, sendResponse) => {
+    void getScrollAnimationsDebugger()
+      .then((m) => {
+        m.disable();
+        state.isScrollAnimationsDebuggerActive = false;
+        sendResponse({ success: true, active: false });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  SCROLL_ANIMATIONS_DEBUGGER_TOGGLE: (_payload, state, sendResponse) => {
+    void getScrollAnimationsDebugger()
+      .then((m) => {
+        m.toggle();
+        const s = m.getState();
+        state.isScrollAnimationsDebuggerActive = s.enabled;
+        sendResponse({ success: true, active: s.enabled });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
+  SCROLL_ANIMATIONS_DEBUGGER_GET_STATE: (_payload, _state, sendResponse) => {
+    void getScrollAnimationsDebugger()
+      .then((m) => {
+        sendResponse({ success: true, state: m.getState() });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
+  },
   SCROLL_ANIMATIONS_DEBUGGER_GET_SUMMARY: (_payload, _state, sendResponse) => {
-    const summary = scrollAnimationsDebugger.getAnimationSummary();
-    sendResponse({ success: true, summary });
+    void getScrollAnimationsDebugger()
+      .then((m) => {
+        const summary = m.getAnimationSummary();
+        sendResponse({ success: true, summary });
+      })
+      .catch((e) => sendResponse({ success: false, error: String(e) }));
+    return true;
   },
 
   // Legacy message types
@@ -595,9 +719,15 @@ export const registry: Record<string, ContentHandler> = {
     smartElementPicker.disable();
     performanceBudget.disable();
     frameworkDevtools.disable();
-    containerQueryInspector.disable();
-    viewTransitionsDebugger.disable();
-    scrollAnimationsDebugger.disable();
+    if (state.isContainerQueryInspectorActive) {
+      void getContainerQueryInspector().then((m) => m.disable());
+    }
+    if (state.isViewTransitionsDebuggerActive) {
+      void getViewTransitionsDebugger().then((m) => m.disable());
+    }
+    if (state.isScrollAnimationsDebuggerActive) {
+      void getScrollAnimationsDebugger().then((m) => m.disable());
+    }
 
     // Update state flags (unified naming convention)
     state.isDomOutlinerActive = false;
