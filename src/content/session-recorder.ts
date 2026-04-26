@@ -6,7 +6,11 @@
  */
 
 import { logger } from '@/utils/logger';
+import { TimerManager } from '@/utils/timer-manager';
+import { CircularBuffer } from '@/utils/circular-buffer';
 import type { ToolId } from '@/constants';
+
+const timers = new TimerManager();
 
 export interface SessionEvent {
   id: string;
@@ -40,14 +44,14 @@ interface RecordingState {
   isRecording: boolean;
   session: DebuggingSession | null;
   startTime: number;
-  eventBuffer: SessionEvent[];
+  eventBuffer: CircularBuffer<SessionEvent>;
 }
 
 const state: RecordingState = {
   isRecording: false,
   session: null,
   startTime: 0,
-  eventBuffer: [],
+  eventBuffer: new CircularBuffer<SessionEvent>({ maxSize: 1000, strategy: 'drop-oldest' }),
 };
 
 let clickListener: ((e: MouseEvent) => void) | null = null;
@@ -71,7 +75,7 @@ export function startRecording(name: string, description?: string): DebuggingSes
 
   state.isRecording = true;
   state.startTime = Date.now();
-  state.eventBuffer = [];
+  state.eventBuffer.clear();
 
   const session: DebuggingSession = {
     id: generateId(),
@@ -124,12 +128,13 @@ export function stopRecording(): DebuggingSession | null {
   state.isRecording = false;
   const duration = Date.now() - state.startTime;
 
-  state.session.events = [...state.eventBuffer];
+  state.session.events = [...state.eventBuffer.items];
   state.session.metadata.duration = duration;
-  state.session.metadata.toolCount = countUniqueTools(state.eventBuffer);
+  state.session.metadata.toolCount = countUniqueTools(state.eventBuffer.items);
   state.session.updatedAt = Date.now();
 
-  // Clean up listeners
+  // Clean up timers and listeners
+  timers.clearAll();
   removeEventListeners();
   hideRecordingIndicator();
 
@@ -153,11 +158,6 @@ export function recordEvent(event: Omit<SessionEvent, 'timestamp'> & { timestamp
   };
 
   state.eventBuffer.push(fullEvent);
-
-  // Limit buffer size
-  if (state.eventBuffer.length > 1000) {
-    state.eventBuffer = state.eventBuffer.slice(-500);
-  }
 }
 
 /**
@@ -208,10 +208,10 @@ function setupEventListeners(): void {
   document.addEventListener('click', clickListener, true);
 
   // Scroll tracking (throttled)
-  let scrollTimeout: number | null = null;
+  let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
   scrollListener = () => {
     if (scrollTimeout) return;
-    scrollTimeout = window.setTimeout(() => {
+    scrollTimeout = timers.setTimeout(() => {
       recordEvent({
         id: generateId(),
         timestamp: Date.now() - state.startTime,
@@ -313,9 +313,9 @@ function showRecordingIndicator(): void {
 
   // Update timer
   const timeDisplay = indicator.querySelector('#fdh-recording-time');
-  const timer = setInterval(() => {
+  timers.setInterval(() => {
     if (!state.isRecording) {
-      clearInterval(timer);
+      timers.clearAll();
       return;
     }
     const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
@@ -410,7 +410,9 @@ export async function replaySession(sessionId: string, onEvent?: (event: Session
       const prevEvent = session.events[i - 1];
       const delay = event.timestamp - prevEvent.timestamp;
       if (delay > 0) {
-        await new Promise((resolve) => setTimeout(resolve, Math.min(delay, 1000))); // Cap at 1 second
+        await new Promise<void>((resolve) => {
+          timers.setTimeout(resolve, Math.min(delay, 1000)); // Cap at 1 second
+        });
       }
     }
 
@@ -510,10 +512,10 @@ function showAnnotation(text: string, selector?: string): void {
 
   document.body.appendChild(annotation);
 
-  setTimeout(() => {
+  timers.setTimeout(() => {
     annotation.style.opacity = '0';
     annotation.style.transition = 'opacity 0.5s';
-    setTimeout(() => annotation.remove(), 500);
+    timers.setTimeout(() => annotation.remove(), 500);
   }, 3000);
 }
 

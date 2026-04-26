@@ -321,7 +321,7 @@ export function buildAnimationList(): string {
       ${animationsRef
         .map(
           (anim) => `
-        <div class="fdh-anim-item" data-id="${anim.id}" style="
+        <div class="fdh-anim-item" data-id="${escapeHtml(anim.id)}" style="
           padding: 12px 16px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           cursor: pointer;
@@ -355,7 +355,7 @@ export function buildAnimationList(): string {
               ">${anim.type === 'css-animation' ? 'CSS' : 'Trans'}</span>
             </div>
             <button
-              type="button" class="fdh-anim-item-play" data-id="${anim.id}" style="
+              type="button" class="fdh-anim-item-play" data-id="${escapeHtml(anim.id)}" style="
               background: transparent;
               border: none;
               color: ${anim.playState === 'running' ? '#f87171' : '#4ade80'};
@@ -469,7 +469,7 @@ export function buildAnimationDetails(anim: AnimationInfo): string {
       ${keyframesHtml}
       
       <button
-        type="button" class="fdh-anim-scroll-to" data-id="${anim.id}" style="
+        type="button" class="fdh-anim-scroll-to" data-id="${escapeHtml(anim.id)}" style="
         width: 100%;
         background: rgba(99, 102, 241, 0.2);
         border: 1px solid rgba(99, 102, 241, 0.4);

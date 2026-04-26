@@ -205,7 +205,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
       <div
         className="
           w-[420px] max-w-[90vw]
-          bg-slate-900 rounded-2xl shadow-2xl
+          bg-extension-bg-dark rounded-2xl shadow-2xl
           border border-slate-700/50
           overflow-hidden
           animate-slide-in
@@ -215,7 +215,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
         aria-labelledby="onboarding-title"
       >
         {/* Progress Bar */}
-        <div className="h-1 bg-slate-800">
+        <div className="h-1 bg-[#111827]">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
             style={{ width: `${(currentStep / 4) * 100}%` }}
@@ -238,7 +238,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({
         </div>
 
         {/* Footer: Navigation */}
-        <div className="px-6 py-4 bg-slate-800/50 border-t border-slate-700/50">
+        <div className="px-6 py-4 bg-[#111827]/50 border-t border-slate-700/50">
           <div className="flex items-center justify-between">
             {/* Step Indicators */}
             <div className="flex items-center gap-2">
@@ -251,9 +251,9 @@ export const Onboarding: React.FC<OnboardingProps> = ({
                     w-2.5 h-2.5 rounded-full transition-all duration-200
                     ${
                       step === currentStep
-                        ? 'bg-indigo-500 w-6'
+                        ? 'bg-primary- w-6'
                         : step < currentStep
-                          ? 'bg-indigo-500/50 hover:bg-indigo-400'
+                          ? 'bg-primary-/50 hover:bg-primary-'
                           : 'bg-slate-600 hover:bg-slate-500'
                     }
                   `}
@@ -302,8 +302,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({
                   onClick={handleNext}
                   className="
                     btn-primary text-xs px-4 py-2 rounded-lg
-                    bg-indigo-600 text-white
-                    hover:bg-indigo-500
+                    bg-primary- text-white
+                    hover:bg-primary-
                     transition-all duration-200
                     shadow-lg shadow-indigo-500/25
                   "
@@ -425,8 +425,8 @@ const ToolsStep: React.FC = () => (
           key={tool.toolId}
           className="
             flex flex-col items-center p-2 rounded-lg
-            bg-slate-800/50 border border-slate-700/30
-            hover:bg-slate-800 hover:border-slate-600
+            bg-[#111827]/50 border border-slate-700/30
+            hover:bg-[#111827] hover:border-slate-600
             transition-all duration-200
             group
           "
@@ -476,8 +476,8 @@ const ShortcutsStep: React.FC = () => (
           className="
             flex items-center justify-between
             px-3 py-2 rounded-lg
-            bg-slate-800/50 border border-slate-700/30
-            hover:bg-slate-800 hover:border-slate-600
+            bg-[#111827]/50 border border-slate-700/30
+            hover:bg-[#111827] hover:border-slate-600
             transition-all duration-200
           "
           style={{ animationDelay: `${index * 75}ms` }}
@@ -499,8 +499,8 @@ const ShortcutsStep: React.FC = () => (
       ))}
     </div>
 
-    <div className="mt-3 p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-      <p className="text-[10px] text-indigo-300 text-center">
+    <div className="mt-3 p-2 rounded-lg bg-primary-/10 border border-primary-/20">
+      <p className="text-[10px] text-primary- text-center">
         💡 Tip: Customize shortcuts in{' '}
         <span className="font-medium">chrome://extensions/shortcuts</span>
       </p>
@@ -522,8 +522,8 @@ const TipsStep: React.FC = () => (
           className="
             flex items-start gap-3
             p-3 rounded-lg
-            bg-slate-800/50 border border-slate-700/30
-            hover:bg-slate-800 hover:border-slate-600
+            bg-[#111827]/50 border border-slate-700/30
+            hover:bg-[#111827] hover:border-slate-600
             transition-all duration-200
           "
           style={{ animationDelay: `${index * 100}ms` }}

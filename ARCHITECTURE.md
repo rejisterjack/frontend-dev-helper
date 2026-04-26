@@ -5,10 +5,13 @@ This document describes the architecture of the FrontendDevHelper browser extens
 ## Overview
 
 FrontendDevHelper is a browser extension built with:
-- **Manifest V3** - Modern extension format for Chrome/Firefox/Brave
-- **React 18** - UI framework for popup and options pages
-- **TypeScript** - Type-safe JavaScript
-- **Vite** - Build tool with CRXJS plugin for extension support
+- **Manifest V3** — Modern extension format for Chrome/Firefox/Brave
+- **React 18** — UI framework for popup and options pages
+- **TypeScript** — Type-safe JavaScript
+- **Vite** — Build tool with CRXJS plugin for extension support
+- **33+ debugging tools** organized across inspection, CSS, responsive, performance, AI, and utility categories
+- **Monetization system** — Stripe-backed license server with Free/Pro/Team tiers
+- **Beast Mode loader** — Lazy-loaded tool chunks to keep initial payload small
 
 ## Architecture Diagram
 
@@ -265,7 +268,18 @@ export const STORAGE_KEYS = {
 
 ## Tool Architecture
 
-Each tool follows a consistent pattern:
+FrontendDevHelper ships **33+ tools** across six categories. Each tool follows a consistent pattern:
+
+### Tool Categories
+
+| Category | Tools |
+|----------|-------|
+| **Inspection** | DOM Outliner, Spacing Visualizer, Font Inspector, Color Picker, Pixel Ruler, Element Inspector, Component Tree, Smart Element Picker |
+| **CSS** | CSS Inspector, CSS Editor, Contrast Checker, CSS Scanner, CSS Variable Inspector, Design System Validator |
+| **Responsive** | Breakpoint Overlay, Responsive Preview, Container Query Inspector |
+| **Performance** | Network Analyzer, Flame Graph, Performance Budget, Site Report, Session Recorder |
+| **AI / Smart** | Smart Suggestions, Command Palette, Framework DevTools |
+| **Utility** | Screenshot Studio, Animation Inspector, Storage Inspector, Focus Debugger, Form Debugger, Visual Regression, View Transitions Debugger, Scroll Animations Debugger, Tech Detector, Layout Visualizer, Z-Index Visualizer, Grid Overlay, Measurement Tool |
 
 ### Tool Structure
 
@@ -287,12 +301,12 @@ export const toolName = {
     state.enabled = true;
     // Inject DOM elements, add listeners
   },
-  
+
   disable() {
     state.enabled = false;
     // Cleanup DOM, remove listeners
   },
-  
+
   toggle() {
     if (state.enabled) {
       this.disable();
@@ -300,18 +314,43 @@ export const toolName = {
       this.enable();
     }
   },
-  
+
   getState() {
     return { ...state };
   },
 };
 ```
 
+### Beast Mode Loader
+
+**Location**: `src/content/beast-mode-loader.ts`
+
+Beast Mode tools (Container Query Inspector, View Transitions Debugger, Scroll Animations Debugger) are **lazy-loaded** via dynamic `import()` so their code lands in separate chunks until first activated. This keeps the initial content-script bundle small. The loader caches each module promise and nullifies it on failure so the next attempt retries.
+
+```typescript
+export function getContainerQueryInspector(): Promise<typeof import('./container-query-inspector')> {
+  if (!cqiPromise) {
+    cqiPromise = import('./container-query-inspector').catch((err) => {
+      cqiPromise = null;
+      throw err;
+    });
+  }
+  return cqiPromise;
+}
+```
+
 ### Tool Registration
 
 Tools are registered in:
-1. `src/constants/index.ts` - `TOOL_IDS` and `TOOL_METADATA`
-2. `src/content/index.ts` - Message handlers for the tool
+1. `src/constants/index.ts` — `TOOL_IDS` and `TOOL_METADATA`
+2. `src/content/handlers/index.ts` — Central handler registry with `createToolHandlers()` helper
+3. `src/utils/tool-catalog.ts` — Catalog for command palette, onboarding, and progressive disclosure
+
+### Handler Registry
+
+**Location**: `src/content/handlers/index.ts`
+
+All content-script message handlers are centralized in a single `registry` object. Eagerly loaded tools use `createToolHandlers()` to auto-generate `ENABLE/DISABLE/TOGGLE/GET_STATE` handlers. Beast Mode tools register explicit async handlers that load their module via the beast-mode loader before delegating.
 
 ## React Hooks
 
@@ -362,19 +401,48 @@ function Toolbar() {
      "extension_pages": "script-src 'self'; object-src 'self'"
    }
    ```
+   See `docs/SECURITY.md` for the full security model.
 
-2. **No External API Calls**: All analysis is performed locally on the DOM
+2. **Input sanitization**: All dynamic content is escaped with `escapeHtml()`, `sanitizeColor()`, and `sanitizeUrl()` from `src/utils/sanitize.ts`.
 
-3. **Host Permissions**: `<all_urls>` is justified for a dev tool that needs to inspect any page
+3. **Host Permissions**: `<all_urls>` is justified for a dev tool that needs to inspect any page.
 
-4. **Data Collection**: Zero - no user data is collected or transmitted
+4. **Data Collection**: Zero — no user data is collected or transmitted.
+
+## Monetization Architecture
+
+**Location**: `monetization/`
+
+A Stripe-backed licensing system gates premium features behind Free/Pro/Team tiers.
+
+```
+Extension (Client)  <-->  License Server (Node.js/Express)  <-->  Stripe (Payments)
+                                       |
+                                  Webhooks (signature-verified)
+```
+
+### Components
+
+| Component | Location | Role |
+|-----------|----------|------|
+| License Server | `monetization/server/` | Express API with JWT validation, Stripe webhooks, team management |
+| Stripe Integration | `monetization/server/src/routes/webhooks.ts` | Checkout sessions, subscription events, customer portal |
+| Extension Client | `src/background/licensing.ts` | Feature gating, license key storage, periodic validation |
+| Notifications | `monetization/server/src/utils/notifyUser.ts` | Transactional email via Resend for payment and trial events |
+
+### Security measures
+- Stripe webhook signature verification on every incoming event
+- Cryptographic license key generation (`crypto.randomBytes`)
+- Zod schema validation for all webhook metadata payloads
+- Environment variable validation on startup
 
 ## Performance Optimizations
 
 1. **AI Analyzer Sampling**: For large DOMs (>1000 nodes), samples elements instead of checking all
-2. **Lazy Loading**: Tools are loaded on-demand when first activated
+2. **Lazy Loading (Beast Mode)**: Beast Mode tools are loaded on-demand via dynamic `import()` chunks (see beast-mode-loader.ts)
 3. **Debouncing**: Resize and scroll events are debounced
 4. **Storage Caching**: Tool states are cached in memory to reduce storage reads
+5. **Timer Management**: `TimerManager` from `src/utils/timer-manager` centralizes setTimeout/setInterval and guarantees cleanup on tool disable
 
 ## Error Handling
 
@@ -434,4 +502,4 @@ type: MESSAGE_TYPES.TOGGLE_TOOL
 
 ---
 
-*Last updated: 2026-03-22*
+*Last updated: 2026-04-26*

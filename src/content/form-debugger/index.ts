@@ -14,6 +14,7 @@
 
 import type { FormDebuggerState, FormInfo } from '@/types';
 import { logger } from '@/utils/logger';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
 import { analyzeForms, isFormField, updateFieldValidity } from './analyzer';
 import { PREFIX, REFRESH_INTERVAL } from './constants';
 import type { TabType } from './types';
@@ -41,11 +42,11 @@ export * from './validator';
 // State
 // ============================================
 
+const lifecycle = new ToolLifecycle();
+
 let isEnabled = false;
 let panelContainer: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
-let refreshTimer: number | null = null;
-let mutationObserver: MutationObserver | null = null;
 let forms: FormInfo[] = [];
 let selectedForm: FormInfo | null = null;
 let highlightIssuesEnabled = true;
@@ -61,6 +62,8 @@ let currentTab: TabType = 'overview';
 export function enable(): void {
   if (isEnabled) return;
   isEnabled = true;
+
+  lifecycle.start();
 
   createPanel();
   startAutoRefresh();
@@ -81,9 +84,9 @@ export function disable(): void {
 
   destroyPanel();
   removeValidationOverlays();
-  stopAutoRefresh();
-  stopMutationObserver();
-  detachEventListeners();
+
+  // Tear down observers, timers, event listeners
+  lifecycle.destroy();
 
   forms = [];
   selectedForm = null;
@@ -166,17 +169,14 @@ function analyzeFormsAndUpdate(): void {
 // ============================================
 
 function attachEventListeners(): void {
-  document.addEventListener('input', handleInput, true);
-  document.addEventListener('change', handleChange, true);
-  document.addEventListener('invalid', handleInvalid, true);
-  document.addEventListener('submit', handleSubmit, true);
+  lifecycle.addEventListener(document, 'input', handleInput, true);
+  lifecycle.addEventListener(document, 'change', handleChange, true);
+  lifecycle.addEventListener(document, 'invalid', handleInvalid, true);
+  lifecycle.addEventListener(document, 'submit', handleSubmit, true);
 }
 
 function detachEventListeners(): void {
-  document.removeEventListener('input', handleInput, true);
-  document.removeEventListener('change', handleChange, true);
-  document.removeEventListener('invalid', handleInvalid, true);
-  document.removeEventListener('submit', handleSubmit, true);
+  // Handled by lifecycle.destroy() via AbortController
 }
 
 function handleInput(event: Event): void {
@@ -385,23 +385,17 @@ function updateStatus(message: string): void {
 // ============================================
 
 function startAutoRefresh(): void {
-  if (refreshTimer) return;
-  refreshTimer = window.setInterval(() => {
+  lifecycle.setInterval(() => {
     refresh();
   }, REFRESH_INTERVAL);
 }
 
 function stopAutoRefresh(): void {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
-  }
+  // Handled by lifecycle.destroy()
 }
 
 function startMutationObserver(): void {
-  if (mutationObserver) return;
-
-  mutationObserver = new MutationObserver((mutations) => {
+  const mutationObserver = new MutationObserver((mutations) => {
     let shouldRefresh = false;
 
     for (const mutation of mutations) {
@@ -432,8 +426,7 @@ function startMutationObserver(): void {
     }
 
     if (shouldRefresh) {
-      clearTimeout((refresh as unknown as { _timeout: number })._timeout);
-      (refresh as unknown as { _timeout: number })._timeout = window.setTimeout(refresh, 100);
+      lifecycle.setTimeout(refresh, 100);
     }
   });
 
@@ -443,13 +436,12 @@ function startMutationObserver(): void {
     attributes: true,
     attributeFilter: ['name', 'type', 'required', 'pattern', 'value', 'disabled'],
   });
+
+  lifecycle.addObserver(mutationObserver);
 }
 
 function stopMutationObserver(): void {
-  if (mutationObserver) {
-    mutationObserver.disconnect();
-    mutationObserver = null;
-  }
+  // Handled by lifecycle.destroy()
 }
 
 // ============================================

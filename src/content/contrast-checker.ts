@@ -235,7 +235,7 @@ function buildOverlayContent(): string {
           ? `
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
           <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">💡 Suggestions:</div>
-          ${result.suggestions.map((s) => `<div style="font-size: 11px; color: #fbbf24; margin-bottom: 4px;">• ${s}</div>`).join('')}
+          ${result.suggestions.map((s) => `<div style="font-size: 11px; color: #fbbf24; margin-bottom: 4px;">• ${escapeHtml(s)}</div>`).join('')}
         </div>
       `
           : ''
@@ -244,7 +244,7 @@ function buildOverlayContent(): string {
     
     <!-- Preview -->
     <div class="fdh-contrast-preview" style="
-      background: ${backgroundColor};
+      background: ${sanitizeColor(backgroundColor) || '#ffffff'};
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 16px;
@@ -252,16 +252,16 @@ function buildOverlayContent(): string {
       <p style="
         margin: 0 0 12px;
         font-size: 16px;
-        color: ${foregroundColor};
+        color: ${sanitizeColor(foregroundColor) || '#000000'};
         line-height: 1.5;
-      ">${normalText}</p>
+      ">${escapeHtml(normalText)}</p>
       <p style="
         margin: 0;
         font-size: 20px;
         font-weight: 700;
-        color: ${foregroundColor};
+        color: ${sanitizeColor(foregroundColor) || '#000000'};
         line-height: 1.4;
-      ">${largeText}</p>
+      ">${escapeHtml(largeText)}</p>
     </div>
     
     <!-- Actions -->

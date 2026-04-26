@@ -148,7 +148,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10 flex flex-col">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-xl bg-extension-bg-dark shadow-2xl ring-1 ring-white/10 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
           <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
               type="button"
               onClick={runAnalysis}
               disabled={loading}
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+              className="rounded-lg bg-primary- px-3 py-1.5 text-sm text-white hover:bg-primary- disabled:opacity-50 flex items-center gap-2"
             >
               {loading ? (
                 <>
@@ -182,7 +182,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-[#111827] hover:text-white"
             >
               ✕
             </button>
@@ -200,7 +200,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                   onClick={() => toggleCategory(category)}
                   className={`
                   rounded-lg p-2 text-left transition-colors
-                  ${selectedCategories.has(category) ? 'bg-slate-700' : 'bg-slate-800/50 hover:bg-slate-800'}
+                  ${selectedCategories.has(category) ? 'bg-slate-700' : 'bg-[#111827]/50 hover:bg-[#111827]'}
                 `}
                 >
                   <div
@@ -228,7 +228,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                 onClick={() => togglePriority(priority)}
                 className={`
                   rounded-full px-2 py-0.5 text-xs capitalize transition-colors
-                  ${selectedPriorities.has(priority) ? PRIORITY_COLORS[priority] : 'text-slate-500 hover:bg-slate-800'}
+                  ${selectedPriorities.has(priority) ? PRIORITY_COLORS[priority] : 'text-slate-500 hover:bg-[#111827]'}
                 `}
               >
                 {priority}
@@ -239,7 +239,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
             <button
               type="button"
               onClick={handleApplyCommonFixes}
-              className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700"
+              className="rounded-lg bg-[#111827] px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700"
             >
               Apply Common Fixes
             </button>
@@ -369,7 +369,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
                       {suggestion.selector && (
                         <div className="mb-3">
                           <span className="text-slate-500 text-sm">Selector:</span>
-                          <code className="ml-2 rounded bg-slate-800 px-2 py-1 text-xs text-slate-300 font-mono">
+                          <code className="ml-2 rounded bg-[#111827] px-2 py-1 text-xs text-slate-300 font-mono">
                             {suggestion.selector}
                           </code>
                         </div>
@@ -411,7 +411,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ isOpen, onClose })
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-700 bg-slate-900/50 px-4 py-2 text-xs text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-700 bg-extension-bg-dark/50 px-4 py-2 text-xs text-slate-500">
           <div>
             {analysis && (
               <span>

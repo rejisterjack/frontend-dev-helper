@@ -84,6 +84,9 @@ export function createPanel(): HTMLElement {
   const el = document.createElement('div');
   el.id = 'fdh-network-analyzer';
   el.className = 'fdh-network-analyzer';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', 'FrontendDevHelper Network Analyzer');
+  el.setAttribute('aria-modal', 'false');
   el.style.cssText = `
     position: fixed;
     top: 20px;
@@ -532,15 +535,15 @@ export function buildDetailPanel(requestId: string, requests: NetworkRequest[]):
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
           <div>
             <span style="color: #64748b; font-size: 11px;">Method</span>
-            <div style="color: #e2e8f0; font-weight: 500; margin-top: 4px;">${req.method}</div>
+            <div style="color: #e2e8f0; font-weight: 500; margin-top: 4px;">${escapeHtml(req.method)}</div>
           </div>
           <div>
             <span style="color: #64748b; font-size: 11px;">Status</span>
-            <div style="color: ${getStatusColor(req.status)}; font-weight: 500; margin-top: 4px;">${req.status} ${req.statusText}</div>
+            <div style="color: ${getStatusColor(req.status)}; font-weight: 500; margin-top: 4px;">${req.status} ${escapeHtml(req.statusText)}</div>
           </div>
           <div>
             <span style="color: #64748b; font-size: 11px;">Type</span>
-            <div style="color: #e2e8f0; font-weight: 500; margin-top: 4px; text-transform: uppercase;">${req.type}</div>
+            <div style="color: #e2e8f0; font-weight: 500; margin-top: 4px; text-transform: uppercase;">${escapeHtml(req.type)}</div>
           </div>
         </div>
         
@@ -647,6 +650,15 @@ function attachEventListeners(requests: NetworkRequest[]): void {
       if (onDisable) onDisable();
     });
   }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function handleEscape(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      removeDetailPanel();
+      if (onDisable) onDisable();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  });
 
   // Filter buttons
   panel.querySelectorAll('.fdh-na-filter').forEach((btn) => {

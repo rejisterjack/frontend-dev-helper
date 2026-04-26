@@ -6,10 +6,14 @@
 
 import { RESOURCE_PATTERNS } from './constants';
 import type { NetworkRequest, ResourceTiming, ResourceType } from './types';
+import { CircularBuffer } from '@/utils/circular-buffer';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
+
+// Lifecycle manager for observers and timers
+const lifecycle = new ToolLifecycle();
 
 // State
-let requests: NetworkRequest[] = [];
-let performanceObserver: PerformanceObserver | null = null;
+const requests = new CircularBuffer<NetworkRequest>({ maxSize: 1000, strategy: 'drop-oldest' });
 let originalFetch: typeof fetch | null = null;
 let originalXHR: typeof XMLHttpRequest | null = null;
 let originalSend: typeof XMLHttpRequest.prototype.send | null = null;
@@ -18,6 +22,20 @@ const requestStartTimes: Map<string, number> = new Map();
 
 // Callback for UI updates
 let onRequestUpdate: (() => void) | null = null;
+
+/**
+ * Start the lifecycle manager (called from index.ts enable())
+ */
+export function startLifecycle(): void {
+  lifecycle.start();
+}
+
+/**
+ * Destroy the lifecycle manager (called from index.ts disable())
+ */
+export function destroyLifecycle(): void {
+  lifecycle.destroy();
+}
 
 /**
  * Set the callback for request updates
@@ -30,14 +48,14 @@ export function setUpdateCallback(callback: () => void): void {
  * Get all captured requests
  */
 export function getRequests(): NetworkRequest[] {
-  return [...requests];
+  return [...requests.items];
 }
 
 /**
  * Clear all captured requests
  */
 export function clearRequests(): void {
-  requests = [];
+  requests.clear();
 }
 
 /**
@@ -333,7 +351,7 @@ export function restoreXHR(): void {
 export function initPerformanceObserver(): void {
   if (!('PerformanceObserver' in window)) return;
 
-  performanceObserver = new PerformanceObserver((list) => {
+  const performanceObserver = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if (entry.entryType === 'resource') {
         processResourceEntry(entry as PerformanceResourceTiming);
@@ -342,6 +360,7 @@ export function initPerformanceObserver(): void {
   });
 
   performanceObserver.observe({ entryTypes: ['resource'] });
+  lifecycle.addObserver(performanceObserver);
 }
 
 /**
@@ -349,10 +368,10 @@ export function initPerformanceObserver(): void {
  */
 function processResourceEntry(entry: PerformanceResourceTiming): void {
   // Skip if already captured by fetch/XHR interceptor
-  const existingIndex = requests.findIndex((r) => r.url === entry.name);
+  const existingIndex = requests.items.findIndex((r) => r.url === entry.name);
   if (existingIndex !== -1) {
     // Update with timing data
-    const existing = requests[existingIndex];
+    const existing = requests.items[existingIndex];
     existing.timing = extractTiming(entry);
     existing.size = entry.encodedBodySize;
     existing.transferSize = entry.transferSize;
@@ -387,10 +406,7 @@ function processResourceEntry(entry: PerformanceResourceTiming): void {
  * Disconnect performance observer
  */
 export function disconnectPerformanceObserver(): void {
-  if (performanceObserver) {
-    performanceObserver.disconnect();
-    performanceObserver = null;
-  }
+  // Handled by lifecycle.destroy()
 }
 
 /**

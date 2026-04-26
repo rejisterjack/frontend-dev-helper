@@ -6,7 +6,7 @@
 
 import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
-import { escapeHtml } from '@/utils/sanitize';
+import { escapeHtml, sanitizeColor } from '@/utils/sanitize';
 
 export interface ColorPickerOptions {
   onColorSelect?: (color: string, format: 'hex' | 'rgb' | 'hsl') => void;
@@ -207,18 +207,19 @@ export class ColorPicker {
     if (!this.previewElement) return;
 
     this.previewElement.style.display = 'flex';
+    const cssColor = sanitizeColor(color) || '#000000';
     const safeColor = escapeHtml(color);
     this.previewElement.innerHTML = `
       <div style="
         width: 32px;
         height: 32px;
         border-radius: 4px;
-        background: ${safeColor};
+        background: ${cssColor};
         border: 2px solid white;
       "></div>
       <div>
         <div>${safeColor}</div>
-        <div style="color: #9ca3af; font-size: 10px;">${this.hexToRgb(safeColor)}</div>
+        <div style="color: #9ca3af; font-size: 10px;">${escapeHtml(this.hexToRgb(color))}</div>
       </div>
     `;
   }
@@ -572,6 +573,9 @@ export class ColorPicker {
 
     const overlay = document.createElement('div');
     overlay.id = 'fdh-palette-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', 'FrontendDevHelper Color Picker');
+    overlay.setAttribute('aria-modal', 'false');
     overlay.style.cssText = `
       position: fixed;
       top: 50%;
@@ -613,12 +617,13 @@ export class ColorPicker {
         <div style="display: flex; flex-wrap: wrap; gap: 6px;" class="color-palette-grid" data-palette-type="dominant">
           ${palette.dominant
             .map((color) => {
+              const cssColor = sanitizeColor(color) || '#000000';
               const safeColor = escapeHtml(color);
               return `
             <div style="
               width: 40px;
               height: 40px;
-              background: ${safeColor};
+              background: ${cssColor};
               border-radius: 8px;
               border: 2px solid rgba(255,255,255,0.1);
               cursor: pointer;
@@ -657,21 +662,23 @@ export class ColorPicker {
                 border-radius: 8px;
                 padding: 10px;
               ">
-                <div style="font-size: 10px; color: #64748b; text-transform: capitalize; margin-bottom: 6px;">${type}</div>
+                <div style="font-size: 10px; color: #64748b; text-transform: capitalize; margin-bottom: 6px;">${escapeHtml(type)}</div>
                 <div style="display: flex; gap: 4px;">
                   ${colors
                     .slice(0, 3)
-                    .map(
-                      (color) => `
+                    .map((color) => {
+                      const cssClr = sanitizeColor(color) || '#000000';
+                      const safeClr = escapeHtml(color);
+                      return `
                     <div style="
                       width: 24px;
                       height: 24px;
-                      background: ${color};
+                      background: ${cssClr};
                       border-radius: 4px;
                       border: 1px solid rgba(255,255,255,0.1);
-                    " title="${color}"></div>
-                  `
-                    )
+                    " title="${safeClr}"></div>
+                  `;
+                    })
                     .join('')}
                 </div>
               </div>
@@ -764,12 +771,13 @@ export class ColorPicker {
         <div style="display: flex; gap: 6px;" class="color-harmony-row">
           ${colors
             .map((color) => {
+              const cssColor = sanitizeColor(color) || '#000000';
               const safeColor = escapeHtml(color);
               return `
             <div style="
               width: 32px;
               height: 32px;
-              background: ${safeColor};
+              background: ${cssColor};
               border-radius: 6px;
               border: 2px solid rgba(255,255,255,0.1);
               cursor: pointer;

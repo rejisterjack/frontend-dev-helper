@@ -489,7 +489,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
 
   return (
     <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-6xl h-[85vh] overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10 flex flex-col">
+      <div className="w-full max-w-6xl h-[85vh] overflow-hidden rounded-xl bg-extension-bg-dark shadow-2xl ring-1 ring-white/10 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
           <div className="flex items-center gap-3">
@@ -510,7 +510,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
               type="button"
               onClick={handleExport}
               disabled={!profile}
-              className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
+              className="rounded-lg bg-[#111827] px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
             >
               <span>📤</span>
               Export
@@ -518,7 +518,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-[#111827] hover:text-white"
             >
               ✕
             </button>
@@ -526,7 +526,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between border-b border-slate-700 px-4 py-2 bg-slate-800/50">
+        <div className="flex items-center justify-between border-b border-slate-700 px-4 py-2 bg-[#111827]/50">
           {/* Type Filters */}
           <div className="flex items-center gap-3">
             {(['script', 'layout', 'paint', 'composite', 'other'] as const).map((type) => (
@@ -566,7 +566,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
               placeholder="Search..."
               value={filter.searchQuery}
               onChange={(e) => setFilter((prev) => ({ ...prev, searchQuery: e.target.value }))}
-              className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              className="rounded-lg bg-[#111827] border border-slate-700 px-3 py-1 text-sm text-white placeholder-slate-500 focus:border-primary- focus:outline-none"
             />
           </div>
         </div>
@@ -585,7 +585,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
           />
 
           {/* Zoom Controls */}
-          <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-slate-800 rounded-lg p-1 shadow-lg">
+          <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-[#111827] rounded-lg p-1 shadow-lg">
             <button
               type="button"
               onClick={handleZoomOut}
@@ -616,7 +616,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
           {/* Tooltip */}
           {hoveredEntry && (
             <div
-              className="absolute z-50 bg-slate-800 border border-slate-700 rounded-lg p-3 shadow-xl pointer-events-none max-w-xs"
+              className="absolute z-50 bg-[#111827] border border-slate-700 rounded-lg p-3 shadow-xl pointer-events-none max-w-xs"
               style={{
                 left: Math.min(tooltipPos.x - 100, (containerRef.current?.clientWidth || 0) - 220),
                 top: Math.min(tooltipPos.y + 20, (containerRef.current?.clientHeight || 0) - 150),
@@ -653,7 +653,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
 
         {/* Stats Bar */}
         {stats && (
-          <div className="flex items-center justify-between border-t border-slate-700 px-4 py-2 bg-slate-800/50">
+          <div className="flex items-center justify-between border-t border-slate-700 px-4 py-2 bg-[#111827]/50">
             <div className="flex items-center gap-6 text-xs">
               <span className="text-slate-400">
                 Total: <span className="text-slate-200">{stats.totalDuration}ms</span>
@@ -679,7 +679,7 @@ export const FlameGraph: React.FC<FlameGraphProps> = ({
 
         {/* Selected Entry Details */}
         {selectedEntry && (
-          <div className="border-t border-slate-700 bg-slate-800/50 px-4 py-3">
+          <div className="border-t border-slate-700 bg-[#111827]/50 px-4 py-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">

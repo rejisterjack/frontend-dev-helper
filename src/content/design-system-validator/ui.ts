@@ -500,7 +500,7 @@ export function updateStats(report: ValidationReport): void {
           violations
             .map(
               (v) => `
-            <div class="dsv-violation ${v.severity}" data-violation-id="${v.id}">
+            <div class="dsv-violation ${v.severity}" data-violation-id="${escapeHtml(v.id)}">
               <div class="dsv-violation-type">${escapeHtml(type)}</div>
               <div class="dsv-violation-message">${escapeHtml(v.message)}</div>
               ${v.actualValue ? `<div class="dsv-violation-value">${escapeHtml(v.actualValue)}</div>` : ''}

@@ -9,6 +9,7 @@
 import { estimateElementCount } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
 
 export interface PerformanceBudget {
   id: string;
@@ -120,9 +121,10 @@ const DEFAULT_BUDGETS: PerformanceBudget[] = [
   },
 ];
 
+const lifecycle = new ToolLifecycle();
+
 let budgets: PerformanceBudget[] = [...DEFAULT_BUDGETS];
 let violations: BudgetViolation[] = [];
-let observer: PerformanceObserver | null = null;
 let isActive = false;
 let notificationOverlay: HTMLElement | null = null;
 
@@ -533,6 +535,8 @@ export async function enable(): Promise<void> {
   if (isActive) return;
   isActive = true;
 
+  lifecycle.start();
+
   await loadBudgets();
 
   // Initial check
@@ -541,19 +545,20 @@ export async function enable(): Promise<void> {
   // Set up observers
   if ('PerformanceObserver' in window) {
     try {
-      observer = new PerformanceObserver(() => {
+      const observer = new PerformanceObserver(() => {
         // Debounce checks
-        setTimeout(runBudgetCheck, 1000);
+        lifecycle.setTimeout(runBudgetCheck, 1000);
       });
       // 'web-vitals' is not a valid PerformanceObserver entryType in Chrome
       observer.observe({ entryTypes: ['resource', 'navigation'] });
+      lifecycle.addObserver(observer);
     } catch {
       // Fallback to periodic checks
-      setInterval(runBudgetCheck, 5000);
+      lifecycle.setInterval(runBudgetCheck, 5000);
     }
   } else {
     // Periodic checks
-    setInterval(runBudgetCheck, 5000);
+    lifecycle.setInterval(runBudgetCheck, 5000);
   }
 
   logger.log('[PerformanceBudget] Enabled');
@@ -566,8 +571,8 @@ export function disable(): void {
   if (!isActive) return;
   isActive = false;
 
-  observer?.disconnect();
-  observer = null;
+  // Tear down observers, timers, event listeners
+  lifecycle.destroy();
 
   notificationOverlay?.remove();
   notificationOverlay = null;

@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger';
+import { escapeHtml } from '../utils/sanitize';
 
 /**
  * Tech Stack Detector
@@ -391,7 +392,7 @@ function buildPanelContent(): string {
         ">×</button>
       </div>
       <div style="font-size: 11px; color: #64748b;">
-        ${detectedTech.length} technologies detected on ${new URL(window.location.href).hostname}
+        ${detectedTech.length} technologies detected on ${escapeHtml(new URL(window.location.href).hostname)}
       </div>
     </div>
     
@@ -422,15 +423,15 @@ function buildPanelContent(): string {
                       border-radius: 8px;
                       transition: background 0.2s;
                     ">
-                      <span style="font-size: 18px;">${tech.icon}</span>
-                      <span style="flex: 1; font-weight: 500;">${tech.name}</span>
+                      <span style="font-size: 18px;">${escapeHtml(tech.icon)}</span>
+                      <span style="flex: 1; font-weight: 500;">${escapeHtml(tech.name)}</span>
                       <span style="
                         font-size: 10px;
                         padding: 2px 8px;
                         border-radius: 10px;
                         background: ${tech.confidence === 'high' ? 'rgba(34, 197, 94, 0.2)' : tech.confidence === 'medium' ? 'rgba(234, 179, 8, 0.2)' : 'rgba(100, 116, 139, 0.2)'};
                         color: ${tech.confidence === 'high' ? '#4ade80' : tech.confidence === 'medium' ? '#facc15' : '#94a3b8'};
-                      ">${tech.confidence}</span>
+                      ">${escapeHtml(tech.confidence)}</span>
                     </div>
                   `
                     )

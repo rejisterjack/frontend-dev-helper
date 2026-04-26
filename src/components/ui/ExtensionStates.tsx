@@ -6,7 +6,7 @@ const shell =
 type Tone = 'dark' | 'light';
 
 const toneClass: Record<Tone, string> = {
-  dark: 'border-slate-700/60 bg-slate-800/35 text-slate-200',
+  dark: 'border-slate-700/60 bg-[#111827]/35 text-slate-200',
   light: 'border-slate-200 bg-white text-slate-900 shadow-sm',
 };
 

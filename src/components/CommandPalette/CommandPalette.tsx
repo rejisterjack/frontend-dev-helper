@@ -170,7 +170,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       role="dialog"
     >
       <div
-        className="w-full max-w-2xl overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10"
+        className="w-full max-w-2xl overflow-hidden rounded-xl bg-extension-bg-dark shadow-2xl ring-1 ring-white/10"
         onKeyDown={handleKeyDown}
         role="application"
       >
@@ -193,7 +193,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="ml-2 rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="ml-2 rounded p-1 text-slate-400 hover:bg-[#111827] hover:text-white"
             >
               <svg
                 aria-hidden="true"
@@ -212,9 +212,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             </button>
           )}
           <div className="ml-4 flex items-center gap-1 text-xs text-slate-500">
-            <kbd className="rounded bg-slate-800 px-1.5 py-0.5">↑↓</kbd>
+            <kbd className="rounded bg-[#111827] px-1.5 py-0.5">↑↓</kbd>
             <span>to navigate</span>
-            <kbd className="ml-2 rounded bg-slate-800 px-1.5 py-0.5">↵</kbd>
+            <kbd className="ml-2 rounded bg-[#111827] px-1.5 py-0.5">↵</kbd>
             <span>to select</span>
           </div>
         </div>
@@ -231,7 +231,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             groupedCommands.map((group, groupIndex) => (
               <div key={group.category} className="mb-2">
                 {/* Category Header */}
-                <div className="sticky top-0 z-10 bg-slate-900/95 px-3 py-1 text-xs font-medium uppercase tracking-wider text-slate-500">
+                <div className="sticky top-0 z-10 bg-extension-bg-dark/95 px-3 py-1 text-xs font-medium uppercase tracking-wider text-slate-500">
                   {getCategoryLabel(group.category)}
                 </div>
 
@@ -249,11 +249,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       onMouseEnter={() => setSelectedIndex(flatIndex)}
                       className={`
                         flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors
-                        ${isSelected ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800'}
+                        ${isSelected ? 'bg-primary- text-white' : 'text-slate-300 hover:bg-[#111827]'}
                       `}
                     >
                       {/* Icon */}
-                      <span className="flex h-8 w-8 items-center justify-center rounded bg-slate-800 text-lg">
+                      <span className="flex h-8 w-8 items-center justify-center rounded bg-[#111827] text-lg">
                         {command.icon}
                       </span>
 
@@ -274,7 +274,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                         </div>
                         <div
                           className={`text-sm truncate ${
-                            isSelected ? 'text-indigo-200' : 'text-slate-500'
+                            isSelected ? 'text-primary-' : 'text-slate-500'
                           }`}
                         >
                           {command.description}
@@ -286,7 +286,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                         <kbd
                           className={`
                             rounded px-2 py-1 text-xs font-mono
-                            ${isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-800 text-slate-500'}
+                            ${isSelected ? 'bg-primary- text-white' : 'bg-[#111827] text-slate-500'}
                           `}
                         >
                           {command.shortcut}
@@ -301,7 +301,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-700 bg-slate-900/50 px-4 py-2 text-xs text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-700 bg-extension-bg-dark/50 px-4 py-2 text-xs text-slate-500">
           <div className="flex items-center gap-4">
             <span>{filteredCommands.length} commands</span>
             {recentCommands.length > 0 && (

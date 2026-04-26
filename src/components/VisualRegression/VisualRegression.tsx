@@ -435,9 +435,9 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
       }}
       role="dialog"
     >
-      <div className="w-full max-w-4xl overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10">
+      <div className="w-full max-w-4xl overflow-hidden rounded-xl bg-extension-bg-dark shadow-2xl ring-1 ring-white/10">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-700 bg-slate-800 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-700 bg-[#111827] px-6 py-4">
           <div className="flex items-center gap-3">
             <span className="text-2xl">📸</span>
             <h2 className="text-lg font-semibold text-white">Visual Regression Testing</h2>
@@ -483,7 +483,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-700 bg-slate-800">
+        <div className="flex border-b border-slate-700 bg-[#111827]">
           {[
             { id: TAB_BASELINES, label: 'Baselines', count: urlBaselines.length },
             { id: TAB_TESTS, label: 'Tests', count: urlTests.length },
@@ -497,7 +497,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                 flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors
                 ${
                   activeTab === tab.id
-                    ? 'border-b-2 border-indigo-500 text-white'
+                    ? 'border-b-2 border-primary- text-white'
                     : 'text-slate-400 hover:text-slate-200'
                 }
               `}
@@ -524,9 +524,9 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   onClick={() => captureBaseline({ fullPage: false })}
                   disabled={isCapturing}
                   className="
-                    flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2
+                    flex items-center gap-2 rounded-lg bg-primary- px-4 py-2
                     text-sm font-medium text-white
-                    hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-600
+                    hover:bg-primary- disabled:cursor-not-allowed disabled:bg-slate-600
                   "
                 >
                   {isCapturing ? (
@@ -554,7 +554,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
 
               {/* Baselines Grid */}
               {urlBaselines.length === 0 ? (
-                <div className="rounded-lg bg-slate-800/50 py-12 text-center">
+                <div className="rounded-lg bg-[#111827]/50 py-12 text-center">
                   <div className="mb-3 text-4xl">📸</div>
                   <p className="text-slate-400">No baselines for this page yet</p>
                   <p className="mt-1 text-sm text-slate-500">
@@ -568,16 +568,16 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                     <div
                       key={baseline.id}
                       className={`
-                        group rounded-lg border-2 bg-slate-800 p-3 transition-all
+                        group rounded-lg border-2 bg-[#111827] p-3 transition-all
                         ${
                           selectedBaselineId === baseline.id
-                            ? 'border-indigo-500 bg-indigo-500/10'
+                            ? 'border-primary- bg-primary-/10'
                             : 'border-slate-700 hover:border-slate-600'
                         }
                       `}
                     >
                       {/* Preview */}
-                      <div className="relative mb-3 aspect-video overflow-hidden rounded bg-slate-900">
+                      <div className="relative mb-3 aspect-video overflow-hidden rounded bg-extension-bg-dark">
                         <img
                           src={baseline.screenshot}
                           alt="Baseline"
@@ -592,7 +592,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                                 selectedBaselineId === baseline.id ? null : baseline.id
                               )
                             }
-                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                            className="rounded-lg bg-primary- px-4 py-2 text-sm font-medium text-white hover:bg-primary-"
                           >
                             {selectedBaselineId === baseline.id ? 'Deselect' : 'Select'}
                           </button>
@@ -616,7 +616,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                           type="button"
                           onClick={() => runTest(baseline.id)}
                           disabled={isComparing}
-                          className="flex-1 rounded bg-indigo-600 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:bg-slate-600"
+                          className="flex-1 rounded bg-primary- py-1.5 text-xs font-medium text-white hover:bg-primary- disabled:bg-slate-600"
                         >
                           {isComparing ? 'Running...' : 'Run Test'}
                         </button>
@@ -645,9 +645,9 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   onClick={() => selectedBaselineId && runTest(selectedBaselineId)}
                   disabled={!selectedBaselineId || isComparing}
                   className="
-                    flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2
+                    flex items-center gap-2 rounded-lg bg-primary- px-4 py-2
                     text-sm font-medium text-white
-                    hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-600
+                    hover:bg-primary- disabled:cursor-not-allowed disabled:bg-slate-600
                   "
                 >
                   {isComparing ? (
@@ -675,7 +675,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
 
               {/* Comparison Result */}
               {comparisonResult && (
-                <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
+                <div className="rounded-lg border border-slate-700 bg-[#111827] p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-white">Latest Comparison</h3>
@@ -703,7 +703,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                   </div>
 
                   {comparisonResult.test.result.diffImage && (
-                    <div className="aspect-video overflow-hidden rounded bg-slate-900">
+                    <div className="aspect-video overflow-hidden rounded bg-extension-bg-dark">
                       <img
                         src={comparisonResult.test.result.diffImage}
                         alt="Diff"
@@ -716,7 +716,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
 
               {/* Tests List */}
               {urlTests.length === 0 ? (
-                <div className="rounded-lg bg-slate-800/50 py-12 text-center">
+                <div className="rounded-lg bg-[#111827]/50 py-12 text-center">
                   <div className="mb-3 text-4xl">🔍</div>
                   <p className="text-slate-400">No tests run yet</p>
                   <p className="mt-1 text-sm text-slate-500">
@@ -729,7 +729,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                     <div
                       key={test.id}
                       className={`
-                        rounded-lg border-l-4 bg-slate-800 p-4
+                        rounded-lg border-l-4 bg-[#111827] p-4
                         ${
                           test.status === 'passed' || test.status === 'approved'
                             ? 'border-green-500'
@@ -761,7 +761,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                           </div>
 
                           {test.result.diffImage && (
-                            <div className="mb-3 aspect-video max-w-md overflow-hidden rounded bg-slate-900">
+                            <div className="mb-3 aspect-video max-w-md overflow-hidden rounded bg-extension-bg-dark">
                               <img
                                 src={test.result.diffImage}
                                 alt="Diff"
@@ -869,7 +869,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
                     {ignoreRegions.map((region, idx) => (
                       <div
                         key={`${region.x}-${region.y}-${region.width}-${region.height}`}
-                        className="flex items-center gap-3 rounded-lg bg-slate-800 p-3"
+                        className="flex items-center gap-3 rounded-lg bg-[#111827] p-3"
                       >
                         <div className="flex-1 text-sm text-slate-300">
                           x: {region.x}, y: {region.y}, {region.width}×{region.height}
@@ -901,7 +901,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
               </div>
 
               {/* Stats */}
-              <div className="rounded-lg bg-slate-800 p-4">
+              <div className="rounded-lg bg-[#111827] p-4">
                 <h4 className="mb-3 text-sm font-medium text-white">Statistics</h4>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   <div className="rounded bg-slate-700/50 p-3 text-center">
@@ -931,7 +931,7 @@ export const VisualRegression: React.FC<VisualRegressionProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-700 bg-slate-800 px-6 py-3">
+        <div className="flex items-center justify-between border-t border-slate-700 bg-[#111827] px-6 py-3">
           <div className="flex items-center gap-4 text-xs text-slate-400">
             <span>{urlBaselines.length} baselines</span>
             <span>•</span>

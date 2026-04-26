@@ -1,189 +1,24 @@
 /**
  * FrontendDevHelper - Tabbed Popup Component
  *
- * New tabbed interface with:
- * - Tools Tab: Categorized tool cards
- * - Performance Tab: Performance metrics
- * - Inspector Tab: Element inspection
- * - Settings Tab: Quick settings
+ * Thin shell that composes hooks, tab bar, tab content, and footer.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { AISuggestions } from '../components/AISuggestions';
 import { ComponentTree } from '../components/ComponentTree';
 import { FlameGraph } from '../components/FlameGraph';
 import { VisualRegression } from '../components/VisualRegression';
-import { TOOL_IDS, TOOL_METADATA, type ToolId } from '../constants';
-import type { ToolMeta, ToolsState } from '../types';
-import { DEFAULT_FEATURE_TOGGLES } from '../types';
-import { applyBuiltinPreset, applyUserPreset } from '../utils/apply-preset';
-import { logger } from '../utils/logger';
-import { collectPageHints, recommendedToolsFromHints } from '../utils/page-hints';
-import type { UserToolPreset } from '../utils/storage';
-import {
-  addUserToolPreset,
-  clearAllStates,
-  getAllToolStates,
-  getUiPrefs,
-  getUserToolPresets,
-  removeUserToolPreset,
-  setUiPrefs,
-} from '../utils/storage';
-import { BUILTIN_TOOL_PRESETS, isStarterTool } from '../utils/tool-catalog';
-import { applyToolEnabledInTab } from '../utils/tool-toggle';
-import { ColorLegend } from './components/ColorLegend';
+import { TOOL_IDS, type ToolId } from '../constants';
+import { usePageHints } from './hooks/usePageHints';
+import { usePresets } from './hooks/usePresets';
+import { useToolState } from './hooks/useToolState';
 import { TabBar } from './components/TabBar';
-import { ToolCard } from './components/ToolCard';
 import { InspectorTab } from './tabs/InspectorTab';
 import { PerformanceTab } from './tabs/PerformanceTab';
 import { SettingsTab } from './tabs/SettingsTab';
+import { ToolsTab } from './tabs/ToolsTab';
 import './popup.css';
-
-// ============================================
-// Tool Categories Configuration
-// ============================================
-
-const TOOL_CATEGORIES: Array<{
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  tools: ToolId[];
-}> = [
-  {
-    id: 'inspection',
-    name: 'Inspection',
-    icon: '🔍',
-    color: '#3b82f6',
-    tools: [
-      TOOL_IDS.DOM_OUTLINER,
-      TOOL_IDS.SPACING_VISUALIZER,
-      TOOL_IDS.FONT_INSPECTOR,
-      TOOL_IDS.TECH_DETECTOR,
-      TOOL_IDS.ACCESSIBILITY_AUDIT,
-      TOOL_IDS.ELEMENT_INSPECTOR,
-      TOOL_IDS.SMART_ELEMENT_PICKER,
-      TOOL_IDS.FRAMEWORK_DEVTOOLS,
-    ],
-  },
-  {
-    id: 'css',
-    name: 'CSS & Design',
-    icon: '🎨',
-    color: '#ec4899',
-    tools: [
-      TOOL_IDS.COLOR_PICKER,
-      TOOL_IDS.CONTRAST_CHECKER,
-      TOOL_IDS.LAYOUT_VISUALIZER,
-      TOOL_IDS.ZINDEX_VISUALIZER,
-      TOOL_IDS.CSS_INSPECTOR,
-      TOOL_IDS.CSS_EDITOR,
-      TOOL_IDS.CSS_SCANNER,
-      TOOL_IDS.CSS_VARIABLE_INSPECTOR,
-      TOOL_IDS.ANIMATION_INSPECTOR,
-      TOOL_IDS.GRID_OVERLAY,
-      TOOL_IDS.DESIGN_SYSTEM_VALIDATOR,
-      // Beast Mode: Next-Gen Features
-      TOOL_IDS.CONTAINER_QUERY_INSPECTOR,
-      TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER,
-      TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER,
-    ],
-  },
-  {
-    id: 'responsive',
-    name: 'Responsive',
-    icon: '📱',
-    color: '#06b6d4',
-    tools: [TOOL_IDS.RESPONSIVE_BREAKPOINT, TOOL_IDS.RESPONSIVE_PREVIEW, TOOL_IDS.PIXEL_RULER],
-  },
-  {
-    id: 'performance',
-    name: 'Performance',
-    icon: '⚡',
-    color: '#f59e0b',
-    tools: [TOOL_IDS.NETWORK_ANALYZER, TOOL_IDS.FLAME_GRAPH, TOOL_IDS.PERFORMANCE_BUDGET],
-  },
-  {
-    id: 'ai',
-    name: 'AI & Analysis',
-    icon: '🤖',
-    color: '#8b5cf6',
-    tools: [TOOL_IDS.SMART_SUGGESTIONS, TOOL_IDS.SITE_REPORT],
-  },
-  {
-    id: 'utility',
-    name: 'Utilities',
-    icon: '🛠️',
-    color: '#6366f1',
-    tools: [
-      TOOL_IDS.COMMAND_PALETTE,
-      TOOL_IDS.SESSION_RECORDER,
-      TOOL_IDS.SCREENSHOT_STUDIO,
-      TOOL_IDS.STORAGE_INSPECTOR,
-      TOOL_IDS.COMPONENT_TREE,
-      TOOL_IDS.VISUAL_REGRESSION,
-      TOOL_IDS.FOCUS_DEBUGGER,
-      TOOL_IDS.FORM_DEBUGGER,
-      TOOL_IDS.MEASUREMENT_TOOL,
-    ],
-  },
-];
-
-// ============================================
-// Tool Metadata with Colors
-// ============================================
-
-const TOOL_META_OVERRIDES: Record<ToolId, { color: string }> = {
-  [TOOL_IDS.DOM_OUTLINER]: { color: '#f97316' },
-  [TOOL_IDS.SPACING_VISUALIZER]: { color: '#8b5cf6' },
-  [TOOL_IDS.FONT_INSPECTOR]: { color: '#3b82f6' },
-  [TOOL_IDS.COLOR_PICKER]: { color: '#ec4899' },
-  [TOOL_IDS.PIXEL_RULER]: { color: '#f59e0b' },
-  [TOOL_IDS.RESPONSIVE_BREAKPOINT]: { color: '#06b6d4' },
-  [TOOL_IDS.CSS_INSPECTOR]: { color: '#10b981' },
-  [TOOL_IDS.CONTRAST_CHECKER]: { color: '#84cc16' },
-  [TOOL_IDS.LAYOUT_VISUALIZER]: { color: '#8b5cf6' },
-  [TOOL_IDS.ZINDEX_VISUALIZER]: { color: '#f43f5e' },
-  [TOOL_IDS.TECH_DETECTOR]: { color: '#0ea5e9' },
-  [TOOL_IDS.ACCESSIBILITY_AUDIT]: { color: '#a855f7' },
-  [TOOL_IDS.SITE_REPORT]: { color: '#f43f5e' },
-  [TOOL_IDS.CSS_EDITOR]: { color: '#ec4899' },
-  [TOOL_IDS.SCREENSHOT_STUDIO]: { color: '#14b8a6' },
-  [TOOL_IDS.ANIMATION_INSPECTOR]: { color: '#f59e0b' },
-  [TOOL_IDS.RESPONSIVE_PREVIEW]: { color: '#06b6d4' },
-  [TOOL_IDS.DESIGN_SYSTEM_VALIDATOR]: { color: '#8b5cf6' },
-  [TOOL_IDS.NETWORK_ANALYZER]: { color: '#22c55e' },
-  [TOOL_IDS.COMMAND_PALETTE]: { color: '#6366f1' },
-  [TOOL_IDS.STORAGE_INSPECTOR]: { color: '#0891b2' },
-  [TOOL_IDS.FOCUS_DEBUGGER]: { color: '#ea580c' },
-  [TOOL_IDS.FORM_DEBUGGER]: { color: '#7c3aed' },
-  [TOOL_IDS.COMPONENT_TREE]: { color: '#16a34a' },
-  [TOOL_IDS.FLAME_GRAPH]: { color: '#dc2626' },
-  [TOOL_IDS.VISUAL_REGRESSION]: { color: '#db2777' },
-  [TOOL_IDS.SMART_SUGGESTIONS]: { color: '#f59e0b' },
-  [TOOL_IDS.ELEMENT_INSPECTOR]: { color: '#6366f1' },
-  [TOOL_IDS.MEASUREMENT_TOOL]: { color: '#64748b' },
-  [TOOL_IDS.GRID_OVERLAY]: { color: '#475569' },
-  [TOOL_IDS.CSS_SCANNER]: { color: '#64748b' },
-  [TOOL_IDS.CSS_VARIABLE_INSPECTOR]: { color: '#a855f7' },
-  [TOOL_IDS.SMART_ELEMENT_PICKER]: { color: '#06b6d4' },
-  [TOOL_IDS.SESSION_RECORDER]: { color: '#ef4444' },
-  [TOOL_IDS.PERFORMANCE_BUDGET]: { color: '#f97316' },
-  [TOOL_IDS.FRAMEWORK_DEVTOOLS]: { color: '#14b8a6' },
-  [TOOL_IDS.CONTAINER_QUERY_INSPECTOR]: { color: '#c026d3' },
-  [TOOL_IDS.VIEW_TRANSITIONS_DEBUGGER]: { color: '#7c3aed' },
-  [TOOL_IDS.SCROLL_ANIMATIONS_DEBUGGER]: { color: '#0d9488' },
-};
-
-/** Generate tool metadata for popup */
-function getToolMeta(toolId: ToolId): ToolMeta {
-  const meta = TOOL_METADATA[toolId];
-  const override = TOOL_META_OVERRIDES[toolId];
-  return {
-    ...meta,
-    color: override?.color || '#6366f1',
-  };
-}
 
 /** Extension version - read from manifest */
 const EXTENSION_VERSION = chrome.runtime.getManifest().version;
@@ -198,138 +33,32 @@ export const Popup: React.FC = () => {
     'tools'
   );
 
-  // Tool states (using unified ToolId)
-  const [toolsState, setToolsState] = useState<ToolsState>({} as ToolsState);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // UI states
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
-  const [recommendedIds, setRecommendedIds] = useState<ToolId[]>([]);
-  const [userPresets, setUserPresets] = useState<UserToolPreset[]>([]);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
-    // Default to all expanded
-    return new Set(TOOL_CATEGORIES.map((c) => c.id));
-  });
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
   // Panel state for React component integration
   const [openPanel, setOpenPanel] = useState<ToolId | null>(null);
   const [currentTabUrl, setCurrentTabUrl] = useState<string>('');
 
-  // Load initial state from service worker (not content script)
-  useEffect(() => {
-    const loadState = async () => {
-      try {
-        // Get all tool states from service worker via storage
-        const states = await getAllToolStates();
-        setToolsState(states);
-        const prefs = await getUiPrefs();
-        setShowAdvancedTools(prefs.showAdvancedTools);
-        setUserPresets(await getUserToolPresets());
-        setIsLoading(false);
-      } catch (err) {
-        logger.error('Failed to load state:', err);
-        setIsLoading(false);
-      }
-    };
+  // Extracted hooks
+  const {
+    toolsState,
+    isLoading,
+    showResetConfirm,
+    activeToolsCount,
+    showAdvancedTools,
+    setShowAdvancedTools,
+    handleToggleTool,
+    handleResetAll,
+    setToolsState,
+  } = useToolState();
 
-    loadState();
+  const recommendedIds = usePageHints();
 
-    // Listen for state changes from service worker
-    const handleMessage = (message: { type: string; payload?: Record<string, unknown> }) => {
-      if (message.type === 'TOOL_STATE_CHANGED') {
-        const toolId = message.payload?.toolId as ToolId | undefined;
-        const payload = message.payload as {
-          enabled?: boolean;
-          state?: { enabled?: boolean };
-        };
-        const enabled =
-          typeof payload?.enabled === 'boolean'
-            ? payload.enabled
-            : typeof payload?.state?.enabled === 'boolean'
-              ? payload.state.enabled
-              : undefined;
-        if (toolId && typeof enabled === 'boolean') {
-          setToolsState((prev) => ({
-            ...prev,
-            [toolId]: { ...prev[toolId], enabled },
-          }));
-        }
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(handleMessage);
-    return () => chrome.runtime.onMessage.removeListener(handleMessage);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id || tab.url?.startsWith('chrome://') || cancelled) return;
-      const hints = await collectPageHints(tab.id);
-      if (!cancelled) setRecommendedIds(recommendedToolsFromHints(hints));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /**
-   * Toggle a tool on/off
-   */
-  const handleToggleTool = useCallback(async (toolId: ToolId, enabled: boolean) => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id) return;
-
-    try {
-      await applyToolEnabledInTab(tab.id, toolId, enabled);
-    } catch (err) {
-      logger.error('Failed to toggle tool:', err);
-    }
-
-    const all = await getAllToolStates();
-    setToolsState(all);
-  }, []);
-
-  const handleApplyPreset = useCallback(async (presetId: string) => {
-    const ok = await applyBuiltinPreset(presetId);
-    if (ok) {
-      const all = await getAllToolStates();
-      setToolsState(all);
-    }
-  }, []);
-
-  const handleApplyUserPreset = useCallback(async (presetId: string) => {
-    const ok = await applyUserPreset(presetId);
-    if (ok) {
-      const all = await getAllToolStates();
-      setToolsState(all);
-    }
-  }, []);
-
-  const handleSaveUserPreset = useCallback(async () => {
-    const name = window.prompt('Name this preset');
-    if (!name?.trim()) return;
-    const toolIds = (Object.entries(toolsState) as [ToolId, { enabled?: boolean }][])
-      .filter(([, s]) => s.enabled)
-      .map(([id]) => id);
-    if (toolIds.length === 0) {
-      window.alert('Enable at least one tool first.');
-      return;
-    }
-    const created = await addUserToolPreset(name.trim(), toolIds);
-    if (created) {
-      setUserPresets(await getUserToolPresets());
-    }
-  }, [toolsState]);
-
-  const handleDeleteUserPreset = useCallback(async (id: string) => {
-    await removeUserToolPreset(id);
-    setUserPresets(await getUserToolPresets());
-  }, []);
+  const {
+    userPresets,
+    handleApplyPreset,
+    handleApplyUserPreset,
+    handleSaveUserPreset,
+    handleDeleteUserPreset,
+  } = usePresets({ toolsState, setToolsState });
 
   /**
    * Open settings for a tool
@@ -350,130 +79,21 @@ export const Popup: React.FC = () => {
     setOpenPanel(toolId);
   }, []);
 
-  /**
-   * Reset all tools
-   */
-  const handleResetAll = useCallback(async () => {
-    if (!showResetConfirm) {
-      setShowResetConfirm(true);
-      setTimeout(() => setShowResetConfirm(false), 3000);
-      return;
-    }
-
-    // Reset state to defaults using DEFAULT_FEATURE_TOGGLES
-    const resetState = {} as ToolsState;
-    for (const toolId of Object.values(TOOL_IDS)) {
-      const defaultEnabled = DEFAULT_FEATURE_TOGGLES[toolId] ?? false;
-      resetState[toolId] = { enabled: defaultEnabled, settings: {} };
-    }
-
-    setToolsState(resetState);
-    setShowResetConfirm(false);
-
-    // Send batch disable message to content script
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, { type: 'DISABLE_ALL_TOOLS' });
-      } catch (err) {
-        logger.error('Failed to send DISABLE_ALL_TOOLS:', err);
-      }
-    }
-
-    // Clear storage
-    try {
-      await clearAllStates();
-    } catch (err) {
-      logger.error('Failed to clear storage:', err);
-    }
-  }, [showResetConfirm]);
-
-  /**
-   * Toggle category expansion
-   */
-  const toggleCategory = useCallback((categoryId: string) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-      return next;
-    });
-  }, []);
-
-  /**
-   * Get count of active tools
-   */
-  const activeToolsCount = useMemo(
-    () => Object.values(toolsState).filter((s) => s?.enabled).length,
-    [toolsState]
-  );
-
-  /**
-   * Filter tools based on search query
-   */
-  const filteredCategories = useMemo(() => {
-    const q = searchQuery.trim();
-    if (!q) {
-      if (!showAdvancedTools) {
-        return TOOL_CATEGORIES.map((cat) => ({
-          ...cat,
-          tools: cat.tools.filter((id) => isStarterTool(id)),
-        })).filter((c) => c.tools.length > 0);
-      }
-      return TOOL_CATEGORIES;
-    }
-
-    const query = q.toLowerCase();
-    return TOOL_CATEGORIES.map((category) => ({
-      ...category,
-      tools: category.tools.filter((toolId) => {
-        const meta = getToolMeta(toolId);
-        return (
-          meta.name.toLowerCase().includes(query) ||
-          meta.description.toLowerCase().includes(query) ||
-          toolId.toLowerCase().includes(query)
-        );
-      }),
-    })).filter((category) => category.tools.length > 0);
-  }, [searchQuery, showAdvancedTools]);
-
-  /**
-   * Handle keyboard shortcut to focus search
-   */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-      if (e.key === 'Escape' && searchInputRef.current === document.activeElement) {
-        setSearchQuery('');
-        searchInputRef.current?.blur();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   if (isLoading) {
     return (
-      <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 items-center justify-center bg-slate-900">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 items-center justify-center bg-extension-bg-dark">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-slate-900 text-slate-100">
+    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-extension-bg-dark text-slate-100">
       {/* Header */}
       <header className="popup-header flex min-w-0 shrink-0 items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {/* Logo */}
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-600 to-purple-600 flex items-center justify-center shadow-[0_4px_10px_rgba(79,70,229,0.4)]">
             <svg
               aria-hidden="true"
               className="w-5 h-5 text-white"
@@ -548,269 +168,21 @@ export const Popup: React.FC = () => {
       {/* Main Content */}
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {activeTab === 'tools' && (
-          <div className="box-border h-full min-h-0 w-full min-w-0 max-w-full space-y-3 overflow-x-hidden overflow-y-auto p-3">
-            {/* Search Bar */}
-            <div className="relative sticky top-0 z-10">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  aria-hidden="true"
-                  className="h-4 w-4 text-slate-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tools..."
-                aria-label="Search tools"
-                className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg pl-9 pr-9 py-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    searchInputRef.current?.focus();
-                  }}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
-                  title="Clear search"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              ) : (
-                <kbd className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span className="text-[10px] text-slate-600 border border-slate-700 rounded px-1.5 py-0.5">
-                    /
-                  </span>
-                </kbd>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showAdvancedTools}
-                  onChange={(e) => {
-                    const next = e.target.checked;
-                    setShowAdvancedTools(next);
-                    void setUiPrefs({ showAdvancedTools: next });
-                  }}
-                  className="rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
-                />
-                Show all tools
-              </label>
-              <span className="text-[10px] text-slate-500">
-                Starter set when off · search always finds everything
-              </span>
-            </div>
-
-            {recommendedIds.length > 0 && (
-              <div className="space-y-1">
-                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                  Suggested for this page
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {recommendedIds.map((id) => {
-                    const meta = getToolMeta(id);
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => void handleToggleTool(id, true)}
-                        className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-indigo-500/50 hover:text-white transition-colors"
-                      >
-                        {meta.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-1">
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                Presets
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {BUILTIN_TOOL_PRESETS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => void handleApplyPreset(p.id)}
-                    className="text-[11px] px-2 py-1 rounded-md bg-indigo-950/80 border border-indigo-800/60 text-indigo-100 hover:bg-indigo-900/80 transition-colors"
-                    title={p.description}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
-                My presets
-              </p>
-              <div className="flex flex-wrap gap-1.5 items-center">
-                <button
-                  type="button"
-                  onClick={() => void handleSaveUserPreset()}
-                  className="text-[11px] px-2 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-200 hover:border-amber-500/50"
-                >
-                  Save current
-                </button>
-                {userPresets.map((p) => (
-                  <span key={p.id} className="inline-flex items-center gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => void handleApplyUserPreset(p.id)}
-                      className="text-[11px] px-2 py-1 rounded-md bg-amber-950/80 border border-amber-800/50 text-amber-100 hover:bg-amber-900/80"
-                      title={`${p.toolIds.length} tools`}
-                    >
-                      {p.name}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleDeleteUserPreset(p.id)}
-                      className="text-[10px] px-1 text-slate-500 hover:text-rose-400"
-                      aria-label={`Delete ${p.name}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Tool Categories */}
-            {filteredCategories.map((category) => (
-              <div key={category.id} className="space-y-2">
-                {/* Category Header */}
-                <button
-                  type="button"
-                  onClick={() => toggleCategory(category.id)}
-                  className="flex items-center justify-between w-full text-left group"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{category.icon}</span>
-                    <span className="font-medium text-sm text-slate-200">{category.name}</span>
-                    <span className="text-xs text-slate-500">({category.tools.length})</span>
-                  </div>
-                  <svg
-                    className={`w-4 h-4 text-slate-500 transition-transform ${
-                      expandedCategories.has(category.id) ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Category Tools */}
-                {expandedCategories.has(category.id) && (
-                  <div className="space-y-2 pl-2">
-                    {category.tools.map((toolId, index) => {
-                      const meta = getToolMeta(toolId);
-                      const state = toolsState[toolId] || { enabled: false };
-                      return (
-                        <React.Fragment key={toolId}>
-                          <ToolCard
-                            toolId={toolId}
-                            name={meta.name}
-                            description={meta.description}
-                            icon={meta.icon}
-                            enabled={state.enabled}
-                            hasSettings={meta.hasSettings}
-                            color={meta.color}
-                            shortcut={meta.shortcut}
-                            onToggle={(enabled) => handleToggleTool(toolId, enabled)}
-                            onSettingsClick={() => handleOpenSettings(toolId)}
-                            onView={
-                              (
-                                [
-                                  TOOL_IDS.SMART_SUGGESTIONS,
-                                  TOOL_IDS.VISUAL_REGRESSION,
-                                  TOOL_IDS.FLAME_GRAPH,
-                                  TOOL_IDS.COMPONENT_TREE,
-                                ] as ToolId[]
-                              ).includes(toolId)
-                                ? () => handleOpenPanel(toolId)
-                                : undefined
-                            }
-                            animationDelay={`stagger-${index + 1}`}
-                          />
-                          {/* Show color legend below DOM Outliner when enabled */}
-                          {toolId === TOOL_IDS.DOM_OUTLINER && state.enabled && (
-                            <div className="animate-fade-in stagger-1">
-                              <ColorLegend />
-                            </div>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* Empty State */}
-            {filteredCategories.length === 0 && (
-              <div className="text-center py-8 text-slate-500">
-                <div className="text-4xl mb-2">🔍</div>
-                <p className="text-sm font-medium">No tools match your search</p>
-                <p className="text-xs mt-1">Try a different keyword or press Escape to clear</p>
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-                >
-                  Clear search
-                </button>
-              </div>
-            )}
-
-            {/* Pro Tips Section */}
-            <div className="mt-4 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-              <h4 className="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-                <span>💡</span>
-                Pro Tip
-              </h4>
-              <p className="text-[11px] text-slate-400">
-                Use{' '}
-                <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">Ctrl+Shift+F</kbd>{' '}
-                to open the popup,{' '}
-                <kbd className="px-1 py-0.5 bg-slate-700 rounded text-slate-300">/</kbd> to search
-                tools.
-              </p>
-            </div>
-          </div>
+          <ToolsTab
+            toolsState={toolsState}
+            showAdvancedTools={showAdvancedTools}
+            setShowAdvancedTools={setShowAdvancedTools}
+            recommendedIds={recommendedIds}
+            userPresets={userPresets}
+            onToggleTool={handleToggleTool}
+            onApplyPreset={handleApplyPreset}
+            onApplyUserPreset={handleApplyUserPreset}
+            onSaveUserPreset={handleSaveUserPreset}
+            onDeleteUserPreset={handleDeleteUserPreset}
+            onOpenSettings={handleOpenSettings}
+            onOpenPanel={handleOpenPanel}
+          />
         )}
-
         {activeTab === 'performance' && <PerformanceTab />}
         {activeTab === 'inspector' && <InspectorTab />}
         {activeTab === 'settings' && <SettingsTab />}
@@ -825,7 +197,7 @@ export const Popup: React.FC = () => {
             href="https://github.com/rejisterjack/frontend-dev-helper"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[10px] text-slate-500 hover:text-indigo-400 transition-colors flex items-center gap-0.5"
+            className="text-[10px] text-slate-500 hover:text-primary- transition-colors flex items-center gap-0.5"
           >
             <svg aria-hidden="true" className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
               <path

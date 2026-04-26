@@ -18,6 +18,7 @@ let isEnabled = false;
 let isOpen = false;
 let paletteContainer: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
+let previouslyFocusedElement: HTMLElement | null = null;
 
 // ============================================
 // Constants
@@ -75,6 +76,8 @@ export function getState(): { enabled: boolean; isOpen: boolean } {
  */
 export function openPalette(): void {
   if (!isEnabled || isOpen) return;
+  // Save the currently focused element so we can restore it later
+  previouslyFocusedElement = document.activeElement as HTMLElement;
   isOpen = true;
   void createPalette();
 }
@@ -86,6 +89,11 @@ export function closePalette(): void {
   if (!isOpen) return;
   isOpen = false;
   destroyPalette();
+  // Restore focus to the previously focused element
+  if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+    previouslyFocusedElement.focus();
+    previouslyFocusedElement = null;
+  }
 }
 
 // ============================================
@@ -126,6 +134,9 @@ async function createPalette(): Promise<void> {
   // Create container
   paletteContainer = document.createElement('div');
   paletteContainer.id = `${PREFIX}-container`;
+  paletteContainer.setAttribute('role', 'dialog');
+  paletteContainer.setAttribute('aria-label', 'FrontendDevHelper Command Palette');
+  paletteContainer.setAttribute('aria-modal', 'true');
   paletteContainer.style.cssText = `
     position: fixed;
     top: 0;
@@ -169,17 +180,21 @@ function createPaletteUI(): HTMLElement {
   palette.id = `${PREFIX}-overlay`;
   palette.innerHTML = `
     <div id="${PREFIX}-backdrop"></div>
-    <div id="${PREFIX}-modal">
+    <div id="${PREFIX}-modal" role="document">
       <div id="${PREFIX}-search-container">
         <span id="${PREFIX}-search-icon">🔍</span>
-        <input 
-          type="text" 
-          id="${PREFIX}-search" 
+        <input
+          type="text"
+          id="${PREFIX}-search"
           placeholder="Type a command or search..."
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
+          aria-label="Search commands"
+          role="combobox"
+          aria-expanded="true"
+          aria-autocomplete="list"
         />
         <div id="${PREFIX}-shortcuts">
           <kbd>↑↓</kbd><span>navigate</span>
@@ -187,7 +202,7 @@ function createPaletteUI(): HTMLElement {
           <kbd>esc</kbd><span>close</span>
         </div>
       </div>
-      <div id="${PREFIX}-results"></div>
+      <div id="${PREFIX}-results" role="listbox" aria-label="Command results"></div>
       <div id="${PREFIX}-footer">
         <span id="${PREFIX}-count">0 commands</span>
         <span>FrontendDevHelper v1.0.0</span>
@@ -269,6 +284,49 @@ function handlePaletteKeyDown(e: KeyboardEvent): void {
       e.preventDefault();
       closePalette();
       break;
+    case 'Tab': {
+      // Focus trap: Tab cycles between search input and palette items
+      e.preventDefault();
+      const searchInput = shadowRoot?.querySelector(`#${PREFIX}-search`) as HTMLElement;
+      const items = shadowRoot?.querySelectorAll(`.${PREFIX}-item`);
+      if (!items || items.length === 0 || !searchInput) break;
+
+      if (e.shiftKey) {
+        // Shift+Tab: go backwards
+        if (document.activeElement === searchInput || document.activeElement === items[0]) {
+          // Wrap to last item
+          (items[items.length - 1] as HTMLElement).focus();
+          selectedIndex = items.length - 1;
+          updateSelection();
+        } else {
+          // Move to previous item or search
+          const currentIndex = Array.from(items).indexOf(document.activeElement as Element);
+          if (currentIndex > 0) {
+            (items[currentIndex - 1] as HTMLElement).focus();
+            selectedIndex = currentIndex - 1;
+            updateSelection();
+          } else {
+            searchInput.focus();
+          }
+        }
+      } else {
+        // Tab: go forwards
+        const currentIndex = Array.from(items).indexOf(document.activeElement as Element);
+        if (document.activeElement === searchInput) {
+          (items[0] as HTMLElement).focus();
+          selectedIndex = 0;
+          updateSelection();
+        } else if (currentIndex >= 0 && currentIndex < items.length - 1) {
+          (items[currentIndex + 1] as HTMLElement).focus();
+          selectedIndex = currentIndex + 1;
+          updateSelection();
+        } else {
+          // Wrap to search input
+          searchInput.focus();
+        }
+      }
+      break;
+    }
   }
 }
 
@@ -333,12 +391,15 @@ function renderCommands(commands: Command[]): void {
     categoryCommands.forEach((cmd) => {
       const isSelected = flatIndex === selectedIndex;
       html += `
-        <div 
-          class="${PREFIX}-item ${isSelected ? `${PREFIX}-selected` : ''}" 
-          data-id="${cmd.id}"
+        <div
+          class="${PREFIX}-item ${isSelected ? `${PREFIX}-selected` : ''}"
+          data-id="${escapeHtml(cmd.id)}"
           data-index="${flatIndex}"
+          role="option"
+          aria-selected="${isSelected}"
+          tabindex="0"
         >
-          <span class="${PREFIX}-item-icon">${cmd.icon}</span>
+          <span class="${PREFIX}-item-icon">${escapeHtml(cmd.icon ?? '')}</span>
           <div class="${PREFIX}-item-content">
             <div class="${PREFIX}-item-title">${escapeHtml(cmd.title)}</div>
             <div class="${PREFIX}-item-description">${escapeHtml(cmd.description ?? '')}</div>

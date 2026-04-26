@@ -129,7 +129,7 @@ export const Options: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900 px-8 py-6">
+      <header className="border-b border-[#1f2937] bg-extension-bg-dark px-8 py-6">
         <div className="mx-auto max-w-6xl">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
@@ -185,8 +185,8 @@ export const Options: React.FC = () => {
                   onClick={() => setActiveSection(item.id)}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
                     activeSection === item.id
-                      ? 'bg-indigo-600/10 text-indigo-400'
-                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      ? 'bg-primary-/10 text-primary-'
+                      : 'text-slate-400 hover:bg-[#111827] hover:text-slate-200'
                   }`}
                 >
                   <span>{item.icon}</span>
@@ -216,7 +216,7 @@ export const Options: React.FC = () => {
 
             {/* Save Button */}
             {activeSection !== 'ai' && (
-              <div className="mt-8 flex items-center justify-between border-t border-slate-800 pt-6">
+              <div className="mt-8 flex items-center justify-between border-t border-[#1f2937] pt-6">
                 <button
                   type="button"
                   onClick={async () => {
@@ -233,7 +233,7 @@ export const Options: React.FC = () => {
                   type="button"
                   onClick={saveSettings}
                   disabled={saving}
-                  className="rounded-lg bg-indigo-600 px-6 py-2 font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                  className="rounded-lg bg-primary- px-6 py-2 font-medium text-white transition-colors hover:bg-primary- disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -259,7 +259,7 @@ const GeneralSection: React.FC<{
     <h2 className="text-xl font-semibold">General Settings</h2>
 
     <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-lg bg-slate-900 p-4 border border-slate-800">
+      <div className="flex items-center justify-between rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
         <div>
           <div className="font-medium">Theme</div>
           <div className="text-sm text-slate-400">Choose your preferred color scheme</div>
@@ -269,7 +269,7 @@ const GeneralSection: React.FC<{
           onChange={(e) =>
             setSettings({ ...settings, theme: e.target.value as ExtensionSettings['theme'] })
           }
-          className="rounded border border-slate-700 bg-slate-800 px-4 py-2 text-slate-200 focus:border-indigo-500 focus:outline-none"
+          className="rounded border border-slate-700 bg-[#111827] px-4 py-2 text-slate-200 focus:border-primary- focus:outline-none"
         >
           <option value="dark">Dark</option>
           <option value="light">Light</option>
@@ -277,7 +277,7 @@ const GeneralSection: React.FC<{
         </select>
       </div>
 
-      <div className="flex items-center justify-between rounded-lg bg-slate-900 p-4 border border-slate-800">
+      <div className="flex items-center justify-between rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
         <div>
           <div className="font-medium">Auto-open DevTools</div>
           <div className="text-sm text-slate-400">
@@ -290,7 +290,7 @@ const GeneralSection: React.FC<{
         />
       </div>
 
-      <div className="flex items-center justify-between rounded-lg bg-slate-900 p-4 border border-slate-800">
+      <div className="flex items-center justify-between rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
         <div>
           <div className="font-medium">Auto-save Tool State</div>
           <div className="text-sm text-slate-400">Remember which tools are enabled per site</div>
@@ -301,7 +301,7 @@ const GeneralSection: React.FC<{
         />
       </div>
 
-      <div className="flex items-center justify-between rounded-lg bg-slate-900 p-4 border border-slate-800">
+      <div className="flex items-center justify-between rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
         <div>
           <div className="font-medium">Experimental Features</div>
           <div className="text-sm text-slate-400">
@@ -372,7 +372,7 @@ const AISection: React.FC<{
 
       <div className="space-y-4">
         {/* Enable AI Toggle */}
-        <div className="flex items-center justify-between rounded-lg bg-slate-900 p-4 border border-slate-800">
+        <div className="flex items-center justify-between rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
           <div>
             <div className="font-medium">Enable AI Analysis</div>
             <div className="text-sm text-slate-400">
@@ -388,7 +388,7 @@ const AISection: React.FC<{
         {localConfig.enabled && (
           <>
             {/* Provider Selection */}
-            <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
+            <div className="rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
               <label htmlFor="fdh-ai-provider" className="block font-medium mb-2">
                 AI Provider
               </label>
@@ -401,7 +401,7 @@ const AISection: React.FC<{
                     provider: e.target.value as LLMConfig['provider'],
                   })
                 }
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-slate-200 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded border border-slate-700 bg-[#111827] px-4 py-2 text-slate-200 focus:border-primary- focus:outline-none"
               >
                 <option value="openrouter">OpenRouter (Recommended)</option>
                 <option value="custom">Custom Provider</option>
@@ -409,7 +409,7 @@ const AISection: React.FC<{
             </div>
 
             {/* API Key Input */}
-            <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
+            <div className="rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
               <label htmlFor="fdh-ai-api-key" className="block font-medium mb-2">
                 API Key
               </label>
@@ -420,7 +420,7 @@ const AISection: React.FC<{
                   value={localConfig.apiKey}
                   onChange={(e) => setLocalConfig({ ...localConfig, apiKey: e.target.value })}
                   placeholder="Enter your OpenRouter API key"
-                  className="flex-1 rounded border border-slate-700 bg-slate-800 px-4 py-2 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  className="flex-1 rounded border border-slate-700 bg-[#111827] px-4 py-2 text-slate-200 placeholder-slate-500 focus:border-primary- focus:outline-none"
                 />
                 <button
                   type="button"
@@ -449,7 +449,7 @@ const AISection: React.FC<{
                   href="https://openrouter.ai/keys"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-400 hover:underline"
+                  className="text-primary- hover:underline"
                 >
                   openrouter.ai/keys
                 </a>
@@ -457,7 +457,7 @@ const AISection: React.FC<{
             </div>
 
             {/* Model Selection */}
-            <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
+            <div className="rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
               <label htmlFor="fdh-ai-model" className="block font-medium mb-2">
                 Model
               </label>
@@ -465,7 +465,7 @@ const AISection: React.FC<{
                 id="fdh-ai-model"
                 value={localConfig.model}
                 onChange={(e) => setLocalConfig({ ...localConfig, model: e.target.value })}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-slate-200 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded border border-slate-700 bg-[#111827] px-4 py-2 text-slate-200 focus:border-primary- focus:outline-none"
               >
                 <optgroup label="Free Models">
                   {OPENROUTER_FREE_MODELS.map((model: { id: string; name: string }) => (
@@ -478,7 +478,7 @@ const AISection: React.FC<{
             </div>
 
             {/* Free Models Only Toggle */}
-            <div className="flex items-center justify-between rounded-lg bg-slate-900 p-4 border border-slate-800">
+            <div className="flex items-center justify-between rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
               <div>
                 <div className="font-medium">Use Free Models Only</div>
                 <div className="text-sm text-slate-400">
@@ -498,7 +498,7 @@ const AISection: React.FC<{
               <button
                 type="button"
                 onClick={handleSave}
-                className="rounded-lg bg-indigo-600 px-6 py-2 font-medium text-white transition-colors hover:bg-indigo-700"
+                className="rounded-lg bg-primary- px-6 py-2 font-medium text-white transition-colors hover:bg-primary-"
               >
                 Save AI Configuration
               </button>
@@ -508,7 +508,7 @@ const AISection: React.FC<{
 
         {/* AI Categories */}
         {localConfig.enabled && (
-          <div className="rounded-lg bg-slate-900 p-4 border border-slate-800">
+          <div className="rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937]">
             <h3 className="font-medium mb-3">Analysis Categories</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -520,7 +520,7 @@ const AISection: React.FC<{
               ].map((cat) => (
                 <label
                   key={cat.key}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-slate-800 cursor-pointer hover:bg-slate-700 transition-colors"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-[#111827] cursor-pointer hover:bg-slate-700 transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -538,7 +538,7 @@ const AISection: React.FC<{
                         },
                       } as LLMConfig)
                     }
-                    className="rounded border-slate-600 bg-slate-700 text-indigo-600 focus:ring-indigo-500"
+                    className="rounded border-slate-600 bg-slate-700 text-primary- focus:ring-primary-"
                   />
                   <span className="text-lg">{cat.icon}</span>
                   <span className="text-sm">{cat.label}</span>
@@ -578,10 +578,10 @@ const ToolsSection: React.FC = () => {
             type="button"
             key={tool.id}
             onClick={() => setSelectedTool(tool.id)}
-            className="flex items-center justify-between p-4 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors text-left"
+            className="flex items-center justify-between p-4 rounded-lg bg-extension-bg-dark border border-[#1f2937] hover:border-slate-700 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-xl">
+              <div className="w-10 h-10 rounded-lg bg-[#111827] flex items-center justify-center text-xl">
                 <span>{getToolIcon(tool.icon)}</span>
               </div>
               <div>
@@ -591,7 +591,7 @@ const ToolsSection: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               {tool.hasSettings && (
-                <span className="text-xs px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-400">
+                <span className="text-xs px-2 py-1 rounded-full bg-primary-/10 text-primary-">
                   Customizable
                 </span>
               )}
@@ -671,7 +671,7 @@ const ToolSettings: React.FC<{ toolId: ToolId; onBack: () => void }> = ({ toolId
               <select
                 value={(settings.format as string) ?? 'hex'}
                 onChange={(e) => setSettings({ ...settings, format: e.target.value })}
-                className="rounded border border-slate-700 bg-slate-800 px-3 py-1 text-sm"
+                className="rounded border border-slate-700 bg-[#111827] px-3 py-1 text-sm"
               >
                 <option value="hex">HEX</option>
                 <option value="rgb">RGB</option>
@@ -701,7 +701,7 @@ const ToolSettings: React.FC<{ toolId: ToolId; onBack: () => void }> = ({ toolId
         <button
           type="button"
           onClick={onBack}
-          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+          className="p-2 rounded-lg bg-[#111827] hover:bg-slate-700 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -715,7 +715,7 @@ const ToolSettings: React.FC<{ toolId: ToolId; onBack: () => void }> = ({ toolId
         <h2 className="text-xl font-semibold">{tool.name} Settings</h2>
       </div>
 
-      <div className="rounded-lg bg-slate-900 p-4 border border-slate-800 space-y-4">
+      <div className="rounded-lg bg-extension-bg-dark p-4 border border-[#1f2937] space-y-4">
         {renderToolSpecificSettings()}
       </div>
 
@@ -726,7 +726,7 @@ const ToolSettings: React.FC<{ toolId: ToolId; onBack: () => void }> = ({ toolId
         <button
           type="button"
           onClick={saveSettings}
-          className="rounded-lg bg-indigo-600 px-6 py-2 font-medium text-white transition-colors hover:bg-indigo-700"
+          className="rounded-lg bg-primary- px-6 py-2 font-medium text-white transition-colors hover:bg-primary-"
         >
           Save Settings
         </button>
@@ -789,8 +789,8 @@ const ShortcutsSection: React.FC<{
         Use <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs">Shift+Alt+Key</kbd> pattern to avoid conflicts.
       </p>
 
-      <div className="p-4 rounded-lg bg-indigo-900/20 border border-indigo-500/30">
-        <p className="text-sm text-indigo-300">
+      <div className="p-4 rounded-lg bg-primary-/20 border border-primary-/30">
+        <p className="text-sm text-primary-">
           <strong>💡 Tip:</strong> To change browser-level shortcuts (like Alt+P), visit{' '}
           <a
             href="chrome://extensions/shortcuts"
@@ -798,7 +798,7 @@ const ShortcutsSection: React.FC<{
               e.preventDefault();
               chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
             }}
-            className="underline hover:text-indigo-200"
+            className="underline hover:text-primary-"
           >
             chrome://extensions/shortcuts
           </a>
@@ -816,7 +816,7 @@ const ShortcutsSection: React.FC<{
         {shortcuts.map(({ key, label }) => (
           <div
             key={key}
-            className="flex items-center justify-between p-4 rounded-lg bg-slate-900 border border-slate-800"
+            className="flex items-center justify-between p-4 rounded-lg bg-extension-bg-dark border border-[#1f2937]"
           >
             <span className="font-medium">{label}</span>
             <button
@@ -824,8 +824,8 @@ const ShortcutsSection: React.FC<{
               onClick={() => recordShortcut(key)}
               className={`px-4 py-2 rounded-lg font-mono text-sm transition-colors ${
                 recording === key
-                  ? 'bg-indigo-600 text-white animate-pulse'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  ? 'bg-primary- text-white animate-pulse'
+                  : 'bg-[#111827] text-slate-300 hover:bg-slate-700'
               }`}
             >
               {recording === key ? 'Press keys...' : settings.shortcuts?.[key] || 'Not set'}
@@ -834,7 +834,7 @@ const ShortcutsSection: React.FC<{
         ))}
       </div>
 
-      <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-800">
+      <div className="p-4 rounded-lg bg-extension-bg-dark/50 border border-[#1f2937]">
         <h3 className="font-medium mb-2">Browser & extension shortcuts</h3>
         <p className="text-sm text-slate-400 mb-3">
           Chromium only allows <strong>four</strong> default keys in the extension manifest. Ours: open
@@ -845,29 +845,29 @@ const ShortcutsSection: React.FC<{
               e.preventDefault();
               chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
             }}
-            className="text-indigo-400 underline hover:text-indigo-200"
+            className="text-primary- underline hover:text-primary-"
           >
             chrome://extensions/shortcuts
           </a>
-          . Assign the other commands (e.g. <kbd className="px-1 rounded bg-slate-800">Alt+S</kbd> for
+          . Assign the other commands (e.g. <kbd className="px-1 rounded bg-[#111827]">Alt+S</kbd> for
           Spacing) there—same list as the extension’s command names.
         </p>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-slate-400">Open popup / extension</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Ctrl+Shift+F · ⌘⇧F</kbd>
+            <kbd className="px-2 py-1 rounded bg-[#111827] font-mono">Ctrl+Shift+F · ⌘⇧F</kbd>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Command palette</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Ctrl+Shift+P · ⌘⇧P</kbd>
+            <kbd className="px-2 py-1 rounded bg-[#111827] font-mono">Ctrl+Shift+P · ⌘⇧P</kbd>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">DOM Outliner</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+P</kbd>
+            <kbd className="px-2 py-1 rounded bg-[#111827] font-mono">Alt+P</kbd>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Disable all tools</span>
-            <kbd className="px-2 py-1 rounded bg-slate-800 font-mono">Alt+Shift+D</kbd>
+            <kbd className="px-2 py-1 rounded bg-[#111827] font-mono">Alt+Shift+D</kbd>
           </div>
         </div>
       </div>
@@ -912,7 +912,7 @@ const AdvancedSection: React.FC = () => {
     <h2 className="text-xl font-semibold">Advanced Settings</h2>
 
     <div className="space-y-4">
-      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+      <div className="rounded-lg border border-[#1f2937] bg-extension-bg-dark p-4">
         <h3 className="mb-2 font-medium">On-page active tools HUD</h3>
         <p className="mb-3 text-sm text-slate-400">
           Small corner badge listing enabled tool names and a disable-all control. Reload pages after toggling.
@@ -928,7 +928,7 @@ const AdvancedSection: React.FC = () => {
         </label>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+      <div className="rounded-lg border border-[#1f2937] bg-extension-bg-dark p-4">
         <h3 className="mb-2 font-medium">Local diagnostics (opt-in)</h3>
         <p className="mb-3 text-sm text-slate-400">
           Count error events on this device only. Nothing is sent to a server. Useful when debugging the
@@ -950,7 +950,7 @@ const AdvancedSection: React.FC = () => {
           <button
             type="button"
             onClick={() => void refreshCounts()}
-            className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
+            className="rounded-lg bg-[#111827] px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
           >
             Refresh counts
           </button>
@@ -959,14 +959,14 @@ const AdvancedSection: React.FC = () => {
             onClick={() => {
               void clearDiagnosticCounts().then(() => refreshCounts());
             }}
-            className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
+            className="rounded-lg bg-[#111827] px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
           >
             Clear counts
           </button>
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+      <div className="rounded-lg border border-[#1f2937] bg-extension-bg-dark p-4">
         <h3 className="mb-2 font-medium">Export Settings</h3>
         <p className="mb-3 text-sm text-slate-400">
           Download your extension settings as a JSON file
@@ -984,13 +984,13 @@ const AdvancedSection: React.FC = () => {
               URL.revokeObjectURL(url);
             });
           }}
-          className="rounded-lg bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
+          className="rounded-lg bg-[#111827] px-4 py-2 text-sm hover:bg-slate-700 transition-colors"
         >
           Export Settings
         </button>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+      <div className="rounded-lg border border-[#1f2937] bg-extension-bg-dark p-4">
         <h3 className="mb-2 font-medium">Import Settings</h3>
         <p className="mb-3 text-sm text-slate-400">Restore settings from a JSON file</p>
         <input
@@ -1013,7 +1013,7 @@ const AdvancedSection: React.FC = () => {
               reader.readAsText(file);
             }
           }}
-          className="block w-full text-sm text-slate-400 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-800 file:px-4 file:py-2 file:text-slate-200"
+          className="block w-full text-sm text-slate-400 file:mr-4 file:rounded-lg file:border-0 file:bg-[#111827] file:px-4 file:py-2 file:text-slate-200"
         />
       </div>
 
@@ -1056,7 +1056,7 @@ const Toggle: React.FC<{
     type="button"
     onClick={() => onChange(!checked)}
     className={`relative h-6 w-11 rounded-full transition-colors ${
-      checked ? 'bg-indigo-600' : 'bg-slate-600'
+      checked ? 'bg-primary-' : 'bg-slate-600'
     }`}
   >
     <span

@@ -112,8 +112,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({
       <div
         className={`
           flex cursor-pointer select-none items-center gap-1.5 py-1.5 pr-4
-          transition-colors hover:bg-slate-800
-          ${isSelected ? 'bg-indigo-600 text-white' : 'text-slate-300'}
+          transition-colors hover:bg-[#111827]
+          ${isSelected ? 'bg-primary- text-white' : 'text-slate-300'}
         `}
         onClick={handleSelect}
         onKeyDown={(e) => {
@@ -155,7 +155,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <span
             className={`
               rounded-full px-2 py-0.5 text-[10px]
-              ${isSelected ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'}
+              ${isSelected ? 'bg-primary- text-white' : 'bg-slate-700 text-slate-400'}
             `}
           >
             {Object.keys(node.props).length}
@@ -426,13 +426,13 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
       />
 
       {/* Panel */}
-      <div className="relative flex max-h-[80vh] w-[420px] flex-col overflow-hidden rounded-xl bg-slate-900 shadow-2xl ring-1 ring-white/10">
+      <div className="relative flex max-h-[80vh] w-[420px] flex-col overflow-hidden rounded-xl bg-extension-bg-dark shadow-2xl ring-1 ring-white/10">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-700 bg-slate-800 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-slate-700 bg-[#111827] px-4 py-3">
           <div className="flex items-center gap-2">
             <FrameworkIcon framework={treeState.framework} />
             <span className="font-semibold text-slate-100">Component Tree</span>
-            <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-medium text-white">
+            <span className="rounded-full bg-primary- px-2 py-0.5 text-[11px] font-medium text-white">
               {treeState.framework}
             </span>
           </div>
@@ -548,7 +548,7 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter components..."
-              className="w-full rounded-lg border border-slate-600 bg-slate-800 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-600 bg-[#111827] py-2 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-primary-"
             />
             {searchQuery && (
               <button
@@ -641,13 +641,13 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-700 bg-slate-800/50 px-4 py-2 text-xs text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-700 bg-[#111827]/50 px-4 py-2 text-xs text-slate-500">
           <span>
             {nodeCount} component{nodeCount !== 1 ? 's' : ''}
           </span>
           <div className="flex items-center gap-3">
             {treeState.selectedNode && (
-              <span className="text-indigo-400">Selected: {treeState.selectedNode.name}</span>
+              <span className="text-primary-">Selected: {treeState.selectedNode.name}</span>
             )}
             <span className="text-slate-600">FrontendDevHelper</span>
           </div>
@@ -655,7 +655,7 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
 
         {/* Selected Node Details Panel */}
         {treeState.selectedNode && (
-          <div className="border-t border-slate-700 bg-slate-800 p-4">
+          <div className="border-t border-slate-700 bg-[#111827] p-4">
             <h3 className="mb-2 text-sm font-semibold text-slate-200">
               {treeState.selectedNode.name}
             </h3>
@@ -665,7 +665,7 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               Object.keys(treeState.selectedNode.props).length > 0 && (
                 <div className="mb-3">
                   <h4 className="mb-1 text-xs font-medium text-slate-500">Props</h4>
-                  <div className="max-h-24 overflow-y-auto rounded bg-slate-900 p-2">
+                  <div className="max-h-24 overflow-y-auto rounded bg-extension-bg-dark p-2">
                     <pre className="font-mono text-[11px] text-slate-300">
                       {JSON.stringify(treeState.selectedNode.props, null, 2)}
                     </pre>
@@ -678,7 +678,7 @@ export const ComponentTree: React.FC<ComponentTreeProps> = ({
               Object.keys(treeState.selectedNode.state).length > 0 && (
                 <div>
                   <h4 className="mb-1 text-xs font-medium text-slate-500">State</h4>
-                  <div className="max-h-24 overflow-y-auto rounded bg-slate-900 p-2">
+                  <div className="max-h-24 overflow-y-auto rounded bg-extension-bg-dark p-2">
                     <pre className="font-mono text-[11px] text-slate-300">
                       {JSON.stringify(treeState.selectedNode.state, null, 2)}
                     </pre>

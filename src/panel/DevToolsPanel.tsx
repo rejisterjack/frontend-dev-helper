@@ -324,8 +324,8 @@ export const DevToolsPanel: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen flex-col bg-slate-900 text-slate-200">
-        <header className="flex items-center justify-between border-b border-slate-700 bg-slate-800 px-4 py-2">
+      <div className="flex h-screen flex-col bg-extension-bg-dark text-slate-200">
+        <header className="flex items-center justify-between border-b border-slate-700 bg-[#111827] px-4 py-2">
           <div className="flex items-center gap-2">
             <span className="font-medium">FrontendDevHelper</span>
           </div>
@@ -343,11 +343,11 @@ export const DevToolsPanel: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-slate-900 text-slate-200">
+    <div className="flex h-screen flex-col bg-extension-bg-dark text-slate-200">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-slate-700 bg-slate-800 px-4 py-2">
+      <header className="flex items-center justify-between border-b border-slate-700 bg-[#111827] px-4 py-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-indigo-600 text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded bg-primary- text-white">
             <svg
               aria-hidden="true"
               className="h-4 w-4"
@@ -392,7 +392,7 @@ export const DevToolsPanel: React.FC = () => {
       {/* Element Info */}
       {selectedElement ? (
         <>
-          <div className="border-b border-slate-700 bg-slate-800 px-4 py-2">
+          <div className="border-b border-slate-700 bg-[#111827] px-4 py-2">
             <div className="flex items-center gap-2 font-mono text-sm">
               <span className="text-purple-400">{selectedElement.tag}</span>
               {selectedElement.id && <span className="text-yellow-400">#{selectedElement.id}</span>}
@@ -413,7 +413,7 @@ export const DevToolsPanel: React.FC = () => {
               <button
                 type="button"
                 onClick={copyElementDescriptor}
-                className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+                className="text-primary- hover:text-primary- underline-offset-2 hover:underline"
               >
                 Copy $0 descriptor
               </button>
@@ -421,7 +421,7 @@ export const DevToolsPanel: React.FC = () => {
               <button
                 type="button"
                 onClick={copyComputedSnippet}
-                className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+                className="text-primary- hover:text-primary- underline-offset-2 hover:underline"
               >
                 Copy computed CSS block
               </button>
@@ -433,7 +433,7 @@ export const DevToolsPanel: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-slate-700 bg-slate-800">
+          <div className="flex border-b border-slate-700 bg-[#111827]">
             {['styles', 'computed', 'layout', 'accessibility'].map((tab) => (
               <button
                 type="button"
@@ -441,7 +441,7 @@ export const DevToolsPanel: React.FC = () => {
                 onClick={() => setActiveTab(tab as typeof activeTab)}
                 className={`px-4 py-2 text-sm capitalize ${
                   activeTab === tab
-                    ? 'border-b-2 border-indigo-500 text-indigo-400'
+                    ? 'border-b-2 border-primary- text-primary-'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -478,7 +478,7 @@ export const DevToolsPanel: React.FC = () => {
             <button
               type="button"
               onClick={refreshSelection}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+              className="rounded-lg bg-primary- px-4 py-2 text-sm text-white hover:bg-primary-"
             >
               Refresh
             </button>
@@ -501,7 +501,7 @@ const StylesTab: React.FC<{
     {Object.keys(inlineStyles).length > 0 && (
       <div>
         <div className="mb-2 text-xs font-medium text-slate-500">Inline Styles</div>
-        <div className="rounded-lg bg-slate-800 p-3 font-mono text-sm">
+        <div className="rounded-lg bg-[#111827] p-3 font-mono text-sm">
           {Object.entries(inlineStyles).map(([prop, value]) => (
             <div key={prop} className="flex justify-between">
               <span className="text-purple-400">{prop}:</span>
@@ -516,7 +516,7 @@ const StylesTab: React.FC<{
       <div className="mb-2 text-xs font-medium text-slate-500">Key Styles</div>
       <div className="space-y-1">
         {Object.entries(styles).map(([prop, value]) => (
-          <div key={prop} className="flex justify-between rounded px-2 py-1 hover:bg-slate-800">
+          <div key={prop} className="flex justify-between rounded px-2 py-1 hover:bg-[#111827]">
             <span className="text-slate-400">{prop}</span>
             <span className="text-slate-200 font-mono text-sm">{value}</span>
           </div>
@@ -547,7 +547,7 @@ const ComputedTab: React.FC<{
       {Object.entries(computedStyles)
         .filter(([_, value]) => value && value !== 'none' && value !== '0px' && value !== 'normal')
         .map(([prop, value]) => (
-          <div key={prop} className="flex justify-between rounded px-2 py-1 hover:bg-slate-800">
+          <div key={prop} className="flex justify-between rounded px-2 py-1 hover:bg-[#111827]">
             <span className="text-slate-400 text-sm">{prop}</span>
             <span className="text-slate-200 font-mono text-xs truncate max-w-[200px]">{value}</span>
           </div>
@@ -562,7 +562,7 @@ const LayoutTab: React.FC<{ boxModel: BoxModelData }> = ({ boxModel }) => {
   return (
     <div className="space-y-4">
       {/* Box Model Visualization */}
-      <div className="mb-4 rounded-lg bg-slate-800 p-4">
+      <div className="mb-4 rounded-lg bg-[#111827] p-4">
         <div className="text-xs text-slate-500 mb-2">Box Model</div>
         <div className="mx-auto w-64">
           {/* Margin */}
@@ -607,7 +607,7 @@ const LayoutTab: React.FC<{ boxModel: BoxModelData }> = ({ boxModel }) => {
 
       {/* Position */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg bg-slate-800 p-3">
+        <div className="rounded-lg bg-[#111827] p-3">
           <div className="text-xs text-slate-500">Position (from viewport)</div>
           <div className="mt-1 grid grid-cols-2 gap-2 font-mono text-sm">
             <div>
@@ -620,7 +620,7 @@ const LayoutTab: React.FC<{ boxModel: BoxModelData }> = ({ boxModel }) => {
             </div>
           </div>
         </div>
-        <div className="rounded-lg bg-slate-800 p-3">
+        <div className="rounded-lg bg-[#111827] p-3">
           <div className="text-xs text-slate-500">Content Dimensions</div>
           <div className="mt-1 grid grid-cols-2 gap-2 font-mono text-sm">
             <div>
@@ -647,7 +647,7 @@ const AccessibilityTab: React.FC<{
   return (
     <div className="space-y-4">
       {/* Element Info */}
-      <div className="rounded-lg bg-slate-800 p-3">
+      <div className="rounded-lg bg-[#111827] p-3">
         <div className="text-xs text-slate-500 mb-2">Semantic Info</div>
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
@@ -679,7 +679,7 @@ const AccessibilityTab: React.FC<{
         {ariaEntries.length > 0 ? (
           <div className="space-y-1">
             {ariaEntries.map(([key, value]) => (
-              <div key={key} className="flex justify-between rounded px-2 py-1 hover:bg-slate-800">
+              <div key={key} className="flex justify-between rounded px-2 py-1 hover:bg-[#111827]">
                 <span className="text-slate-400">aria-{key}</span>
                 <span className="text-slate-200 font-mono text-sm">{value}</span>
               </div>
@@ -691,7 +691,7 @@ const AccessibilityTab: React.FC<{
       </div>
 
       {/* Accessibility Recommendations */}
-      <div className="rounded-lg bg-slate-800/50 p-3 border border-slate-700">
+      <div className="rounded-lg bg-[#111827]/50 p-3 border border-slate-700">
         <div className="text-xs text-slate-500 mb-2">💡 Recommendations</div>
         <ul className="text-sm text-slate-400 space-y-1">
           {!aria.role && <li>• Consider adding a role attribute</li>}

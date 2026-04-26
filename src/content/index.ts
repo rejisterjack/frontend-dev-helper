@@ -21,6 +21,31 @@ import { recordDiagnosticEvent } from '../utils/storage';
 import { initActiveToolsHudIfEnabled } from './active-tools-hud';
 import { registry } from './handlers';
 
+/**
+ * @crxjs dev injects a small HMR client (see vendor/crx-client-port.js). After you press
+ * "Reload" on chrome://extensions, that old world is dead and Chrome throws
+ * "Extension context invalidated" until you refresh the tab — not an app bug.
+ */
+function registerDevInvalidContextHint(): void {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return;
+  let shown = false;
+  window.addEventListener(
+    'error',
+    (event: ErrorEvent) => {
+      if (shown) return;
+      const text = [event.message, String(event.error)].filter(Boolean).join(' ');
+      if (text.includes('Extension context invalidated')) {
+        shown = true;
+        console.info(
+          '[FDH dev] Tab still has a pre-reload content script. Refresh this page (F5) after reloading the extension, or run `pnpm run dev:nohmr` for a calmer dev loop.'
+        );
+      }
+    },
+    true
+  );
+}
+registerDevInvalidContextHint();
+
 // ============================================
 // State Management (Unified Naming Convention)
 // ============================================

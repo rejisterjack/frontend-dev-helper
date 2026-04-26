@@ -10,6 +10,7 @@
 
 import { logger } from '@/utils/logger';
 import { walkElementsEfficiently } from '@/utils/dom-performance';
+import { TimerManager } from '@/utils/timer-manager';
 
 interface ScrollAnimationInfo {
   element: HTMLElement;
@@ -25,7 +26,7 @@ interface ScrollAnimationInfo {
 let isActive = false;
 let overlay: HTMLElement | null = null;
 let animationOverlays: Map<HTMLElement, HTMLElement> = new Map();
-let updateInterval: number | null = null;
+const timers = new TimerManager();
 
 /**
  * Check if Scroll-driven Animations API is supported
@@ -484,7 +485,7 @@ function updateOverlays(): void {
  * Start progress updates
  */
 function startProgressUpdates(): void {
-  updateInterval = window.setInterval(() => {
+  timers.setInterval(() => {
     if (!isActive) return;
 
     const animations = detectScrollAnimations();
@@ -536,11 +537,8 @@ export function disable(): void {
     overlay = null;
   }
 
-  // Stop updates
-  if (updateInterval) {
-    clearInterval(updateInterval);
-    updateInterval = null;
-  }
+  // Stop all pending timers
+  timers.clearAll();
 
   logger.log('[ScrollAnimationsDebugger] Disabled');
 }

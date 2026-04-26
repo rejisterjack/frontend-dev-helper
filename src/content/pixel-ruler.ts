@@ -6,6 +6,7 @@
  */
 
 import { createOverlay, createTooltip, positionTooltip } from '@/utils/dom';
+import { escapeHtml } from '@/utils/sanitize';
 
 type MeasurementMode = 'horizontal' | 'vertical' | 'element';
 type MeasurementType = 'drag' | 'element';
@@ -607,7 +608,7 @@ export class PixelRuler {
     if (elements) {
       elements.badge.innerHTML += `
         <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">
-          ${this.getElementLabel(startEl)} → ${this.getElementLabel(endEl)}
+          ${escapeHtml(this.getElementLabel(startEl))} → ${escapeHtml(this.getElementLabel(endEl))}
         </div>
       `;
     }

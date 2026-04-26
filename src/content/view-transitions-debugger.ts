@@ -10,6 +10,7 @@
 
 import { logger } from '@/utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
 
 interface ViewTransitionInfo {
   isActive: boolean;
@@ -31,9 +32,10 @@ interface CapturedElementInfo {
 }
 
 // State
+const lifecycle = new ToolLifecycle();
+
 let isActive = false;
 let debugPanel: HTMLElement | null = null;
-let transitionObserver: MutationObserver | null = null;
 
 /**
  * Check if View Transitions API is supported
@@ -379,7 +381,7 @@ function updatePanel(): void {
  * Setup mutation observer to detect transition changes
  */
 function setupObserver(): void {
-  transitionObserver = new MutationObserver((mutations) => {
+  const transitionObserver = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
         const target = mutation.target as HTMLElement;
@@ -396,6 +398,8 @@ function setupObserver(): void {
     attributeFilter: ['style'],
     subtree: true,
   });
+
+  lifecycle.addObserver(transitionObserver);
 }
 
 /**
@@ -404,6 +408,8 @@ function setupObserver(): void {
 export function enable(): void {
   if (isActive) return;
   isActive = true;
+
+  lifecycle.start();
 
   updatePanel();
   setupObserver();
@@ -423,8 +429,8 @@ export function disable(): void {
     debugPanel = null;
   }
 
-  transitionObserver?.disconnect();
-  transitionObserver = null;
+  // Tear down observers, timers, event listeners
+  lifecycle.destroy();
 
   logger.log('[ViewTransitionsDebugger] Disabled');
 }

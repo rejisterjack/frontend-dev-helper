@@ -11,6 +11,8 @@
 
 import { walkElementsEfficiently } from '@/utils/dom-performance';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
 
 export interface CSSVariable {
   name: string;
@@ -33,10 +35,11 @@ interface VariableUsage {
   property: string;
 }
 
+const lifecycle = new ToolLifecycle();
+
 let isActive = false;
 let overlayElement: HTMLElement | null = null;
 let variableCache: Map<string, CSSVariable> = new Map();
-let observer: MutationObserver | null = null;
 
 /**
  * Get all CSS variables defined in stylesheets
@@ -551,16 +554,16 @@ function renderVariables(): void {
     .map(
       (group) => `
     <div class="fdh-cvi-category">
-      <div class="fdh-cvi-category-title">${group.category} (${group.variables.length})</div>
+      <div class="fdh-cvi-category-title">${escapeHtml(group.category)} (${group.variables.length})</div>
       ${group.variables
         .map(
           (v) => `
-        <div class="fdh-cvi-variable" data-var="${v.name}">
-          <span class="fdh-cvi-var-name">${v.name}</span>
-          <span class="fdh-cvi-scope ${v.scope}">${v.scope}</span>
+        <div class="fdh-cvi-variable" data-var="${escapeHtml(v.name)}">
+          <span class="fdh-cvi-var-name">${escapeHtml(v.name)}</span>
+          <span class="fdh-cvi-scope ${escapeHtml(v.scope)}">${escapeHtml(v.scope)}</span>
           <div class="fdh-cvi-var-value">
-            ${v.type === 'color' ? `<span class="fdh-cvi-color-preview" style="background: ${v.computedValue}"></span>` : ''}
-            <input type="text" class="fdh-cvi-var-input" value="${v.value}" data-var="${v.name}">
+            ${v.type === 'color' ? `<span class="fdh-cvi-color-preview" style="background: ${escapeHtml(v.computedValue)}"></span>` : ''}
+            <input type="text" class="fdh-cvi-var-input" value="${escapeHtml(v.value)}" data-var="${escapeHtml(v.name)}">
             <span class="fdh-cvi-usage">${v.usageCount} uses</span>
           </div>
         </div>
@@ -601,6 +604,8 @@ export function enable(): void {
   if (isActive) return;
   isActive = true;
 
+  lifecycle.start();
+
   overlayElement = createOverlay();
   document.body.appendChild(overlayElement);
 
@@ -608,11 +613,13 @@ export function enable(): void {
   renderVariables();
 
   // Watch for DOM changes
-  observer = new MutationObserver(() => {
+  const observer = new MutationObserver(() => {
     // Debounce re-rendering
-    setTimeout(renderVariables, 500);
+    lifecycle.setTimeout(renderVariables, 500);
   });
   observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+  lifecycle.addObserver(observer);
 
   logger.log('[CSSVariableInspector] Enabled');
 }
@@ -624,8 +631,8 @@ export function disable(): void {
   if (!isActive) return;
   isActive = false;
 
-  observer?.disconnect();
-  observer = null;
+  // Tear down observers, timers, event listeners
+  lifecycle.destroy();
 
   overlayElement?.remove();
   overlayElement = null;

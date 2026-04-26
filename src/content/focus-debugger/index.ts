@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@/utils/logger';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
 import { FOCUSABLE_SELECTORS, PREFIX, REFRESH_INTERVAL } from './constants';
 import { OverlayManager } from './overlay';
 import { FocusTracker } from './tracker';
@@ -26,12 +27,12 @@ export { FocusTracker, OverlayManager, UIManager };
 // State
 // ============================================
 
+const lifecycle = new ToolLifecycle();
+
 let isEnabled = false;
 let isPanelOpen = false;
 let panelContainer: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
-let refreshTimer: number | null = null;
-let mutationObserver: MutationObserver | null = null;
 let currentTab: CurrentTab = 'elements';
 
 // Component instances
@@ -49,6 +50,8 @@ let uiManager: UIManager;
 export function enable(): void {
   if (isEnabled) return;
   isEnabled = true;
+
+  lifecycle.start();
 
   // Initialize components
   focusTracker = new FocusTracker(
@@ -88,9 +91,9 @@ export function disable(): void {
 
   destroyPanel();
   overlayManager?.destroy();
-  stopAutoRefresh();
-  stopMutationObserver();
-  detachEventListeners();
+
+  // Tear down observers, timers, event listeners
+  lifecycle.destroy();
 
   focusTracker?.reset();
 
@@ -286,19 +289,15 @@ function updateBadges(): void {
 // ============================================
 
 function attachEventListeners(): void {
-  document.addEventListener('focusin', handleFocusIn, true);
-  document.addEventListener('focusout', handleFocusOut, true);
-  document.addEventListener('keydown', handleKeyDown, true);
-  document.addEventListener('mousedown', handleMouseDown, true);
-  document.addEventListener('click', handleClick, true);
+  lifecycle.addEventListener(document, 'focusin', handleFocusIn, true);
+  lifecycle.addEventListener(document, 'focusout', handleFocusOut, true);
+  lifecycle.addEventListener(document, 'keydown', handleKeyDown, true);
+  lifecycle.addEventListener(document, 'mousedown', handleMouseDown, true);
+  lifecycle.addEventListener(document, 'click', handleClick, true);
 }
 
 function detachEventListeners(): void {
-  document.removeEventListener('focusin', handleFocusIn, true);
-  document.removeEventListener('focusout', handleFocusOut, true);
-  document.removeEventListener('keydown', handleKeyDown, true);
-  document.removeEventListener('mousedown', handleMouseDown, true);
-  document.removeEventListener('click', handleClick, true);
+  // Handled by lifecycle.destroy() via AbortController
 }
 
 function handleFocusIn(event: FocusEvent): void {
@@ -351,23 +350,17 @@ function updateOverlays(): void {
 // ============================================
 
 function startAutoRefresh(): void {
-  if (refreshTimer) return;
-  refreshTimer = window.setInterval(() => {
+  lifecycle.setInterval(() => {
     refresh();
   }, REFRESH_INTERVAL);
 }
 
 function stopAutoRefresh(): void {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
-  }
+  // Handled by lifecycle.destroy()
 }
 
 function startMutationObserver(): void {
-  if (mutationObserver) return;
-
-  mutationObserver = new MutationObserver((mutations) => {
+  const mutationObserver = new MutationObserver((mutations) => {
     let shouldRefresh = false;
 
     for (const mutation of mutations) {
@@ -401,8 +394,7 @@ function startMutationObserver(): void {
 
     if (shouldRefresh) {
       // Debounce refresh
-      clearTimeout((refresh as unknown as { _timeout: number })._timeout);
-      (refresh as unknown as { _timeout: number })._timeout = window.setTimeout(refresh, 100);
+      lifecycle.setTimeout(refresh, 100);
     }
   });
 
@@ -412,13 +404,12 @@ function startMutationObserver(): void {
     attributes: true,
     attributeFilter: ['tabindex', 'disabled', 'hidden', 'style'],
   });
+
+  lifecycle.addObserver(mutationObserver);
 }
 
 function stopMutationObserver(): void {
-  if (mutationObserver) {
-    mutationObserver.disconnect();
-    mutationObserver = null;
-  }
+  // Handled by lifecycle.destroy()
 }
 
 // ============================================

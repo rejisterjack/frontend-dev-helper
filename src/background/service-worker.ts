@@ -125,6 +125,10 @@ const state: ServiceWorkerState = {
   initialized: false,
 };
 
+// Promise chain to serialize toggle operations and prevent race conditions
+// when rapid toggles arrive before previous ones complete.
+let pendingToggle: Promise<void> = Promise.resolve();
+
 // Initialize message router and context menu manager
 const messageRouter = new MessageRouter();
 contextMenuManager = new ContextMenuManager();
@@ -358,6 +362,29 @@ function setupMessageListeners(): void {
  * Handle TOGGLE_TOOL message
  */
 async function handleToggleTool(
+  payload: {
+    toolId: ToolId;
+    enabled?: boolean;
+    tabId?: number;
+  },
+  sender?: chrome.runtime.MessageSender
+): Promise<{ toolId: ToolId; enabled: boolean }> {
+  // Wait for any in-flight toggle to finish before starting this one,
+  // then chain the next promise so subsequent callers also wait.
+  await pendingToggle;
+
+  const promise = actuallyToggleTool(payload, sender);
+  pendingToggle = promise.then(
+    () => {},
+    () => {}
+  );
+  return promise;
+}
+
+/**
+ * Perform the actual toggle work (extracted for serialization).
+ */
+async function actuallyToggleTool(
   payload: {
     toolId: ToolId;
     enabled?: boolean;

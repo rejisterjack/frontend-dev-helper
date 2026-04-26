@@ -6,6 +6,7 @@
  */
 
 import { getContrastRatio, getWCAGRating } from '../utils/color';
+import { escapeHtml } from '../utils/sanitize';
 import { logger } from '../utils/logger';
 
 interface CSSProperty {
@@ -393,7 +394,7 @@ function buildTooltipContent(element: HTMLElement): string {
 
   // Category selector
   const categoryOptions = ['All', ...CSS_CATEGORIES.map((c) => c.name)]
-    .map((c) => `<option value="${c}" ${c === currentCategory ? 'selected' : ''}>${c}</option>`)
+    .map((c) => `<option value="${escapeHtml(c)}" ${c === currentCategory ? 'selected' : ''}>${escapeHtml(c)}</option>`)
     .join('');
 
   // Properties list
@@ -410,8 +411,8 @@ function buildTooltipContent(element: HTMLElement): string {
           border-bottom: 1px solid rgba(255,255,255,0.05);
           ${p.inherited ? 'opacity: 0.6;' : ''}
         ">
-          <span class="fdh-prop-name" style="color: #93c5fd;">${p.name}</span>
-          <span class="fdh-prop-value" style="color: #a5f3fc; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.value}</span>
+          <span class="fdh-prop-name" style="color: #93c5fd;">${escapeHtml(p.name)}</span>
+          <span class="fdh-prop-value" style="color: #a5f3fc; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(p.value)}</span>
         </div>
       `
           )
@@ -421,7 +422,7 @@ function buildTooltipContent(element: HTMLElement): string {
   return `
     <div class="fdh-css-header" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-        <code style="color: #c084fc; font-size: 14px; font-weight: 600;">${selector}</code>
+        <code style="color: #c084fc; font-size: 14px; font-weight: 600;">${escapeHtml(selector)}</code>
         <span style="color: #64748b; font-size: 11px;">${Math.round(rect.width)}×${Math.round(rect.height)}</span>
       </div>
       ${contrastInfo}

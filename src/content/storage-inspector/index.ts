@@ -65,6 +65,7 @@ let panelContainer: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
 let refreshTimer: number | null = null;
 let currentTab: StorageTab = 'localStorage';
+let escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
 // ============================================
 // Public API
@@ -129,6 +130,9 @@ function createPanel(): void {
 
   panelContainer = document.createElement('div');
   panelContainer.id = `${PREFIX}-container`;
+  panelContainer.setAttribute('role', 'dialog');
+  panelContainer.setAttribute('aria-label', 'FrontendDevHelper Storage Inspector');
+  panelContainer.setAttribute('aria-modal', 'false');
   panelContainer.style.cssText = `
     position: fixed;
     top: 20px;
@@ -164,6 +168,10 @@ function createPanel(): void {
 
 function destroyPanel(): void {
   if (!panelContainer) return;
+  if (escapeHandler) {
+    document.removeEventListener('keydown', escapeHandler);
+    escapeHandler = null;
+  }
   panelContainer.remove();
   panelContainer = null;
   shadowRoot = null;
@@ -198,6 +206,14 @@ function setupEventListeners(panel: HTMLElement): void {
     const query = (e.target as HTMLInputElement).value.toLowerCase();
     filterContent(query);
   });
+
+  // Close on Escape key
+  escapeHandler = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') {
+      disable();
+    }
+  };
+  document.addEventListener('keydown', escapeHandler);
 
   // Clear all
   panel.querySelector(`#${PREFIX}-clear-all`)?.addEventListener('click', () => {

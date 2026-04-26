@@ -10,6 +10,7 @@ import { logger } from '@/utils/logger';
 import {
   clearRequests,
   collectExistingResources,
+  destroyLifecycle,
   disconnectPerformanceObserver,
   getRequests,
   initPerformanceObserver,
@@ -18,6 +19,7 @@ import {
   restoreFetch,
   restoreXHR,
   setUpdateCallback,
+  startLifecycle,
 } from './analyzer';
 import type { FilterType, NetworkRequest } from './types';
 import {
@@ -101,6 +103,8 @@ export function enable(): void {
   if (isActive) return;
   isActive = true;
 
+  startLifecycle();
+
   // Create panel
   if (!getPanel()) {
     setPanel(createPanel());
@@ -152,6 +156,9 @@ export function disable(): void {
   restoreFetch();
   restoreXHR();
   disconnectPerformanceObserver();
+
+  // Tear down observers and timers
+  destroyLifecycle();
 
   logger.log('[NetworkAnalyzer] Disabled');
 }

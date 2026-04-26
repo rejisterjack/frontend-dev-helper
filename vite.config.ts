@@ -38,6 +38,8 @@ const disableHmr = process.env.VITE_NO_HMR === '1' || process.env.VITE_NO_HMR ==
 export default defineConfig(({ command, mode }) => ({
   plugins: [
     react(),
+    // Dev: "Extension context invalidated" on open tabs after chrome://extensions → Reload
+    // is a known @crxjs HMR quirk; refresh the tab. Use pnpm run dev:nohmr to disable Vite HMR.
     crx({ manifest: getManifest(command, mode) as any }),
   ],
   resolve: {

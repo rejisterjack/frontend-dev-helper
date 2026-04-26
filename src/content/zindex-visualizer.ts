@@ -221,7 +221,7 @@ function buildOverlayContent(): string {
               ${items
                 .slice(0, 5)
                 .map((item) => {
-                  const tag = item.element.tagName.toLowerCase();
+                  const tag = escapeHtml(item.element.tagName.toLowerCase());
                   const id = item.element.id ? `#${escapeHtml(item.element.id)}` : '';
                   const classes = Array.from(item.element.classList)
                     .filter((c) => !c.startsWith('fdh-'))

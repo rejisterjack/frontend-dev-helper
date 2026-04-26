@@ -303,6 +303,17 @@ pnpm run test -- --watch
 - Use proper CSP-compliant code
 - Sanitize any DOM manipulations
 
+## Security Checklist for Content Scripts
+
+When adding or modifying content script tools:
+
+1. **innerHTML safety**: All dynamic content MUST be escaped with `escapeHtml()` or use the `html` tagged template literal from `@/utils/sanitize`
+2. **Color values**: Use `sanitizeColor()` for any CSS color values from page content
+3. **URLs**: Use `sanitizeUrl()` for any URLs from page content
+4. **Resource cleanup**: Store all timers, observers, and event listeners. Clean up in disable()
+5. **Timer management**: Use `TimerManager` from `@/utils/timer-manager` for setTimeout/setInterval
+6. **Testing**: Add tests for enable/disable lifecycle and cleanup verification
+
 ## Performance Guidelines
 
 - Use Web Workers for heavy computations

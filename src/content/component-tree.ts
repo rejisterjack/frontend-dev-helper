@@ -15,6 +15,7 @@
 import type { ComponentNode, ComponentTreeState, FrameworkType } from '@/types';
 import { logger } from '@/utils/logger';
 import { escapeHtml } from '@/utils/sanitize';
+import { ToolLifecycle } from '@/utils/tool-lifecycle';
 
 // Import framework detectors
 import {
@@ -49,12 +50,12 @@ const REFRESH_DEBOUNCE_MS = 500; // Debounce mutations to avoid excessive update
 // State
 // ============================================
 
+const lifecycle = new ToolLifecycle();
+
 let isEnabled = false;
 let isPanelOpen = false;
 let panelContainer: HTMLElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
-let mutationObserver: MutationObserver | null = null;
-let refreshDebounceTimer: number | null = null;
 
 const state: ComponentTreeState = {
   framework: 'unknown',
@@ -74,6 +75,8 @@ const state: ComponentTreeState = {
 export function enable(): void {
   if (isEnabled) return;
   isEnabled = true;
+
+  lifecycle.start();
 
   // Detect framework
   detectFramework();
@@ -97,8 +100,8 @@ export function disable(): void {
   // Destroy panel
   destroyPanel();
 
-  // Stop auto-refresh
-  stopAutoRefresh();
+  // Tear down observers, timers, event listeners
+  lifecycle.destroy();
 
   // Clear state
   state.root = null;
@@ -452,6 +455,9 @@ function createPanel(): void {
 
   panelContainer = document.createElement('div');
   panelContainer.id = `${PREFIX}-container`;
+  panelContainer.setAttribute('role', 'dialog');
+  panelContainer.setAttribute('aria-label', 'FrontendDevHelper Component Tree');
+  panelContainer.setAttribute('aria-modal', 'false');
   panelContainer.style.cssText = `
     position: fixed;
     top: 20px;
@@ -492,7 +498,9 @@ function destroyPanel(): void {
 
 function getPanelHTML(): string {
   const frameworkIcon = getFrameworkIcon(state.framework);
-  const frameworkLabel = state.framework.charAt(0).toUpperCase() + state.framework.slice(1);
+  const frameworkLabel = escapeHtml(
+    state.framework.charAt(0).toUpperCase() + state.framework.slice(1)
+  );
 
   return `
     <div id="${PREFIX}-header">
@@ -546,6 +554,14 @@ function getFrameworkIcon(framework: FrameworkType): string {
 function setupEventListeners(panel: HTMLElement): void {
   // Close button
   panel.querySelector(`#${PREFIX}-close`)?.addEventListener('click', () => disable());
+
+  // Close on Escape key
+  const handleEscape = (e: Event): void => {
+    if ((e as KeyboardEvent).key === 'Escape') {
+      disable();
+    }
+  };
+  lifecycle.addEventListener(document, 'keydown', handleEscape);
 
   // Refresh button
   panel.querySelector(`#${PREFIX}-refresh`)?.addEventListener('click', () => {
@@ -720,10 +736,8 @@ function updateStatus(message: string): void {
 // ============================================
 
 function startAutoRefresh(): void {
-  if (mutationObserver) return;
-
   // Use MutationObserver instead of polling for better performance
-  mutationObserver = new MutationObserver((mutations) => {
+  const mutationObserver = new MutationObserver((mutations) => {
     // Only trigger refresh for meaningful DOM changes
     const hasMeaningfulChanges = mutations.some((mutation) => {
       // Ignore changes to our own overlay elements
@@ -755,11 +769,7 @@ function startAutoRefresh(): void {
     if (!hasMeaningfulChanges) return;
 
     // Debounce refresh to batch multiple mutations
-    if (refreshDebounceTimer) {
-      clearTimeout(refreshDebounceTimer);
-    }
-
-    refreshDebounceTimer = window.setTimeout(() => {
+    lifecycle.setTimeout(() => {
       refresh();
     }, REFRESH_DEBOUNCE_MS);
   });
@@ -772,20 +782,14 @@ function startAutoRefresh(): void {
     attributeFilter: ['class', 'id', 'data-component', 'data-testid'],
   });
 
+  lifecycle.addObserver(mutationObserver);
+
   logger.log('[ComponentTree] MutationObserver started');
 }
 
 function stopAutoRefresh(): void {
-  if (mutationObserver) {
-    mutationObserver.disconnect();
-    mutationObserver = null;
-    logger.log('[ComponentTree] MutationObserver stopped');
-  }
-
-  if (refreshDebounceTimer) {
-    clearTimeout(refreshDebounceTimer);
-    refreshDebounceTimer = null;
-  }
+  // Cleanup is handled by lifecycle.destroy() in disable()
+  logger.log('[ComponentTree] MutationObserver stopped');
 }
 
 // ============================================

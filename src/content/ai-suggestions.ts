@@ -143,19 +143,19 @@ function renderPanel(): void {
     <div id="${PREFIX}-content">
       <div id="${PREFIX}-summary">
         <div class="${PREFIX}-stat">
-          <span class="${PREFIX}-stat-value">${summary.total}</span>
+          <span class="${PREFIX}-stat-value">${escapeHtml(String(summary.total))}</span>
           <span class="${PREFIX}-stat-label">Total</span>
         </div>
         <div class="${PREFIX}-stat ${PREFIX}-stat-critical">
-          <span class="${PREFIX}-stat-value">${summary.critical}</span>
+          <span class="${PREFIX}-stat-value">${escapeHtml(String(summary.critical))}</span>
           <span class="${PREFIX}-stat-label">Critical</span>
         </div>
         <div class="${PREFIX}-stat ${PREFIX}-stat-high">
-          <span class="${PREFIX}-stat-value">${summary.high}</span>
+          <span class="${PREFIX}-stat-value">${escapeHtml(String(summary.high))}</span>
           <span class="${PREFIX}-stat-label">High</span>
         </div>
         <div class="${PREFIX}-stat ${PREFIX}-stat-autofix">
-          <span class="${PREFIX}-stat-value">${summary.autoFixable}</span>
+          <span class="${PREFIX}-stat-value">${escapeHtml(String(summary.autoFixable))}</span>
           <span class="${PREFIX}-stat-label">Auto-fixable</span>
         </div>
       </div>
@@ -180,7 +180,7 @@ function renderPanel(): void {
             </div>
             <div class="${PREFIX}-suggestion-title">${escapeHtml(s.title)}</div>
             <div class="${PREFIX}-suggestion-desc">${escapeHtml(s.description)}</div>
-            ${s.autoFixable ? `<button class="${PREFIX}-fix-btn" data-id="${s.id}">🔧 Fix</button>` : ''}
+            ${s.autoFixable ? `<button class="${PREFIX}-fix-btn" data-id="${escapeHtml(s.id)}">🔧 Fix</button>` : ''}
           </div>
         `
                 )

@@ -1,7 +1,9 @@
 /**
  * FrontendDevHelper - TypeScript Types
  *
- * Central type definitions for the extension.
+ * Barrel file that re-exports everything from the split type modules.
+ * All existing imports like `import { ContentScriptState } from '@/types'` continue to work.
+ *
  * For tool-specific types, see src/types/tools.ts
  */
 
@@ -45,6 +47,14 @@ export type {
 
 // Import ToolId for use in this file
 import type { ToolId } from './tools';
+
+// ============================================
+// Re-exports from split modules
+// ============================================
+
+export * from './content-script';
+export * from './storage';
+export * from './llm';
 
 // ============================================
 // Message Types for Extension Communication
@@ -215,30 +225,6 @@ export interface ExtensionSettings {
       security: boolean;
     };
   };
-}
-
-// ============================================
-// Storage Types
-// ============================================
-
-/** Storage area type */
-export type StorageArea = 'local' | 'session' | 'sync';
-
-/** Storage item */
-export interface StorageItem<T = unknown> {
-  key: string;
-  value: T;
-  area: StorageArea;
-  timestamp?: number;
-  version?: number;
-}
-
-/** Extension storage interface */
-export interface ExtensionStorage {
-  get<T>(key: string, area?: StorageArea): Promise<T | null>;
-  set<T>(key: string, value: T, area?: StorageArea): Promise<void>;
-  remove(key: string, area?: StorageArea): Promise<void>;
-  clear(area?: StorageArea): Promise<void>;
 }
 
 // ============================================
@@ -685,241 +671,6 @@ export interface CommandPaletteState {
 }
 
 // ============================================
-// Storage Inspector Types
-// ============================================
-
-/** Storage item for LocalStorage/SessionStorage (Storage Inspector tool) */
-export interface StorageInspectorItem {
-  key: string;
-  value: string;
-  size: number;
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
-  area?: StorageArea;
-}
-
-/** IndexedDB database info */
-export interface IndexedDBDatabase {
-  name: string;
-  version: number;
-  objectStores: IndexedDBObjectStore[];
-}
-
-/** IndexedDB object store info */
-export interface IndexedDBObjectStore {
-  name: string;
-  keyPath: string | string[] | null;
-  autoIncrement: boolean;
-  indexes: IndexedDBIndex[];
-  count: number;
-}
-
-/** IndexedDB index info */
-export interface IndexedDBIndex {
-  name: string;
-  keyPath: string | string[];
-  unique: boolean;
-  multiEntry: boolean;
-}
-
-/** Cookie info */
-export interface CookieInfo {
-  name: string;
-  value: string;
-  domain: string;
-  path: string;
-  expires?: number;
-  secure: boolean;
-  httpOnly: boolean;
-  sameSite?: chrome.cookies.SameSiteStatus;
-}
-
-/** Cache storage entry */
-export interface CacheEntry {
-  url: string;
-  size: number;
-  headers: Record<string, string>;
-}
-
-/** Complete storage snapshot */
-export interface StorageSnapshot {
-  localStorage: StorageInspectorItem[];
-  sessionStorage: StorageInspectorItem[];
-  indexedDB: IndexedDBDatabase[];
-  cookies: CookieInfo[];
-  cacheStorage: { [cacheName: string]: CacheEntry[] };
-}
-
-// ============================================
-// AI Suggestion Types
-// ============================================
-
-/** AI suggestion category */
-export type AISuggestionCategory =
-  | 'accessibility'
-  | 'performance'
-  | 'seo'
-  | 'best-practice'
-  | 'security';
-
-/** AI suggestion priority */
-export type AISuggestionPriority = 'critical' | 'high' | 'medium' | 'low';
-
-/** AI suggestion item */
-export interface AISuggestion {
-  id: string;
-  category: AISuggestionCategory;
-  priority: AISuggestionPriority;
-  title: string;
-  description: string;
-  element?: string;
-  selector?: string;
-  impact: string;
-  effort: 'easy' | 'medium' | 'hard';
-  confidence: number;
-  autoFixable: boolean;
-  fix?: () => boolean | Promise<boolean>;
-}
-
-/** AI analysis result */
-export interface AIAnalysisResult {
-  timestamp: number;
-  url: string;
-  suggestions: AISuggestion[];
-  summary: {
-    total: number;
-    critical: number;
-    high: number;
-    medium: number;
-    low: number;
-    autoFixable: number;
-    byCategory: Record<AISuggestionCategory, number>;
-  };
-}
-
-// ============================================
-// LLM / AI Provider Types
-// ============================================
-
-/** AI provider type */
-export type AIProvider = 'openrouter' | 'custom';
-
-/** LLM configuration */
-export interface LLMConfig {
-  provider: AIProvider;
-  apiKey: string;
-  model: string;
-  enabled: boolean;
-  useFreeModelsOnly: boolean;
-  categories?: {
-    accessibility: boolean;
-    performance: boolean;
-    seo: boolean;
-    bestPractice: boolean;
-    security: boolean;
-  };
-}
-
-/** LLM request message */
-export interface LLMMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-/** LLM request payload */
-export interface LLMRequest {
-  model: string;
-  messages: LLMMessage[];
-  temperature?: number;
-  max_tokens?: number;
-  stream?: boolean;
-}
-
-/** LLM response choice */
-export interface LLMChoice {
-  index: number;
-  message: LLMMessage;
-  finish_reason: string;
-}
-
-/** LLM API response */
-export interface LLMResponse {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  choices: LLMChoice[];
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-/** LLM suggestion from AI analysis */
-export interface LLMSuggestion {
-  category: AISuggestionCategory;
-  priority: AISuggestionPriority;
-  title: string;
-  description: string;
-  impact: string;
-  effort: 'easy' | 'medium' | 'hard';
-  element?: string;
-  selector?: string;
-  autoFixable: boolean;
-  suggestedFix?: string;
-}
-
-/** Page context for LLM analysis */
-export interface LLMPageContext {
-  url: string;
-  title: string;
-  meta: {
-    description?: string;
-    viewport?: string;
-  };
-  techStack: string[];
-  domStats: {
-    totalElements: number;
-    images: number;
-    links: number;
-    headings: number;
-  };
-}
-
-/** Default LLM configuration */
-export const DEFAULT_LLM_CONFIG: LLMConfig = {
-  provider: 'openrouter',
-  apiKey: '',
-  model: 'openrouter/quasar-alpha',
-  enabled: true,
-  useFreeModelsOnly: true,
-};
-
-/** Available OpenRouter models (free tier) */
-export const OPENROUTER_FREE_MODELS = [
-  {
-    id: 'openrouter/quasar-alpha',
-    name: 'Quasar Alpha (Free)',
-    description: "OpenRouter's free model",
-  },
-  {
-    id: 'google/gemini-2.0-flash-exp:free',
-    name: 'Gemini 2.0 Flash (Free)',
-    description: "Google's fast multimodal model",
-  },
-  {
-    id: 'deepseek/deepseek-chat:free',
-    name: 'DeepSeek V3 (Free)',
-    description: "DeepSeek's chat model",
-  },
-  {
-    id: 'meta-llama/llama-3.3-70b-instruct:free',
-    name: 'Llama 3.3 70B (Free)',
-    description: "Meta's large instruction model",
-  },
-];
-
-// ============================================
 // Component Tree Types
 // ============================================
 
@@ -1135,72 +886,6 @@ export interface VisualRegressionImportResponse {
 }
 
 // ============================================
-// Content Script Handler Types
-// ============================================
-
-/** Content script state interface - Unified naming convention */
-export interface ContentScriptState {
-  inspector: unknown;
-  measureTool: unknown;
-  gridOverlay: unknown;
-  // Unified is{ToolName}Active naming
-  isInspectorActive: boolean;
-  isColorPickerActive: boolean;
-  isMeasureToolActive: boolean;
-  isGridVisible: boolean;
-  isScreenshotStudioActive: boolean;
-  isDomOutlinerActive: boolean;
-  isSpacingVisualizerActive: boolean;
-  isFontInspectorActive: boolean;
-  isPixelRulerActive: boolean;
-  isBreakpointOverlayActive: boolean;
-  isResponsivePreviewActive: boolean;
-  isCssInspectorActive: boolean;
-  isCssEditorActive: boolean;
-  isContrastCheckerActive: boolean;
-  isLayoutVisualizerActive: boolean;
-  isZIndexVisualizerActive: boolean;
-  isTechDetectorActive: boolean;
-  isAccessibilityAuditActive: boolean;
-  isNetworkAnalyzerActive: boolean;
-  isSiteReportActive: boolean;
-  isAnimationInspectorActive: boolean;
-  isDesignSystemValidatorActive: boolean;
-  isFlameGraphActive: boolean;
-  isFocusDebuggerActive: boolean;
-  isFormDebuggerActive: boolean;
-  isCommandPaletteActive: boolean;
-  isStorageInspectorActive: boolean;
-  isComponentTreeActive: boolean;
-  isVisualRegressionActive: boolean;
-  isSmartSuggestionsActive: boolean;
-  // Advanced tools
-  isCssVariableInspectorActive: boolean;
-  isSmartElementPickerActive: boolean;
-  isSessionRecorderActive: boolean;
-  isPerformanceBudgetActive: boolean;
-  isFrameworkDevtoolsActive: boolean;
-  // Beast Mode: Next-Gen Features
-  isContainerQueryInspectorActive: boolean;
-  isViewTransitionsDebuggerActive: boolean;
-  isScrollAnimationsDebuggerActive: boolean;
-}
-
-/**
- * Content handler function type
- * @returns true if async (to keep message channel open), undefined/false if sync
- */
-export type ContentHandler = (
-  payload: Record<string, unknown> | undefined,
-  state: ContentScriptState,
-  sendResponse: (response: Record<string, unknown>) => void
-  // biome-ignore lint/suspicious/noConfusingVoidType: void needed for sync handlers
-) => boolean | undefined | void;
-
-/** Handler registry type */
-export type HandlerRegistry = Record<string, ContentHandler>;
-
-// ============================================
 // Popup Tab Types
 // ============================================
 
@@ -1213,14 +898,4 @@ export interface PopupTabConfig {
   label: string;
   icon: string;
   badge?: number;
-}
-
-// ============================================
-// Favorites/Quick Access Types
-// ============================================
-
-/** User favorites storage */
-export interface UserFavorites {
-  pinnedTools: ToolId[];
-  recentTools: Array<{ toolId: ToolId; timestamp: number }>;
 }

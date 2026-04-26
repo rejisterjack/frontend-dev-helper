@@ -77,7 +77,7 @@ const SidePanelApp: React.FC = () => {
                   className={`shrink-0 rounded px-2 py-1 text-[10px] font-medium border ${
                     on
                       ? 'border-emerald-600 bg-emerald-950 text-emerald-200'
-                      : 'border-slate-600 bg-slate-800 text-slate-300'
+                      : 'border-slate-600 bg-[#111827] text-slate-300'
                   }`}
                 >
                   {on ? 'On' : 'Off'}
@@ -92,7 +92,7 @@ const SidePanelApp: React.FC = () => {
         <button
           type="button"
           onClick={() => chrome.runtime.openOptionsPage()}
-          className="w-full rounded-md border border-slate-600 bg-slate-800 py-2 text-slate-200 hover:bg-slate-700"
+          className="w-full rounded-md border border-slate-600 bg-[#111827] py-2 text-slate-200 hover:bg-slate-700"
         >
           Open options
         </button>

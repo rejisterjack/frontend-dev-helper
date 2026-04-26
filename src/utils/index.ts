@@ -293,5 +293,7 @@ export function hashString(str: string): number {
   return Math.abs(hash);
 }
 
-// Re-export logger
+// Re-exports
 export { logger } from './logger';
+export { TimerManager } from './timer-manager';
+export { mutationObserverPool } from './observer-pool';

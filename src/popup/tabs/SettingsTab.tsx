@@ -73,7 +73,7 @@ export const SettingsTab: React.FC = () => {
           <select
             value={settings.theme}
             onChange={(e) => handleChange('theme', e.target.value as ExtensionSettings['theme'])}
-            className="rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm text-slate-200 focus:border-indigo-500 focus:outline-none"
+            className="rounded border border-slate-700 bg-[#111827] px-3 py-1.5 text-sm text-slate-200 focus:border-primary- focus:outline-none"
           >
             <option value="dark">Dark</option>
             <option value="light">Light</option>
@@ -180,7 +180,7 @@ export const SettingsTab: React.FC = () => {
               chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
             }
           }}
-          className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+          className="flex items-center gap-1 text-xs text-primary- hover:text-primary-"
         >
           Open Full Options
           <svg
@@ -222,7 +222,7 @@ const Toggle: React.FC<{
     type="button"
     onClick={() => onChange(!checked)}
     className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-      checked ? 'bg-indigo-600' : 'bg-slate-600'
+      checked ? 'bg-primary-' : 'bg-slate-600'
     }`}
   >
     <span

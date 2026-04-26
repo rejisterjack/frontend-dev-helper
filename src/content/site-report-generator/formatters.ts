@@ -33,9 +33,8 @@ export function printReport(report: SiteReport): void {
 
   const html = generateFullHTMLReport(report);
   printWindow.document.open();
+  printWindow.document.write(html);
   printWindow.document.close();
-  printWindow.document.write = () => {};
-  printWindow.document.documentElement.innerHTML = html.replace('<!DOCTYPE html>', '');
   setTimeout(() => printWindow.print(), 100);
 }
 

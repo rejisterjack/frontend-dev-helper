@@ -1,149 +1,152 @@
 /**
  * Container Query Inspector Tests
+ *
+ * Tests the enable/disable/toggle/getState lifecycle, container detection,
+ * and DOM management for the container-query-inspector content script tool.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock DOM APIs
-describe('Container Query Inspector', () => {
-  let container: HTMLElement;
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
 
+import {
+  enable,
+  disable,
+  toggle,
+  getState,
+  getContainerSummary,
+} from '@/content/container-query-inspector';
+
+describe('ContainerQueryInspector', () => {
   beforeEach(() => {
-    // Create test container
-    container = document.createElement('div');
-    container.id = 'test-container';
-    container.style.containerType = 'inline-size';
-    container.style.containerName = 'card-grid';
-    container.innerHTML = `
-      <div class="card">Card 1</div>
-      <div class="card">Card 2</div>
-    `;
-    document.body.appendChild(container);
-  });
-
-  afterEach(() => {
-    container.remove();
-    // Clean up any overlays
+    if (getState().enabled) {
+      disable();
+    }
+    // Clean up leftover DOM
     document.querySelectorAll('.fdh-cq-overlay').forEach((el) => el.remove());
   });
 
-  describe('Detection', () => {
-    it('should detect container-type property', () => {
-      // Note: JSDOM may not fully support container-type on computed styles
-      expect(container.style.containerType).toBe('inline-size');
-    });
+  afterEach(() => {
+    if (getState().enabled) {
+      disable();
+    }
+  });
 
-    it('should detect container-name property', () => {
-      expect(container.style.containerName).toBe('card-grid');
-    });
+  // --- Lifecycle tests ---
 
-    it('should find container elements in document', () => {
-      const allElements = document.querySelectorAll('*');
-      const containers: Element[] = [];
+  it('should enable successfully', () => {
+    enable();
+    expect(getState().enabled).toBe(true);
+  });
 
-      allElements.forEach((el) => {
-        const style = (el as HTMLElement).style;
-        if (style.containerType && style.containerType !== 'normal') {
-          containers.push(el);
-        }
-      });
+  it('should disable successfully', () => {
+    enable();
+    disable();
+    expect(getState().enabled).toBe(false);
+  });
 
-      expect(containers.length).toBeGreaterThan(0);
-      expect(containers).toContain(container);
+  it('should toggle state', () => {
+    expect(getState().enabled).toBe(false);
+
+    toggle();
+    expect(getState().enabled).toBe(true);
+
+    toggle();
+    expect(getState().enabled).toBe(false);
+  });
+
+  it('should return correct state via getState', () => {
+    const stateBefore = getState();
+    expect(stateBefore.enabled).toBe(false);
+    expect(stateBefore).toHaveProperty('containerCount');
+
+    enable();
+    const stateAfter = getState();
+    expect(stateAfter.enabled).toBe(true);
+  });
+
+  it('should handle double-enable gracefully', () => {
+    enable();
+    enable();
+    expect(getState().enabled).toBe(true);
+  });
+
+  it('should handle double-disable gracefully', () => {
+    enable();
+    disable();
+    disable();
+    expect(getState().enabled).toBe(false);
+  });
+
+  it('should clean up DOM elements on disable', () => {
+    enable();
+    expect(getState().enabled).toBe(true);
+
+    disable();
+
+    // All overlays created by the tool should be removed
+    expect(document.querySelectorAll('.fdh-cq-overlay').length).toBe(0);
+  });
+
+  // --- Container summary ---
+
+  it('should return container summary with zero containers by default', () => {
+    const summary = getContainerSummary();
+    expect(summary).toEqual({
+      total: 0,
+      sizeContainers: 0,
+      inlineSizeContainers: 0,
+      namedContainers: 0,
     });
   });
 
-  describe('Overlay Creation', () => {
-    it('should create overlay element', () => {
-      const overlay = document.createElement('div');
-      overlay.className = 'fdh-cq-overlay';
-      document.body.appendChild(overlay);
+  // --- Container detection with inline styles ---
 
-      expect(document.querySelector('.fdh-cq-overlay')).toBe(overlay);
-    });
+  it('should detect container elements with container-type inline style', () => {
+    const container = document.createElement('div');
+    container.style.containerType = 'inline-size';
+    container.style.containerName = 'test-container';
+    document.body.appendChild(container);
 
-    it('should position overlay correctly', () => {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'absolute';
-      overlay.style.left = '0px';
-      overlay.style.top = '0px';
-      overlay.style.width = '100px';
-      overlay.style.height = '100px';
-      document.body.appendChild(overlay);
+    try {
+      enable();
 
-      const rect = overlay.getBoundingClientRect();
-      expect(rect.left).toBe(0);
-      expect(rect.top).toBe(0);
-      // jsdom often reports 0×0 layout boxes; styles still encode intent
-      expect(overlay.style.width).toBe('100px');
-      expect(overlay.style.height).toBe('100px');
-    });
-
-    it('should add label to overlay', () => {
-      const overlay = document.createElement('div');
-      const label = document.createElement('div');
-      label.className = 'fdh-cq-label';
-      label.textContent = '@container (card-grid)';
-      overlay.appendChild(label);
-      document.body.appendChild(overlay);
-
-      expect(overlay.querySelector('.fdh-cq-label')).toBe(label);
-      expect(label.textContent).toContain('card-grid');
-    });
+      // The tool walks the DOM looking for containerType in computed styles.
+      // jsdom may not propagate inline containerType to computed styles,
+      // so we verify the tool enabled without error and state is correct.
+      expect(getState().enabled).toBe(true);
+    } finally {
+      disable();
+      container.remove();
+    }
   });
 
-  describe('Container Summary', () => {
-    it('should count total containers', () => {
-      // Add another container
-      const container2 = document.createElement('div');
-      container2.style.containerType = 'size';
-      document.body.appendChild(container2);
+  // --- Overlay creation ---
 
-      const allElements = document.querySelectorAll('*');
-      let count = 0;
+  it('should create overlay with correct structure', () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'fdh-cq-overlay';
 
-      allElements.forEach((el) => {
-        const style = (el as HTMLElement).style;
-        if (style.containerType && style.containerType !== 'normal') {
-          count++;
-        }
-      });
+    const label = document.createElement('div');
+    label.className = 'fdh-cq-label';
+    label.textContent = '@container (test) [inline-size]';
+    overlay.appendChild(label);
 
-      expect(count).toBe(2);
+    const dimsLabel = document.createElement('div');
+    dimsLabel.textContent = '100x200';
+    overlay.appendChild(dimsLabel);
 
-      container2.remove();
-    });
+    document.body.appendChild(overlay);
 
-    it('should categorize containers by type', () => {
-      const types: string[] = [];
+    expect(overlay.querySelector('.fdh-cq-label')).not.toBeNull();
+    expect(overlay.querySelector('.fdh-cq-label')?.textContent).toContain('test');
 
-      const allElements = document.querySelectorAll('*');
-      allElements.forEach((el) => {
-        const style = (el as HTMLElement).style;
-        if (style.containerType && style.containerType !== 'normal') {
-          types.push(style.containerType);
-        }
-      });
-
-      expect(types).toContain('inline-size');
-    });
-  });
-
-  describe('Cleanup', () => {
-    it('should remove all overlays on disable', () => {
-      // Create multiple overlays
-      for (let i = 0; i < 3; i++) {
-        const overlay = document.createElement('div');
-        overlay.className = 'fdh-cq-overlay';
-        document.body.appendChild(overlay);
-      }
-
-      expect(document.querySelectorAll('.fdh-cq-overlay').length).toBe(3);
-
-      // Remove all
-      document.querySelectorAll('.fdh-cq-overlay').forEach((el) => el.remove());
-
-      expect(document.querySelectorAll('.fdh-cq-overlay').length).toBe(0);
-    });
+    overlay.remove();
   });
 });

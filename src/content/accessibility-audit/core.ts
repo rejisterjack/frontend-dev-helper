@@ -3,6 +3,7 @@
  * Manages state, UI, and coordinates all audit checks
  */
 
+import { showContentErrorToast } from '@/utils/content-notify';
 import { logger } from '@/utils/logger';
 // Import audit functions
 import { validateARIA } from './audits/aria';
@@ -13,7 +14,12 @@ import { detectMissingAltText } from './audits/images';
 import { testKeyboardNav } from './audits/keyboard';
 import { validateLandmarks } from './audits/landmarks';
 import { COLORS, FOCUSABLE_SELECTOR, Z_INDEX } from './constants';
-import { buildReportContent, generateMarkdownReport, generateTextReport, setReportState } from './report';
+import {
+  buildReportContent,
+  generateMarkdownReport,
+  generateTextReport,
+  setReportState,
+} from './report';
 import type {
   AccessibilityAuditState,
   AccessibilityReport,
@@ -430,7 +436,11 @@ function createOverlayPanel(): HTMLElement {
   `;
   document.head.appendChild(style);
 
-  document.body.appendChild(panel);
+  const root = document.body ?? document.documentElement;
+  if (!root) {
+    throw new DOMException('No document root to mount accessibility panel', 'NotSupportedError');
+  }
+  root.appendChild(panel);
   return panel;
 }
 
@@ -623,23 +633,50 @@ function handleKeyDown(e: KeyboardEvent): void {
  */
 export function enable(): void {
   if (isActive) return;
-  isActive = true;
 
-  // Create overlay panel
-  overlayPanel = createOverlayPanel();
+  try {
+    isActive = true;
 
-  // Run initial audit
-  const report = runAudit();
-  updateOverlayPanel(report);
+    // Create overlay panel
+    overlayPanel = createOverlayPanel();
 
-  // Create focus order overlays
-  createFocusOrderOverlays();
+    // Run initial audit
+    const report = runAudit();
+    updateOverlayPanel(report);
 
-  // Setup keyboard handler
-  keyHandler = handleKeyDown;
-  document.addEventListener('keydown', keyHandler);
+    // Create focus order overlays
+    createFocusOrderOverlays();
 
-  logger.log('[AccessibilityAudit] Enabled');
+    // Setup keyboard handler
+    keyHandler = handleKeyDown;
+    document.addEventListener('keydown', keyHandler);
+
+    logger.log('[AccessibilityAudit] Enabled');
+  } catch (err) {
+    isActive = false;
+    if (keyHandler) {
+      try {
+        document.removeEventListener('keydown', keyHandler);
+      } catch {
+        // ignore
+      }
+      keyHandler = null;
+    }
+    removeFocusOrderOverlays();
+    removeIssueHighlights();
+    if (overlayPanel) {
+      try {
+        overlayPanel.remove();
+      } catch {
+        // ignore
+      }
+      overlayPanel = null;
+    }
+    logger.error('[AccessibilityAudit] enable failed:', err);
+    showContentErrorToast(
+      'Accessibility audit could not start on this page. Try a normal HTML page (not a restricted or embedded viewer).'
+    );
+  }
 }
 
 /**

@@ -8,6 +8,7 @@
  */
 
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 // ToolId type available from constants when needed for plugin registration
 
 // Plugin types
@@ -205,7 +206,7 @@ function createPluginAPI(): PluginAPI {
       createPanel: (title: string) => {
         const panel = document.createElement('div');
         panel.className = 'fdh-plugin-panel bg-white rounded-lg shadow-lg border border-slate-200 p-4';
-        panel.innerHTML = `<h3 class="font-semibold text-slate-900 mb-4">${title}</h3>`;
+        panel.innerHTML = `<h3 class="font-semibold text-slate-900 mb-4">${escapeHtml(title)}</h3>`;
         return panel;
       },
 
@@ -302,7 +303,7 @@ function createPluginAPI(): PluginAPI {
       createOverlay: (content: string) => {
         const overlay = document.createElement('div');
         overlay.className = 'fdh-plugin-overlay fixed inset-0 bg-black/50 z-[2147483646] flex items-center justify-center';
-        overlay.innerHTML = content;
+        overlay.innerHTML = escapeHtml(content);
         document.body.appendChild(overlay);
         return overlay;
       },

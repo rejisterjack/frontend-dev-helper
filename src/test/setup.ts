@@ -2,6 +2,45 @@ import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
 // ============================================
+// localStorage / sessionStorage Polyfill
+// ============================================
+// jsdom in vitest 3 may provide a non-functional stub (empty object).
+// Replace with a fully functional in-memory Storage implementation.
+
+class MemoryStorage implements Storage {
+  get length(): number {
+    return Object.keys(this).filter(k => !['length', 'clear', 'getItem', 'key', 'removeItem', 'setItem'].includes(k)).length;
+  }
+  clear(): void {
+    const builtins = new Set(['length', 'clear', 'getItem', 'key', 'removeItem', 'setItem']);
+    for (const k of Object.keys(this)) {
+      if (!builtins.has(k)) delete (this as Record<string, unknown>)[k];
+    }
+  }
+  getItem(key: string): string | null {
+    return key in this ? String((this as Record<string, unknown>)[key]) : null;
+  }
+  key(index: number): string | null {
+    const builtins = new Set(['length', 'clear', 'getItem', 'key', 'removeItem', 'setItem']);
+    const keys = Object.keys(this).filter(k => !builtins.has(k));
+    return keys[index] ?? null;
+  }
+  removeItem(key: string): void {
+    delete (this as Record<string, unknown>)[key];
+  }
+  setItem(key: string, value: string): void {
+    (this as Record<string, unknown>)[key] = value;
+  }
+}
+
+if (typeof localStorage.setItem !== 'function') {
+  Object.defineProperty(globalThis, 'localStorage', { value: new MemoryStorage(), writable: true });
+}
+if (typeof sessionStorage.setItem !== 'function') {
+  Object.defineProperty(globalThis, 'sessionStorage', { value: new MemoryStorage(), writable: true });
+}
+
+// ============================================
 // Chrome API Mock
 // ============================================
 
@@ -154,8 +193,10 @@ const mockChrome = {
 (global as unknown as { chrome: typeof mockChrome }).chrome = mockChrome;
 
 // ============================================
-// Browser API Mocks
+// Browser API Mocks (skip in node environment)
 // ============================================
+
+if (typeof window !== 'undefined') {
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -349,6 +390,8 @@ HTMLCanvasElement.prototype.getContext = function (
 
 // Note: Don't mock document.createElement globally as it breaks jsdom for React tests
 // Export manager tests have their own DOM mocks
+
+} // end if (typeof window !== 'undefined')
 
 // ============================================
 // Console Mocking (optional)

@@ -5,6 +5,7 @@
 import { MESSAGE_TYPES, TOOL_METADATA, type ToolId } from '@/constants';
 import { getAllToolStates, getUiPrefs } from '@/utils/storage';
 import { logger } from '@/utils/logger';
+import { escapeHtml } from '@/utils/sanitize';
 
 const HUD_ID = 'fdh-active-tools-hud';
 let hudRoot: HTMLDivElement | null = null;
@@ -15,7 +16,7 @@ function buildHudHtml(activeIds: ToolId[]): string {
   if (activeIds.length === 0) {
     return `<div style="font-size:11px;opacity:.75">No tools active</div>`;
   }
-  const labels = activeIds.map((id) => TOOL_METADATA[id]?.name ?? id).join(' · ');
+  const labels = activeIds.map((id) => escapeHtml(TOOL_METADATA[id]?.name ?? id)).join(' &middot; ');
   return `
     <div style="font-weight:600;font-size:11px;margin-bottom:4px;color:#e2e8f0">Active</div>
     <div style="font-size:11px;line-height:1.35;color:#cbd5e1;max-width:220px">${labels}</div>

@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger';
+import { escapeHtml } from '../utils/sanitize';
 
 /**
  * Pesticide Reborn - DOM Outliner
@@ -34,7 +35,8 @@ const ELEMENT_COLORS: Record<string, string> = {
 };
 
 const DEFAULT_COLOR = '#b2bec3';
-const STORAGE_KEY = 'pesticideState';
+/** `chrome.storage.session` is not available in content scripts — use `local` with a namespaced key. */
+const STORAGE_KEY = 'fdh_pesticide_state';
 
 interface PesticideState {
   enabled: boolean;
@@ -61,7 +63,7 @@ class Pesticide {
    */
   async init(): Promise<void> {
     try {
-      const result = await chrome.storage.session.get(STORAGE_KEY);
+      const result = await chrome.storage.local.get(STORAGE_KEY);
       const state: PesticideState = result[STORAGE_KEY] || {
         enabled: false,
         visibleTags: this.visibleTags,
@@ -189,15 +191,15 @@ class Pesticide {
     const classNames = element.className;
     const id = element.id;
 
-    let info = `<span style="color: #ff6b6b; font-weight: bold;">&lt;${tagName}&gt;</span>`;
+    let info = `<span style="color: #ff6b6b; font-weight: bold;">&lt;${escapeHtml(tagName)}&gt;</span>`;
 
     if (id) {
-      info += ` <span style="color: #4ecdc4;">#${id}</span>`;
+      info += ` <span style="color: #4ecdc4;">#${escapeHtml(id)}</span>`;
     }
 
     if (classNames && typeof classNames === 'string' && classNames.trim()) {
       const classes = classNames.trim().split(/\s+/).join('.');
-      info += ` <span style="color: #f7dc6f;">.${classes}</span>`;
+      info += ` <span style="color: #f7dc6f;">.${escapeHtml(classes)}</span>`;
     }
 
     return info;
@@ -279,7 +281,7 @@ class Pesticide {
         enabled: this.isEnabled,
         visibleTags: this.visibleTags,
       };
-      await chrome.storage.session.set({ [STORAGE_KEY]: state });
+      await chrome.storage.local.set({ [STORAGE_KEY]: state });
     } catch (error) {
       logger.error('[Pesticide] Failed to save state:', error);
     }

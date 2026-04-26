@@ -58,8 +58,8 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         className={`
           toggle-slider
           relative inline-flex h-6 w-11 items-center rounded-full
-          transition-colors duration-300 ease-in-out
-          ${checked ? 'bg-emerald-500' : 'bg-slate-600 hover:bg-slate-500'}
+          transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+          ${checked ? 'bg-primary-500 shadow-[0_0_8px_rgba(79,70,229,0.5)]' : 'bg-slate-700 hover:bg-slate-600'}
           ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
         `}
         role="switch"
@@ -70,7 +70,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         <span
           className={`
             inline-block h-4 w-4 transform rounded-full bg-white shadow-lg
-            transition-transform duration-300 ease-in-out
+            transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
             ${checked ? 'translate-x-6' : 'translate-x-1'}
           `}
         />

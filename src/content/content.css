@@ -19,8 +19,8 @@
 /* Element Inspector Overlay */
 .fdh-inspector-overlay {
   position: fixed;
-  border: 2px solid #3b82f6;
-  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px solid #4f46e5;
+  background-color: rgba(79, 70, 229, 0.1);
   pointer-events: none;
   z-index: 2147483646;
   transition: all 0.1s ease;
@@ -28,7 +28,7 @@
 
 .fdh-inspector-tooltip {
   position: fixed;
-  background: #1e293b;
+  background: #111827;
   color: #f8fafc;
   padding: 8px 12px;
   border-radius: 6px;
@@ -37,7 +37,7 @@
   pointer-events: none;
   z-index: 2147483647;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  border: 1px solid #334155;
+  border: 1px solid #1f2937;
   max-width: 300px;
   word-break: break-all;
 }
@@ -51,7 +51,7 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #1e293b;
+  border-top: 6px solid #111827;
 }
 
 /* Highlight Box for Selected Elements */
@@ -215,7 +215,7 @@
   display: flex;
   gap: 8px;
   padding: 8px;
-  background: #1f2937;
+  background: #0b0f19;
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   z-index: 2147483648;
@@ -252,7 +252,7 @@
   display: flex;
   gap: 6px;
   padding: 10px;
-  background: #1f2937;
+  background: #0b0f19;
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   z-index: 2147483648;
@@ -283,7 +283,7 @@
   display: flex;
   gap: 12px;
   padding: 12px 20px;
-  background: #1f2937;
+  background: #0b0f19;
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   z-index: 2147483648;
@@ -293,7 +293,7 @@
   display: flex;
   align-items: center;
   padding: 10px 16px;
-  background: #3b82f6;
+  background: #4f46e5;
   border: none;
   border-radius: 8px;
   color: white;
@@ -333,8 +333,8 @@
 
 .fdh-screenshot-studio-selection-box {
   position: absolute;
-  border: 2px dashed #3b82f6;
-  background: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
   pointer-events: none;
   z-index: 10;
 }
@@ -343,7 +343,7 @@
   position: absolute;
   width: 8px;
   height: 8px;
-  background: #3b82f6;
+  background: #4f46e5;
   border: 2px solid white;
   border-radius: 50%;
   pointer-events: auto;

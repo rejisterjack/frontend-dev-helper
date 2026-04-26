@@ -10,6 +10,7 @@
  */
 
 // import { logger } from '@/utils/logger';
+import { escapeHtml } from '../utils/sanitize';
 
 export type FrameworkType = 'react' | 'vue' | 'angular' | 'svelte' | 'none';
 
@@ -480,10 +481,10 @@ export function createFrameworkInfo(element: HTMLElement): HTMLElement | null {
     content += `
       <div style="padding: 12px 16px; border-bottom: 1px solid #313244; background: #181825;">
         <div style="font-size: 11px; text-transform: uppercase; color: #89b4fa; font-weight: 600; margin-bottom: 4px;">
-          ${component.framework.toUpperCase()} Component
+          ${escapeHtml(component.framework.toUpperCase())} Component
         </div>
         <div style="font-size: 16px; font-weight: 600; color: #f5c2e7; font-family: monospace;">
-          ${component.name}
+          ${escapeHtml(component.name)}
         </div>
       </div>
     `;
@@ -502,7 +503,7 @@ export function createFrameworkInfo(element: HTMLElement): HTMLElement | null {
               .map(
                 ([key, value]) => `
                 <div style="margin-bottom: 4px;">
-                  <span style="color: #89b4fa;">${key}</span>: <span style="color: #a6e3a1;">${JSON.stringify(value).slice(0, 50)}</span>
+                  <span style="color: #89b4fa;">${escapeHtml(key)}</span>: <span style="color: #a6e3a1;">${escapeHtml(JSON.stringify(value).slice(0, 50))}</span>
                 </div>
               `
               )
@@ -523,7 +524,7 @@ export function createFrameworkInfo(element: HTMLElement): HTMLElement | null {
               .map(
                 ([key, value]) => `
                 <div style="margin-bottom: 4px;">
-                  <span style="color: #fab387;">${key}</span>: <span style="color: #a6e3a1;">${JSON.stringify(value).slice(0, 50)}</span>
+                  <span style="color: #fab387;">${escapeHtml(key)}</span>: <span style="color: #a6e3a1;">${escapeHtml(JSON.stringify(value).slice(0, 50))}</span>
                 </div>
               `
               )
@@ -541,7 +542,7 @@ export function createFrameworkInfo(element: HTMLElement): HTMLElement | null {
             ${component.hooks
               .map(
                 (hook) => `
-              <span style="background: #313244; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-family: monospace;">${hook}</span>
+              <span style="background: #313244; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-family: monospace;">${escapeHtml(hook)}</span>
             `
               )
               .join('')}
@@ -561,8 +562,8 @@ export function createFrameworkInfo(element: HTMLElement): HTMLElement | null {
             .map(
               ({ class: cls, meaning }) => `
             <div style="background: #313244; padding: 8px 12px; border-radius: 6px;">
-              <div style="font-family: monospace; font-size: 12px; color: #89b4fa; margin-bottom: 2px;">${cls}</div>
-              <div style="font-size: 11px; color: #cdd6f4;">${meaning}</div>
+              <div style="font-family: monospace; font-size: 12px; color: #89b4fa; margin-bottom: 2px;">${escapeHtml(cls)}</div>
+              <div style="font-size: 11px; color: #cdd6f4;">${escapeHtml(meaning)}</div>
             </div>
           `
             )

@@ -49,7 +49,7 @@ export const ColorLegend: React.FC<ColorLegendProps> = ({
   };
 
   return (
-    <div className={`bg-slate-800/50 rounded-lg overflow-hidden ${className}`}>
+    <div className={`bg-[#111827]/50 rounded-lg overflow-hidden ${className}`}>
       {/* Toggle Header */}
       <button
         type="button"

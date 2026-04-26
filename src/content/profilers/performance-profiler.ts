@@ -11,6 +11,8 @@
 
 import type { FlameGraphEntry, PerformanceProfile } from '@/types';
 import { logger } from '@/utils/logger';
+import { TimerManager } from '@/utils/timer-manager';
+import { CircularBuffer } from '@/utils/circular-buffer';
 
 // ============================================
 // Constants
@@ -57,17 +59,18 @@ export interface ProfilerState {
 // State
 // ============================================
 
+const timers = new TimerManager();
+
 let isProfiling = false;
 let performanceObserver: PerformanceObserver | null = null;
 let longTaskObserver: PerformanceObserver | null = null;
 let layoutObserver: PerformanceObserver | null = null;
-let memoryInterval: number | null = null;
 let startTime = 0;
-let entries: FlameGraphEntry[] = [];
+let entries = new CircularBuffer<FlameGraphEntry>({ maxSize: MAX_ENTRIES, strategy: 'drop-oldest' });
 let entryIdCounter = 0;
 let longTasks = 0;
 let forcedReflows = 0;
-let memorySnapshots: Array<{ timestamp: number; used: number; total: number }> = [];
+let memorySnapshots = new CircularBuffer<{ timestamp: number; used: number; total: number }>({ maxSize: 200, strategy: 'drop-oldest' });
 let options: ProfilerOptions = {};
 
 // ============================================
@@ -86,11 +89,11 @@ export function startProfiling(opts: ProfilerOptions = {}): void {
   options = opts;
   isProfiling = true;
   startTime = performance.now();
-  entries = [];
+  entries.clear();
   entryIdCounter = 0;
   longTasks = 0;
   forcedReflows = 0;
-  memorySnapshots = [];
+  memorySnapshots.clear();
 
   try {
     setupPerformanceObserver();
@@ -103,7 +106,7 @@ export function startProfiling(opts: ProfilerOptions = {}): void {
 
     // Auto-stop after duration
     const duration = opts.duration || DEFAULT_DURATION;
-    setTimeout(() => {
+    timers.setTimeout(() => {
       if (isProfiling) {
         stopProfiling();
       }
@@ -132,10 +135,8 @@ export function stopProfiling(): PerformanceProfile | null {
   longTaskObserver?.disconnect();
   layoutObserver?.disconnect();
 
-  if (memoryInterval) {
-    clearInterval(memoryInterval);
-    memoryInterval = null;
-  }
+  // Clean up all pending timers (auto-stop setTimeout + memory setInterval)
+  timers.clearAll();
 
   const profile = buildProfile();
 
@@ -162,10 +163,10 @@ export function getState(): ProfilerState {
   return {
     isRunning: isProfiling,
     startTime,
-    entries: [...entries],
+    entries: [...entries.items],
     longTasks,
     forcedReflows,
-    memorySnapshots: [...memorySnapshots],
+    memorySnapshots: [...memorySnapshots.items],
   };
 }
 
@@ -173,25 +174,25 @@ export function getState(): ProfilerState {
  * Clear all profiling data
  */
 export function clear(): void {
-  entries = [];
+  entries.clear();
   entryIdCounter = 0;
   longTasks = 0;
   forcedReflows = 0;
-  memorySnapshots = [];
+  memorySnapshots.clear();
 }
 
 /**
  * Get collected entries
  */
 export function getEntries(): FlameGraphEntry[] {
-  return [...entries];
+  return [...entries.items];
 }
 
 /**
  * Get memory snapshots
  */
 export function getMemorySnapshots(): Array<{ timestamp: number; used: number; total: number }> {
-  return [...memorySnapshots];
+  return [...memorySnapshots.items];
 }
 
 // ============================================
@@ -304,7 +305,7 @@ function startMemoryTracking(): void {
     return;
   }
 
-  memoryInterval = window.setInterval(() => {
+  timers.setInterval(() => {
     const memory = (
       performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }
     ).memory;
@@ -324,11 +325,6 @@ function startMemoryTracking(): void {
 // ============================================
 
 function processPerformanceEntry(entry: PerformanceEntry): void {
-  // Limit entries to prevent memory issues
-  if (entries.length >= MAX_ENTRIES) {
-    entries.shift();
-  }
-
   const flameEntry = createFlameEntry({
     name: entry.name,
     startTime: entry.startTime,
@@ -406,24 +402,25 @@ function createFlameEntry(params: {
 // ============================================
 
 function buildProfile(): PerformanceProfile {
+  const allEntries = entries.items;
   const now = performance.now();
-  const endTime = isProfiling ? now : startTime + entries[entries.length - 1]?.duration || 0;
+  const endTime = isProfiling ? now : startTime + allEntries[allEntries.length - 1]?.duration || 0;
 
   // Calculate summary statistics
-  const scriptTime = entries
+  const scriptTime = allEntries
     .filter((e) => e.type === 'script')
     .reduce((sum, e) => sum + e.duration, 0);
 
-  const layoutTime = entries
+  const layoutTime = allEntries
     .filter((e) => e.type === 'layout')
     .reduce((sum, e) => sum + e.duration, 0);
 
-  const paintTime = entries
+  const paintTime = allEntries
     .filter((e) => e.type === 'paint')
     .reduce((sum, e) => sum + e.duration, 0);
 
   // Build hierarchical structure
-  const rootEntries = buildHierarchy(entries);
+  const rootEntries = buildHierarchy(allEntries);
 
   return {
     timestamp: Date.now(),
