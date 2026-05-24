@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String?
+  name              String?
+  emailVerified     Boolean   @default(false)
+  oauthProvider     String?
+  oauthId           String?
+  avatarUrl         String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  emailVerifications EmailVerification[]
+  referrals          Referral[]       @relation("Referrer")
+  referredBy         Referral[]       @relation("Referred")
+
+  @@unique([oauthProvider, oauthId])
+  @@index([email])
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Referral {
+  id           String   @id @default(uuid())
+  referrerId   String
+  referrer     User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referralCode String   @unique
+  status       String   @default("PENDING")
+  reward       String?
+  referredId   String?
+  referred     User?    @relation("Referred", fields: [referredId], references: [id])
+  redeemedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([referrerId])
+  @@index([referredId])
+}
