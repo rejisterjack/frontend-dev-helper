@@ -4,35 +4,55 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {rm} from 'node:fs/promises';
 import {resolve} from 'node:path';
 
-const projectRoot = process.cwd();
+// In a monorepo, deps may be hoisted to root node_modules
+function findNodeModules(): string {
+  let dir = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    if (existsSync(resolve(dir, 'node_modules'))) {
+      return resolve(dir, 'node_modules');
+    }
+    dir = resolve(dir, '..');
+  }
+  return resolve(process.cwd(), 'node_modules');
+}
+
+const nodeModulesDir = findNodeModules();
 
 const filesToRemove = [
-  'node_modules/chrome-devtools-frontend/package.json',
-  'node_modules/chrome-devtools-frontend/front_end/models/trace/lantern/testing',
-  'node_modules/chrome-devtools-frontend/front_end/third_party/intl-messageformat/package/package.json',
+  'chrome-devtools-frontend/package.json',
+  'chrome-devtools-frontend/front_end/models/trace/lantern/testing',
+  'chrome-devtools-frontend/front_end/third_party/intl-messageformat/package/package.json',
 ];
 
-/**
- * Removes the conflicting global HTMLElementEventMap declaration from
- * @paulirish/trace_engine/models/trace/ModelImpl.d.ts to avoid TS2717 error
- * when both chrome-devtools-frontend and @paulirish/trace_engine declare
- * the same property.
- */
 function removeConflictingGlobalDeclaration(): void {
-  const filePath = resolve(
-    projectRoot,
-    'node_modules/@paulirish/trace_engine/models/trace/ModelImpl.d.ts',
-  );
-  console.log(
-    'Removing conflicting global declaration from @paulirish/trace_engine...',
-  );
+  const searchPaths = [
+    resolve(nodeModulesDir, '@paulirish/trace_engine/models/trace/ModelImpl.d.ts'),
+  ];
+  // Bun stores deps in .bun cache with scoped names
+  const bunDir = resolve(nodeModulesDir, '.bun');
+  if (existsSync(bunDir)) {
+    try {
+      const entries = readdirSync(bunDir).filter(e => e.startsWith('@paulirish+trace_engine'));
+      for (const entry of entries) {
+        searchPaths.push(
+          resolve(bunDir, entry, 'node_modules/@paulirish/trace_engine/models/trace/ModelImpl.d.ts'),
+        );
+      }
+    } catch { /* ignore */ }
+  }
+
+  const filePath = searchPaths.find(p => existsSync(p));
+  if (!filePath) {
+    console.log('Skipping conflicting global declaration removal (file not found in monorepo layout).');
+    return;
+  }
+
+  console.log('Removing conflicting global declaration from @paulirish/trace_engine...');
   const content = readFileSync(filePath, 'utf-8');
-  // Remove the declare global block using regex
-  // Matches: declare global { ... interface HTMLElementEventMap { ... } ... }
   const newContent = content.replace(
     /declare global\s*\{\s*interface HTMLElementEventMap\s*\{[^}]*\[ModelUpdateEvent\.eventName\]:\s*ModelUpdateEvent;\s*\}\s*\}/s,
     '',
@@ -44,7 +64,7 @@ function removeConflictingGlobalDeclaration(): void {
 async function main() {
   console.log('Running prepare script to clean up chrome-devtools-frontend...');
   for (const file of filesToRemove) {
-    const fullPath = resolve(projectRoot, file);
+    const fullPath = resolve(nodeModulesDir, file);
     console.log(`Removing: ${file}`);
     try {
       await rm(fullPath, {recursive: true, force: true});

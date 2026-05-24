@@ -348,7 +348,7 @@ class PageEventSubscriber {
         DevTools.IssuesManagerEvents.ISSUE_ADDED,
         {
           issue,
-          // @ts-expect-error We don't care that issues model is null
+          // @ts-ignore issues model is intentionally null
           issuesModel: null,
         },
       );

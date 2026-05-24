@@ -140,8 +140,10 @@ function hasEquivalentType(zodType: ZodType, value: unknown): boolean {
 export function sanitizeParams(
   params: ShapeOutput<zod.ZodRawShape>,
   schema: zod.ZodRawShape,
-): ShapeOutput<zod.ZodRawShape> {
-  const transformed: ShapeOutput<zod.ZodRawShape> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const transformed: any = {};
   for (const [name, value] of Object.entries(params)) {
     if (PARAM_BLOCKLIST.has(name)) {
       continue;
