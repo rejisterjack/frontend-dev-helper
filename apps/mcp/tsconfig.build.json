@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noImplicitReturns": false,
+    "noEmitOnError": false,
+    "skipLibCheck": true,
+    "strict": false
+  },
+  "exclude": [
+    "tests/**/*",
+    "node_modules/chrome-devtools-frontend/**/*.test.ts"
+  ]
+}
