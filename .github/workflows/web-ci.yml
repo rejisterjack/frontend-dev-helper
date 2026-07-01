@@ -1,0 +1,75 @@
+name: Web CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "bun.lock"
+      - ".github/workflows/web-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "bun.lock"
+      - ".github/workflows/web-ci.yml"
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: web-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, type-check, build
+    runs-on: ubuntu-latest
+
+    env:
+      # Next.js build will fail if these are missing; provide inert values so
+      # the build can complete in CI without real secrets. Prisma generate is
+      # the only thing that needs DATABASE_URL at install time.
+      DATABASE_URL: "postgresql://ci:ci@ep-ci-pooler.us-east-1.aws.neon.tech/ci?sslmode=require"
+      NEXTAUTH_SECRET: "ci-not-a-real-secret-just-for-build"
+      NEXTAUTH_URL: "http://localhost:7393"
+      GOOGLE_CLIENT_ID: "ci-placeholder"
+      GOOGLE_CLIENT_SECRET: "ci-placeholder"
+      GITHUB_CLIENT_ID: "ci-placeholder"
+      GITHUB_CLIENT_SECRET: "ci-placeholder"
+      RESEND_API_KEY: "re_ci_placeholder"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        working-directory: apps/web
+        run: bun run lint -- --max-warnings=0
+
+      - name: Type check
+        working-directory: apps/web
+        run: bun run check-types
+
+      - name: Build
+        working-directory: apps/web
+        run: bun run build
+
+      - name: Upload build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: apps/web/.next/
+          retention-days: 3

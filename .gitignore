@@ -27,6 +27,20 @@ out/
 build
 dist
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Prisma v7 — generated client no longer lives in node_modules
+apps/web/prisma/generated/
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/.playwright/
+
+# Lighthouse CI
+apps/web/.lighthouseci/
+
 
 # Debug
 npm-debug.log*

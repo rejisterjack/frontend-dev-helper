@@ -1,0 +1,58 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run nightly at 09:00 UTC to catch newly-disclosed CVEs in dependencies.
+    - cron: "0 9 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Secret scanning — catch committed API keys / tokens / passwords before
+  # they end up in main.
+  # ---------------------------------------------------------------------------
+  gitleaks:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so we scan all commits, not just the PR diff.
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          # Required even on PRs (the action uses it to post comments).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional — set GITLEAKS_LICENSE for the paid tier to enable
+          # baseline scanning and SARIF upload to the Security tab.
+
+  # ---------------------------------------------------------------------------
+  # Dependency audit — fail on high/critical CVEs in installed packages.
+  # Uses `bun audit` (built into Bun >=1.1).
+  # ---------------------------------------------------------------------------
+  dependency-audit:
+    name: Dependency audit (bun audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (no postinstall — avoids Prisma generate)
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Audit for vulnerabilities
+        # Fail the job on `high` or `critical` advisories. `moderate` and
+        # below are reported but non-blocking (track in MASTER_PLAN.md).
+        run: bun audit --audit-level=high

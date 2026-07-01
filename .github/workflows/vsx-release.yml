@@ -1,0 +1,67 @@
+name: Release VS Code Extension
+
+on:
+  push:
+    tags:
+      - "vsx-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, package, publish to Marketplace
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/vsx
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        working-directory: apps/vsx
+        run: bun run lint
+
+      - name: Type check
+        working-directory: apps/vsx
+        run: bun run check-types
+
+      - name: Production package
+        working-directory: apps/vsx
+        run: bun run package
+
+      - name: Build .vsix
+        working-directory: apps/vsx
+        run: bunx @vscode/vsce package --no-dependencies --no-git-tag-version
+
+      - name: Read version
+        id: version
+        working-directory: apps/vsx
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "vsix=fdh-vsx-v${VERSION}.vsix" >> "$GITHUB_OUTPUT"
+
+      # Publish only if a PAT is configured. On personal forks without a
+      # PAT, this step is skipped — the .vsix is still attached to the
+      # release for manual install.
+      - name: Publish to Marketplace
+        if: env.VSCE_PAT != ''
+        working-directory: apps/vsx
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: bunx @vscode/vsce publish --no-dependencies --packagePath ../vsx/*.vsix
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/vsx/*.vsix
+          generate_release_notes: true
+          name: VS Code Extension ${{ steps.version.outputs.version }}

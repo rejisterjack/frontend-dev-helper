@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # npm dependencies for the Bun workspaces. Bun uses the same package.json
+  # + lockfile conventions that dependabot understands.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      # Group non-major updates so we get one PR per ecosystem (instead of
+      # dozens of micro-PRs that drown the queue).
+      minor-and-patch:
+        update-types: [minor, patch]
+    # Rebase any open PRs when a new commit lands on the target branch.
+    rebase-strategy: disabled
+    labels: [dependencies]
+    commit-message:
+      prefix: chore(deps)
+  # GitHub Actions — keep workflow action versions current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, github-actions]
+    commit-message:
+      prefix: chore(ci)

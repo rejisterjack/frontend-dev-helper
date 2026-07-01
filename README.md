@@ -1,159 +1,122 @@
-# Turborepo starter
+# Frontend Dev Helper
 
-This Turborepo starter is maintained by the Turborepo core team.
+> 40+ professional visual debugging tools in one Manifest V3 browser
+> extension — plus a VS Code bridge, an AI agent surface, and a SaaS
+> marketing/account site.
 
-## Using this example
+[![CI](https://github.com/USER/frontend-dev-helper/actions/workflows/web-ci.yml/badge.svg)](.github/workflows/web-ci.yml)
 
-Run the following command:
+**Frontend Dev Helper** is a Bun + Turborepo monorepo that ships **four
+products** working together: a flagship browser extension, a VS Code bridge
+extension, a Next.js marketing/account web app, and a vendored Chrome DevTools
+MCP server that exposes Chrome control to AI agents.
 
-```sh
-npx create-turbo@latest
+---
+
+## What's in this monorepo?
+
+```mermaid
+graph TB
+    subgraph UserDevice[User Device]
+        Browser[Browser<br/>apps/ext<br/>40+ visual tools]
+        VSCode[VS Code<br/>apps/vsx<br/>Jump-to-source bridge]
+    end
+
+    subgraph Cloud[Cloud]
+        WebApp[apps/web<br/>Next.js 15 + Postgres<br/>Auth, referrals, billing]
+        Providers[LLM Providers<br/>OpenRouter / Ollama / Fireworks / ZAI]
+    end
+
+    subgraph Optional[Optional — AI Agents]
+        Mcp[apps/mcp<br/>chrome-devtools-mcp<br/>vendored from Google]
+        Agent[AI Client<br/>Cursor / Claude / etc.]
+    end
+
+    Browser <-->|"WebSocket :9456<br/>JumpToSource / ApplyFix"| VSCode
+    Browser -->|"AI requests<br/>user-configured key"| Providers
+    Browser -->|"Auth, referrals, license"| WebApp
+    Agent <-->|"stdio MCP"| Mcp
+    Mcp -->|"Puppeteer"| Browser
 ```
 
-## What's inside?
+| App                   | Path                   | What it is                                                                                                                               |
+| --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Browser extension** | [`apps/ext`](apps/ext) | WXT + React 19 + shadcn/ui + Zustand. 40+ tools across Inspection, CSS, Performance, A11y, AI, Utilities. Manifest V3, Chrome + Firefox. |
+| **VS Code extension** | [`apps/vsx`](apps/vsx) | WebSocket bridge on port 9456. Receives jump-to-source, apply-fix, publish-diagnostics messages from the browser extension.              |
+| **Web app**           | [`apps/web`](apps/web) | Next.js 15 marketing site, NextAuth (Credentials + Google + GitHub), Postgres via Prisma, Resend email, referral program, dashboard.     |
+| **MCP server**        | [`apps/mcp`](apps/mcp) | Vendored Google `chrome-devtools-mcp` — exposes 43 Puppeteer tools to AI clients via MCP.                                                |
 
-This Turborepo includes the following packages/apps:
+Shared packages:
 
-### Apps and Packages
+| Package                   | Path                                                       | What it is                                                        |
+| ------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| `@repo/ui`                | [`packages/ui`](packages/ui)                               | Shared React components (stub).                                   |
+| `@repo/eslint-config`     | [`packages/eslint-config`](packages/eslint-config)         | Shared ESLint flat configs (`base`, `next-js`, `react-internal`). |
+| `@repo/typescript-config` | [`packages/typescript-config`](packages/typescript-config) | Shared `tsconfig.json` bases.                                     |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Quickstart
 
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+**Prerequisites:** Node 22+ (see [`.nvmrc`](.nvmrc)), Bun 1.3+.
 
 ```sh
-cd my-turborepo
-turbo build
+# 1. Install
+git clone <this-repo> frontend-dev-helper
+cd frontend-dev-helper
+bun install
+
+# 2. Configure the web app (only apps/web needs env vars)
+cp apps/web/.env.example apps/web/.env
+# Fill in DATABASE_URL, NEXTAUTH_SECRET, RESEND_API_KEY, etc.
+
+# 3. Run everything in dev (parallel across all workspaces)
+bun run dev
 ```
 
-Without global `turbo`, use your package manager:
+### Run a single app
 
 ```sh
-cd my-turborepo
-npx turbo build
-bun dlx turbo build
-bun exec turbo build
+bun run dev --filter=web        # marketing/account site at http://localhost:7393
+bun run dev --filter=ext        # browser extension via WXT HMR
+bun run dev --filter=vsx        # VS Code extension host
+bun run dev --filter=chrome-devtools-mcp   # MCP server
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Build, lint, type-check
 
 ```sh
-turbo build --filter=docs
+bun run build         # turbo run build
+bun run lint          # turbo run lint
+bun run check-types   # turbo run check-types
+bun run format        # prettier --write "**/*.{ts,tsx,md}"
 ```
 
-Without global `turbo`:
+For per-app deep dives, see:
 
-```sh
-npx turbo build --filter=docs
-bun exec turbo build --filter=docs
-bun exec turbo build --filter=docs
-```
+- [`apps/ext/README.md`](apps/ext/README.md) — extension build, load-unpacked, tool authoring
+- [`apps/web/README.md`](apps/web/README.md) — web app env vars, deploy, migrations
+- [`apps/vsx/README.md`](apps/vsx/README.md) — VS Code extension dev + bridge protocol
+- [`apps/mcp/README.md`](apps/mcp/README.md) — Google's chrome-devtools-mcp server docs
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Documentation
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+- **Audit & roadmap** — [`AUDIT.md`](AUDIT.md) and [`MASTER_PLAN.md`](MASTER_PLAN.md)
+- **Architecture & contributing per app** — see each app's `README.md` and `CLAUDE.md`
+- **Security** — [`apps/mcp/SECURITY.md`](apps/mcp/SECURITY.md) covers the MCP server;
+  web app security model is documented in [`apps/web/README.md`](apps/web/README.md)
 
-```sh
-cd my-turborepo
-turbo dev
-```
+---
 
-Without global `turbo`, use your package manager:
+## License
 
-```sh
-cd my-turborepo
-npx turbo dev
-bun exec turbo dev
-bun exec turbo dev
-```
+- `apps/mcp` — Apache-2.0 (Google LLC, vendored upstream)
+- All other code in this monorepo — see [`LICENSE`](LICENSE)
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Acknowledgements
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-bun exec turbo dev --filter=web
-bun exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-bun exec turbo login
-bun exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-bun exec turbo link
-bun exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- [`chrome-devtools-mcp`](https://github.com/ChromeDevTools/chrome-devtools-mcp) by Google
+- [WXT](https://wxt.dev) — Web Extension Toolkit
+- [shadcn/ui](https://ui.shadcn.com) — UI components

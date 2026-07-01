@@ -1,0 +1,82 @@
+name: Web Bundle
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "bun.lock"
+      - ".github/workflows/web-bundle.yml"
+
+concurrency:
+  group: web-bundle-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bundle-size:
+    name: Bundle size budget
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "postgresql://ci:ci@ep-ci-pooler.us-east-1.aws.neon.tech/ci?sslmode=require"
+      NEXTAUTH_SECRET: "ci-not-a-real-secret-just-for-build"
+      NEXTAUTH_URL: "http://localhost:7393"
+      GOOGLE_CLIENT_ID: "ci-placeholder"
+      GOOGLE_CLIENT_SECRET: "ci-placeholder"
+      GITHUB_CLIENT_ID: "ci-placeholder"
+      GITHUB_CLIENT_SECRET: "ci-placeholder"
+      RESEND_API_KEY: "re_ci_placeholder"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        working-directory: apps/web
+        run: bun run build
+
+      - name: Summarize bundle size
+        working-directory: apps/web
+        run: |
+          echo "## Web bundle sizes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### First-load JS (per route)" >> $GITHUB_STEP_SUMMARY
+          find .next/static -name '*.js' -type f -exec du -h {} + | sort -rh | head -20 >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Total" >> $GITHUB_STEP_SUMMARY
+          du -sh .next/static >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce budget (250 KB total static)
+        working-directory: apps/web
+        run: |
+          # Fail if total .next/static exceeds 250KB. Tune as we approach the
+          # limit. We print size in bytes via `du -b` (GNU du) for the math.
+          BYTES=$(du -sb .next/static | cut -f1)
+          LIMIT=262144  # 256 * 1024
+          KB=$((BYTES / 1024))
+          echo "Static bundle: ${KB} KB (limit $((LIMIT / 1024)) KB)"
+          if [ "$BYTES" -gt "$LIMIT" ]; then
+            echo "::error::Static bundle ${KB} KB exceeds limit $((LIMIT / 1024)) KB"
+            exit 1
+          fi
+
+      - name: Upload analyzer report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-bundle-analyze
+          path: |
+            apps/web/.next/analyze/
+            apps/web/.next/static/

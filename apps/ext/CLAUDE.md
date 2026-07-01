@@ -2,7 +2,7 @@
 
 ## Companion Project
 
-This Chrome extension is paired with **FDH-VSX** (`/Users/velann/Documents/FDH-VSX`), a VS Code extension. They communicate over a **WebSocket bridge on port 9456**. Changes to the protocol or bridge in one project must be reflected in the other.
+This Chrome extension is paired with **FDH-VSX** (`apps/vsx/` in this monorepo), a VS Code extension. They communicate over a **WebSocket bridge on port 9456**. Changes to the protocol or bridge in one project must be reflected in the other.
 
 ## Architecture: Browser ↔ VS Code Bridge
 
@@ -20,13 +20,13 @@ This Chrome extension is paired with **FDH-VSX** (`/Users/velann/Documents/FDH-V
 
 ### Key Files
 
-| File | Role |
-|------|------|
-| `lib/vscode-bridge.ts` | WebSocket client singleton. `getBridge()` returns shared instance. Methods: `send()`, `jumpToSource()`, `openInEditor()` |
-| `lib/vscode-protocol.ts` | All message types and payload interfaces. **Must stay in sync with FDH-VSX handlers.** |
-| `lib/element-source-resolver.ts` | Resolves HTMLElement → `{ file, line, column }` via React fibers, Vue instances, or source map matching |
-| `lib/css-source-resolver.ts` | Resolves element + CSS property → source file/line via stylesheet source maps |
-| `lib/source-map-resolver.ts` | Low-level source map consumer: `resolvePosition()`, `getSourceContent()`, `findSourceMapUrls()` |
+| File                             | Role                                                                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `lib/vscode-bridge.ts`           | WebSocket client singleton. `getBridge()` returns shared instance. Methods: `send()`, `jumpToSource()`, `openInEditor()` |
+| `lib/vscode-protocol.ts`         | All message types and payload interfaces. **Must stay in sync with FDH-VSX handlers.**                                   |
+| `lib/element-source-resolver.ts` | Resolves HTMLElement → `{ file, line, column }` via React fibers, Vue instances, or source map matching                  |
+| `lib/css-source-resolver.ts`     | Resolves element + CSS property → source file/line via stylesheet source maps                                            |
+| `lib/source-map-resolver.ts`     | Low-level source map consumer: `resolvePosition()`, `getSourceContent()`, `findSourceMapUrls()`                          |
 
 ### Message Flow
 
@@ -38,17 +38,17 @@ This Chrome extension is paired with **FDH-VSX** (`/Users/velann/Documents/FDH-V
 
 ### Tools with VS Code Integration
 
-| Tool | Integration |
-|------|-------------|
-| Element Inspector | Pin element → resolves source → "Open in VS Code" button |
-| React State Panel | Extracts `_debugSource` from fiber → "Open source" button |
-| Vue State Panel | Extracts `__file` from Vue instance → "Open source" button |
-| Component Tree | "→VS" button on component nodes → jump to source |
-| Framework DevTools | Click component card → jump to source |
-| CSS Inspector | Hover ↗ icon per property → jump to CSS source |
-| CSS Editor | "Sync to VS Code" button → sends edits to source file |
-| AI Auto-Fix | "Fix in VS Code" button → diff preview in VS Code |
-| Smart Suggestions | "Fix in VS Code" button per suggestion |
+| Tool               | Integration                                                |
+| ------------------ | ---------------------------------------------------------- |
+| Element Inspector  | Pin element → resolves source → "Open in VS Code" button   |
+| React State Panel  | Extracts `_debugSource` from fiber → "Open source" button  |
+| Vue State Panel    | Extracts `__file` from Vue instance → "Open source" button |
+| Component Tree     | "→VS" button on component nodes → jump to source           |
+| Framework DevTools | Click component card → jump to source                      |
+| CSS Inspector      | Hover ↗ icon per property → jump to CSS source             |
+| CSS Editor         | "Sync to VS Code" button → sends edits to source file      |
+| AI Auto-Fix        | "Fix in VS Code" button → diff preview in VS Code          |
+| Smart Suggestions  | "Fix in VS Code" button per suggestion                     |
 
 ## Build
 

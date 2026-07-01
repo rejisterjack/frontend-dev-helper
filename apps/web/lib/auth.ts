@@ -1,17 +1,17 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import Google from 'next-auth/providers/google';
-import GitHub from 'next-auth/providers/github';
-import bcrypt from 'bcryptjs';
-import { prisma } from './db';
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
+import bcrypt from "bcryptjs";
+import { prisma } from "./db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -52,18 +52,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: "/login",
+    error: "/login",
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
       if (user) {
         token.userId = user.id!;
         token.email = user.email!;
-        token.emailVerified = (user as Record<string, unknown>).emailVerified as boolean;
+        token.emailVerified = user.emailVerified ?? false;
 
         // For OAuth providers, create or link account
         if (account) {
@@ -80,7 +80,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 oauthProvider: account.provider,
                 oauthId: account.providerAccountId,
                 emailVerified: true,
-                avatarUrl: (profile as Record<string, unknown>)?.image as string | undefined ?? dbUser.avatarUrl,
+                avatarUrl:
+                  ((profile as Record<string, unknown>)?.image as
+                    | string
+                    | undefined) ?? dbUser.avatarUrl,
               },
             });
             token.emailVerified = true;
@@ -91,16 +94,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const user = session.user as any;
-        user.id = token.userId;
-        user.emailVerified = token.emailVerified;
+      if (token && session.user) {
+        // `session.user` is augmented via the module declaration at the
+        // bottom of this file — no cast needed.
+        session.user.id = token.userId;
+        session.user.emailVerified = token.emailVerified;
       }
       return session;
     },
     async signIn({ user, account }) {
-      if (account && (account.provider === 'google' || account.provider === 'github')) {
+      if (
+        account &&
+        (account.provider === "google" || account.provider === "github")
+      ) {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email! },
         });
@@ -124,7 +130,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface User {
     emailVerified?: boolean;
   }
@@ -140,7 +146,7 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface JWT {
     userId: string;
     emailVerified: boolean;

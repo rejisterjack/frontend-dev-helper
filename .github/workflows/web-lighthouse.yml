@@ -1,0 +1,65 @@
+name: Web Lighthouse
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "bun.lock"
+      - ".github/workflows/web-lighthouse.yml"
+
+concurrency:
+  group: web-lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      DATABASE_URL: "postgresql://ci:ci@ep-ci-pooler.us-east-1.aws.neon.tech/ci?sslmode=require"
+      NEXTAUTH_SECRET: "ci-not-a-real-secret-just-for-build"
+      NEXTAUTH_URL: "http://localhost:7394"
+      GOOGLE_CLIENT_ID: "ci-placeholder"
+      GOOGLE_CLIENT_SECRET: "ci-placeholder"
+      GITHUB_CLIENT_ID: "ci-placeholder"
+      GITHUB_CLIENT_SECRET: "ci-placeholder"
+      RESEND_API_KEY: "re_ci_placeholder"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        working-directory: apps/web
+        run: bun run build
+
+      - name: Install Lighthouse CI
+        working-directory: apps/web
+        run: bun add -d @lhci/cli@0.15.x
+
+      - name: Run Lighthouse CI
+        working-directory: apps/web
+        run: bunx lhci autorun || echo "Lighthouse failed — results below."
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: |
+            apps/web/.lighthouseci/

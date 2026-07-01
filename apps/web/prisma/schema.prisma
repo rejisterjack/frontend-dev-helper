@@ -1,30 +1,91 @@
+// Prisma v7 generator — the Rust-free `prisma-client`. The `output` field
+// is REQUIRED in v7; the client is no longer generated into node_modules.
+// Output path is relative to this schema file, so we generate into
+// apps/web/prisma/generated/client (gitignored — see .gitignore).
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "./generated/client"
 }
 
+// Datasource: provider only. The connection URL is wired in prisma.config.ts
+// (Prisma v7 convention). We use the @prisma/adapter-neon driver adapter at
+// runtime — see lib/db.ts. No `directUrl` is required: Neon's pooler URL in
+// DATABASE_URL handles both pooling (queries) and DDL (migrations) fine.
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
+
+// ---------------------------------------------------------------------------
+// Enums (mirror migration 20260507130046_init)
+// ---------------------------------------------------------------------------
+
+enum LicenseTier {
+  FREE
+  PRO
+  TEAM
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+}
+
+// ---------------------------------------------------------------------------
+// Core identity
+// ---------------------------------------------------------------------------
 
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  passwordHash      String?
-  name              String?
-  emailVerified     Boolean   @default(false)
-  oauthProvider     String?
-  oauthId           String?
-  avatarUrl         String?
-  resetToken        String?
-  resetTokenExpiry  DateTime?
-  deletedAt         DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String?
+  name             String?
+  emailVerified    Boolean  @default(false)
+  oauthProvider    String?
+  oauthId          String?
+  avatarUrl        String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  deletedAt        DateTime?
+  // The user who referred this user (1:1 — a user can only be referred once).
+  // Back-relation; the FK lives on Referral.referredId. Prisma v7 enforces
+  // that fields/references/onDelete are declared on exactly one side.
+  referredById     String?
+  referredBy       Referral? @relation("Referred")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
   emailVerifications EmailVerification[]
   referrals          Referral[]       @relation("Referrer")
-  referredBy         Referral[]       @relation("Referred")
+  licenses           License[]
+  subscriptions      Subscription[]
+  teamsOwned         Team[]
+  teamMemberships    TeamMember[]
+  teamPresets        TeamPreset[]
 
   @@unique([oauthProvider, oauthId])
   @@index([email])
@@ -42,19 +103,122 @@ model EmailVerification {
   @@index([userId])
 }
 
+// ---------------------------------------------------------------------------
+// Billing
+// ---------------------------------------------------------------------------
+
+model License {
+  id              String        @id @default(uuid())
+  key             String        @unique
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  tier            LicenseTier
+  status          LicenseStatus @default(ACTIVE)
+  expiresAt       DateTime?
+  lastValidated   DateTime      @default(now())
+  validationCount Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([key])
+  @@index([userId])
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  tier                 LicenseTier
+  status               SubscriptionStatus @default(INCOMPLETE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  canceledAt           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+}
+
+// ---------------------------------------------------------------------------
+// Teams
+// ---------------------------------------------------------------------------
+
+model Team {
+  id        String       @id @default(uuid())
+  name      String
+  ownerId   String
+  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  maxMembers Int         @default(5)
+  members   TeamMember[]
+  presets   TeamPreset[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id      String  @id @default(uuid())
+  teamId  String
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role    TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+model TeamPreset {
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  name      String
+  config    Json
+  createdBy String
+  creator   User     @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+// ---------------------------------------------------------------------------
+// Referrals
+// ---------------------------------------------------------------------------
+
 model Referral {
-  id           String   @id @default(uuid())
+  id           String          @id @default(uuid())
   referrerId   String
-  referrer     User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referralCode String   @unique
-  status       String   @default("PENDING")
+  referrer     User            @relation("Referrer", fields: [referrerId], references: [id], onDelete: Restrict)
+  referralCode String          @unique
+  // The user who redeemed this referral code (optional until redeemed).
+  referredId   String?         @unique
+  referred     User?           @relation("Referred", fields: [referredId], references: [id], onDelete: SetNull)
   reward       String?
-  referredId   String?
-  referred     User?    @relation("Referred", fields: [referredId], references: [id])
+  status       ReferralStatus  @default(PENDING)
   redeemedAt   DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime        @default(now())
 
   @@index([referrerId])
-  @@index([referredId])
+  @@index([referralCode])
+}
+
+// ---------------------------------------------------------------------------
+// Webhook idempotency (Stripe and similar)
+// ---------------------------------------------------------------------------
+
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  eventId   String   @unique
+  eventType String
+  processed Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
 }

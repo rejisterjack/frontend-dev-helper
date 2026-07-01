@@ -1,4 +1,25 @@
 {
+  // ────────────────────────────────────────────────────────────────────────
+  // VENDORED PROJECT — strict vs permissive build (audit RR-6 / 1.12)
+  // ────────────────────────────────────────────────────────────────────────
+  // This `tsconfig.build.json` is intentionally permissive because this
+  // directory is a vendored copy of Google's `chrome-devtools-mcp` (Apache-2.0)
+  // — see `apps/mcp/README.md` and `MASTER_PLAN.md` task 1.12. The upstream
+  // build script uses `tsc ... || true` to tolerate TS warnings.
+  //
+  // We deliberately DO NOT change this behavior because:
+  //   1. The project has its own CI (presubmit.yml + run-tests.yml) that
+  //      catches real type errors via `tsc --noEmit` against the stricter
+  //      base tsconfig.json.
+  //   2. Tightening here would diverge from upstream and make future
+  //      vendored updates painful.
+  //
+  // Quality gate that matters: `bun run check-types` (which uses the strict
+  // base config) and `bun run test`. The build is just a codegen step.
+  //
+  // If you fork this project (rather than vendoring), set `strict: true`
+  // here and remove `|| true` from the build script in package.json.
+  // ────────────────────────────────────────────────────────────────────────
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noImplicitAny": false,

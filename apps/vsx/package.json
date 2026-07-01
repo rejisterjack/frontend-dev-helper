@@ -81,6 +81,7 @@
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
+    "@repo/bridge-protocol": "workspace:*",
     "ws": "^8.20.1"
   }
 }

@@ -1,0 +1,67 @@
+name: Web E2E
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "bun.lock"
+      - ".github/workflows/web-e2e.yml"
+
+concurrency:
+  group: web-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      DATABASE_URL: "postgresql://ci:ci@ep-ci-pooler.us-east-1.aws.neon.tech/ci?sslmode=require"
+      NEXTAUTH_SECRET: "ci-not-a-real-secret-just-for-build"
+      NEXTAUTH_URL: "http://localhost:7393"
+      GOOGLE_CLIENT_ID: "ci-placeholder"
+      GOOGLE_CLIENT_SECRET: "ci-placeholder"
+      GITHUB_CLIENT_ID: "ci-placeholder"
+      GITHUB_CLIENT_SECRET: "ci-placeholder"
+      RESEND_API_KEY: "re_ci_placeholder"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: bunx playwright install --with-deps chromium
+
+      # Run against a built + started server so we exercise production-mode
+      # behavior (middleware CSP, redirects, etc.) instead of dev HMR.
+      - name: Build
+        working-directory: apps/web
+        run: bun run build
+
+      - name: Run E2E tests
+        working-directory: apps/web
+        run: bunx playwright test
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
