@@ -1,10 +1,10 @@
-import type { ToolDefinition } from '../types';
-import { jumpToElementSource } from '@/lib/element-source-resolver';
+import type { ToolDefinition } from "../types";
+import { jumpToElementSource } from "@/lib/element-source-resolver";
 
 interface ComponentNode {
   id: string;
   name: string;
-  type: 'component' | 'element' | 'text' | 'fragment';
+  type: "component" | "element" | "text" | "fragment";
   framework: string;
   props?: Record<string, string>;
   children: ComponentNode[];
@@ -15,33 +15,55 @@ interface ComponentNode {
 }
 
 function detectFramework(): string {
-  if (document.querySelector('[data-reactroot]') || document.querySelector('[data-reactid]') || (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__) return 'react';
-  const allEls = document.querySelectorAll('*');
+  if (
+    document.querySelector("[data-reactroot]") ||
+    document.querySelector("[data-reactid]") ||
+    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__
+  )
+    return "react";
+  const allEls = document.querySelectorAll("*");
   for (const el of allEls) {
-    if ((el as any).__vue__ || (el as any).__vue_app__) return 'vue';
+    if ((el as any).__vue__ || (el as any).__vue_app__) return "vue";
   }
-  if (document.querySelector('[ng-version]') || document.querySelector('[ng-app]')) return 'angular';
-  if (document.querySelectorAll('[class*="svelte-"]').length > 0) return 'svelte';
-  return 'unknown';
+  if (
+    document.querySelector("[ng-version]") ||
+    document.querySelector("[ng-app]")
+  )
+    return "angular";
+  if (document.querySelectorAll('[class*="svelte-"]').length > 0)
+    return "svelte";
+  return "unknown";
 }
 
-function domElementToNode(element: HTMLElement, depth: number, index: number, maxDepth: number): ComponentNode {
+function domElementToNode(
+  element: HTMLElement,
+  depth: number,
+  index: number,
+  maxDepth: number,
+): ComponentNode {
   const childNodes: ComponentNode[] = [];
   if (depth < maxDepth) {
     for (let i = 0; i < element.children.length; i++) {
-      childNodes.push(domElementToNode(element.children[i] as HTMLElement, depth + 1, i, maxDepth));
+      childNodes.push(
+        domElementToNode(
+          element.children[i] as HTMLElement,
+          depth + 1,
+          i,
+          maxDepth,
+        ),
+      );
     }
   }
   const props: Record<string, string> = {};
-  for (const attr of ['id', 'class', 'data-testid', 'aria-label', 'role']) {
+  for (const attr of ["id", "class", "data-testid", "aria-label", "role"]) {
     const value = element.getAttribute(attr);
     if (value) props[attr] = value;
   }
   return {
     id: `dom-${element.tagName}-${depth}-${index}`,
     name: element.tagName.toLowerCase(),
-    type: 'element',
-    framework: 'unknown',
+    type: "element",
+    framework: "unknown",
     props: Object.keys(props).length > 0 ? props : undefined,
     children: childNodes,
     depth,
@@ -53,26 +75,37 @@ function domElementToNode(element: HTMLElement, depth: number, index: number, ma
 
 function extractTree(maxDepth: number): ComponentNode | null {
   const framework = detectFramework();
-  const rootEl = framework === 'react'
-    ? (document.getElementById('root') || document.getElementById('__next') || document.body.firstElementChild as HTMLElement)
-    : framework === 'vue'
-    ? (document.querySelector('#app') as HTMLElement || document.body.firstElementChild as HTMLElement)
-    : document.body;
+  const rootEl =
+    framework === "react"
+      ? document.getElementById("root") ||
+        document.getElementById("__next") ||
+        (document.body.firstElementChild as HTMLElement)
+      : framework === "vue"
+        ? (document.querySelector("#app") as HTMLElement) ||
+          (document.body.firstElementChild as HTMLElement)
+        : document.body;
 
   if (!rootEl) return null;
 
-  const rootName = framework === 'react' ? 'React Root'
-    : framework === 'vue' ? 'Vue Root'
-    : framework === 'angular' ? 'Angular Root'
-    : framework === 'svelte' ? 'Svelte Root'
-    : 'DOM Tree';
+  const rootName =
+    framework === "react"
+      ? "React Root"
+      : framework === "vue"
+        ? "Vue Root"
+        : framework === "angular"
+          ? "Angular Root"
+          : framework === "svelte"
+            ? "Svelte Root"
+            : "DOM Tree";
 
   return {
     id: `${framework}-root`,
     name: rootName,
-    type: 'component',
+    type: "component",
     framework,
-    children: Array.from(rootEl.children).map((child, i) => domElementToNode(child as HTMLElement, 1, i, maxDepth)),
+    children: Array.from(rootEl.children).map((child, i) =>
+      domElementToNode(child as HTMLElement, 1, i, maxDepth),
+    ),
     depth: 0,
     isExpanded: true,
     hasChildren: rootEl.children.length > 0,
@@ -81,21 +114,31 @@ function extractTree(maxDepth: number): ComponentNode | null {
 
 function getFrameworkIcon(fw: string): string {
   switch (fw) {
-    case 'react': return '⚛️';
-    case 'vue': return '🟢';
-    case 'angular': return '🅰️';
-    case 'svelte': return '🔶';
-    default: return '🌲';
+    case "react":
+      return "⚛️";
+    case "vue":
+      return "🟢";
+    case "angular":
+      return "🅰️";
+    case "svelte":
+      return "🔶";
+    default:
+      return "🌲";
   }
 }
 
-function getTypeIcon(type: ComponentNode['type']): string {
+function getTypeIcon(type: ComponentNode["type"]): string {
   switch (type) {
-    case 'component': return '⚙️';
-    case 'element': return '📄';
-    case 'text': return '📝';
-    case 'fragment': return '🧩';
-    default: return '📦';
+    case "component":
+      return "⚙️";
+    case "element":
+      return "📄";
+    case "text":
+      return "📝";
+    case "fragment":
+      return "🧩";
+    default:
+      return "📦";
   }
 }
 
@@ -105,7 +148,10 @@ function countNodes(node: ComponentNode): number {
   return count;
 }
 
-function findNode(node: ComponentNode | null, id: string): ComponentNode | null {
+function findNode(
+  node: ComponentNode | null,
+  id: string,
+): ComponentNode | null {
   if (!node) return null;
   if (node.id === id) return node;
   for (const child of node.children) {
@@ -128,60 +174,64 @@ function filterTree(node: ComponentNode, f: string): ComponentNode | null {
   return null;
 }
 
-function buildNodeEl(node: ComponentNode, expandedNodes: Set<string>, selectedId: string | null): HTMLElement {
+function buildNodeEl(
+  node: ComponentNode,
+  expandedNodes: Set<string>,
+  selectedId: string | null,
+): HTMLElement {
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedId === node.id;
   const indent = node.depth * 16;
 
-  const row = document.createElement('div');
-  row.className = 'fdh-ct-node' + (isSelected ? ' fdh-ct-selected' : '');
+  const row = document.createElement("div");
+  row.className = "fdh-ct-node" + (isSelected ? " fdh-ct-selected" : "");
   row.dataset.nodeId = node.id;
-  row.style.paddingLeft = indent + 'px';
+  row.style.paddingLeft = indent + "px";
 
-  const content = document.createElement('div');
-  content.className = 'fdh-ct-node-content';
+  const content = document.createElement("div");
+  content.className = "fdh-ct-node-content";
 
   if (node.hasChildren) {
-    const toggle = document.createElement('span');
-    toggle.className = 'fdh-ct-toggle';
-    toggle.textContent = isExpanded ? '▼' : '▶';
+    const toggle = document.createElement("span");
+    toggle.className = "fdh-ct-toggle";
+    toggle.textContent = isExpanded ? "▼" : "▶";
     content.appendChild(toggle);
   } else {
-    const spacer = document.createElement('span');
-    spacer.className = 'fdh-ct-spacer';
+    const spacer = document.createElement("span");
+    spacer.className = "fdh-ct-spacer";
     content.appendChild(spacer);
   }
 
-  const icon = document.createElement('span');
-  icon.className = 'fdh-ct-icon';
+  const icon = document.createElement("span");
+  icon.className = "fdh-ct-icon";
   icon.textContent = getTypeIcon(node.type);
   content.appendChild(icon);
 
-  const fw = document.createElement('span');
-  fw.className = 'fdh-ct-fw';
+  const fw = document.createElement("span");
+  fw.className = "fdh-ct-fw";
   fw.textContent = getFrameworkIcon(node.framework);
   content.appendChild(fw);
 
-  const name = document.createElement('span');
-  name.className = 'fdh-ct-name';
+  const name = document.createElement("span");
+  name.className = "fdh-ct-name";
   name.textContent = node.name;
   name.title = node.name;
   content.appendChild(name);
 
   if (node.props && Object.keys(node.props).length > 0) {
-    const badge = document.createElement('span');
-    badge.className = 'fdh-ct-badge';
+    const badge = document.createElement("span");
+    badge.className = "fdh-ct-badge";
     badge.textContent = String(Object.keys(node.props).length);
     content.appendChild(badge);
   }
 
-  if (node.domElement && node.type === 'component') {
-    const srcBtn = document.createElement('span');
-    srcBtn.className = 'fdh-ct-badge';
-    srcBtn.style.cssText = 'cursor:pointer;background:#4f46e5;color:white;';
-    srcBtn.textContent = '→VS';
-    srcBtn.title = 'Jump to source in VS Code';
-    srcBtn.addEventListener('click', (ev) => {
+  if (node.domElement && node.type === "component") {
+    const srcBtn = document.createElement("span");
+    srcBtn.className = "fdh-ct-badge";
+    srcBtn.style.cssText = "cursor:pointer;background:#4f46e5;color:white;";
+    srcBtn.textContent = "→VS";
+    srcBtn.title = "Jump to source in VS Code";
+    srcBtn.addEventListener("click", (ev) => {
       ev.stopPropagation();
       if (node.domElement) {
         jumpToElementSource(node.domElement);
@@ -200,23 +250,38 @@ function buildNodeEl(node: ComponentNode, expandedNodes: Set<string>, selectedId
     }
   }
 
-  const wrapper = document.createElement('div');
+  const wrapper = document.createElement("div");
   wrapper.appendChild(fragment);
   return wrapper;
 }
 
 export const componentTree: ToolDefinition = {
-  id: 'component-tree',
-  name: 'Component Tree',
-  description: 'Visualize component hierarchy and props flow',
-  category: 'inspection',
-  icon: 'GitBranch',
+  id: "component-tree",
+  name: "DOM Tree Viewer",
+  description: "Walk and inspect the DOM tree hierarchy and element attributes",
+  category: "inspection",
+  icon: "GitBranch",
   configSchema: {
-    maxDepth: { type: 'slider', label: 'Max Depth', default: 6, min: 1, max: 15, step: 1 },
-    showProps: { type: 'boolean', label: 'Show Props', default: true },
-    showState: { type: 'boolean', label: 'Show State', default: false },
-    highlightUpdates: { type: 'boolean', label: 'Highlight Updates', default: true },
-    collapseThreshold: { type: 'number', label: 'Collapse Threshold', default: 50 },
+    maxDepth: {
+      type: "slider",
+      label: "Max Depth",
+      default: 6,
+      min: 1,
+      max: 15,
+      step: 1,
+    },
+    showProps: { type: "boolean", label: "Show Props", default: true },
+    showState: { type: "boolean", label: "Show State", default: false },
+    highlightUpdates: {
+      type: "boolean",
+      label: "Highlight Updates",
+      default: true,
+    },
+    collapseThreshold: {
+      type: "number",
+      label: "Collapse Threshold",
+      default: 50,
+    },
   },
   run: (ctx, config) => {
     const maxDepth = (config?.maxDepth as number) ?? 6;
@@ -224,13 +289,14 @@ export const componentTree: ToolDefinition = {
     const expandedNodes = new Set<string>();
     let selectedId: string | null = null;
     let root: ComponentNode | null = null;
-    let filter = '';
+    let filter = "";
 
-    const panelHost = document.createElement('div');
-    panelHost.style.cssText = 'position:fixed;top:20px;right:20px;width:400px;max-height:80vh;z-index:2147483646;';
-    const shadow = panelHost.attachShadow({ mode: 'open' });
+    const panelHost = document.createElement("div");
+    panelHost.style.cssText =
+      "position:fixed;top:20px;right:20px;width:400px;max-height:80vh;z-index:2147483646;";
+    const shadow = panelHost.attachShadow({ mode: "open" });
 
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       .fdh-ct-panel{background:#0f172a;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column;max-height:80vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;color:#e2e8f0;}
       .fdh-ct-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #334155;background:#1e293b;}
@@ -260,66 +326,67 @@ export const componentTree: ToolDefinition = {
     `;
     shadow.appendChild(style);
 
-    const panel = document.createElement('div');
-    panel.className = 'fdh-ct-panel';
+    const panel = document.createElement("div");
+    panel.className = "fdh-ct-panel";
 
-    const header = document.createElement('div');
-    header.className = 'fdh-ct-header';
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'fdh-ct-title';
-    const fwIcon = document.createElement('span');
+    const header = document.createElement("div");
+    header.className = "fdh-ct-header";
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "fdh-ct-title";
+    const fwIcon = document.createElement("span");
     fwIcon.textContent = getFrameworkIcon(framework);
-    const titleText = document.createElement('span');
-    titleText.textContent = 'Component Tree';
-    const fwBadge = document.createElement('span');
-    fwBadge.className = 'fdh-ct-fw-badge';
-    fwBadge.textContent = framework.charAt(0).toUpperCase() + framework.slice(1);
+    const titleText = document.createElement("span");
+    titleText.textContent = "DOM Tree Viewer";
+    const fwBadge = document.createElement("span");
+    fwBadge.className = "fdh-ct-fw-badge";
+    fwBadge.textContent =
+      framework.charAt(0).toUpperCase() + framework.slice(1);
     titleDiv.append(fwIcon, titleText, fwBadge);
 
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'fdh-ct-actions';
-    const btnRefresh = document.createElement('button');
-    btnRefresh.dataset.action = 'refresh';
-    btnRefresh.textContent = '🔄';
-    btnRefresh.title = 'Refresh';
-    const btnExpand = document.createElement('button');
-    btnExpand.dataset.action = 'expand';
-    btnExpand.textContent = '⬇️';
-    btnExpand.title = 'Expand All';
-    const btnCollapse = document.createElement('button');
-    btnCollapse.dataset.action = 'collapse';
-    btnCollapse.textContent = '➡️';
-    btnCollapse.title = 'Collapse All';
-    const btnClose = document.createElement('button');
-    btnClose.dataset.action = 'close';
-    btnClose.textContent = '✕';
-    btnClose.title = 'Close';
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "fdh-ct-actions";
+    const btnRefresh = document.createElement("button");
+    btnRefresh.dataset.action = "refresh";
+    btnRefresh.textContent = "🔄";
+    btnRefresh.title = "Refresh";
+    const btnExpand = document.createElement("button");
+    btnExpand.dataset.action = "expand";
+    btnExpand.textContent = "⬇️";
+    btnExpand.title = "Expand All";
+    const btnCollapse = document.createElement("button");
+    btnCollapse.dataset.action = "collapse";
+    btnCollapse.textContent = "➡️";
+    btnCollapse.title = "Collapse All";
+    const btnClose = document.createElement("button");
+    btnClose.dataset.action = "close";
+    btnClose.textContent = "✕";
+    btnClose.title = "Close";
     actionsDiv.append(btnRefresh, btnExpand, btnCollapse, btnClose);
     header.append(titleDiv, actionsDiv);
 
-    const toolbar = document.createElement('div');
-    toolbar.className = 'fdh-ct-toolbar';
-    const searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.className = 'fdh-ct-search';
-    searchInput.placeholder = 'Filter components...';
+    const toolbar = document.createElement("div");
+    toolbar.className = "fdh-ct-toolbar";
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.className = "fdh-ct-search";
+    searchInput.placeholder = "Filter elements...";
     toolbar.appendChild(searchInput);
 
-    const content = document.createElement('div');
-    content.className = 'fdh-ct-content';
-    const emptyMsg = document.createElement('div');
-    emptyMsg.className = 'fdh-ct-empty';
-    emptyMsg.textContent = 'Detecting framework...';
+    const content = document.createElement("div");
+    content.className = "fdh-ct-content";
+    const emptyMsg = document.createElement("div");
+    emptyMsg.className = "fdh-ct-empty";
+    emptyMsg.textContent = "Detecting framework...";
     content.appendChild(emptyMsg);
 
-    const footer = document.createElement('div');
-    footer.className = 'fdh-ct-footer';
-    const stats = document.createElement('span');
-    stats.className = 'fdh-ct-stats';
-    stats.textContent = '0 components';
-    const status = document.createElement('span');
-    status.className = 'fdh-ct-status';
-    status.textContent = 'Ready';
+    const footer = document.createElement("div");
+    footer.className = "fdh-ct-footer";
+    const stats = document.createElement("span");
+    stats.className = "fdh-ct-stats";
+    stats.textContent = "0 components";
+    const status = document.createElement("span");
+    status.className = "fdh-ct-status";
+    status.textContent = "Ready";
     footer.append(stats, status);
 
     panel.append(header, toolbar, content, footer);
@@ -339,51 +406,66 @@ export const componentTree: ToolDefinition = {
     function render(): void {
       while (content.firstChild) content.removeChild(content.firstChild);
       if (!root) {
-        const msg = document.createElement('div');
-        msg.className = 'fdh-ct-empty';
-        msg.textContent = 'No component tree detected';
+        const msg = document.createElement("div");
+        msg.className = "fdh-ct-empty";
+        msg.textContent = "No component tree detected";
         content.appendChild(msg);
-        stats.textContent = '0 components';
+        stats.textContent = "0 components";
         return;
       }
       let displayRoot = root;
       if (filter) displayRoot = filterTree(root, filter) || root;
       content.appendChild(buildNodeEl(displayRoot, expandedNodes, selectedId));
       const total = countNodes(displayRoot);
-      stats.textContent = total + ' component' + (total !== 1 ? 's' : '');
+      stats.textContent = total + " component" + (total !== 1 ? "s" : "");
     }
 
     function highlightNode(node: ComponentNode): void {
       if (node.domElement) {
         const el = node.domElement;
         const orig = el.style.outline;
-        el.style.outline = '2px solid #6366f1';
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(() => { el.style.outline = orig; }, 3000);
+        el.style.outline = "2px solid #6366f1";
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          el.style.outline = orig;
+        }, 3000);
       }
     }
 
-    panel.addEventListener('click', (e) => {
+    panel.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
       const action = target.dataset.action;
-      if (action === 'close') { cleanup(); return; }
-      if (action === 'refresh') { doExtract(); render(); return; }
-      if (action === 'expand') {
-        const addAll = (n: ComponentNode) => { expandedNodes.add(n.id); n.children.forEach(addAll); };
-        if (root) addAll(root);
-        render(); return;
+      if (action === "close") {
+        cleanup();
+        return;
       }
-      if (action === 'collapse') {
+      if (action === "refresh") {
+        doExtract();
+        render();
+        return;
+      }
+      if (action === "expand") {
+        const addAll = (n: ComponentNode) => {
+          expandedNodes.add(n.id);
+          n.children.forEach(addAll);
+        };
+        if (root) addAll(root);
+        render();
+        return;
+      }
+      if (action === "collapse") {
         expandedNodes.clear();
         if (root) expandedNodes.add(root.id);
-        render(); return;
+        render();
+        return;
       }
 
-      const nodeEl = target.closest('[data-node-id]') as HTMLElement;
+      const nodeEl = target.closest("[data-node-id]") as HTMLElement;
       if (!nodeEl) return;
       const nodeId = nodeEl.dataset.nodeId!;
-      if (target.closest('.fdh-ct-toggle')) {
-        if (expandedNodes.has(nodeId)) expandedNodes.delete(nodeId); else expandedNodes.add(nodeId);
+      if (target.closest(".fdh-ct-toggle")) {
+        if (expandedNodes.has(nodeId)) expandedNodes.delete(nodeId);
+        else expandedNodes.add(nodeId);
         render();
       } else {
         selectedId = nodeId;
@@ -393,20 +475,30 @@ export const componentTree: ToolDefinition = {
       }
     });
 
-    searchInput.addEventListener('input', () => {
+    searchInput.addEventListener("input", () => {
       filter = searchInput.value.toLowerCase();
       render();
     });
 
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') cleanup(); };
-    document.addEventListener('keydown', handleKeyDown, true);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") cleanup();
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
 
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const observer = new MutationObserver(() => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => { doExtract(); render(); }, 500);
+      debounceTimer = setTimeout(() => {
+        doExtract();
+        render();
+      }, 500);
     });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'id'] });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "id"],
+    });
 
     doExtract();
     render();
@@ -414,7 +506,7 @@ export const componentTree: ToolDefinition = {
     function cleanup() {
       observer.disconnect();
       if (debounceTimer) clearTimeout(debounceTimer);
-      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
       panelHost.remove();
     }
 

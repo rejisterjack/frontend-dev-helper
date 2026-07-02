@@ -29,12 +29,14 @@ bun run build
 ### Load Extension in Browser
 
 **Chrome:**
+
 1. Open `chrome://extensions/`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
 4. Select the `.output/chrome-mv3` folder
 
 **Firefox:**
+
 1. Open `about:debugging`
 2. Click "This Firefox"
 3. Click "Load Temporary Add-on"
@@ -63,7 +65,7 @@ FDH-EXT/
 ├── lib/
 │   ├── constants.ts         # App-wide constants
 │   ├── messaging/           # Typed message passing
-│   ├── telemetry.ts         # Opt-in analytics
+│   ├── telemetry.ts         # Local-only diagnostics (no network)
 │   ├── types.ts             # Shared TypeScript types
 │   └── validators.ts        # Zod schemas
 ├── stores/                   # Zustand stores
@@ -101,14 +103,14 @@ FDH-EXT/
 
 ### Naming Conventions
 
-| Artifact | Convention | Example |
-|---|---|---|
-| Files (utilities) | `kebab-case.ts` | `use-active-tab.ts` |
-| Files (components) | `PascalCase.tsx` | `ToolCard.tsx` |
-| Components | PascalCase | `DashboardView` |
-| Functions | camelCase | `activateTool` |
-| Constants | UPPER_SNAKE_CASE | `MAX_RECENT_TOOLS` |
-| Types/Interfaces | PascalCase | `ToolMetadata` |
+| Artifact           | Convention       | Example             |
+| ------------------ | ---------------- | ------------------- |
+| Files (utilities)  | `kebab-case.ts`  | `use-active-tab.ts` |
+| Files (components) | `PascalCase.tsx` | `ToolCard.tsx`      |
+| Components         | PascalCase       | `DashboardView`     |
+| Functions          | camelCase        | `activateTool`      |
+| Constants          | UPPER_SNAKE_CASE | `MAX_RECENT_TOOLS`  |
+| Types/Interfaces   | PascalCase       | `ToolMetadata`      |
 
 ### Import Order
 
@@ -124,17 +126,17 @@ Create a new file in the appropriate category folder under `tools/`:
 
 ```typescript
 // tools/inspection/my-new-tool.ts
-import type { ToolDefinition } from '../types';
+import type { ToolDefinition } from "../types";
 
 export const myNewTool: ToolDefinition = {
-  id: 'my-new-tool',
-  name: 'My New Tool',
-  description: 'Description of what the tool does',
-  category: 'inspection',
-  icon: 'Search',
+  id: "my-new-tool",
+  name: "My New Tool",
+  description: "Description of what the tool does",
+  category: "inspection",
+  icon: "Search",
   configSchema: {
     // optional config fields
-    myOption: { type: 'boolean', label: 'My Option', default: true },
+    myOption: { type: "boolean", label: "My Option", default: true },
   },
   run: (ctx, config) => {
     let disposed = false;
@@ -158,7 +160,7 @@ export const myNewTool: ToolDefinition = {
 Add to `tools/<category>/index.ts`:
 
 ```typescript
-export { myNewTool } from './my-new-tool';
+export { myNewTool } from "./my-new-tool";
 ```
 
 ### 3. Add Metadata
@@ -212,14 +214,14 @@ bun run test:coverage
 ### Example
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { useUIStore } from '@/stores/use-ui-store';
+import { describe, it, expect } from "vitest";
+import { useUIStore } from "@/stores/use-ui-store";
 
-describe('useUIStore', () => {
-  it('should add a favorite tool', () => {
+describe("useUIStore", () => {
+  it("should add a favorite tool", () => {
     const { addFavorite, favoriteToolIds } = useUIStore.getState();
-    addFavorite('dom-outliner');
-    expect(useUIStore.getState().favoriteToolIds).toContain('dom-outliner');
+    addFavorite("dom-outliner");
+    expect(useUIStore.getState().favoriteToolIds).toContain("dom-outliner");
   });
 });
 ```
@@ -227,6 +229,7 @@ describe('useUIStore', () => {
 ## Pull Request Process
 
 1. **Create a Branch**
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -236,6 +239,7 @@ describe('useUIStore', () => {
    - Update documentation if needed
 
 3. **Verify**
+
    ```bash
    bun run build
    bun run test

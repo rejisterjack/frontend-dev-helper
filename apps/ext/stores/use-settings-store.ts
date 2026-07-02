@@ -1,15 +1,16 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { chromeStorageAdapter } from "@/lib/storage";
 
-type Theme = 'light' | 'dark' | 'system';
-type CategoryView = 'grid' | 'list';
+type Theme = "light" | "dark" | "system";
+type CategoryView = "grid" | "list";
 
 interface AIConfig {
   enabled: boolean;
   apiKey: string;
   model: string;
   baseUrl: string;
-  provider: 'openrouter' | 'ollama' | 'fireworks' | 'zai' | 'custom';
+  provider: "openrouter" | "ollama" | "fireworks" | "zai" | "custom";
 }
 
 interface GitHubConfig {
@@ -20,6 +21,12 @@ interface GitHubConfig {
 interface VSCodeConfig {
   enabled: boolean;
   port: number;
+  /**
+   * Shared secret required by the VS Code bridge server. Run the
+   * "FDH: Copy Bridge Auth Token" command in VS Code, then paste the value
+   * here. Required for the bridge to authenticate — see lib/vscode-bridge.ts.
+   */
+  bridgeToken: string;
 }
 
 interface SettingsState {
@@ -32,7 +39,21 @@ interface SettingsState {
   github: GitHubConfig;
   vscode: VSCodeConfig;
   setTheme: (theme: Theme) => void;
-  updateSetting: <K extends keyof Omit<SettingsState, 'theme' | 'ai' | 'github' | 'vscode' | 'setTheme' | 'updateSetting' | 'updateAIConfig' | 'updateGitHubConfig' | 'updateVSCodeConfig' | 'resetToDefaults'>>(
+  updateSetting: <
+    K extends keyof Omit<
+      SettingsState,
+      | "theme"
+      | "ai"
+      | "github"
+      | "vscode"
+      | "setTheme"
+      | "updateSetting"
+      | "updateAIConfig"
+      | "updateGitHubConfig"
+      | "updateVSCodeConfig"
+      | "resetToDefaults"
+    >,
+  >(
     key: K,
     value: SettingsState[K],
   ) => void;
@@ -43,40 +64,30 @@ interface SettingsState {
 }
 
 const defaultState = {
-  theme: 'system' as Theme,
-  defaultCategoryView: 'grid' as CategoryView,
+  theme: "system" as Theme,
+  defaultCategoryView: "grid" as CategoryView,
   showInactiveTools: false,
   shortcuts: {},
   enableTelemetry: false,
   ai: {
     enabled: false,
-    apiKey: '',
-    model: 'openai/gpt-4o-mini',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    provider: 'openrouter' as const,
+    apiKey: "",
+    model: "openai/gpt-4o-mini",
+    baseUrl: "https://openrouter.ai/api/v1",
+    provider: "openrouter" as const,
   },
   github: {
-    token: '',
+    token: "",
     enabled: false,
   },
   vscode: {
     enabled: false,
     port: 9456,
+    bridgeToken: "",
   },
 };
 
-const chromeStorageAdapter = {
-  getItem: async (name: string) => {
-    const result = await chrome.storage.local.get(name);
-    return result[name] ?? null;
-  },
-  setItem: async (name: string, value: unknown) => {
-    await chrome.storage.local.set({ [name]: value });
-  },
-  removeItem: async (name: string) => {
-    await chrome.storage.local.remove(name);
-  },
-};
+const chromeStorageAdapterInstance = chromeStorageAdapter<SettingsState>();
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -105,8 +116,8 @@ export const useSettingsStore = create<SettingsState>()(
       resetToDefaults: () => set(defaultState),
     }),
     {
-      name: 'fdh-settings-storage',
-      storage: chromeStorageAdapter,
+      name: "fdh-settings-storage",
+      storage: chromeStorageAdapterInstance,
     },
   ),
 );

@@ -23,7 +23,10 @@ export type BridgeMessageType =
   | "ClearDiagnostics"
   | "CreateFile"
   | "Request"
-  | "Response";
+  | "Response"
+  | "Auth"
+  | "AuthOk"
+  | "AuthFail";
 
 /**
  * The wire format. `payload` is loosely typed here; per-message-type
@@ -152,6 +155,32 @@ export interface CreateFilePayload {
 }
 
 // ---------------------------------------------------------------------------
+// Auth handshake (Phase 0.3 of the ext audit)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sent by the client as the FIRST frame after opening the WebSocket.
+ * The server compares `token` to its expected shared secret using a
+ * constant-time comparison. Until auth succeeds, the server drops every
+ * other message type. `client` identifies who is connecting (for logging).
+ */
+export interface AuthPayload {
+  /** Shared secret printed by the VS Code extension on first start. */
+  token: string;
+  /** Human-readable client identifier, e.g. "ext@1.2.0 (chrome 124)". */
+  client: string;
+}
+
+export interface AuthOkPayload {
+  /** Echo of the client identifier that was authed. */
+  client: string;
+}
+
+export interface AuthFailPayload {
+  reason: string;
+}
+
+// ---------------------------------------------------------------------------
 // Discriminated-union helpers
 // ---------------------------------------------------------------------------
 
@@ -175,6 +204,9 @@ export interface BridgePayloadMap {
   CreateFile: CreateFilePayload;
   Request: Record<string, unknown>;
   Response: Record<string, unknown>;
+  Auth: AuthPayload;
+  AuthOk: AuthOkPayload;
+  AuthFail: AuthFailPayload;
 }
 
 /**

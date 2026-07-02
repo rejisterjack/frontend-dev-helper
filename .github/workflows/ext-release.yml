@@ -1,0 +1,87 @@
+name: Release Chrome Extension
+
+on:
+  push:
+    tags:
+      - "ext-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, package, publish to Web Store
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/ext
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        working-directory: apps/ext
+        run: bun run lint -- --max-warnings=0
+
+      - name: Type check
+        working-directory: apps/ext
+        run: bun run compile
+
+      - name: Build extension
+        working-directory: apps/ext
+        run: bun run build
+
+      - name: Package extension (.zip)
+        working-directory: apps/ext
+        run: bun run zip
+
+      - name: Read version
+        id: version
+        working-directory: apps/ext
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
+          ZIP=$(ls .output/*.zip | head -n1 | xargs basename)
+          echo "zip=${ZIP}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/ext/.output/*.zip
+          generate_release_notes: true
+          name: Chrome Extension ${{ steps.version.outputs.version }}
+
+      # Publish to the Chrome Web Store only when all four secrets are
+      # configured. On forks without the secrets, this step is skipped and the
+      # .zip remains attached to the GitHub Release for manual upload.
+      #
+      # Secrets required (Settings -> Secrets and variables -> Actions):
+      #   CHROME_EXTENSION_ID  — the 32-char item ID from the Web Store listing
+      #   CHROME_CLIENT_ID     — Google Cloud OAuth2 client ID (Web Store API)
+      #   CHROME_CLIENT_SECRET — matching client secret
+      #   CHROME_REFRESH_TOKEN — OAuth2 refresh token for the publisher account
+      #
+      # `publish: false` uploads the zip but leaves it as a draft so a human
+      # can review on the Developer Dashboard before the listing goes live.
+      # Flip to `publish: true` once the initial submission is approved.
+      - name: Publish to Chrome Web Store
+        if: env.CHROME_EXTENSION_ID != '' && env.CHROME_CLIENT_ID != '' && env.CHROME_CLIENT_SECRET != '' && env.CHROME_REFRESH_TOKEN != ''
+        uses: mnao305/chrome-extension-upload@v6.0.0
+        with:
+          file-path: apps/ext/.output/${{ steps.version.outputs.zip }}
+          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          publish: false
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}

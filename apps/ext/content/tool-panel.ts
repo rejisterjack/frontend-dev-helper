@@ -17,13 +17,13 @@ export class ToolPanel {
   private cleanupFns: (() => void)[] = [];
 
   constructor(private config: ToolPanelConfig) {
-    this.panel = document.createElement('div');
+    this.panel = document.createElement("div");
     this.panel.style.cssText = `
       position: fixed;
       top: 16px;
       right: 16px;
       width: ${config.width || 420}px;
-      max-height: ${config.maxHeight || '80vh'};
+      max-height: ${config.maxHeight || "80vh"};
       background: #0f172a;
       border: 1px solid #1e293b;
       border-radius: 12px;
@@ -41,7 +41,7 @@ export class ToolPanel {
     this.headerEl = this.createHeader();
     this.panel.appendChild(this.headerEl);
 
-    this.contentArea = document.createElement('div');
+    this.contentArea = document.createElement("div");
     this.contentArea.style.cssText = `
       flex: 1;
       overflow-y: auto;
@@ -51,7 +51,10 @@ export class ToolPanel {
     this.panel.appendChild(this.contentArea);
 
     if (config.footer) {
-      this.footerEl = config.footer;
+      // config.footer is typed HTMLElement; coerce to HTMLDivElement since
+      // tool callers always pass a div here. (TS otherwise complains about
+      // the missing `align` property on the loose assignment.)
+      this.footerEl = config.footer as HTMLDivElement;
       this.footerEl.style.cssText = `
         padding: 8px 12px;
         border-top: 1px solid #1e293b;
@@ -59,14 +62,16 @@ export class ToolPanel {
         font-size: 11px;
         color: #64748b;
       `;
-      this.panel.appendChild(this.footerEl);
+      if (this.footerEl) {
+        this.panel.appendChild(this.footerEl);
+      }
     }
 
     this.setupDragging();
   }
 
   private createHeader(): HTMLDivElement {
-    const header = document.createElement('div');
+    const header = document.createElement("div");
     header.style.cssText = `
       display: flex;
       align-items: center;
@@ -78,7 +83,7 @@ export class ToolPanel {
       user-select: none;
     `;
 
-    const title = document.createElement('span');
+    const title = document.createElement("span");
     title.style.cssText = `
       font-weight: 600;
       font-size: 13px;
@@ -88,7 +93,7 @@ export class ToolPanel {
     header.appendChild(title);
 
     if (this.config.headerExtra) {
-      const extraContainer = document.createElement('div');
+      const extraContainer = document.createElement("div");
       extraContainer.style.cssText = `
         display: flex;
         align-items: center;
@@ -100,7 +105,7 @@ export class ToolPanel {
       header.appendChild(extraContainer);
     }
 
-    const closeBtn = document.createElement('button');
+    const closeBtn = document.createElement("button");
     closeBtn.style.cssText = `
       background: none;
       border: none;
@@ -111,16 +116,16 @@ export class ToolPanel {
       line-height: 1;
       border-radius: 4px;
     `;
-    closeBtn.textContent = '×';
-    closeBtn.addEventListener('mouseenter', () => {
-      closeBtn.style.color = '#f1f5f9';
-      closeBtn.style.background = '#334155';
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("mouseenter", () => {
+      closeBtn.style.color = "#f1f5f9";
+      closeBtn.style.background = "#334155";
     });
-    closeBtn.addEventListener('mouseleave', () => {
-      closeBtn.style.color = '#94a3b8';
-      closeBtn.style.background = 'none';
+    closeBtn.addEventListener("mouseleave", () => {
+      closeBtn.style.color = "#94a3b8";
+      closeBtn.style.background = "none";
     });
-    closeBtn.addEventListener('click', (e) => {
+    closeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.config.onClose?.();
       this.destroy();
@@ -132,14 +137,14 @@ export class ToolPanel {
 
   private setupDragging(): void {
     const onMouseDown = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+      if ((e.target as HTMLElement).tagName === "BUTTON") return;
       this.isDragging = true;
       const rect = this.panel.getBoundingClientRect();
       this.dragOffset = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
       };
-      this.panel.style.transition = 'none';
+      this.panel.style.transition = "none";
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -148,22 +153,22 @@ export class ToolPanel {
       const y = e.clientY - this.dragOffset.y;
       this.panel.style.left = `${x}px`;
       this.panel.style.top = `${y}px`;
-      this.panel.style.right = 'auto';
+      this.panel.style.right = "auto";
     };
 
     const onMouseUp = () => {
       this.isDragging = false;
-      this.panel.style.transition = '';
+      this.panel.style.transition = "";
     };
 
-    this.headerEl.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    this.headerEl.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
 
     this.cleanupFns.push(() => {
-      this.headerEl.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      this.headerEl.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     });
   }
 
@@ -198,7 +203,7 @@ export class ToolPanel {
 }
 
 export function createBadge(text: string, color: string): HTMLSpanElement {
-  const badge = document.createElement('span');
+  const badge = document.createElement("span");
   badge.style.cssText = `
     display: inline-flex;
     align-items: center;
@@ -217,40 +222,42 @@ export function createBadge(text: string, color: string): HTMLSpanElement {
 export function createButton(
   text: string,
   onClick: () => void,
-  variant: 'primary' | 'secondary' = 'secondary',
+  variant: "primary" | "secondary" = "secondary",
 ): HTMLButtonElement {
-  const btn = document.createElement('button');
-  const isPrimary = variant === 'primary';
+  const btn = document.createElement("button");
+  const isPrimary = variant === "primary";
   btn.style.cssText = `
     padding: 4px 10px;
     border-radius: 6px;
-    border: 1px solid ${isPrimary ? '#3b82f6' : '#334155'};
-    background: ${isPrimary ? '#3b82f6' : '#1e293b'};
-    color: ${isPrimary ? '#fff' : '#94a3b8'};
+    border: 1px solid ${isPrimary ? "#3b82f6" : "#334155"};
+    background: ${isPrimary ? "#3b82f6" : "#1e293b"};
+    color: ${isPrimary ? "#fff" : "#94a3b8"};
     font-size: 11px;
     cursor: pointer;
     font-family: inherit;
   `;
   btn.textContent = text;
-  btn.addEventListener('click', onClick);
-  btn.addEventListener('mouseenter', () => {
-    btn.style.opacity = '0.8';
+  btn.addEventListener("click", onClick);
+  btn.addEventListener("mouseenter", () => {
+    btn.style.opacity = "0.8";
   });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.opacity = '1';
+  btn.addEventListener("mouseleave", () => {
+    btn.style.opacity = "1";
   });
   return btn;
 }
 
-export function createScrollList(items: Array<{ label: string; value: string; color?: string }>): HTMLDivElement {
-  const list = document.createElement('div');
+export function createScrollList(
+  items: Array<{ label: string; value: string; color?: string }>,
+): HTMLDivElement {
+  const list = document.createElement("div");
   list.style.cssText = `
     display: flex;
     flex-direction: column;
     gap: 4px;
   `;
   for (const item of items) {
-    const row = document.createElement('div');
+    const row = document.createElement("div");
     row.style.cssText = `
       display: flex;
       justify-content: space-between;
@@ -259,12 +266,12 @@ export function createScrollList(items: Array<{ label: string; value: string; co
       border-radius: 4px;
       background: #1e293b;
     `;
-    const label = document.createElement('span');
+    const label = document.createElement("span");
     label.style.cssText = `color: #94a3b8; font-size: 12px;`;
     label.textContent = item.label;
 
-    const value = document.createElement('span');
-    value.style.cssText = `color: ${item.color || '#e2e8f0'}; font-family: 'SF Mono', monospace; font-size: 11px;`;
+    const value = document.createElement("span");
+    value.style.cssText = `color: ${item.color || "#e2e8f0"}; font-family: 'SF Mono', monospace; font-size: 11px;`;
     value.textContent = item.value;
 
     row.appendChild(label);
@@ -278,7 +285,7 @@ export function createTabBar(
   tabs: Array<{ id: string; label: string }>,
   onTabChange: (id: string) => void,
 ): { container: HTMLDivElement; setActive: (id: string) => void } {
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   container.style.cssText = `
     display: flex;
     gap: 2px;
@@ -291,7 +298,7 @@ export function createTabBar(
   const tabButtons: Record<string, HTMLButtonElement> = {};
 
   for (const tab of tabs) {
-    const btn = document.createElement('button');
+    const btn = document.createElement("button");
     btn.style.cssText = `
       flex: 1;
       padding: 5px 8px;
@@ -305,7 +312,7 @@ export function createTabBar(
       transition: all 0.15s;
     `;
     btn.textContent = tab.label;
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
       onTabChange(tab.id);
       setActive(tab.id);
     });
@@ -316,11 +323,11 @@ export function createTabBar(
   function setActive(id: string) {
     for (const [tabId, btn] of Object.entries(tabButtons)) {
       if (tabId === id) {
-        btn.style.background = '#1e293b';
-        btn.style.color = '#f1f5f9';
+        btn.style.background = "#1e293b";
+        btn.style.color = "#f1f5f9";
       } else {
-        btn.style.background = 'transparent';
-        btn.style.color = '#64748b';
+        btn.style.background = "transparent";
+        btn.style.color = "#64748b";
       }
     }
   }
@@ -334,11 +341,11 @@ export function createSearchInput(
   placeholder: string,
   onSearch: (query: string) => void,
 ): { container: HTMLDivElement; getValue: () => string } {
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   container.style.cssText = `margin-bottom: 8px;`;
 
-  const input = document.createElement('input');
-  input.type = 'text';
+  const input = document.createElement("input");
+  input.type = "text";
   input.placeholder = placeholder;
   input.style.cssText = `
     width: 100%;
@@ -352,12 +359,12 @@ export function createSearchInput(
     outline: none;
     box-sizing: border-box;
   `;
-  input.addEventListener('input', () => onSearch(input.value));
-  input.addEventListener('focus', () => {
-    input.style.borderColor = '#3b82f6';
+  input.addEventListener("input", () => onSearch(input.value));
+  input.addEventListener("focus", () => {
+    input.style.borderColor = "#3b82f6";
   });
-  input.addEventListener('blur', () => {
-    input.style.borderColor = '#334155';
+  input.addEventListener("blur", () => {
+    input.style.borderColor = "#334155";
   });
 
   container.appendChild(input);

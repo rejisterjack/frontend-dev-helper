@@ -1,4 +1,8 @@
-import { addOverlayElement, removeOverlayElement, createHighlightBox } from './overlay-manager';
+import {
+  addOverlayElement,
+  removeOverlayElement,
+  createHighlightBox,
+} from "./overlay-manager";
 
 interface HighlightOptions {
   color: string;
@@ -24,17 +28,17 @@ export class HighlightEngine {
   }
 
   start(): void {
-    document.addEventListener('mousemove', this.onMouseMove, true);
-    document.addEventListener('mouseleave', this.onMouseLeave, true);
+    document.addEventListener("mousemove", this.onMouseMove, true);
+    document.addEventListener("mouseleave", this.onMouseLeave, true);
     if (this.options.onClick) {
-      document.addEventListener('click', this.onClick, true);
+      document.addEventListener("click", this.onClick, true);
     }
   }
 
   stop(): void {
-    document.removeEventListener('mousemove', this.onMouseMove, true);
-    document.removeEventListener('mouseleave', this.onMouseLeave, true);
-    document.removeEventListener('click', this.onClick, true);
+    document.removeEventListener("mousemove", this.onMouseMove, true);
+    document.removeEventListener("mouseleave", this.onMouseLeave, true);
+    document.removeEventListener("click", this.onClick, true);
     this.cleanup();
   }
 
@@ -47,9 +51,10 @@ export class HighlightEngine {
     this.currentElement = target;
 
     const rect = target.getBoundingClientRect();
-    const label = this.options.showLabel && this.options.getLabel
-      ? this.options.getLabel(target)
-      : undefined;
+    const label =
+      this.options.showLabel && this.options.getLabel
+        ? this.options.getLabel(target)
+        : undefined;
 
     this.highlightBox = createHighlightBox(rect, this.options.color, label);
     addOverlayElement(this.highlightBox);
@@ -80,26 +85,38 @@ export class HighlightEngine {
   }
 }
 
-export function generateSelector(el: HTMLElement): string {
+export function generateSelector(
+  el: HTMLElement,
+  options?: { preferClass?: boolean },
+): string {
+  const preferClass = options?.preferClass ?? true;
   if (el.id) return `#${CSS.escape(el.id)}`;
 
   const path: string[] = [];
   let current: HTMLElement | null = el;
 
-  while (current && current !== document.body && current !== document.documentElement) {
+  while (
+    current &&
+    current !== document.body &&
+    current !== document.documentElement
+  ) {
     let selector = current.tagName.toLowerCase();
 
-    if (current.className && typeof current.className === 'string') {
+    if (
+      preferClass &&
+      current.className &&
+      typeof current.className === "string"
+    ) {
       const classes = current.className.trim().split(/\s+/).filter(Boolean);
       if (classes.length > 0) {
-        selector += '.' + classes.map((c) => CSS.escape(c)).join('.');
+        selector += "." + classes.map((c) => CSS.escape(c)).join(".");
       }
     }
 
-    const parent = current.parentElement;
+    const parent: HTMLElement | null = current.parentElement;
     if (parent) {
       const siblings = Array.from(parent.children).filter(
-        (s) => s.tagName === current!.tagName
+        (s: Element) => s.tagName === current!.tagName,
       );
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1;
@@ -111,19 +128,37 @@ export function generateSelector(el: HTMLElement): string {
     current = parent;
   }
 
-  return path.join(' > ');
+  return path.join(" > ");
 }
 
 export function getComputedStyles(el: HTMLElement): Record<string, string> {
   const computed = window.getComputedStyle(el);
   const styles: Record<string, string> = {};
   const relevantProps = [
-    'display', 'position', 'width', 'height', 'margin', 'padding',
-    'font-family', 'font-size', 'font-weight', 'line-height',
-    'color', 'background-color', 'border', 'border-radius',
-    'flex-direction', 'justify-content', 'align-items', 'gap',
-    'grid-template-columns', 'grid-template-rows',
-    'overflow', 'opacity', 'z-index', 'box-shadow',
+    "display",
+    "position",
+    "width",
+    "height",
+    "margin",
+    "padding",
+    "font-family",
+    "font-size",
+    "font-weight",
+    "line-height",
+    "color",
+    "background-color",
+    "border",
+    "border-radius",
+    "flex-direction",
+    "justify-content",
+    "align-items",
+    "gap",
+    "grid-template-columns",
+    "grid-template-rows",
+    "overflow",
+    "opacity",
+    "z-index",
+    "box-shadow",
   ];
   for (const prop of relevantProps) {
     styles[prop] = computed.getPropertyValue(prop);

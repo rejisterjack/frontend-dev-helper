@@ -4,7 +4,7 @@
 > Built for Chrome & Firefox · Manifest V3 · Open Source
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/rejisterjack/frontend-dev-helper)
-[![Tools](https://img.shields.io/badge/tools-40+-success.svg)](#features)
+[![Tools](https://img.shields.io/badge/tools-50+-success.svg)](#features)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](#)
 
@@ -16,7 +16,7 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 **FrontendDevHelper is the unified, modern replacement.**
 
-- **40+ professional tools** in one extension
+- **50+ professional tools** in one extension
 - **Manifest V3** from day one
 - **Privacy-first** — tools run locally; optional AI calls only to providers you configure
 - **Open source** and free forever
@@ -28,73 +28,73 @@ Frontend developers rely on 8–12 separate browser extensions for visual debugg
 
 ### Inspection (15 tools)
 
-| Tool | Description |
-|------|-------------|
-| **DOM Outliner** | Color-coded element outlines by depth |
-| **Element Inspector** | Hover tooltip with computed properties |
-| **Spacing Visualizer** | Margin & padding box overlays |
-| **Font Inspector** | Typography analysis with source detection |
-| **Color Picker** | Click to pick, palette extraction |
-| **Pixel Ruler** | Precise distance measurement |
-| **Tech Detector** | Detect frameworks & libraries |
-| **Component Tree** | React/Vue/Angular/Svelte tree visualization |
-| **Focus Debugger** | Focus order visualization |
-| **Form Debugger** | Form validation & accessibility debugging |
-| **Z-Index Visualizer** | Stacking context map with 3D view |
-| **Smart Element Picker** | Advanced element selector with XPath/CSS |
-| **Framework DevTools** | React DevTools integration |
-| **Container Query Inspector** | CSS container query visualization |
-| **View Transitions Debugger** | View Transitions API debugging |
+| Tool                          | Description                                         |
+| ----------------------------- | --------------------------------------------------- |
+| **DOM Outliner**              | Color-coded element outlines by depth               |
+| **Element Inspector**         | Hover tooltip with computed properties              |
+| **Spacing Visualizer**        | Margin & padding box overlays                       |
+| **Font Inspector**            | Typography analysis with source detection           |
+| **Color Picker**              | Click to pick, palette extraction                   |
+| **Pixel Ruler**               | Precise distance measurement                        |
+| **Tech Detector**             | Detect frameworks & libraries                       |
+| **DOM Tree Viewer**           | Walk and inspect the DOM tree with colored outlines |
+| **Focus Debugger**            | Focus order visualization                           |
+| **Form Debugger**             | Form validation & accessibility debugging           |
+| **Z-Index Visualizer**        | Stacking context map with 3D view                   |
+| **Smart Element Picker**      | Advanced element selector with XPath/CSS            |
+| **Framework DevTools**        | React DevTools integration                          |
+| **Container Query Inspector** | CSS container query visualization                   |
+| **View Transitions Debugger** | View Transitions API debugging                      |
 
 ### CSS (10 tools)
 
-| Tool | Description |
-|------|-------------|
-| **CSS Inspector** | Computed CSS property viewer |
-| **CSS Editor** | Live CSS editing |
-| **CSS Scanner** | Detect CSS anti-patterns |
-| **CSS Variable Inspector** | CSS custom property viewer |
-| **Layout Visualizer** | Flexbox/Grid overlay visualization |
-| **Grid Overlay** | CSS Grid line visualization |
-| **Contrast Checker** | WCAG contrast compliance |
-| **Animation Inspector** | CSS animation timeline debugger |
-| **Design System Validator** | Design token consistency checker |
-| **Breakpoint Overlay** | Responsive breakpoint indicators |
+| Tool                        | Description                        |
+| --------------------------- | ---------------------------------- |
+| **CSS Inspector**           | Computed CSS property viewer       |
+| **CSS Editor**              | Live CSS editing                   |
+| **CSS Scanner**             | Detect CSS anti-patterns           |
+| **CSS Variable Inspector**  | CSS custom property viewer         |
+| **Layout Visualizer**       | Flexbox/Grid overlay visualization |
+| **Grid Overlay**            | CSS Grid line visualization        |
+| **Contrast Checker**        | WCAG contrast compliance           |
+| **Animation Inspector**     | CSS animation timeline debugger    |
+| **Design System Validator** | Design token consistency checker   |
+| **Breakpoint Overlay**      | Responsive breakpoint indicators   |
 
 ### Performance (4 tools)
 
-| Tool | Description |
-|------|-------------|
-| **Flame Graph** | JavaScript execution performance visualization |
-| **Network Analyzer** | Network request monitoring & analysis |
-| **Performance Budget** | Set and monitor performance thresholds |
-| **Scroll Animations Debugger** | Debug scroll-driven animations |
+| Tool                           | Description                                               |
+| ------------------------------ | --------------------------------------------------------- |
+| **Performance Entries Viewer** | Performance marks, measures, and resource timing timeline |
+| **Network Analyzer**           | Network request monitoring & analysis                     |
+| **Performance Budget**         | Set and monitor performance thresholds                    |
+| **Scroll Animations Debugger** | Debug scroll-driven animations                            |
 
 ### Accessibility (2 tools)
 
-| Tool | Description |
-|------|-------------|
-| **Accessibility Audit** | WCAG validator + ARIA checker |
+| Tool                      | Description                                |
+| ------------------------- | ------------------------------------------ |
+| **Accessibility Audit**   | WCAG validator + ARIA checker              |
 | **Focus Debugger (A11y)** | Focus order & keyboard navigation debugger |
 
 ### AI (3 tools)
 
-| Tool | Description |
-|------|-------------|
-| **AI Analyzer** | AI-powered page analysis |
-| **Component Analyzer** | AI-powered element analysis |
-| **Smart Suggestions** | AI-powered suggestions with auto-fix |
+| Tool                   | Description                          |
+| ---------------------- | ------------------------------------ |
+| **AI Analyzer**        | AI-powered page analysis             |
+| **Component Analyzer** | AI-powered element analysis          |
+| **Smart Suggestions**  | AI-powered suggestions with auto-fix |
 
 ### Utilities (6 tools)
 
-| Tool | Description |
-|------|-------------|
-| **Command Palette** | Quick tool access via keyboard |
-| **Responsive Preview** | Multi-device viewport preview |
-| **Screenshot Studio** | Capture & annotate screenshots |
-| **Site Report Generator** | Comprehensive page quality reports |
-| **Storage Inspector** | Browse localStorage, sessionStorage, cookies |
-| **Visual Regression** | Screenshot comparison testing |
+| Tool                      | Description                                  |
+| ------------------------- | -------------------------------------------- |
+| **Command Palette**       | Quick tool access via keyboard               |
+| **Responsive Preview**    | Multi-device viewport preview                |
+| **Screenshot Studio**     | Capture & annotate screenshots               |
+| **Site Report Generator** | Comprehensive page quality reports           |
+| **Storage Inspector**     | Browse localStorage, sessionStorage, cookies |
+| **Visual Regression**     | Screenshot comparison testing                |
 
 ---
 
@@ -124,12 +124,12 @@ bun run build
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Alt+Shift+D` | Toggle DOM Outliner |
+| Shortcut      | Action                   |
+| ------------- | ------------------------ |
+| `Alt+Shift+D` | Toggle DOM Outliner      |
 | `Alt+Shift+I` | Toggle Element Inspector |
-| `Alt+Shift+P` | Open Command Palette |
-| `Alt+Shift+0` | Disable All Tools |
+| `Alt+Shift+P` | Open Command Palette     |
+| `Alt+Shift+0` | Disable All Tools        |
 
 Additional shortcuts can be assigned at `chrome://extensions/shortcuts`.
 
@@ -187,15 +187,15 @@ frontend-dev-helper/
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
+| Layer               | Technology                  |
+| ------------------- | --------------------------- |
 | Extension Framework | WXT (Web Extension Toolkit) |
-| UI | React 19 + shadcn/ui |
-| Styling | Tailwind CSS v4 |
-| State Management | Zustand |
-| Validation | Zod |
-| Build | WXT + Vite |
-| Package Manager | Bun |
+| UI                  | React 19 + shadcn/ui        |
+| Styling             | Tailwind CSS v4             |
+| State Management    | Zustand                     |
+| Validation          | Zod                         |
+| Build               | WXT + Vite                  |
+| Package Manager     | Bun                         |
 
 ---
 

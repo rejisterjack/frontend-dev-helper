@@ -3,8 +3,10 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
+    "types": ["vitest/globals", "chrome"],
     "paths": {
       "@/*": ["./*"]
     }
-  }
+  },
+  "exclude": ["test/**", "node_modules", ".output"]
 }

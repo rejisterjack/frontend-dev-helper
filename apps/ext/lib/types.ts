@@ -1,62 +1,61 @@
 export type ToolId =
-  | 'dom-outliner'
-  | 'spacing-visualizer'
-  | 'font-inspector'
-  | 'color-picker'
-  | 'pixel-ruler'
-  | 'css-inspector'
-  | 'css-editor'
-  | 'contrast-checker'
-  | 'layout-visualizer'
-  | 'z-index-visualizer'
-  | 'tech-detector'
-  | 'accessibility-audit'
-  | 'network-analyzer'
-  | 'screenshot-studio'
-  | 'animation-inspector'
-  | 'responsive-preview'
-  | 'design-system-validator'
-  | 'command-palette'
-  | 'storage-inspector'
-  | 'focus-debugger'
-  | 'form-debugger'
-  | 'component-tree'
-  | 'flame-graph'
-  | 'visual-regression'
-  | 'smart-suggestions'
-  | 'element-inspector'
-  | 'grid-overlay'
-  | 'css-scanner'
-  | 'css-variable-inspector'
-  | 'smart-element-picker'
-  | 'performance-budget'
-  | 'framework-devtools'
-  | 'container-query-inspector'
-  | 'view-transitions-debugger'
-  | 'scroll-animations-debugger'
-  | 'breakpoint-overlay'
-  | 'ai-analyzer'
-  | 'component-analyzer'
-  | 'focus-debugger-a11y'
-  | 'site-report-generator'
-  | 'ai-auto-fix'
-  | 'full-audit'
-  | 'design-token-extractor'
-  | 'source-map-viewer'
-  | 'network-replay'
-  | 'react-state-panel'
-  | 'vue-state-panel'
-  | 'session-replay';
+  | "dom-outliner"
+  | "spacing-visualizer"
+  | "font-inspector"
+  | "color-picker"
+  | "pixel-ruler"
+  | "css-inspector"
+  | "css-editor"
+  | "contrast-checker"
+  | "layout-visualizer"
+  | "z-index-visualizer"
+  | "tech-detector"
+  | "accessibility-audit"
+  | "network-analyzer"
+  | "screenshot-studio"
+  | "animation-inspector"
+  | "responsive-preview"
+  | "design-system-validator"
+  | "command-palette"
+  | "storage-inspector"
+  | "focus-debugger"
+  | "form-debugger"
+  | "component-tree"
+  | "flame-graph"
+  | "visual-regression"
+  | "smart-suggestions"
+  | "element-inspector"
+  | "grid-overlay"
+  | "css-scanner"
+  | "css-variable-inspector"
+  | "smart-element-picker"
+  | "performance-budget"
+  | "framework-devtools"
+  | "container-query-inspector"
+  | "view-transitions-debugger"
+  | "scroll-animations-debugger"
+  | "breakpoint-overlay"
+  | "ai-analyzer"
+  | "focus-debugger-a11y"
+  | "site-report-generator"
+  | "ai-auto-fix"
+  | "full-audit"
+  | "design-token-extractor"
+  | "source-map-viewer"
+  | "network-replay"
+  | "react-state-panel"
+  | "vue-state-panel"
+  | "session-replay";
 
 export type ToolCategory =
-  | 'inspection'
-  | 'css'
-  | 'performance'
-  | 'accessibility'
-  | 'ai'
-  | 'utility';
+  | "inspection"
+  | "css"
+  | "performance"
+  | "accessibility"
+  | "ai"
+  | "utility";
 
-export type ToolActivationState = 'active' | 'inactive' | 'loading' | 'error';
+export type ToolActivationState = "active" | "inactive" | "loading" | "error";
 
 export interface ToolState {
   id: ToolId;
@@ -126,12 +125,12 @@ export interface WebVitals {
   ttfb: number;
   inp: number;
   fcp: number;
-  lcpRating: 'good' | 'needs-improvement' | 'poor';
-  fidRating: 'good' | 'needs-improvement' | 'poor';
-  clsRating: 'good' | 'needs-improvement' | 'poor';
-  ttfbRating: 'good' | 'needs-improvement' | 'poor';
-  inpRating: 'good' | 'needs-improvement' | 'poor';
-  fcpRating: 'good' | 'needs-improvement' | 'poor';
+  lcpRating: "good" | "needs-improvement" | "poor";
+  fidRating: "good" | "needs-improvement" | "poor";
+  clsRating: "good" | "needs-improvement" | "poor";
+  ttfbRating: "good" | "needs-improvement" | "poor";
+  inpRating: "good" | "needs-improvement" | "poor";
+  fcpRating: "good" | "needs-improvement" | "poor";
 }
 
 export interface AccessibilityReport {
@@ -148,7 +147,7 @@ export interface AccessibilityReport {
 
 export interface AccessibilityIssue {
   id: string;
-  impact: 'critical' | 'serious' | 'moderate' | 'minor';
+  impact: "critical" | "serious" | "moderate" | "minor";
   description: string;
   helpUrl: string;
   nodes: AccessibilityNode[];
@@ -163,7 +162,7 @@ export interface AccessibilityNode {
 export interface AccessibilityWarning {
   id: string;
   description: string;
-  impact: 'critical' | 'serious' | 'moderate' | 'minor';
+  impact: "critical" | "serious" | "moderate" | "minor";
   helpUrl: string;
 }
 
@@ -313,7 +312,7 @@ export interface StructuredDataEntry {
 }
 
 export interface SEOIssue {
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
   message: string;
   element?: string;
 }
@@ -335,15 +334,21 @@ export interface BestPracticeIssue {
   id: string;
   title: string;
   description: string;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
 }
 
-export type FrameworkType = 'react' | 'vue' | 'angular' | 'svelte' | 'solid' | 'unknown';
+export type FrameworkType =
+  | "react"
+  | "vue"
+  | "angular"
+  | "svelte"
+  | "solid"
+  | "unknown";
 
 export interface ComponentNode {
   id: string;
   name: string;
-  type: 'element' | 'component' | 'text';
+  type: "element" | "component" | "text";
   framework: FrameworkType;
   props?: Record<string, unknown>;
   state?: Record<string, unknown>;
@@ -367,7 +372,7 @@ export interface FlameGraphEntry {
   duration: number;
   selfTime: number;
   children: FlameGraphEntry[];
-  type: 'script' | 'layout' | 'paint' | 'render' | 'idle' | 'other';
+  type: "script" | "layout" | "paint" | "render" | "idle" | "other";
   stackDepth: number;
 }
 
@@ -396,7 +401,7 @@ export interface FocusHistoryEntry {
   element: string;
   selector: string;
   timestamp: number;
-  type: 'focus' | 'blur';
+  type: "focus" | "blur";
 }
 
 export interface FocusDebuggerState {
@@ -441,7 +446,7 @@ export interface FormValidationError {
   field: string;
   selector: string;
   message: string;
-  type: 'required' | 'pattern' | 'custom' | 'type' | 'range';
+  type: "required" | "pattern" | "custom" | "type" | "range";
 }
 
 export interface FormDebuggerState {
@@ -476,7 +481,7 @@ export interface VisualRegressionTest {
   baseline: BaselineScreenshot;
   comparison?: BaselineScreenshot;
   diff?: DiffResult;
-  status: 'pending' | 'passed' | 'failed' | 'error';
+  status: "pending" | "passed" | "failed" | "error";
   threshold: number;
 }
 
@@ -489,8 +494,8 @@ export interface VisualRegressionState {
 }
 
 export interface ExtensionSettings {
-  theme: 'light' | 'dark' | 'system';
-  fontSize: 'small' | 'medium' | 'large';
+  theme: "light" | "dark" | "system";
+  fontSize: "small" | "medium" | "large";
   showTooltips: boolean;
   autoActivate: boolean;
   overlayOpacity: number;
@@ -500,7 +505,7 @@ export interface ExtensionSettings {
   keyboardShortcuts: boolean;
   compactMode: boolean;
   notifications: boolean;
-  animationSpeed: 'slow' | 'normal' | 'fast';
+  animationSpeed: "slow" | "normal" | "fast";
 }
 
 export interface FeatureToggles {
@@ -556,35 +561,41 @@ export interface AccessibilityDataPayload {
 }
 
 export type ExtensionMessage =
-  | { type: 'TOGGLE_TOOL'; payload: ToggleToolPayload }
-  | { type: 'TOOL_STATE_CHANGED'; payload: ToolStateChangeEvent }
-  | { type: 'SET_TOOL_STATE'; payload: SetToolStatePayload }
-  | { type: 'GET_TOOL_STATE'; payload: GetToolStatePayload }
-  | { type: 'DEACTIVATE_ALL_TOOLS' }
-  | { type: 'UPDATE_SETTINGS'; payload: UpdateSettingsPayload }
-  | { type: 'GET_SETTINGS' }
-  | { type: 'SETTINGS_UPDATED'; payload: ExtensionSettings }
-  | { type: 'ELEMENT_SELECTED'; payload: ElementSelectedPayload }
-  | { type: 'PERFORMANCE_DATA'; payload: PerformanceDataPayload }
-  | { type: 'ACCESSIBILITY_DATA'; payload: AccessibilityDataPayload }
-  | { type: 'SITE_REPORT_DATA'; payload: SiteReport }
-  | { type: 'COLOR_REPORT_DATA'; payload: ColorReportData }
-  | { type: 'SEO_REPORT_DATA'; payload: SEOReportData }
-  | { type: 'CONTENT_SCRIPT_READY' }
-  | { type: 'POPUP_OPENED' }
-  | { type: 'POPUP_CLOSED' }
-  | { type: 'EXECUTE_COMMAND'; payload: Command }
-  | { type: 'COMMAND_RESULT'; payload: { commandId: string; result: unknown } }
-  | { type: 'LLM_QUERY'; payload: { query: string; context?: LLMPageContext } }
-  | { type: 'LLM_RESPONSE'; payload: { response: string } }
-  | { type: 'LLM_ERROR'; payload: { error: string } }
-  | { type: 'VISUAL_REGRESSION_CAPTURE'; payload: { name: string; threshold: number } }
-  | { type: 'VISUAL_REGRESSION_COMPARE'; payload: { baselineId: string; threshold: number } }
-  | { type: 'VISUAL_REGRESSION_RESULT'; payload: VisualRegressionTest }
-  | { type: 'CONTEXT_MENU_CLICKED'; payload: ContextMenuConfig }
-  | { type: 'KEYBOARD_SHORTCUT'; payload: { shortcut: string } }
-  | { type: 'INIT_CONTENT_SCRIPT' }
-  | { type: 'DESTROY_CONTENT_SCRIPT' };
+  | { type: "TOGGLE_TOOL"; payload: ToggleToolPayload }
+  | { type: "TOOL_STATE_CHANGED"; payload: ToolStateChangeEvent }
+  | { type: "SET_TOOL_STATE"; payload: SetToolStatePayload }
+  | { type: "GET_TOOL_STATE"; payload: GetToolStatePayload }
+  | { type: "DEACTIVATE_ALL_TOOLS" }
+  | { type: "UPDATE_SETTINGS"; payload: UpdateSettingsPayload }
+  | { type: "GET_SETTINGS" }
+  | { type: "SETTINGS_UPDATED"; payload: ExtensionSettings }
+  | { type: "ELEMENT_SELECTED"; payload: ElementSelectedPayload }
+  | { type: "PERFORMANCE_DATA"; payload: PerformanceDataPayload }
+  | { type: "ACCESSIBILITY_DATA"; payload: AccessibilityDataPayload }
+  | { type: "SITE_REPORT_DATA"; payload: SiteReport }
+  | { type: "COLOR_REPORT_DATA"; payload: ColorReportData }
+  | { type: "SEO_REPORT_DATA"; payload: SEOReportData }
+  | { type: "CONTENT_SCRIPT_READY" }
+  | { type: "POPUP_OPENED" }
+  | { type: "POPUP_CLOSED" }
+  | { type: "EXECUTE_COMMAND"; payload: Command }
+  | { type: "COMMAND_RESULT"; payload: { commandId: string; result: unknown } }
+  | { type: "LLM_QUERY"; payload: { query: string; context?: LLMPageContext } }
+  | { type: "LLM_RESPONSE"; payload: { response: string } }
+  | { type: "LLM_ERROR"; payload: { error: string } }
+  | {
+      type: "VISUAL_REGRESSION_CAPTURE";
+      payload: { name: string; threshold: number };
+    }
+  | {
+      type: "VISUAL_REGRESSION_COMPARE";
+      payload: { baselineId: string; threshold: number };
+    }
+  | { type: "VISUAL_REGRESSION_RESULT"; payload: VisualRegressionTest }
+  | { type: "CONTEXT_MENU_CLICKED"; payload: ContextMenuConfig }
+  | { type: "KEYBOARD_SHORTCUT"; payload: { shortcut: string } }
+  | { type: "INIT_CONTENT_SCRIPT" }
+  | { type: "DESTROY_CONTENT_SCRIPT" };
 
 export interface MessageResponse {
   success: boolean;
@@ -629,8 +640,13 @@ export interface LLMConfig {
 }
 
 export interface LLMMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string | Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }>;
+  role: "system" | "user" | "assistant";
+  content:
+    | string
+    | Array<
+        | { type: "text"; text: string }
+        | { type: "image_url"; image_url: { url: string } }
+      >;
 }
 
 export interface LLMPageContext {
@@ -645,7 +661,7 @@ export interface LLMPageContext {
   framework?: FrameworkType;
 }
 
-export type ChatMessageRole = 'system' | 'user' | 'assistant';
+export type ChatMessageRole = "system" | "user" | "assistant";
 
 export interface ChatMessage {
   id: string;
@@ -660,39 +676,37 @@ export interface ChatMessage {
   };
 }
 
-export type SubscriptionTier = 'free' | 'pro' | 'team';
+export type SubscriptionTier = "free" | "pro" | "team";
 
 export type FeatureFlag =
-  | 'source-map-resolution'
-  | 'vscode-bridge'
-  | 'element-inspector'
-  | 'css-inspector'
-  | 'dom-outliner'
-  | 'tech-detector'
-  | 'color-picker'
-  | 'contrast-checker'
-  | 'accessibility-audit'
-  | 'ollama-provider'
-  | 'github-pr-comments'
-  | 'ai-tools'
-  | 'ai-auto-fix'
-  | 'smart-suggestions'
-  | 'component-analyzer'
-  | 'specificity-cascade'
-  | 'css-editor'
-  | 'css-scanner'
-  | 'css-variable-inspector'
-  | 'layout-visualizer'
-  | 'framework-panels'
-  | 'react-state-panel'
-  | 'vue-state-panel'
-  | 'react-render-tracker'
-  | 'performance-audit'
-  | 'flame-graph'
-  | 'network-analyzer'
-  | 'network-replay'
-  | 'session-replay'
-  | 'visual-regression'
-  | 'screenshot-studio'
-  | 'site-report-generator'
-  | 'full-audit';
+  | "source-map-resolution"
+  | "vscode-bridge"
+  | "element-inspector"
+  | "css-inspector"
+  | "dom-outliner"
+  | "tech-detector"
+  | "color-picker"
+  | "contrast-checker"
+  | "accessibility-audit"
+  | "ollama-provider"
+  | "github-pr-comments"
+  | "ai-tools"
+  | "ai-auto-fix"
+  | "smart-suggestions"
+  | "specificity-cascade"
+  | "css-editor"
+  | "css-scanner"
+  | "css-variable-inspector"
+  | "layout-visualizer"
+  | "framework-panels"
+  | "react-state-panel"
+  | "vue-state-panel"
+  | "performance-audit"
+  | "flame-graph"
+  | "network-analyzer"
+  | "network-replay"
+  | "session-replay"
+  | "visual-regression"
+  | "screenshot-studio"
+  | "site-report-generator"
+  | "full-audit";

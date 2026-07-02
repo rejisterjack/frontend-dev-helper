@@ -1,13 +1,13 @@
-import { useEffect } from 'react';
-import type { FDHMessage } from '@/lib/messaging/types';
+import { useEffect } from "react";
+import type { FDHMessage } from "@/lib/messaging/types";
 
 export function useMessageListener(
-  handler: (message: FDHMessage, sender: browser.Runtime.MessageSender) => void,
+  handler: (message: FDHMessage, sender: chrome.runtime.MessageSender) => void,
 ) {
   useEffect(() => {
     const listener = (
       message: unknown,
-      sender: browser.Runtime.MessageSender,
+      sender: chrome.runtime.MessageSender,
     ) => {
       handler(message as FDHMessage, sender);
     };

@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Mock the overlay-manager module
-vi.mock('@/content/overlay-manager', () => ({
+vi.mock("@/content/overlay-manager", () => ({
   getOverlayContainer: () => ({
-    container: document.createElement('div'),
-    shadow: document.createElement('div'),
+    container: document.createElement("div"),
+    shadow: document.createElement("div"),
   }),
   addOverlayElement: (el: HTMLElement) => {
     // no-op in test: just track it on the element
@@ -16,11 +16,15 @@ vi.mock('@/content/overlay-manager', () => ({
     if (el.parentNode) el.parentNode.removeChild(el);
   },
   clearAllOverlays: () => {},
+  attachViewportTracker: (tracker: () => void) => {
+    tracker();
+    return () => {};
+  },
   createHighlightBox: (rect: DOMRect, color: string, label?: string) => {
-    const box = document.createElement('div');
+    const box = document.createElement("div");
     box.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;border:2px solid ${color};pointer-events:none;z-index:2147483641;`;
     if (label) {
-      const labelEl = document.createElement('div');
+      const labelEl = document.createElement("div");
       labelEl.textContent = label;
       box.appendChild(labelEl);
     }
@@ -30,19 +34,26 @@ vi.mock('@/content/overlay-manager', () => ({
 }));
 
 // Mock the highlight-engine module
-vi.mock('@/content/highlight-engine', () => ({
+vi.mock("@/content/highlight-engine", () => ({
   HighlightEngine: class MockHighlightEngine {
     start() {}
     stop() {}
   },
   generateSelector: (el: HTMLElement) => {
-    if (el.id) return '#' + el.id;
+    if (el.id) return "#" + el.id;
     return el.tagName.toLowerCase();
   },
   getComputedStyles: (el: HTMLElement) => {
     const computed = window.getComputedStyle(el);
     const styles: Record<string, string> = {};
-    const props = ['display', 'position', 'width', 'height', 'color', 'background-color'];
+    const props = [
+      "display",
+      "position",
+      "width",
+      "height",
+      "color",
+      "background-color",
+    ];
     for (const prop of props) {
       styles[prop] = computed.getPropertyValue(prop);
     }
@@ -64,7 +75,7 @@ const chromeStorageMock = {
 };
 
 const chromeTabsMock = {
-  query: () => Promise.resolve([{ id: 1, url: 'https://example.com' }]),
+  query: () => Promise.resolve([{ id: 1, url: "https://example.com" }]),
   sendMessage: () => Promise.resolve(),
 };
 
@@ -114,7 +125,9 @@ global.browser = global.chrome as any;
 class MockMutationObserver {
   observe() {}
   disconnect() {}
-  takeRecords() { return []; }
+  takeRecords() {
+    return [];
+  }
 }
 global.MutationObserver = MockMutationObserver as any;
 
@@ -143,26 +156,32 @@ if (!global.performance) {
 }
 
 if (!global.requestAnimationFrame) {
-  global.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(cb, 0) as unknown as number;
+  global.requestAnimationFrame = (cb: FrameRequestCallback) =>
+    setTimeout(cb, 0) as unknown as number;
   global.cancelAnimationFrame = (id: number) => clearTimeout(id);
 }
 
-if (typeof CSS !== 'undefined' && !CSS.escape) {
-  (CSS as any).escape = (str: string) => str.replace(/([^\w-])/g, '\\$1');
+if (typeof CSS !== "undefined" && !CSS.escape) {
+  (CSS as any).escape = (str: string) => str.replace(/([^\w-])/g, "\\$1");
 }
 
 if (!document.createTreeWalker) {
-  document.createTreeWalker = () => ({
-    nextNode: () => null,
-    currentNode: null,
-  } as any);
+  document.createTreeWalker = () =>
+    ({
+      nextNode: () => null,
+      currentNode: null,
+    }) as any;
 }
 
-if (typeof NodeFilter === 'undefined') {
+if (!document.getAnimations) {
+  document.getAnimations = () => [];
+}
+
+if (typeof NodeFilter === "undefined") {
   (global as any).NodeFilter = {
     SHOW_ELEMENT: 1,
     SHOW_TEXT: 4,
-    SHOW_ALL: 0xFFFFFFFF,
+    SHOW_ALL: 0xffffffff,
   };
 }
 

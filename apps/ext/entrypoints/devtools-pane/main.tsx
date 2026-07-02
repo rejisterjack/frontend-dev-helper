@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom/client';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface ElementInfo {
   tagName: string;
@@ -82,7 +82,7 @@ function getElementInfo(): Promise<ElementInfo | null> {
           resolve(null);
         } else {
           try {
-            resolve(JSON.parse(result as string));
+            resolve(JSON.parse(result as unknown as string));
           } catch {
             resolve(null);
           }
@@ -92,12 +92,20 @@ function getElementInfo(): Promise<ElementInfo | null> {
   });
 }
 
-function PropertyInfo({ label, value }: { label: string; value: string | null | undefined }) {
+function PropertyInfo({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
   if (!value) return null;
   return (
     <div className="flex justify-between text-xs py-0.5">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono text-foreground truncate ml-2 max-w-[60%] text-right">{value}</span>
+      <span className="font-mono text-foreground truncate ml-2 max-w-[60%] text-right">
+        {value}
+      </span>
     </div>
   );
 }
@@ -143,13 +151,21 @@ function PaneContent() {
           <Badge variant="outline" className="font-mono text-xs">
             {info.tagName}
           </Badge>
-          {info.id && <Badge variant="secondary" className="text-xs">#{info.id}</Badge>}
+          {info.id && (
+            <Badge variant="secondary" className="text-xs">
+              #{info.id}
+            </Badge>
+          )}
         </div>
 
         {info.classes.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {info.classes.map((cls) => (
-              <Badge key={cls} variant="secondary" className="text-[0.6rem] px-1 py-0">
+              <Badge
+                key={cls}
+                variant="secondary"
+                className="text-[0.6rem] px-1 py-0"
+              >
                 .{cls}
               </Badge>
             ))}
@@ -159,7 +175,9 @@ function PaneContent() {
         {info.textContent && (
           <>
             <Separator />
-            <div className="text-xs text-muted-foreground italic truncate">{info.textContent}</div>
+            <div className="text-xs text-muted-foreground italic truncate">
+              {info.textContent}
+            </div>
           </>
         )}
 
@@ -177,20 +195,24 @@ function PaneContent() {
         ))}
 
         <Separator />
-        <div className="text-xs font-semibold text-foreground">Accessibility</div>
+        <div className="text-xs font-semibold text-foreground">
+          Accessibility
+        </div>
         <PropertyInfo label="Role" value={info.accessibility.role} />
         <PropertyInfo label="Name" value={info.accessibility.accessibleName} />
         <PropertyInfo label="tabIndex" value={info.accessibility.tabIndex} />
-        {Object.entries(info.accessibility.ariaAttributes).map(([key, value]) => (
-          <PropertyInfo key={key} label={key} value={value} />
-        ))}
+        {Object.entries(info.accessibility.ariaAttributes).map(
+          ([key, value]) => (
+            <PropertyInfo key={key} label={key} value={value} />
+          ),
+        )}
       </div>
     </ScrollArea>
   );
 }
 
-document.documentElement.classList.add('dark');
-ReactDOM.createRoot(document.getElementById('root')!).render(
+document.documentElement.classList.add("dark");
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <PaneContent />
   </React.StrictMode>,

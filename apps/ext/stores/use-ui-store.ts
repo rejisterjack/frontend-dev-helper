@@ -1,7 +1,14 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { chromeStorageAdapter } from "@/lib/storage";
 
-type View = 'dashboard' | 'category' | 'tool-detail' | 'settings' | 'ai-chat';
+type View =
+  | "dashboard"
+  | "category"
+  | "tool-detail"
+  | "settings"
+  | "ai-chat"
+  | "react-profiler";
 
 interface NavigationEntry {
   view: View;
@@ -10,18 +17,7 @@ interface NavigationEntry {
 
 const MAX_RECENT_TOOLS = 10;
 
-const chromeStorageAdapter = {
-  getItem: async (name: string) => {
-    const result = await chrome.storage.local.get(name);
-    return result[name] ?? null;
-  },
-  setItem: async (name: string, value: unknown) => {
-    await chrome.storage.local.set({ [name]: value });
-  },
-  removeItem: async (name: string) => {
-    await chrome.storage.local.remove(name);
-  },
-};
+const chromeStorageAdapterInstance = chromeStorageAdapter<UIState>();
 
 interface UIState {
   currentView: View;
@@ -45,10 +41,10 @@ interface UIState {
 export const useUIStore = create<UIState>()(
   persist(
     (set, get) => ({
-      currentView: 'dashboard',
+      currentView: "dashboard",
       selectedCategory: null,
       selectedToolId: null,
-      searchQuery: '',
+      searchQuery: "",
       commandPaletteOpen: false,
       history: [],
       favoriteToolIds: [],
@@ -59,10 +55,15 @@ export const useUIStore = create<UIState>()(
         set((state) => ({
           currentView: view,
           selectedCategory: (meta?.category as string) ?? selectedCategory,
-          selectedToolId: (meta?.toolId as string) ?? (view === 'tool-detail' ? selectedToolId : null),
+          selectedToolId:
+            (meta?.toolId as string) ??
+            (view === "tool-detail" ? selectedToolId : null),
           history: [
             ...state.history,
-            { view: currentView, meta: { category: selectedCategory, toolId: selectedToolId } },
+            {
+              view: currentView,
+              meta: { category: selectedCategory, toolId: selectedToolId },
+            },
           ],
         }));
       },
@@ -98,7 +99,9 @@ export const useUIStore = create<UIState>()(
       toggleFavorite: (toolId) => {
         const { favoriteToolIds } = get();
         if (favoriteToolIds.includes(toolId)) {
-          set({ favoriteToolIds: favoriteToolIds.filter((id) => id !== toolId) });
+          set({
+            favoriteToolIds: favoriteToolIds.filter((id) => id !== toolId),
+          });
         } else {
           set({ favoriteToolIds: [...favoriteToolIds, toolId] });
         }
@@ -112,12 +115,13 @@ export const useUIStore = create<UIState>()(
       },
     }),
     {
-      name: 'fdh-ui-storage',
-      storage: chromeStorageAdapter,
-      partialize: (state) => ({
-        favoriteToolIds: state.favoriteToolIds,
-        recentToolIds: state.recentToolIds,
-      }),
+      name: "fdh-ui-storage",
+      storage: chromeStorageAdapterInstance,
+      partialize: (state) =>
+        ({
+          favoriteToolIds: state.favoriteToolIds,
+          recentToolIds: state.recentToolIds,
+        }) as UIState,
     },
   ),
 );

@@ -1,12 +1,15 @@
-import type { ToolDefinition } from '../types';
-import { addOverlayElement, removeOverlayElement } from '@/content/overlay-manager';
+import type { ToolDefinition } from "../types";
+import {
+  addOverlayElement,
+  removeOverlayElement,
+} from "@/content/overlay-manager";
 
-const MARGIN_COLOR_DEFAULT = '#3b82f6';
-const PADDING_COLOR_DEFAULT = '#22c55e';
-const LABEL_BG = 'rgba(0,0,0,0.8)';
+const MARGIN_COLOR_DEFAULT = "#3b82f6";
+const PADDING_COLOR_DEFAULT = "#22c55e";
+const LABEL_BG = "rgba(0,0,0,0.8)";
 
 function createLabel(value: number, color: string): HTMLElement {
-  const label = document.createElement('span');
+  const label = document.createElement("span");
   label.textContent = `${Math.round(value)}px`;
   label.style.cssText = `
     position: absolute;
@@ -26,54 +29,56 @@ function createLabel(value: number, color: string): HTMLElement {
 
 function positionLabel(
   label: HTMLElement,
-  position: 'top' | 'right' | 'bottom' | 'left'
+  position: "top" | "right" | "bottom" | "left",
 ): void {
   switch (position) {
-    case 'top':
-      label.style.bottom = '2px';
-      label.style.left = '50%';
-      label.style.transform = 'translateX(-50%)';
+    case "top":
+      label.style.bottom = "2px";
+      label.style.left = "50%";
+      label.style.transform = "translateX(-50%)";
       break;
-    case 'right':
-      label.style.left = '2px';
-      label.style.top = '50%';
-      label.style.transform = 'translateY(-50%)';
+    case "right":
+      label.style.left = "2px";
+      label.style.top = "50%";
+      label.style.transform = "translateY(-50%)";
       break;
-    case 'bottom':
-      label.style.top = '2px';
-      label.style.left = '50%';
-      label.style.transform = 'translateX(-50%)';
+    case "bottom":
+      label.style.top = "2px";
+      label.style.left = "50%";
+      label.style.transform = "translateX(-50%)";
       break;
-    case 'left':
-      label.style.right = '2px';
-      label.style.top = '50%';
-      label.style.transform = 'translateY(-50%)';
+    case "left":
+      label.style.right = "2px";
+      label.style.top = "50%";
+      label.style.transform = "translateY(-50%)";
       break;
   }
 }
 
 export const spacingVisualizer: ToolDefinition = {
-  id: 'spacing-visualizer',
-  name: 'Spacing Visualizer',
-  description: 'Visualize margin, padding, and gap spacing on elements',
-  category: 'inspection',
-  icon: 'Move',
+  id: "spacing-visualizer",
+  name: "Spacing Visualizer",
+  description: "Visualize margin, padding, and gap spacing on elements",
+  category: "inspection",
+  icon: "Move",
   configSchema: {
-    showMargin: { type: 'boolean', label: 'Show Margin', default: true },
-    showPadding: { type: 'boolean', label: 'Show Padding', default: true },
-    showGap: { type: 'boolean', label: 'Show Gap', default: true },
-    marginColor: { type: 'color', label: 'Margin Color', default: '#f97316' },
-    paddingColor: { type: 'color', label: 'Padding Color', default: '#22c55e' },
-    gapColor: { type: 'color', label: 'Gap Color', default: '#3b82f6' },
-    showValues: { type: 'boolean', label: 'Show Values', default: true },
+    showMargin: { type: "boolean", label: "Show Margin", default: true },
+    showPadding: { type: "boolean", label: "Show Padding", default: true },
+    showGap: { type: "boolean", label: "Show Gap", default: true },
+    marginColor: { type: "color", label: "Margin Color", default: "#f97316" },
+    paddingColor: { type: "color", label: "Padding Color", default: "#22c55e" },
+    gapColor: { type: "color", label: "Gap Color", default: "#3b82f6" },
+    showValues: { type: "boolean", label: "Show Values", default: true },
   },
 
   run(ctx, config) {
     const showMargin = (config?.showMargin ?? true) as boolean;
     const showPadding = (config?.showPadding ?? true) as boolean;
+    const showGap = (config?.showGap ?? true) as boolean;
     const showValues = (config?.showValues ?? true) as boolean;
-    const marginColor = (config?.marginColor ?? '#f97316') as string;
-    const paddingColor = (config?.paddingColor ?? '#22c55e') as string;
+    const marginColor = (config?.marginColor ?? "#f97316") as string;
+    const paddingColor = (config?.paddingColor ?? "#22c55e") as string;
+    const gapColor = (config?.gapColor ?? "#3b82f6") as string;
 
     let currentOverlays: HTMLElement[] = [];
     let currentElement: HTMLElement | null = null;
@@ -87,7 +92,7 @@ export const spacingVisualizer: ToolDefinition = {
     }
 
     function createOverlayBox(color: string): HTMLElement {
-      const el = document.createElement('div');
+      const el = document.createElement("div");
       el.style.cssText = `
         position: fixed;
         pointer-events: none;
@@ -122,11 +127,14 @@ export const spacingVisualizer: ToolDefinition = {
       };
 
       if (showMargin) {
-        const sides: Array<{ key: 'top' | 'right' | 'bottom' | 'left'; position: 'top' | 'right' | 'bottom' | 'left' }> = [
-          { key: 'top', position: 'top' },
-          { key: 'right', position: 'right' },
-          { key: 'bottom', position: 'bottom' },
-          { key: 'left', position: 'left' },
+        const sides: Array<{
+          key: "top" | "right" | "bottom" | "left";
+          position: "top" | "right" | "bottom" | "left";
+        }> = [
+          { key: "top", position: "top" },
+          { key: "right", position: "right" },
+          { key: "bottom", position: "bottom" },
+          { key: "left", position: "left" },
         ];
 
         for (const { key, position } of sides) {
@@ -134,25 +142,25 @@ export const spacingVisualizer: ToolDefinition = {
           const box = createOverlayBox(marginColor);
 
           switch (key) {
-            case 'top':
+            case "top":
               box.style.top = `${rect.top - margin.top}px`;
               box.style.left = `${rect.left}px`;
               box.style.width = `${rect.width}px`;
               box.style.height = `${margin.top}px`;
               break;
-            case 'right':
+            case "right":
               box.style.top = `${rect.top}px`;
               box.style.left = `${rect.right}px`;
               box.style.width = `${margin.right}px`;
               box.style.height = `${rect.height}px`;
               break;
-            case 'bottom':
+            case "bottom":
               box.style.top = `${rect.bottom}px`;
               box.style.left = `${rect.left}px`;
               box.style.width = `${rect.width}px`;
               box.style.height = `${margin.bottom}px`;
               break;
-            case 'left':
+            case "left":
               box.style.top = `${rect.top}px`;
               box.style.left = `${rect.left - margin.left}px`;
               box.style.width = `${margin.left}px`;
@@ -160,7 +168,7 @@ export const spacingVisualizer: ToolDefinition = {
               break;
           }
 
-          box.style.display = 'block';
+          box.style.display = "block";
 
           if (showValues && margin[key] >= 2) {
             const label = createLabel(margin[key], marginColor);
@@ -174,11 +182,14 @@ export const spacingVisualizer: ToolDefinition = {
       }
 
       if (showPadding) {
-        const sides: Array<{ key: 'top' | 'right' | 'bottom' | 'left'; position: 'top' | 'right' | 'bottom' | 'left' }> = [
-          { key: 'top', position: 'top' },
-          { key: 'right', position: 'right' },
-          { key: 'bottom', position: 'bottom' },
-          { key: 'left', position: 'left' },
+        const sides: Array<{
+          key: "top" | "right" | "bottom" | "left";
+          position: "top" | "right" | "bottom" | "left";
+        }> = [
+          { key: "top", position: "top" },
+          { key: "right", position: "right" },
+          { key: "bottom", position: "bottom" },
+          { key: "left", position: "left" },
         ];
 
         for (const { key, position } of sides) {
@@ -186,25 +197,25 @@ export const spacingVisualizer: ToolDefinition = {
           const box = createOverlayBox(paddingColor);
 
           switch (key) {
-            case 'top':
+            case "top":
               box.style.top = `${rect.top}px`;
               box.style.left = `${rect.left}px`;
               box.style.width = `${rect.width}px`;
               box.style.height = `${padding.top}px`;
               break;
-            case 'right':
+            case "right":
               box.style.top = `${rect.top}px`;
               box.style.left = `${rect.right - padding.right}px`;
               box.style.width = `${padding.right}px`;
               box.style.height = `${rect.height}px`;
               break;
-            case 'bottom':
+            case "bottom":
               box.style.top = `${rect.bottom - padding.bottom}px`;
               box.style.left = `${rect.left}px`;
               box.style.width = `${rect.width}px`;
               box.style.height = `${padding.bottom}px`;
               break;
-            case 'left':
+            case "left":
               box.style.top = `${rect.top}px`;
               box.style.left = `${rect.left}px`;
               box.style.width = `${padding.left}px`;
@@ -212,7 +223,7 @@ export const spacingVisualizer: ToolDefinition = {
               break;
           }
 
-          box.style.display = 'block';
+          box.style.display = "block";
 
           if (showValues && padding[key] >= 2) {
             const label = createLabel(padding[key], paddingColor);
@@ -225,7 +236,79 @@ export const spacingVisualizer: ToolDefinition = {
         }
       }
 
-      const dimLabel = document.createElement('div');
+      if (showGap) {
+        const display = style.display;
+        const isFlex = display === "flex" || display === "inline-flex";
+        const isGrid = display === "grid" || display === "inline-grid";
+        if (isFlex || isGrid) {
+          const columnGap =
+            parseFloat(style.columnGap) || parseFloat(style.gap) || 0;
+          const rowGap = parseFloat(style.rowGap) || parseFloat(style.gap) || 0;
+          const children = Array.from(element.children).filter(
+            (child): child is HTMLElement => child instanceof HTMLElement,
+          );
+
+          if (children.length > 1 && (columnGap > 0 || rowGap > 0)) {
+            const childRects = children.map((child) => ({
+              child,
+              rect: child.getBoundingClientRect(),
+            }));
+
+            for (let i = 0; i < childRects.length - 1; i++) {
+              const current = childRects[i];
+              const next = childRects[i + 1];
+
+              if (columnGap > 0) {
+                const gapLeft = current.rect.right;
+                const gapWidth = next.rect.left - current.rect.right;
+                if (gapWidth > 0) {
+                  const gapTop = Math.min(current.rect.top, next.rect.top);
+                  const gapHeight =
+                    Math.max(current.rect.bottom, next.rect.bottom) - gapTop;
+                  const box = createOverlayBox(gapColor);
+                  box.style.top = `${gapTop}px`;
+                  box.style.left = `${gapLeft}px`;
+                  box.style.width = `${gapWidth}px`;
+                  box.style.height = `${gapHeight}px`;
+                  box.style.display = "block";
+                  if (showValues && gapWidth >= 2) {
+                    const label = createLabel(gapWidth, gapColor);
+                    positionLabel(label, "top");
+                    box.appendChild(label);
+                  }
+                  currentOverlays.push(box);
+                  addOverlayElement(box);
+                }
+              }
+
+              if (rowGap > 0) {
+                const gapTop = current.rect.bottom;
+                const gapHeight = next.rect.top - current.rect.bottom;
+                if (gapHeight > 0) {
+                  const gapLeft = Math.min(current.rect.left, next.rect.left);
+                  const gapWidth =
+                    Math.max(current.rect.right, next.rect.right) - gapLeft;
+                  const box = createOverlayBox(gapColor);
+                  box.style.top = `${gapTop}px`;
+                  box.style.left = `${gapLeft}px`;
+                  box.style.width = `${gapWidth}px`;
+                  box.style.height = `${gapHeight}px`;
+                  box.style.display = "block";
+                  if (showValues && gapHeight >= 2) {
+                    const label = createLabel(gapHeight, gapColor);
+                    positionLabel(label, "left");
+                    box.appendChild(label);
+                  }
+                  currentOverlays.push(box);
+                  addOverlayElement(box);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const dimLabel = document.createElement("div");
       dimLabel.style.cssText = `
         position: fixed;
         top: ${rect.top - 22}px;
@@ -247,7 +330,11 @@ export const spacingVisualizer: ToolDefinition = {
 
     const mouseMoveHandler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target || target === document.body || target === document.documentElement) {
+      if (
+        !target ||
+        target === document.body ||
+        target === document.documentElement
+      ) {
         clearOverlays();
         return;
       }
@@ -264,7 +351,7 @@ export const spacingVisualizer: ToolDefinition = {
     };
 
     const keyHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         clearOverlays();
       }
     };
@@ -279,19 +366,19 @@ export const spacingVisualizer: ToolDefinition = {
       });
     };
 
-    document.addEventListener('mousemove', mouseMoveHandler, true);
-    document.addEventListener('mouseout', mouseOutHandler, true);
-    document.addEventListener('keydown', keyHandler, true);
-    window.addEventListener('scroll', scrollHandler, true);
-    window.addEventListener('resize', scrollHandler);
+    document.addEventListener("mousemove", mouseMoveHandler, true);
+    document.addEventListener("mouseout", mouseOutHandler, true);
+    document.addEventListener("keydown", keyHandler, true);
+    window.addEventListener("scroll", scrollHandler, true);
+    window.addEventListener("resize", scrollHandler);
 
     const cleanup = () => {
       cancelAnimationFrame(scrollRaf);
-      document.removeEventListener('mousemove', mouseMoveHandler, true);
-      document.removeEventListener('mouseout', mouseOutHandler, true);
-      document.removeEventListener('keydown', keyHandler, true);
-      window.removeEventListener('scroll', scrollHandler, true);
-      window.removeEventListener('resize', scrollHandler);
+      document.removeEventListener("mousemove", mouseMoveHandler, true);
+      document.removeEventListener("mouseout", mouseOutHandler, true);
+      document.removeEventListener("keydown", keyHandler, true);
+      window.removeEventListener("scroll", scrollHandler, true);
+      window.removeEventListener("resize", scrollHandler);
       clearOverlays();
     };
 

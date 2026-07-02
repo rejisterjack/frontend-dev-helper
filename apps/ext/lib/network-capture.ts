@@ -18,7 +18,15 @@ export interface CapturedRequest {
     ttfb?: number;
     download?: number;
   };
-  resourceType: 'xhr' | 'fetch' | 'script' | 'stylesheet' | 'image' | 'font' | 'document' | 'other';
+  resourceType:
+    | "xhr"
+    | "fetch"
+    | "script"
+    | "stylesheet"
+    | "image"
+    | "font"
+    | "document"
+    | "other";
   size: number;
   timestamp: number;
 }
@@ -33,17 +41,30 @@ function truncateBody(body: string | null, maxSize: number): string | null {
   return body.slice(0, maxSize) + `\n... [truncated at ${maxSize} bytes]`;
 }
 
-function classifyResourceType(contentType: string, url: string): CapturedRequest['resourceType'] {
+function classifyResourceType(
+  contentType: string,
+  url: string,
+): CapturedRequest["resourceType"] {
   const ct = contentType.toLowerCase();
   const u = url.toLowerCase();
 
-  if (ct.includes('javascript') || ct.includes('ecmascript') || u.match(/\.(js|mjs|cjs)(\?|$)/)) return 'script';
-  if (ct.includes('css') || u.match(/\.css(\?|$)/)) return 'stylesheet';
-  if (ct.includes('image/') || u.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|avif)(\?|$)/)) return 'image';
-  if (ct.includes('font') || u.match(/\.(woff2?|ttf|otf|eot)(\?|$)/)) return 'font';
-  if (ct.includes('html') || u.match(/\.(html|htm)(\?|$)/)) return 'document';
+  if (
+    ct.includes("javascript") ||
+    ct.includes("ecmascript") ||
+    u.match(/\.(js|mjs|cjs)(\?|$)/)
+  )
+    return "script";
+  if (ct.includes("css") || u.match(/\.css(\?|$)/)) return "stylesheet";
+  if (
+    ct.includes("image/") ||
+    u.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|avif)(\?|$)/)
+  )
+    return "image";
+  if (ct.includes("font") || u.match(/\.(woff2?|ttf|otf|eot)(\?|$)/))
+    return "font";
+  if (ct.includes("html") || u.match(/\.(html|htm)(\?|$)/)) return "document";
 
-  return 'other';
+  return "other";
 }
 
 export class NetworkCapture {
@@ -52,15 +73,23 @@ export class NetworkCapture {
   private originalFetch: typeof fetch | null = null;
   private originalXHROpen: typeof XMLHttpRequest.prototype.open | null = null;
   private originalXHRSend: typeof XMLHttpRequest.prototype.send | null = null;
-  private originalXHRSetRequestHeader: typeof XMLHttpRequest.prototype.setRequestHeader | null = null;
+  private originalXHRSetRequestHeader:
+    | typeof XMLHttpRequest.prototype.setRequestHeader
+    | null = null;
   private maxBodySize = 100 * 1024;
   private captureXHR = true;
   private captureFetch = true;
 
-  constructor(options?: { maxBodySize?: number; captureXHR?: boolean; captureFetch?: boolean }) {
-    if (options?.maxBodySize !== undefined) this.maxBodySize = options.maxBodySize;
+  constructor(options?: {
+    maxBodySize?: number;
+    captureXHR?: boolean;
+    captureFetch?: boolean;
+  }) {
+    if (options?.maxBodySize !== undefined)
+      this.maxBodySize = options.maxBodySize;
     if (options?.captureXHR !== undefined) this.captureXHR = options.captureXHR;
-    if (options?.captureFetch !== undefined) this.captureFetch = options.captureFetch;
+    if (options?.captureFetch !== undefined)
+      this.captureFetch = options.captureFetch;
   }
 
   start(): void {
@@ -96,7 +125,8 @@ export class NetworkCapture {
     }
 
     if (this.originalXHRSetRequestHeader !== null) {
-      XMLHttpRequest.prototype.setRequestHeader = this.originalXHRSetRequestHeader;
+      XMLHttpRequest.prototype.setRequestHeader =
+        this.originalXHRSetRequestHeader;
       this.originalXHRSetRequestHeader = null;
     }
   }
@@ -106,7 +136,11 @@ export class NetworkCapture {
 
     return this.requests.filter((req) => {
       if (filter.type && req.resourceType !== filter.type) return false;
-      if (filter.url && !req.url.toLowerCase().includes(filter.url.toLowerCase())) return false;
+      if (
+        filter.url &&
+        !req.url.toLowerCase().includes(filter.url.toLowerCase())
+      )
+        return false;
       return true;
     });
   }
@@ -124,40 +158,47 @@ export class NetworkCapture {
   }
 
   private interceptFetch(): void {
-    this.originalFetch = window.fetch.bind(window);
+    this.originalFetch = window.fetch;
     const origFetch = this.originalFetch;
     const self = this;
     const maxSize = this.maxBodySize;
 
-    window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    window.fetch = function (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ): Promise<Response> {
       const startTime = performance.now();
       const timestamp = Date.now();
 
-      const url = typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.href
-          : input instanceof Request
-            ? input.url
-            : String(input);
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input instanceof Request
+              ? input.url
+              : String(input);
 
-      const method = init?.method || (input instanceof Request ? input.method : 'GET') || 'GET';
+      const method =
+        init?.method ||
+        (input instanceof Request ? input.method : "GET") ||
+        "GET";
 
       let requestBody: string | null = null;
       if (init?.body) {
-        if (typeof init.body === 'string') {
+        if (typeof init.body === "string") {
           requestBody = truncateBody(init.body, maxSize);
         } else if (init.body instanceof URLSearchParams) {
           requestBody = truncateBody(init.body.toString(), maxSize);
         } else if (init.body instanceof FormData) {
-          requestBody = '[FormData]';
+          requestBody = "[FormData]";
         } else if (init.body instanceof ArrayBuffer) {
           requestBody = `[ArrayBuffer: ${init.body.byteLength} bytes]`;
         } else if (init.body instanceof Blob) {
           requestBody = `[Blob: ${init.body.size} bytes]`;
         }
       } else if (input instanceof Request && input.body) {
-        requestBody = '[Request body: unreadable without cloning]';
+        requestBody = "[Request body: unreadable without cloning]";
       }
 
       const requestHeaders: Record<string, string> = {};
@@ -186,7 +227,7 @@ export class NetworkCapture {
             responseHeaders[key] = value;
           });
 
-          const contentType = response.headers.get('content-type') || '';
+          const contentType = response.headers.get("content-type") || "";
 
           let responseBody: string | null = null;
           let size = 0;
@@ -208,9 +249,10 @@ export class NetworkCapture {
               responseBody = `[Response body: ${size} bytes, truncated at ${maxSize} bytes]`;
             }
           } catch {
-            responseBody = size > 0
-              ? `[Response body: ${size} bytes, truncated at ${maxSize} bytes]`
-              : null;
+            responseBody =
+              size > 0
+                ? `[Response body: ${size} bytes, truncated at ${maxSize} bytes]`
+                : null;
           }
 
           const captured: CapturedRequest = {
@@ -248,14 +290,14 @@ export class NetworkCapture {
             responseHeaders: {},
             responseBody: null,
             statusCode: 0,
-            statusText: 'Network Error',
-            contentType: '',
+            statusText: "Network Error",
+            contentType: "",
             timing: {
               start: startTime,
               end: endTime,
               duration: endTime - startTime,
             },
-            resourceType: 'fetch',
+            resourceType: "fetch",
             size: 0,
             timestamp,
           };
@@ -269,15 +311,18 @@ export class NetworkCapture {
     const self = this;
     const maxSize = this.maxBodySize;
 
-    this.originalXHRSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader.bind(
-      XMLHttpRequest.prototype,
-    );
+    this.originalXHRSetRequestHeader =
+      XMLHttpRequest.prototype.setRequestHeader.bind(XMLHttpRequest.prototype);
     const origSetHeader = this.originalXHRSetRequestHeader;
 
-    this.originalXHROpen = XMLHttpRequest.prototype.open.bind(XMLHttpRequest.prototype);
+    this.originalXHROpen = XMLHttpRequest.prototype.open.bind(
+      XMLHttpRequest.prototype,
+    );
     const origOpen = this.originalXHROpen;
 
-    this.originalXHRSend = XMLHttpRequest.prototype.send.bind(XMLHttpRequest.prototype);
+    this.originalXHRSend = XMLHttpRequest.prototype.send.bind(
+      XMLHttpRequest.prototype,
+    );
     const origSend = this.originalXHRSend;
 
     XMLHttpRequest.prototype.setRequestHeader = function (
@@ -301,32 +346,41 @@ export class NetworkCapture {
       (this as any).__fdh_method = method;
       (this as any).__fdh_url = String(url);
       (this as any).__fdh_headers = (this as any).__fdh_headers || {};
-      return origOpen.call(this, method, url, async !== false, username ?? null, password ?? null);
+      return origOpen.call(
+        this,
+        method,
+        url,
+        async !== false,
+        username ?? null,
+        password ?? null,
+      );
     };
 
-    XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null): void {
+    XMLHttpRequest.prototype.send = function (
+      body?: Document | XMLHttpRequestBodyInit | null,
+    ): void {
       const startTime = performance.now();
       const timestamp = Date.now();
       const xhr = this as any;
 
       let requestBody: string | null = null;
       if (body !== null && body !== undefined) {
-        if (typeof body === 'string') {
+        if (typeof body === "string") {
           requestBody = truncateBody(body, maxSize);
         } else if (body instanceof URLSearchParams) {
           requestBody = truncateBody(body.toString(), maxSize);
         } else if (body instanceof FormData) {
-          requestBody = '[FormData]';
+          requestBody = "[FormData]";
         } else if (body instanceof ArrayBuffer) {
           requestBody = `[ArrayBuffer: body.byteLength bytes]`;
         } else if (body instanceof Blob) {
           requestBody = `[Blob: ${body.size} bytes]`;
         } else if (body instanceof Document) {
-          requestBody = '[Document]';
+          requestBody = "[Document]";
         }
       }
 
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener("load", () => {
         const endTime = performance.now();
 
         const responseHeaders: Record<string, string> = {};
@@ -334,7 +388,7 @@ export class NetworkCapture {
         if (rawHeaders) {
           const lines = rawHeaders.trim().split(/\r?\n/);
           for (const line of lines) {
-            const idx = line.indexOf(':');
+            const idx = line.indexOf(":");
             if (idx > 0) {
               const key = line.slice(0, idx).trim().toLowerCase();
               const value = line.slice(idx + 1).trim();
@@ -343,7 +397,7 @@ export class NetworkCapture {
           }
         }
 
-        const contentType = responseHeaders['content-type'] || '';
+        const contentType = responseHeaders["content-type"] || "";
         let responseBody: string | null = null;
         try {
           const raw = xhr.responseText;
@@ -352,12 +406,14 @@ export class NetworkCapture {
           responseBody = null;
         }
 
-        const size = parseInt(responseHeaders['content-length'] || '0', 10) || (responseBody?.length ?? 0);
+        const size =
+          parseInt(responseHeaders["content-length"] || "0", 10) ||
+          (responseBody?.length ?? 0);
 
         const captured: CapturedRequest = {
           id: generateId(),
-          url: xhr.__fdh_url || '',
-          method: (xhr.__fdh_method || 'GET').toUpperCase(),
+          url: xhr.__fdh_url || "",
+          method: (xhr.__fdh_method || "GET").toUpperCase(),
           requestHeaders: xhr.__fdh_headers || {},
           requestBody,
           responseHeaders,
@@ -370,7 +426,7 @@ export class NetworkCapture {
             end: endTime,
             duration: endTime - startTime,
           },
-          resourceType: classifyResourceType(contentType, xhr.__fdh_url || ''),
+          resourceType: classifyResourceType(contentType, xhr.__fdh_url || ""),
           size,
           timestamp,
         };
@@ -378,32 +434,35 @@ export class NetworkCapture {
         self.addRequest(captured);
       });
 
-      xhr.addEventListener('error', () => {
+      xhr.addEventListener("error", () => {
         const endTime = performance.now();
         const captured: CapturedRequest = {
           id: generateId(),
-          url: xhr.__fdh_url || '',
-          method: (xhr.__fdh_method || 'GET').toUpperCase(),
+          url: xhr.__fdh_url || "",
+          method: (xhr.__fdh_method || "GET").toUpperCase(),
           requestHeaders: xhr.__fdh_headers || {},
           requestBody,
           responseHeaders: {},
           responseBody: null,
           statusCode: 0,
-          statusText: 'Network Error',
-          contentType: '',
+          statusText: "Network Error",
+          contentType: "",
           timing: {
             start: startTime,
             end: endTime,
             duration: endTime - startTime,
           },
-          resourceType: 'xhr',
+          resourceType: "xhr",
           size: 0,
           timestamp,
         };
         self.addRequest(captured);
       });
 
-      return origSend.call(this, body);
+      return origSend.call(
+        this,
+        body as XMLHttpRequestBodyInit | null | undefined,
+      );
     };
   }
 }

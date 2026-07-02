@@ -133,6 +133,44 @@ export const createFilePayloadSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Request / Response (RPC envelopes used by apps/ext VSCodeBridge)
+// ---------------------------------------------------------------------------
+
+export const requestSchema = z.object({
+  type: z.literal("Request"),
+  requestId: z.string().min(1),
+  method: z.string().min(1),
+  payload: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const responseSchema = z.object({
+  type: z.literal("Response"),
+  requestId: z.string().min(1),
+  // A response carries either `result` or `error`, but Zod can't easily
+  // express "exactly one of" without a superRefine — keep both optional so
+  // callers can branch on presence.
+  result: z.unknown().optional(),
+  error: z.string().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// Auth handshake
+// ---------------------------------------------------------------------------
+
+export const authPayloadSchema = z.object({
+  token: z.string().min(8),
+  client: z.string().min(1).max(128),
+});
+
+export const authOkPayloadSchema = z.object({
+  client: z.string().min(1).max(128),
+});
+
+export const authFailPayloadSchema = z.object({
+  reason: z.string().min(1),
+});
+
+// ---------------------------------------------------------------------------
 // Discriminated-union of all message envelopes
 // ---------------------------------------------------------------------------
 
@@ -180,6 +218,12 @@ export const bridgeMessageSchema = z.discriminatedUnion("type", [
     payload: clearDiagnosticsPayloadSchema.optional(),
   }),
   z.object({ type: z.literal("CreateFile"), payload: createFilePayloadSchema }),
+  // RPC + auth envelopes never carry a `payload`; their fields are top-level.
+  requestSchema,
+  responseSchema,
+  z.object({ type: z.literal("Auth"), payload: authPayloadSchema }),
+  z.object({ type: z.literal("AuthOk"), payload: authOkPayloadSchema }),
+  z.object({ type: z.literal("AuthFail"), payload: authFailPayloadSchema }),
 ]);
 
 /**

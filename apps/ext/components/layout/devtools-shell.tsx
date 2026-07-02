@@ -1,10 +1,14 @@
-import { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sun,
   Moon,
@@ -20,12 +24,13 @@ import {
   Accessibility,
   Bot,
   Wrench,
-} from 'lucide-react';
-import { useSettingsStore } from '@/stores/use-settings-store';
-import { useUIStore } from '@/stores/use-ui-store';
-import { useConnectionStore } from '@/stores/use-connection-store';
-import { useToolsStore } from '@/stores/use-tools-store';
-import { toolMetadata } from '@/tools/metadata';
+  Activity,
+} from "lucide-react";
+import { useSettingsStore } from "@/stores/use-settings-store";
+import { useUIStore } from "@/stores/use-ui-store";
+import { useConnectionStore } from "@/stores/use-connection-store";
+import { useToolsStore } from "@/stores/use-tools-store";
+import { toolMetadata } from "@/tools/metadata";
 
 const categoryIcons: Record<string, ReactNode> = {
   inspection: <Eye className="size-3.5" />,
@@ -37,12 +42,12 @@ const categoryIcons: Record<string, ReactNode> = {
 };
 
 const categoryLabels: Record<string, string> = {
-  inspection: 'Inspection',
-  css: 'CSS',
-  performance: 'Performance',
-  accessibility: 'Accessibility',
-  ai: 'AI',
-  utility: 'Utilities',
+  inspection: "Inspection",
+  css: "CSS",
+  performance: "Performance",
+  accessibility: "Accessibility",
+  ai: "AI",
+  utility: "Utilities",
 };
 
 function getActiveCountByCategory(): Record<string, number> {
@@ -70,18 +75,15 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
   const activeByCategory = getActiveCountByCategory();
 
   const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
+    const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
-    document.documentElement.classList.toggle('dark', next === 'dark');
+    document.documentElement.classList.toggle("dark", next === "dark");
   };
 
-  const categories = Object.values(toolMetadata).reduce(
-    (acc, tool) => {
-      if (!acc.includes(tool.category)) acc.push(tool.category);
-      return acc;
-    },
-    [] as string[],
-  );
+  const categories = Object.values(toolMetadata).reduce((acc, tool) => {
+    if (!acc.includes(tool.category)) acc.push(tool.category);
+    return acc;
+  }, [] as string[]);
 
   return (
     <div className="flex h-screen bg-background text-foreground">
@@ -89,10 +91,10 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
+              variant={currentView === "dashboard" ? "secondary" : "ghost"}
               size="icon"
               className="size-8"
-              onClick={() => navigateTo('dashboard')}
+              onClick={() => navigateTo("dashboard")}
             >
               <LayoutDashboard className="size-4" />
             </Button>
@@ -111,7 +113,7 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
                 variant="ghost"
                 size="icon"
                 className="size-8 relative"
-                onClick={() => navigateTo('category', { category: cat })}
+                onClick={() => navigateTo("category", { category: cat })}
               >
                 {categoryIcons[cat]}
                 {activeByCategory[cat] ? (
@@ -127,11 +129,34 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
           </Tooltip>
         ))}
 
+        <Separator className="my-1 w-6" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={currentView === "react-profiler" ? "secondary" : "ghost"}
+              size="icon"
+              className="size-8"
+              onClick={() => navigateTo("react-profiler")}
+            >
+              <Activity className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="text-xs">
+            React Profiler
+          </TooltipContent>
+        </Tooltip>
+
         <div className="flex-1" />
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" onClick={toggleCommandPalette}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={toggleCommandPalette}
+            >
               <Terminal className="size-3.5" />
             </Button>
           </TooltipTrigger>
@@ -143,10 +168,10 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={currentView === 'ai-chat' ? 'secondary' : 'ghost'}
+              variant={currentView === "ai-chat" ? "secondary" : "ghost"}
               size="icon"
               className="size-8"
-              onClick={() => navigateTo('ai-chat')}
+              onClick={() => navigateTo("ai-chat")}
             >
               <Sparkles className="size-3.5" />
             </Button>
@@ -159,10 +184,10 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={currentView === 'settings' ? 'secondary' : 'ghost'}
+              variant={currentView === "settings" ? "secondary" : "ghost"}
               size="icon"
               className="size-8"
-              onClick={() => navigateTo('settings')}
+              onClick={() => navigateTo("settings")}
             >
               <Settings className="size-3.5" />
             </Button>
@@ -176,8 +201,17 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" onClick={toggleTheme}>
-              {theme === 'dark' ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? (
+                <Sun className="size-3.5" />
+              ) : (
+                <Moon className="size-3.5" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" className="text-xs">
@@ -191,11 +225,15 @@ export function DevToolsShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold tracking-tight">FDH</span>
             <Badge
-              variant={contentScriptReady ? 'default' : 'secondary'}
+              variant={contentScriptReady ? "default" : "secondary"}
               className="gap-1 text-[0.6rem] px-1.5 py-0 cursor-default"
             >
-              {contentScriptReady ? <Wifi className="size-2.5" /> : <WifiOff className="size-2.5" />}
-              {contentScriptReady ? 'Connected' : 'No page'}
+              {contentScriptReady ? (
+                <Wifi className="size-2.5" />
+              ) : (
+                <WifiOff className="size-2.5" />
+              )}
+              {contentScriptReady ? "Connected" : "No page"}
             </Badge>
           </div>
           {activeCount > 0 && (

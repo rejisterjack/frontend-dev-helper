@@ -1,33 +1,61 @@
-import type { ToolDefinition } from '../types';
-import { addOverlayElement, removeOverlayElement } from '@/content/overlay-manager';
+import type { ToolDefinition } from "../types";
+import {
+  addOverlayElement,
+  removeOverlayElement,
+} from "@/content/overlay-manager";
 
 interface FlameEntry {
   name: string;
-  type: 'script' | 'layout' | 'paint' | 'render' | 'idle';
+  type: "script" | "layout" | "paint" | "render" | "idle";
   startTime: number;
   duration: number;
   depth: number;
 }
 
-const TYPE_COLORS: Record<FlameEntry['type'], string> = {
-  script: '#3b82f6',
-  layout: '#ef4444',
-  paint: '#22c55e',
-  render: '#a855f7',
-  idle: '#6b7280',
+const TYPE_COLORS: Record<FlameEntry["type"], string> = {
+  script: "#3b82f6",
+  layout: "#ef4444",
+  paint: "#22c55e",
+  render: "#a855f7",
+  idle: "#6b7280",
 };
 
 export const flameGraph: ToolDefinition = {
-  id: 'flame-graph',
-  name: 'Flame Graph',
-  description: 'Visualize JavaScript execution performance with flame charts',
-  category: 'performance',
-  icon: 'Flame',
+  id: "flame-graph",
+  name: "Performance Entries Viewer",
+  // Honest description: this tool reads PerformanceEntry marks/measures/resources,
+  // it does not sample the JS call stack. A real flame graph would require
+  // the JS Self-Profiling API or the in-house lib/profiler/ pipeline.
+  description:
+    "Visualize performance.measure / mark / resource / longtask entries as a timeline",
+  category: "performance",
+  icon: "Flame",
   configSchema: {
-    sampleRate: { type: 'slider', label: 'Sample Rate (ms)', default: 10, min: 1, max: 100, step: 1 },
-    maxDuration: { type: 'slider', label: 'Max Duration (s)', default: 30, min: 5, max: 120, step: 5 },
-    showLongTasks: { type: 'boolean', label: 'Show Long Tasks', default: true },
-    longTaskThreshold: { type: 'slider', label: 'Long Task Threshold (ms)', default: 50, min: 10, max: 500, step: 10 },
+    sampleRate: {
+      type: "slider",
+      label: "Sample Rate (ms)",
+      default: 10,
+      min: 1,
+      max: 100,
+      step: 1,
+    },
+    maxDuration: {
+      type: "slider",
+      label: "Max Duration (s)",
+      default: 30,
+      min: 5,
+      max: 120,
+      step: 5,
+    },
+    showLongTasks: { type: "boolean", label: "Show Long Tasks", default: true },
+    longTaskThreshold: {
+      type: "slider",
+      label: "Long Task Threshold (ms)",
+      default: 50,
+      min: 10,
+      max: 500,
+      step: 10,
+    },
   },
   run: (ctx, config) => {
     const timeRange = ((config?.maxDuration as number) ?? 30) * 1000;
@@ -36,8 +64,19 @@ export const flameGraph: ToolDefinition = {
     const longTaskThreshold = (config?.longTaskThreshold as number) ?? 50;
 
     const entries: FlameEntry[] = [];
+    // Dedupe by (name, startTime, duration) — captureEntries() runs on a
+    // 2s timer AND on every PerformanceObserver callback, so without this
+    // the previous implementation accumulated duplicates on every tick.
+    const seenKeys = new Set<string>();
     const overlayEls: HTMLElement[] = [];
     let active = true;
+
+    function pushEntry(e: FlameEntry): void {
+      const key = `${e.name}|${e.startTime.toFixed(2)}|${e.duration.toFixed(2)}`;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      entries.push(e);
+    }
 
     // -- Capture Performance entries --
     function captureEntries(): void {
@@ -45,36 +84,69 @@ export const flameGraph: ToolDefinition = {
       const cutoff = now - timeRange;
 
       // Gather measures
-      const measures = performance.getEntriesByType('measure') as PerformanceMeasure[];
+      const measures = performance.getEntriesByType(
+        "measure",
+      ) as PerformanceMeasure[];
       for (const m of measures) {
         if (m.startTime < cutoff || m.duration < minDuration) continue;
-        entries.push({ name: m.name || 'measure', type: 'script', startTime: m.startTime, duration: m.duration, depth: 0 });
+        pushEntry({
+          name: m.name || "measure",
+          type: "script",
+          startTime: m.startTime,
+          duration: m.duration,
+          depth: 0,
+        });
       }
 
       // Gather marks (zero-duration, inflate slightly for visibility)
-      const marks = performance.getEntriesByType('mark') as PerformanceMark[];
+      const marks = performance.getEntriesByType("mark") as PerformanceMark[];
       for (const mk of marks) {
         if (mk.startTime < cutoff) continue;
-        entries.push({ name: mk.name || 'mark', type: 'render', startTime: mk.startTime, duration: Math.max(minDuration, 0.1), depth: 0 });
+        pushEntry({
+          name: mk.name || "mark",
+          type: "render",
+          startTime: mk.startTime,
+          duration: Math.max(minDuration, 0.1),
+          depth: 0,
+        });
       }
 
       // Gather resource timing entries
-      const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+      const resources = performance.getEntriesByType(
+        "resource",
+      ) as PerformanceResourceTiming[];
       for (const r of resources) {
         if (r.startTime < cutoff || r.duration < minDuration) continue;
         const rType = inferResourceType(r);
-        entries.push({ name: r.name.split('/').pop() || r.name, type: rType, startTime: r.startTime, duration: r.duration, depth: 1 });
+        pushEntry({
+          name: r.name.split("/").pop() || r.name,
+          type: rType,
+          startTime: r.startTime,
+          duration: r.duration,
+          depth: 1,
+        });
       }
 
       // Gather navigation timing
-      const navigations = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+      const navigations = performance.getEntriesByType(
+        "navigation",
+      ) as PerformanceNavigationTiming[];
       for (const n of navigations) {
         if (n.startTime < cutoff) continue;
-        entries.push({ name: 'navigation', type: 'script', startTime: n.startTime, duration: n.duration, depth: 0 });
+        pushEntry({
+          name: "navigation",
+          type: "script",
+          startTime: n.startTime,
+          duration: n.duration,
+          depth: 0,
+        });
       }
 
-      // Compute depth from overlap (simple greedy stacking)
-      entries.sort((a, b) => a.startTime - b.startTime || b.duration - a.duration);
+      // Recompute depth from overlap on every pass — duplicates have been
+      // removed so the greedy stack is stable.
+      entries.sort(
+        (a, b) => a.startTime - b.startTime || b.duration - a.duration,
+      );
       const ends: number[] = [];
       for (const e of entries) {
         let d = 0;
@@ -84,12 +156,14 @@ export const flameGraph: ToolDefinition = {
       }
     }
 
-    function inferResourceType(r: PerformanceResourceTiming): FlameEntry['type'] {
+    function inferResourceType(
+      r: PerformanceResourceTiming,
+    ): FlameEntry["type"] {
       const url = r.name.toLowerCase();
-      if (url.match(/\.(js|mjs|cjs)(\?|$)/)) return 'script';
-      if (url.match(/\.(css)(\?|$)/)) return 'render';
-      if (url.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)(\?|$)/)) return 'paint';
-      return 'layout';
+      if (url.match(/\.(js|mjs|cjs)(\?|$)/)) return "script";
+      if (url.match(/\.(css)(\?|$)/)) return "render";
+      if (url.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)(\?|$)/)) return "paint";
+      return "layout";
     }
 
     // -- PerformanceObserver for live entries --
@@ -100,17 +174,20 @@ export const flameGraph: ToolDefinition = {
         captureEntries();
         renderFlameGraph();
       });
-      perfObserver.observe({ entryTypes: ['measure', 'mark', 'resource', 'longtask'] });
+      perfObserver.observe({
+        entryTypes: ["measure", "mark", "resource", "longtask"],
+      });
     } catch {
       // PerformanceObserver may not support all entry types; fall back to polling
     }
 
     // -- Build panel in shadow DOM --
-    const panelHost = document.createElement('div');
-    panelHost.style.cssText = 'position:fixed;top:20px;right:20px;width:780px;height:480px;z-index:2147483646;';
-    const shadow = panelHost.attachShadow({ mode: 'open' });
+    const panelHost = document.createElement("div");
+    panelHost.style.cssText =
+      "position:fixed;top:20px;right:20px;width:780px;height:480px;z-index:2147483647;";
+    const shadow = panelHost.attachShadow({ mode: "open" });
 
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       :host { all: initial; font-family: system-ui, -apple-system, sans-serif; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -135,34 +212,34 @@ export const flameGraph: ToolDefinition = {
     `;
     shadow.appendChild(style);
 
-    const panel = document.createElement('div');
-    panel.className = 'fg-panel';
+    const panel = document.createElement("div");
+    panel.className = "fg-panel";
 
     // Header
-    const header = document.createElement('div');
-    header.className = 'fg-header';
-    const title = document.createElement('div');
-    title.className = 'fg-header-title';
-    title.textContent = 'Performance Flame Graph';
-    const actions = document.createElement('div');
-    actions.className = 'fg-header-actions';
-    const btnRefresh = document.createElement('button');
-    btnRefresh.textContent = 'Refresh';
-    btnRefresh.dataset.action = 'refresh';
-    const btnClose = document.createElement('button');
-    btnClose.textContent = 'Close';
-    btnClose.dataset.action = 'close';
+    const header = document.createElement("div");
+    header.className = "fg-header";
+    const title = document.createElement("div");
+    title.className = "fg-header-title";
+    title.textContent = "Performance Entries";
+    const actions = document.createElement("div");
+    actions.className = "fg-header-actions";
+    const btnRefresh = document.createElement("button");
+    btnRefresh.textContent = "Refresh";
+    btnRefresh.dataset.action = "refresh";
+    const btnClose = document.createElement("button");
+    btnClose.textContent = "Close";
+    btnClose.dataset.action = "close";
     actions.append(btnRefresh, btnClose);
     header.append(title, actions);
 
     // Legend
-    const legend = document.createElement('div');
-    legend.className = 'fg-legend';
+    const legend = document.createElement("div");
+    legend.className = "fg-legend";
     for (const [t, c] of Object.entries(TYPE_COLORS)) {
-      const item = document.createElement('div');
-      item.className = 'fg-legend-item';
-      const dot = document.createElement('div');
-      dot.className = 'fg-legend-dot';
+      const item = document.createElement("div");
+      item.className = "fg-legend-item";
+      const dot = document.createElement("div");
+      dot.className = "fg-legend-dot";
       dot.style.background = c;
       item.appendChild(dot);
       item.appendChild(document.createTextNode(t));
@@ -170,28 +247,29 @@ export const flameGraph: ToolDefinition = {
     }
 
     // Stats bar
-    const stats = document.createElement('div');
-    stats.className = 'fg-stats';
-    const statsText = document.createElement('span');
-    statsText.textContent = 'Entries: 0';
+    const stats = document.createElement("div");
+    stats.className = "fg-stats";
+    const statsText = document.createElement("span");
+    statsText.textContent = "Entries: 0";
     stats.appendChild(statsText);
 
     // Canvas wrapper
-    const canvasWrap = document.createElement('div');
-    canvasWrap.className = 'fg-canvas-wrap';
+    const canvasWrap = document.createElement("div");
+    canvasWrap.className = "fg-canvas-wrap";
 
     // Footer
-    const footer = document.createElement('div');
-    footer.className = 'fg-footer';
-    const footerLeft = document.createElement('span');
-    footerLeft.textContent = 'Hover bars for details';
-    const footerRight = document.createElement('span');
-    footerRight.textContent = 'Time range: ' + ((config?.maxDuration as number) ?? 30) + 's';
+    const footer = document.createElement("div");
+    footer.className = "fg-footer";
+    const footerLeft = document.createElement("span");
+    footerLeft.textContent = "Hover bars for details";
+    const footerRight = document.createElement("span");
+    footerRight.textContent =
+      "Time range: " + ((config?.maxDuration as number) ?? 30) + "s";
     footer.append(footerLeft, footerRight);
 
     // Tooltip (lives outside canvas wrap so it is not clipped)
-    const tooltip = document.createElement('div');
-    tooltip.className = 'fg-tooltip';
+    const tooltip = document.createElement("div");
+    tooltip.className = "fg-tooltip";
 
     panel.append(header, legend, stats, canvasWrap, footer);
     shadow.append(panel, tooltip);
@@ -205,24 +283,27 @@ export const flameGraph: ToolDefinition = {
 
     function renderFlameGraph(): void {
       // Remove old bars
-      while (canvasWrap.firstChild) canvasWrap.removeChild(canvasWrap.firstChild);
+      while (canvasWrap.firstChild)
+        canvasWrap.removeChild(canvasWrap.firstChild);
       // Remove overlay highlights
       for (const o of overlayEls) removeOverlayElement(o);
       overlayEls.length = 0;
 
       if (entries.length === 0) {
-        const empty = document.createElement('div');
-        empty.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px;';
-        empty.textContent = 'No performance entries captured. Interact with the page or use performance.mark()/measure().';
+        const empty = document.createElement("div");
+        empty.style.cssText =
+          "display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px;";
+        empty.textContent =
+          "No performance entries captured. Interact with the page or use performance.mark()/measure().";
         canvasWrap.appendChild(empty);
-        statsText.textContent = 'Entries: 0';
+        statsText.textContent = "Entries: 0";
         return;
       }
 
-      const maxDepth = Math.max(...entries.map(e => e.depth), 0);
+      const maxDepth = Math.max(...entries.map((e) => e.depth), 0);
       const totalHeight = (maxDepth + 1) * ROW + 8;
-      canvasWrap.style.position = 'relative';
-      canvasWrap.style.minHeight = totalHeight + 'px';
+      canvasWrap.style.position = "relative";
+      canvasWrap.style.minHeight = totalHeight + "px";
 
       const containerWidth = canvasWrap.clientWidth || 700;
       const now = performance.now();
@@ -235,23 +316,32 @@ export const flameGraph: ToolDefinition = {
         const w = Math.max(2, (entry.duration / timeSpan) * containerWidth);
         if (x + w < 0 || x > containerWidth) continue;
 
-        const bar = document.createElement('div');
-        bar.className = 'fg-bar';
-        bar.style.left = x + 'px';
-        bar.style.top = (entry.depth * ROW) + 'px';
-        bar.style.width = w + 'px';
+        const bar = document.createElement("div");
+        bar.className = "fg-bar";
+        bar.style.left = x + "px";
+        bar.style.top = entry.depth * ROW + "px";
+        bar.style.width = w + "px";
         bar.style.background = TYPE_COLORS[entry.type] || TYPE_COLORS.idle;
 
         // Long task indicator
-        if (showLongTasks && entry.type === 'script' && entry.duration > longTaskThreshold) {
-          bar.style.borderRight = '3px solid #f59e0b';
+        if (
+          showLongTasks &&
+          entry.type === "script" &&
+          entry.duration > longTaskThreshold
+        ) {
+          bar.style.borderRight = "3px solid #f59e0b";
         }
 
         if (w > 40) {
-          bar.textContent = entry.name.length > 30 ? entry.name.slice(0, 27) + '...' : entry.name;
+          bar.textContent =
+            entry.name.length > 30
+              ? entry.name.slice(0, 27) + "..."
+              : entry.name;
         }
 
-        bar.addEventListener('mouseenter', (ev: MouseEvent) => {
+        bar.addEventListener("mouseenter", (ev: MouseEvent) => {
+          // User input is escaped via escapeText() above. Audited Phase 1.1.
+          // eslint-disable-next-line no-restricted-syntax
           tooltip.innerHTML = `
             <div class="fg-tooltip-name">${escapeText(entry.name)}</div>
             <div class="fg-tooltip-details">
@@ -260,41 +350,53 @@ export const flameGraph: ToolDefinition = {
               <span>Start: ${entry.startTime.toFixed(2)}ms</span>
             </div>
           `;
-          tooltip.classList.add('visible');
+          tooltip.classList.add("visible");
           positionTooltip(ev);
         });
-        bar.addEventListener('mousemove', positionTooltip);
-        bar.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+        bar.addEventListener("mousemove", positionTooltip);
+        bar.addEventListener("mouseleave", () =>
+          tooltip.classList.remove("visible"),
+        );
 
         canvasWrap.appendChild(bar);
       }
 
-      statsText.textContent = 'Entries: ' + entries.length + ' | Depth: ' + (maxDepth + 1);
+      statsText.textContent =
+        "Entries: " + entries.length + " | Depth: " + (maxDepth + 1);
 
       // Add long-task count
-      const longCount = entries.filter(e => e.duration > longTaskThreshold).length;
+      const longCount = entries.filter(
+        (e) => e.duration > longTaskThreshold,
+      ).length;
       if (showLongTasks && longCount > 0) {
-        const longSpan = document.createElement('span');
-        longSpan.style.color = '#f59e0b';
-        longSpan.textContent = ' | Long tasks: ' + longCount;
+        const longSpan = document.createElement("span");
+        longSpan.style.color = "#f59e0b";
+        longSpan.textContent = " | Long tasks: " + longCount;
         stats.appendChild(longSpan);
       }
     }
 
     function positionTooltip(ev: MouseEvent): void {
-      tooltip.style.left = (ev.clientX + 12) + 'px';
-      tooltip.style.top = (ev.clientY - 10) + 'px';
+      tooltip.style.left = ev.clientX + 12 + "px";
+      tooltip.style.top = ev.clientY - 10 + "px";
     }
 
     function escapeText(s: string): string {
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     // -- Event handlers --
-    panel.addEventListener('click', (e: Event) => {
+    panel.addEventListener("click", (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.dataset.action === 'close') cleanup();
-      else if (target.dataset.action === 'refresh') { captureEntries(); renderFlameGraph(); }
+      if (target.dataset.action === "close") cleanup();
+      else if (target.dataset.action === "refresh") {
+        captureEntries();
+        renderFlameGraph();
+      }
     });
 
     // Initial capture & render

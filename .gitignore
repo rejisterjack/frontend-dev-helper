@@ -50,3 +50,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Memsearch (local memory/index cache)
+.memsearch/

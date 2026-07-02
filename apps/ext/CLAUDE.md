@@ -52,8 +52,8 @@ This Chrome extension is paired with **FDH-VSX** (`apps/vsx/` in this monorepo),
 
 ## Build
 
-- `pnpm run build` — production build to `.output/chrome-mv3/` (load unpacked in Chrome)
-- Pre-existing `tsc` errors exist in `background.ts`, `content.ts`, and other untouched files — these don't affect the WXT/Vite build
+- `bun run build` — production build to `.output/chrome-mv3/` (load unpacked in Chrome)
+- `bun run compile` (`tsc --noEmit`) is **green** as of the Phase 0.5 audit pass — pre-existing type debt across `background.ts`, `content.ts`, and ~15 tool files has been cleared.
 
 ## Design System Rules
 

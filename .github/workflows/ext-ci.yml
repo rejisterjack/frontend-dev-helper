@@ -1,0 +1,92 @@
+name: Extension CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/ext/**"
+      - "packages/bridge-protocol/**"
+      - "packages/eslint-config/**"
+      - "bun.lock"
+      - ".github/workflows/ext-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/ext/**"
+      - "packages/bridge-protocol/**"
+      - "packages/eslint-config/**"
+      - "bun.lock"
+      - ".github/workflows/ext-ci.yml"
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ext-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, type-check, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: apps/ext
+        run: bun install --frozen-lockfile
+
+      # Phase 1.1: --max-warnings=0 parity with web CI.
+      # Current baseline (Phase 0/1 cleanup): ~229 warnings — almost all pre-existing
+      # `@typescript-eslint/no-unused-vars` (~117) and `@typescript-eslint/no-explicit-any`
+      # (~77, including test-file chrome.* mocks) documented in apps/ext/CLAUDE.md.
+      # The threshold caps at the current baseline so new warnings fail CI immediately
+      # while the legacy debt is burned down (tracked in MASTER_PLAN_EXT.md → Phase 2.7).
+      # The no-restricted-syntax innerHTML ban above is a hard error regardless of this
+      # threshold.
+      - name: Lint
+        working-directory: apps/ext
+        run: bun run lint -- --max-warnings=229
+
+      - name: Type check
+        working-directory: apps/ext
+        run: bun run compile
+
+      - name: Test (with coverage)
+        working-directory: apps/ext
+        run: bun run test -- --coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ext-coverage
+          path: apps/ext/coverage/
+          retention-days: 7
+
+      - name: Build extension
+        working-directory: apps/ext
+        run: bun run build
+
+      - name: Upload build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-build
+          path: apps/ext/.output/
+          retention-days: 7
+
+      - name: Bundle size summary
+        if: always()
+        working-directory: apps/ext
+        run: |
+          echo "## Extension Bundle Size" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          du -sh .output/* >> $GITHUB_STEP_SUMMARY

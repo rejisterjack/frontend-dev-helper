@@ -1,253 +1,637 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Frontend Dev Helper — 40+ Browser DevTools in One Extension</title>
-<meta name="description" content="A comprehensive browser extension with 40+ tools for DOM inspection, CSS debugging, accessibility auditing, performance profiling, and AI-powered analysis.">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0f172a; --surface: #1e293b; --border: #334155; --text: #e2e8f0;
-  --muted: #94a3b8; --accent: #3b82f6; --accent-hover: #2563eb;
-  --green: #22c55e; --red: #ef4444; --yellow: #f59e0b; --purple: #8b5cf6; --pink: #ec4899;
-}
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend Dev Helper — 50+ Browser DevTools in One Extension</title>
+    <meta
+      name="description"
+      content="A comprehensive browser extension with 50+ tools for DOM inspection, CSS debugging, accessibility auditing, performance profiling, and AI-powered analysis."
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0f172a;
+        --surface: #1e293b;
+        --border: #334155;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #3b82f6;
+        --accent-hover: #2563eb;
+        --green: #22c55e;
+        --red: #ef4444;
+        --yellow: #f59e0b;
+        --purple: #8b5cf6;
+        --pink: #ec4899;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
 
-/* Hero */
-.hero { padding: 80px 0 60px; text-align: center; border-bottom: 1px solid var(--border); }
-.hero-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: #3b82f620; color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 20px; }
-.hero h1 { font-size: 48px; font-weight: 800; line-height: 1.15; margin-bottom: 16px; letter-spacing: -1px; }
-.hero h1 span { background: linear-gradient(135deg, var(--accent), var(--purple), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.hero p { font-size: 18px; color: var(--muted); max-width: 600px; margin: 0 auto 32px; }
-.cta { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: var(--accent); color: #fff; border-radius: 10px; font-size: 16px; font-weight: 600; transition: background 0.2s; }
-.cta:hover { background: var(--accent-hover); text-decoration: none; }
-.cta svg { width: 20px; height: 20px; }
-.stats { display: flex; justify-content: center; gap: 40px; margin-top: 40px; }
-.stat { text-align: center; }
-.stat-num { font-size: 32px; font-weight: 700; color: var(--text); }
-.stat-label { font-size: 13px; color: var(--muted); }
+      /* Hero */
+      .hero {
+        padding: 80px 0 60px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+      .hero-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: #3b82f620;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+      .hero h1 {
+        font-size: 48px;
+        font-weight: 800;
+        line-height: 1.15;
+        margin-bottom: 16px;
+        letter-spacing: -1px;
+      }
+      .hero h1 span {
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--purple),
+          var(--pink)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero p {
+        font-size: 18px;
+        color: var(--muted);
+        max-width: 600px;
+        margin: 0 auto 32px;
+      }
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 28px;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        transition: background 0.2s;
+      }
+      .cta:hover {
+        background: var(--accent-hover);
+        text-decoration: none;
+      }
+      .cta svg {
+        width: 20px;
+        height: 20px;
+      }
+      .stats {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 40px;
+      }
+      .stat {
+        text-align: center;
+      }
+      .stat-num {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .stat-label {
+        font-size: 13px;
+        color: var(--muted);
+      }
 
-/* Features */
-.features { padding: 60px 0; }
-.features h2 { text-align: center; font-size: 32px; margin-bottom: 12px; }
-.features > p { text-align: center; color: var(--muted); margin-bottom: 40px; font-size: 16px; }
-.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
-.feature-card:hover { border-color: var(--accent); }
-.feature-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
-.feature-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-.feature-card p { font-size: 13px; color: var(--muted); }
-.feature-card ul { list-style: none; padding: 0; margin-top: 8px; }
-.feature-card li { font-size: 12px; color: var(--muted); padding: 2px 0; }
-.feature-card li::before { content: '→ '; color: var(--accent); }
+      /* Features */
+      .features {
+        padding: 60px 0;
+      }
+      .features h2 {
+        text-align: center;
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+      .features > p {
+        text-align: center;
+        color: var(--muted);
+        margin-bottom: 40px;
+        font-size: 16px;
+      }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .feature-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        transition: border-color 0.2s;
+      }
+      .feature-card:hover {
+        border-color: var(--accent);
+      }
+      .feature-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+      .feature-card h3 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .feature-card p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .feature-card ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 8px;
+      }
+      .feature-card li {
+        font-size: 12px;
+        color: var(--muted);
+        padding: 2px 0;
+      }
+      .feature-card li::before {
+        content: "→ ";
+        color: var(--accent);
+      }
 
-/* Comparison */
-.comparison { padding: 60px 0; border-top: 1px solid var(--border); }
-.comparison h2 { text-align: center; font-size: 32px; margin-bottom: 40px; }
-.comparison-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.comparison-table th { padding: 12px 16px; text-align: left; border-bottom: 2px solid var(--border); color: var(--muted); font-weight: 600; }
-.comparison-table td { padding: 10px 16px; border-bottom: 1px solid var(--border); }
-.comparison-table tr:hover td { background: var(--surface); }
-.check { color: var(--green); font-weight: 700; }
-.cross { color: #475569; }
+      /* Comparison */
+      .comparison {
+        padding: 60px 0;
+        border-top: 1px solid var(--border);
+      }
+      .comparison h2 {
+        text-align: center;
+        font-size: 32px;
+        margin-bottom: 40px;
+      }
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .comparison-table th {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 2px solid var(--border);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .comparison-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .comparison-table tr:hover td {
+        background: var(--surface);
+      }
+      .check {
+        color: var(--green);
+        font-weight: 700;
+      }
+      .cross {
+        color: #475569;
+      }
 
-/* Install */
-.install { padding: 60px 0; text-align: center; border-top: 1px solid var(--border); }
-.install h2 { font-size: 32px; margin-bottom: 12px; }
-.install p { color: var(--muted); margin-bottom: 24px; font-size: 16px; }
-.install-steps { display: flex; justify-content: center; gap: 32px; margin-top: 32px; }
-.install-step { text-align: center; max-width: 200px; }
-.install-step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 12px; }
-.install-step h3 { font-size: 14px; margin-bottom: 4px; }
-.install-step p { font-size: 12px; color: var(--muted); }
+      /* Install */
+      .install {
+        padding: 60px 0;
+        text-align: center;
+        border-top: 1px solid var(--border);
+      }
+      .install h2 {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+      .install p {
+        color: var(--muted);
+        margin-bottom: 24px;
+        font-size: 16px;
+      }
+      .install-steps {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        margin-top: 32px;
+      }
+      .install-step {
+        text-align: center;
+        max-width: 200px;
+      }
+      .install-step-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin: 0 auto 12px;
+      }
+      .install-step h3 {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      .install-step p {
+        font-size: 12px;
+        color: var(--muted);
+      }
 
-/* Open Source */
-.opensource { padding: 60px 0; text-align: center; border-top: 1px solid var(--border); }
-.opensource h2 { font-size: 28px; margin-bottom: 12px; }
-.opensource p { color: var(--muted); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; }
-.gh-button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-weight: 600; transition: border-color 0.2s; }
-.gh-button:hover { border-color: var(--accent); text-decoration: none; }
+      /* Open Source */
+      .opensource {
+        padding: 60px 0;
+        text-align: center;
+        border-top: 1px solid var(--border);
+      }
+      .opensource h2 {
+        font-size: 28px;
+        margin-bottom: 12px;
+      }
+      .opensource p {
+        color: var(--muted);
+        margin-bottom: 24px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .gh-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+        transition: border-color 0.2s;
+      }
+      .gh-button:hover {
+        border-color: var(--accent);
+        text-decoration: none;
+      }
 
-/* Footer */
-footer { padding: 24px 0; border-top: 1px solid var(--border); text-align: center; }
-footer p { font-size: 13px; color: var(--muted); }
+      /* Footer */
+      footer {
+        padding: 24px 0;
+        border-top: 1px solid var(--border);
+        text-align: center;
+      }
+      footer p {
+        font-size: 13px;
+        color: var(--muted);
+      }
 
-@media (max-width: 768px) {
-  .hero h1 { font-size: 32px; }
-  .feature-grid { grid-template-columns: 1fr; }
-  .stats { flex-direction: column; gap: 16px; }
-  .install-steps { flex-direction: column; align-items: center; }
-}
-</style>
-</head>
-<body>
-
-<section class="hero">
-  <div class="container">
-    <div class="hero-badge">Free &amp; Open Source</div>
-    <h1><span>40+ Dev Tools</span> in One<br>Browser Extension</h1>
-    <p>DOM inspection, CSS debugging, accessibility audits, performance profiling, and AI-powered analysis — everything you need to build better web pages.</p>
-    <a href="https://github.com/rejisterjack/frontend-dev-helper" class="cta">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
-      Install for Chrome
-    </a>
-    <div class="stats">
-      <div class="stat"><div class="stat-num">40+</div><div class="stat-label">Tools</div></div>
-      <div class="stat"><div class="stat-num">6</div><div class="stat-label">Categories</div></div>
-      <div class="stat"><div class="stat-num">AI</div><div class="stat-label">Powered</div></div>
-      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Data Collected</div></div>
-    </div>
-  </div>
-</section>
-
-<section class="features">
-  <div class="container">
-    <h2>Every Tool You Need</h2>
-    <p>Organized into six categories, covering every aspect of frontend development.</p>
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#3b82f620;color:#3b82f6">🔍</div>
-        <h3>Inspection</h3>
-        <p>Deep-dive into DOM, components, and element properties.</p>
-        <ul>
-          <li>DOM Outliner</li>
-          <li>React &amp; Vue State Panels</li>
-          <li>Source Map Viewer</li>
-          <li>Element Inspector</li>
-          <li>Component Tree</li>
-        </ul>
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 32px;
+        }
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          flex-direction: column;
+          gap: 16px;
+        }
+        .install-steps {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge">Free &amp; Open Source</div>
+        <h1><span>50+ Dev Tools</span> in One<br />Browser Extension</h1>
+        <p>
+          DOM inspection, CSS debugging, accessibility audits, performance
+          profiling, and AI-powered analysis — everything you need to build
+          better web pages.
+        </p>
+        <a
+          href="https://github.com/rejisterjack/frontend-dev-helper"
+          class="cta"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M8 12l2 2 4-4" />
+          </svg>
+          Install for Chrome
+        </a>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-num">50+</div>
+            <div class="stat-label">Tools</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">6</div>
+            <div class="stat-label">Categories</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">AI</div>
+            <div class="stat-label">Powered</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Data Collected</div>
+          </div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#8b5cf620;color:#8b5cf6">🎨</div>
-        <h3>CSS</h3>
-        <p>Edit, visualize, and debug CSS in real-time.</p>
-        <ul>
-          <li>CSS Editor (live)</li>
-          <li>Design Token Extractor</li>
-          <li>Grid &amp; Flexbox Overlay</li>
-          <li>Contrast Checker</li>
-          <li>Breakpoint Overlay</li>
-        </ul>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#f59e0b20;color:#f59e0b">⚡</div>
-        <h3>Performance</h3>
-        <p>Profile, analyze, and optimize page performance.</p>
-        <ul>
-          <li>Network Replay</li>
-          <li>Flame Graph</li>
-          <li>Performance Budget</li>
-          <li>X-Ray Mode</li>
-          <li>Network Analyzer</li>
-        </ul>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#22c55e20;color:#22c55e">♿</div>
-        <h3>Accessibility</h3>
-        <p>WCAG compliance checking and keyboard navigation.</p>
-        <ul>
-          <li>Full Accessibility Audit</li>
-          <li>Focus Debugger</li>
-          <li>Contrast Checker</li>
-          <li>One-Click Full Audit</li>
-        </ul>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#ec489920;color:#ec4899">🤖</div>
-        <h3>AI-Powered</h3>
-        <p>AI analysis with live page context and auto-fix.</p>
-        <ul>
-          <li>AI Chat Assistant</li>
-          <li>AI Auto-Fix</li>
-          <li>Smart Suggestions</li>
-          <li>Copy as Component</li>
-          <li>Ollama (Local) Support</li>
-        </ul>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#64748b20;color:#94a3b8">🛠</div>
-        <h3>Utilities</h3>
-        <p>Capture, compare, export, and collaborate.</p>
-        <ul>
-          <li>Screenshot Studio</li>
-          <li>Visual Regression</li>
-          <li>Session Replay</li>
-          <li>Site Report Generator</li>
-          <li>GitHub PR Comments</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="comparison">
-  <div class="container">
-    <h2>Why Frontend Dev Helper?</h2>
-    <table class="comparison-table">
-      <thead>
-        <tr><th>Feature</th><th>FDH</th><th>Chrome DevTools</th><th>Individual Extensions</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>40+ specialized tools</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
-        <tr><td>AI-powered analysis</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
-        <tr><td>React/Vue state inspection</td><td class="check">✓</td><td class="cross">—</td><td>Separate extension</td></tr>
-        <tr><td>Accessibility audit</td><td class="check">✓</td><td class="cross">—</td><td>Separate extension</td></tr>
-        <tr><td>Design token extraction</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
-        <tr><td>Network replay &amp; export</td><td class="check">✓</td><td>Partial</td><td class="cross">—</td></tr>
-        <tr><td>Source map resolution</td><td class="check">✓</td><td class="check">✓</td><td class="cross">—</td></tr>
-        <tr><td>Command palette (Ctrl+K)</td><td class="check">✓</td><td class="check">✓</td><td class="cross">—</td></tr>
-        <tr><td>GitHub PR integration</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
-        <tr><td>One extension, zero clutter</td><td class="check">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section class="install">
-  <div class="container">
-    <h2>Get Started in Seconds</h2>
-    <p>Install, open DevTools, and start debugging.</p>
-    <a href="https://github.com/rejisterjack/frontend-dev-helper" class="cta">Install for Chrome</a>
-    <div class="install-steps">
-      <div class="install-step">
-        <div class="install-step-num">1</div>
-        <h3>Install Extension</h3>
-        <p>One click from the Chrome Web Store</p>
+    <section class="features">
+      <div class="container">
+        <h2>Every Tool You Need</h2>
+        <p>
+          Organized into six categories, covering every aspect of frontend
+          development.
+        </p>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div
+              class="feature-icon"
+              style="background: #3b82f620; color: #3b82f6"
+            >
+              🔍
+            </div>
+            <h3>Inspection</h3>
+            <p>Deep-dive into DOM, components, and element properties.</p>
+            <ul>
+              <li>DOM Outliner</li>
+              <li>React &amp; Vue State Panels</li>
+              <li>Source Map Viewer</li>
+              <li>Element Inspector</li>
+              <li>DOM Tree Viewer</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div
+              class="feature-icon"
+              style="background: #8b5cf620; color: #8b5cf6"
+            >
+              🎨
+            </div>
+            <h3>CSS</h3>
+            <p>Edit, visualize, and debug CSS in real-time.</p>
+            <ul>
+              <li>CSS Editor (live)</li>
+              <li>Design Token Extractor</li>
+              <li>Grid &amp; Flexbox Overlay</li>
+              <li>Contrast Checker</li>
+              <li>Breakpoint Overlay</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div
+              class="feature-icon"
+              style="background: #f59e0b20; color: #f59e0b"
+            >
+              ⚡
+            </div>
+            <h3>Performance</h3>
+            <p>Profile, analyze, and optimize page performance.</p>
+            <ul>
+              <li>Network Replay</li>
+              <li>Performance Entries Viewer</li>
+              <li>Performance Budget</li>
+              <li>X-Ray Mode</li>
+              <li>Network Analyzer</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div
+              class="feature-icon"
+              style="background: #22c55e20; color: #22c55e"
+            >
+              ♿
+            </div>
+            <h3>Accessibility</h3>
+            <p>WCAG compliance checking and keyboard navigation.</p>
+            <ul>
+              <li>Full Accessibility Audit</li>
+              <li>Focus Debugger</li>
+              <li>Contrast Checker</li>
+              <li>One-Click Full Audit</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div
+              class="feature-icon"
+              style="background: #ec489920; color: #ec4899"
+            >
+              🤖
+            </div>
+            <h3>AI-Powered</h3>
+            <p>AI analysis with live page context and auto-fix.</p>
+            <ul>
+              <li>AI Chat Assistant</li>
+              <li>AI Auto-Fix</li>
+              <li>Smart Suggestions</li>
+              <li>Copy as Component</li>
+              <li>Ollama (Local) Support</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div
+              class="feature-icon"
+              style="background: #64748b20; color: #94a3b8"
+            >
+              🛠
+            </div>
+            <h3>Utilities</h3>
+            <p>Capture, compare, export, and collaborate.</p>
+            <ul>
+              <li>Screenshot Studio</li>
+              <li>Visual Regression</li>
+              <li>Session Replay</li>
+              <li>Site Report Generator</li>
+              <li>GitHub PR Comments</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="install-step">
-        <div class="install-step-num">2</div>
-        <h3>Open DevTools</h3>
-        <p>Press F12 or Ctrl+Shift+I</p>
+    </section>
+
+    <section class="comparison">
+      <div class="container">
+        <h2>Why Frontend Dev Helper?</h2>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>FDH</th>
+              <th>Chrome DevTools</th>
+              <th>Individual Extensions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>50+ specialized tools</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>AI-powered analysis</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>React/Vue state inspection</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td>Separate extension</td>
+            </tr>
+            <tr>
+              <td>Accessibility audit</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td>Separate extension</td>
+            </tr>
+            <tr>
+              <td>Design token extraction</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>Network replay &amp; export</td>
+              <td class="check">✓</td>
+              <td>Partial</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>Source map resolution</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>Command palette (Ctrl+K)</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>GitHub PR integration</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+            </tr>
+            <tr>
+              <td>One extension, zero clutter</td>
+              <td class="check">✓</td>
+              <td class="cross">—</td>
+              <td class="cross">—</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="install-step">
-        <div class="install-step-num">3</div>
-        <h3>Find FDH Tab</h3>
-        <p>Click the FDH tab in DevTools</p>
+    </section>
+
+    <section class="install">
+      <div class="container">
+        <h2>Get Started in Seconds</h2>
+        <p>Install, open DevTools, and start debugging.</p>
+        <a
+          href="https://github.com/rejisterjack/frontend-dev-helper"
+          class="cta"
+          >Install for Chrome</a
+        >
+        <div class="install-steps">
+          <div class="install-step">
+            <div class="install-step-num">1</div>
+            <h3>Install Extension</h3>
+            <p>One click from the Chrome Web Store</p>
+          </div>
+          <div class="install-step">
+            <div class="install-step-num">2</div>
+            <h3>Open DevTools</h3>
+            <p>Press F12 or Ctrl+Shift+I</p>
+          </div>
+          <div class="install-step">
+            <div class="install-step-num">3</div>
+            <h3>Find FDH Tab</h3>
+            <p>Click the FDH tab in DevTools</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="opensource">
-  <div class="container">
-    <h2>Open Source</h2>
-    <p>Frontend Dev Helper is MIT licensed. Inspect the code, contribute, or fork it.</p>
-    <a href="https://github.com/rejisterjack/frontend-dev-helper" class="gh-button">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-      View on GitHub
-    </a>
-  </div>
-</section>
+    <section class="opensource">
+      <div class="container">
+        <h2>Open Source</h2>
+        <p>
+          Frontend Dev Helper is MIT licensed. Inspect the code, contribute, or
+          fork it.
+        </p>
+        <a
+          href="https://github.com/rejisterjack/frontend-dev-helper"
+          class="gh-button"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+          View on GitHub
+        </a>
+      </div>
+    </section>
 
-<footer>
-  <div class="container">
-    <p>&copy; 2024 Frontend Dev Helper. MIT License.</p>
-  </div>
-</footer>
-
-</body>
+    <footer>
+      <div class="container">
+        <p>&copy; 2024 Frontend Dev Helper. MIT License.</p>
+      </div>
+    </footer>
+  </body>
 </html>

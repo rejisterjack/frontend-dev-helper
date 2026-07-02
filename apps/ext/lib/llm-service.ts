@@ -1,34 +1,46 @@
-import type { LLMConfig, LLMMessage } from './types';
-import type { PageContextData } from './messaging/types';
-import { getProvider } from './providers';
+import type { LLMConfig, LLMMessage } from "./types";
+import type { PageContextData } from "./messaging/types";
+import { getProvider } from "./providers";
+import { getSecret } from "./secrets";
 
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
 const DEFAULT_LLM_CONFIG: LLMConfig = {
-  apiKey: '',
-  model: 'openai/gpt-4o-mini',
-  baseUrl: 'https://openrouter.ai/api/v1',
+  apiKey: "",
+  model: "openai/gpt-4o-mini",
+  baseUrl: "https://openrouter.ai/api/v1",
   maxTokens: 2000,
   temperature: 0.3,
   enabled: false,
-  provider: 'openrouter',
+  provider: "openrouter",
 };
 
 let config: LLMConfig = { ...DEFAULT_LLM_CONFIG };
-const analysisCache = new Map<string, { result: unknown[]; timestamp: number }>();
+const analysisCache = new Map<
+  string,
+  { result: unknown[]; timestamp: number }
+>();
 
 export async function loadConfig(): Promise<LLMConfig> {
   try {
-    const result = await browser.storage.local.get('fdh-settings-storage');
-    const settings = result['fdh-settings-storage']?.state;
+    const result = await browser.storage.local.get("fdh-settings-storage");
+    const settings = (
+      result["fdh-settings-storage"] as { state?: any } | undefined
+    )?.state;
     if (settings?.ai) {
+      // The API key lives in encrypted-at-rest storage (lib/secrets.ts).
+      // settings.ai.apiKey is the legacy plaintext field, kept empty after
+      // migration; fall back to it once for a graceful upgrade path.
+      const encryptedKey = await getSecret("aiApiKey");
+      const legacyKey = settings.ai.apiKey || "";
+      const apiKey = encryptedKey || legacyKey;
       config = {
         ...DEFAULT_LLM_CONFIG,
-        apiKey: settings.ai.apiKey || '',
-        model: settings.ai.model || 'openai/gpt-4o-mini',
-        baseUrl: settings.ai.baseUrl || 'https://openrouter.ai/api/v1',
+        apiKey,
+        model: settings.ai.model || "openai/gpt-4o-mini",
+        baseUrl: settings.ai.baseUrl || "https://openrouter.ai/api/v1",
         enabled: settings.ai.enabled || false,
-        provider: settings.ai.provider || 'openrouter',
+        provider: settings.ai.provider || "openrouter",
       };
     }
     return config;
@@ -39,7 +51,30 @@ export async function loadConfig(): Promise<LLMConfig> {
 
 export async function saveConfig(newConfig: Partial<LLMConfig>): Promise<void> {
   config = { ...config, ...newConfig };
-  await browser.storage.local.set({ 'fdh-llm-config': config });
+  // Phase 1.3: write through to the canonical fdh-settings-storage key used by
+  // loadConfig + useSettingsStore. The legacy 'fdh-llm-config' key was an
+  // orphan — loadConfig never read it — so writing here kept a phantom entry
+  // in chrome.storage.local that nothing ever consumed.
+  //
+  // The API key continues to live in encrypted-at-rest storage via secrets.ts;
+  // never persist it to fdh-settings-storage in plaintext.
+  if (newConfig.apiKey !== undefined) {
+    const { setSecret } = await import("./secrets");
+    await setSecret("aiApiKey", newConfig.apiKey);
+  }
+  await browser.storage.local.set({
+    "fdh-settings-storage": {
+      state: {
+        ai: {
+          enabled: config.enabled,
+          apiKey: "", // sensitive — stored in secrets.ts, never here
+          model: config.model,
+          baseUrl: config.baseUrl,
+          provider: config.provider,
+        },
+      },
+    },
+  });
 }
 
 export function getConfig(): LLMConfig {
@@ -48,7 +83,7 @@ export function getConfig(): LLMConfig {
 
 export function isEnabled(): boolean {
   const provider = getProvider(config.provider);
-  if (provider.name === 'ollama') {
+  if (provider.name === "ollama") {
     return config.enabled;
   }
   return config.enabled && !!config.apiKey;
@@ -71,7 +106,12 @@ async function sendRequest(messages: LLMMessage[]): Promise<string | null> {
 export async function analyzePage(context: {
   url: string;
   title: string;
-  domStats: { totalElements: number; images: number; links: number; headings: number };
+  domStats: {
+    totalElements: number;
+    images: number;
+    links: number;
+    headings: number;
+  };
   techStack: string[];
 }): Promise<unknown[] | null> {
   const cacheKey = `${context.url}:${context.domStats.totalElements}`;
@@ -84,14 +124,14 @@ export async function analyzePage(context: {
 
   const messages: LLMMessage[] = [
     {
-      role: 'system',
+      role: "system",
       content: `You are a frontend development expert analyzing web pages. Provide analysis in JSON format:
 {"suggestions":[{"category":"accessibility|performance|seo|best-practice|security","priority":"critical|high|medium|low","title":"Issue title","description":"What's wrong","impact":"Why it matters","effort":"easy|medium|hard","suggestedFix":"How to fix"}]}
 Focus on actionable, high-impact issues. Limit to 5-10 suggestions.`,
     },
     {
-      role: 'user',
-      content: `Analyze this page:\nURL: ${context.url}\nTitle: ${context.title}\nTech: ${context.techStack.join(', ') || 'Unknown'}\nElements: ${context.domStats.totalElements}, Images: ${context.domStats.images}, Links: ${context.domStats.links}, Headings: ${context.domStats.headings}`,
+      role: "user",
+      content: `Analyze this page:\nURL: ${context.url}\nTitle: ${context.title}\nTech: ${context.techStack.join(", ") || "Unknown"}\nElements: ${context.domStats.totalElements}, Images: ${context.domStats.images}, Links: ${context.domStats.links}, Headings: ${context.domStats.headings}`,
     },
   ];
 
@@ -99,7 +139,10 @@ Focus on actionable, high-impact issues. Limit to 5-10 suggestions.`,
   if (!content) return null;
 
   try {
-    const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [null, content];
+    const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || [
+      null,
+      content,
+    ];
     const parsed = JSON.parse((jsonMatch[1] || content).trim());
     const suggestions = parsed.suggestions || [];
 
@@ -119,13 +162,14 @@ function buildDevToolsSystemPrompt(pageContext?: {
   pageContext?: PageContextData;
 }): string {
   const ctx = pageContext?.pageContext;
-  const contextSection = ctx ? `
+  const contextSection = ctx
+    ? `
 ## Current Page Context (Live Data)
 
 **URL:** ${ctx.url}
 **Title:** ${ctx.title}
 **Viewport:** ${ctx.viewport.width}x${ctx.viewport.height}
-**Tech Stack:** ${ctx.techStack.join(', ') || 'Unknown'}
+**Tech Stack:** ${ctx.techStack.join(", ") || "Unknown"}
 
 ### DOM Statistics
 - Total elements: ${ctx.domStats.totalElements}
@@ -136,7 +180,7 @@ function buildDevToolsSystemPrompt(pageContext?: {
 - Scripts: ${ctx.domStats.scripts}
 - Stylesheets: ${ctx.domStats.stylesheets}
 
-${ctx.headingHierarchy.length > 0 ? `### Heading Hierarchy\n${ctx.headingHierarchy.map(h => `${'  '.repeat(h.level - 1)}H${h.level}: ${h.text}`).join('\n')}` : ''}
+${ctx.headingHierarchy.length > 0 ? `### Heading Hierarchy\n${ctx.headingHierarchy.map((h) => `${"  ".repeat(h.level - 1)}H${h.level}: ${h.text}`).join("\n")}` : ""}
 
 ### Performance
 - DOM Content Loaded: ${ctx.performance.domContentLoaded}ms
@@ -155,10 +199,22 @@ ${ctx.headingHierarchy.length > 0 ? `### Heading Hierarchy\n${ctx.headingHierarc
 - Cookies: ${ctx.storage.cookieCount}
 
 ### Meta Tags
-${Object.entries(ctx.meta).map(([k, v]) => `- ${k}: ${v}`).join('\n') || 'None detected'}
+${
+  Object.entries(ctx.meta)
+    .map(([k, v]) => `- ${k}: ${v}`)
+    .join("\n") || "None detected"
+}
 
-${ctx.consoleErrors.length > 0 ? `### Console Errors\n${ctx.consoleErrors.slice(0, 10).map(e => `- ${e}`).join('\n')}` : '### Console Errors: None detected'}
-` : `**Page:** ${pageContext?.url ?? 'Unknown'} | ${pageContext?.title ?? ''} | ${pageContext?.viewport ?? ''}`;
+${
+  ctx.consoleErrors.length > 0
+    ? `### Console Errors\n${ctx.consoleErrors
+        .slice(0, 10)
+        .map((e) => `- ${e}`)
+        .join("\n")}`
+    : "### Console Errors: None detected"
+}
+`
+    : `**Page:** ${pageContext?.url ?? "Unknown"} | ${pageContext?.title ?? ""} | ${pageContext?.viewport ?? ""}`;
 
   return `You are FrontendDevHelper AI, an expert browser DevTools assistant. You have deep knowledge of Chrome DevTools, Firefox Developer Tools, and web platform APIs. You help developers understand, debug, and optimize web pages by analyzing live page context.
 
@@ -224,28 +280,42 @@ ${contextSection}
 }
 
 export async function sendChatMessage(
-  aiConfig: { apiKey: string; model: string; baseUrl: string; provider?: string },
+  aiConfig: {
+    apiKey: string;
+    model: string;
+    baseUrl: string;
+    provider?: string;
+  },
   messages: LLMMessage[],
-  pageContext: {
-    url: string;
-    title: string;
-    viewport: string;
-    techStack: string[];
-    pageContext?: PageContextData;
-  } | undefined,
+  pageContext:
+    | {
+        url: string;
+        title: string;
+        viewport: string;
+        techStack: string[];
+        pageContext?: PageContextData;
+      }
+    | undefined,
   onChunk: (chunk: { content: string; done: boolean; error?: string }) => void,
   _signal?: AbortSignal,
 ): Promise<void> {
-  const providerName = aiConfig.provider || 'openrouter';
+  const providerName = aiConfig.provider || "openrouter";
   const provider = getProvider(providerName);
 
-  if (provider.name !== 'ollama' && !aiConfig.apiKey) {
-    onChunk({ content: '', done: true, error: 'AI not configured. Open Settings to add your API key.' });
+  if (provider.name !== "ollama" && !aiConfig.apiKey) {
+    onChunk({
+      content: "",
+      done: true,
+      error: "AI not configured. Open Settings to add your API key.",
+    });
     return;
   }
 
   const systemPrompt = buildDevToolsSystemPrompt(pageContext);
-  const fullMessages: LLMMessage[] = [{ role: 'system', content: systemPrompt }, ...messages];
+  const fullMessages: LLMMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...messages,
+  ];
 
   await provider.sendStreamingMessage(
     {
@@ -261,10 +331,13 @@ export async function sendChatMessage(
   );
 }
 
-export async function testConnection(
-  aiConfig: { apiKey: string; model: string; baseUrl: string; provider?: string },
-): Promise<{ success: boolean; message: string }> {
-  const providerName = aiConfig.provider || 'openrouter';
+export async function testConnection(aiConfig: {
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+  provider?: string;
+}): Promise<{ success: boolean; message: string }> {
+  const providerName = aiConfig.provider || "openrouter";
   const provider = getProvider(providerName);
   return provider.testConnection({
     apiKey: aiConfig.apiKey,
@@ -275,6 +348,36 @@ export async function testConnection(
   });
 }
 
+/**
+ * Send a single non-streaming request using the current global LLM config.
+ *
+ * Used by the React Profiler's AI suggestions panel — it doesn't need
+ * streaming, doesn't need page context, and shouldn't carry its own provider
+ * config (the user already configured the LLM in Settings).
+ *
+ * Returns the assistant's raw text response, or null if AI is disabled /
+ * unconfigured / errored.
+ */
+export async function sendRawRequest(
+  messages: LLMMessage[],
+  options: { maxTokens?: number; temperature?: number } = {},
+): Promise<string | null> {
+  const cfg = getConfig();
+  if (!isEnabled()) return null;
+
+  const provider = getProvider(cfg.provider);
+  return provider.sendMessage(
+    {
+      apiKey: cfg.apiKey,
+      model: cfg.model,
+      baseUrl: cfg.baseUrl,
+      maxTokens: options.maxTokens ?? cfg.maxTokens,
+      temperature: options.temperature ?? cfg.temperature,
+    },
+    messages,
+  );
+}
+
 function cleanupCache(): void {
   const now = Date.now();
   for (const [key, entry] of analysisCache.entries()) {
@@ -282,4 +385,13 @@ function cleanupCache(): void {
   }
 }
 
-export const llmService = { loadConfig, saveConfig, getConfig, isEnabled, analyzePage, sendChatMessage, testConnection };
+export const llmService = {
+  loadConfig,
+  saveConfig,
+  getConfig,
+  isEnabled,
+  analyzePage,
+  sendChatMessage,
+  testConnection,
+  sendRawRequest,
+};

@@ -1,8 +1,8 @@
-import type { FDHMessage } from './types';
+import type { FDHMessage } from "./types";
 
 type MessageHandler = (
   message: FDHMessage,
-  sender: browser.Runtime.MessageSender,
+  sender: chrome.runtime.MessageSender,
   sendResponse: (response?: unknown) => void,
 ) => boolean | void;
 
