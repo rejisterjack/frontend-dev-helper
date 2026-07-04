@@ -20,7 +20,8 @@ export default {
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    seed: "tsx prisma/seed.ts",
+    // Bun runs TypeScript natively, so we don't need tsx as a devDep.
+    seed: "bun run prisma/seed.ts",
   },
   datasource: {
     url: env("DATABASE_URL"),

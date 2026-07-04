@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { randomBytes } from "crypto";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { sendVerificationEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { hashToken } from "@/lib/tokens";
+
+// Validate the request body up front so we can fail fast with a 400 before
+// hitting the rate limiter / DB. Mirrors the validation in the sibling auth
+// routes (login, reset-password, forgot-password).
+const registerSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(80),
+  email: z.string().trim().toLowerCase().email("Invalid email"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(160),
+});
 
 export async function POST(request: Request) {
   // IP-level: 5 signups per minute. Email-level: 3 per hour (below).
@@ -17,21 +30,33 @@ export async function POST(request: Request) {
   if (ipLimited) return ipLimited;
 
   try {
-    const { name, email, password } = await request.json();
+    const body = await request.json();
+    const parsed = registerSchema.safeParse(body);
 
-    if (!name || !email || !password) {
+    // For validation errors we deliberately return the SAME success-shaped
+    // response we use to avoid email enumeration. The actual `error` path is
+    // only used when the body is structurally invalid JSON.
+    if (!parsed.success) {
+      // Re-run rate limit on the email (if present) so attackers can't bypass
+      // the per-email throttle by sending malformed payloads.
+      const email = body?.email;
+      if (typeof email === "string") {
+        await enforceRateLimit(request, {
+          limit: 3,
+          windowSeconds: 3600,
+          identifierSuffix: `register:${email.toLowerCase()}`,
+        });
+      }
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
-        { status: 400 },
+        {
+          message:
+            "If this email is not already registered, an account has been created and a verification link sent.",
+        },
+        { status: 200 },
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 },
-      );
-    }
+    const { name, email, password } = parsed.data;
 
     // Email-level throttling: 3 registrations per email per hour. Limits
     // both abuse and accidental re-registration storms. We deliberately do
@@ -39,7 +64,7 @@ export async function POST(request: Request) {
     const emailLimited = await enforceRateLimit(request, {
       limit: 3,
       windowSeconds: 3600,
-      identifierSuffix: `register:${email.toLowerCase()}`,
+      identifierSuffix: `register:${email}`,
     });
     if (emailLimited) return emailLimited;
 

@@ -1,12 +1,114 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
-import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 import { prisma } from "./db";
 
+/**
+ * Full NextAuth setup for Node-runtime contexts (route handlers, server
+ * components, the credentials `authorize` callback).
+ *
+ * Edge-runtime code (notably `middleware.ts`) MUST NOT import this file — it
+ * transitively pulls in Prisma (`node:*` modules) and bcrypt, neither of
+ * which the Edge runtime can resolve. Edge code imports `lib/auth.config.ts`
+ * instead, which contains the edge-safe subset (providers list + the
+ * `authorized` callback).
+ *
+ * NextAuth's `NextAuth(config)` merges the config from `authConfig` with the
+ * additional callbacks defined here. The callbacks defined here override
+ * their namesakes in `authConfig` (so the `authorized` callback in
+ * `authConfig` keeps running in middleware; the `signIn` / `jwt` / `session`
+ * callbacks defined here run in the Node runtime).
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  callbacks: {
+    // Carry forward the edge-safe `authorized` callback so types stay in sync.
+    authorized: authConfig.callbacks?.authorized,
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.userId = user.id!;
+        token.email = user.email!;
+        token.emailVerified = user.emailVerified ?? false;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        // Cast through the augmented JWT type — TS sometimes fails to merge
+        // the module augmentation when strict mode + Next.js plugin interact.
+        const t = token as { userId: string; emailVerified: boolean };
+        session.user.id = t.userId;
+        // Force-override emailVerified; the base Session.user type from
+        // @auth/core types it as `Date | string | null`, but we store and
+        // propagate a boolean.
+        (session.user as { emailVerified: boolean }).emailVerified =
+          t.emailVerified;
+      }
+      return session;
+    },
+    async signIn({ user, account, profile }) {
+      // Only run linking/creation logic for OAuth providers.
+      if (
+        !account ||
+        (account.provider !== "google" && account.provider !== "github")
+      ) {
+        return true;
+      }
+
+      if (!user?.email) return false;
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+      });
+
+      if (!existingUser) {
+        // No user yet — provision one. OAuth providers have already verified
+        // the email at the IdP, so we stamp emailVerified: true.
+        await prisma.user.create({
+          data: {
+            email: user.email,
+            name: user.name,
+            avatarUrl: user.image,
+            oauthProvider: account.provider,
+            oauthId: account.providerAccountId,
+            emailVerified: true,
+          },
+        });
+        return true;
+      }
+
+      // Existing user. Decide whether to allow this OAuth sign-in.
+      const sameOAuthIdentity =
+        existingUser.oauthProvider === account.provider &&
+        existingUser.oauthId === account.providerAccountId;
+
+      if (sameOAuthIdentity) {
+        // Returning OAuth user — allow. Refresh avatar from profile.
+        const avatarFromProfile = (profile as Record<string, unknown> | null)
+          ?.image as string | undefined;
+        if (avatarFromProfile && avatarFromProfile !== existingUser.avatarUrl) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: { avatarUrl: avatarFromProfile },
+          });
+        }
+        return true;
+      }
+
+      // The email matches a user that did NOT sign in with this OAuth identity.
+      // Refuse to link automatically — that would let anyone controlling a
+      // matching-email OAuth identity take over the credentials account.
+      // The user must sign in with their existing credentials and link the
+      // OAuth account explicitly from the dashboard (TODO: build that flow).
+      // Returning `false` redirects to /login?error=OAuthAccountNotLinked.
+      return false;
+    },
+  },
   providers: [
+    // Credentials provider lives here (not in auth.config.ts) because it
+    // transitively imports Prisma + bcrypt — Node-only.
     Credentials({
       name: "credentials",
       credentials: {
@@ -25,15 +127,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email },
         });
 
-        if (!user || !user.passwordHash) {
+        // Always run a bcrypt compare against a throwaway hash when the user
+        // doesn't exist so the failure path takes the same time as the
+        // success path (mitigates user-enumeration via timing).
+        const placeholderHash =
+          "$2a$12$00000000000000000000000000000000000000000000000000000001";
+        const hashToCompare = user?.passwordHash ?? placeholderHash;
+        const isValid = await bcrypt.compare(password, hashToCompare);
+
+        if (!user || !user.passwordHash || !isValid) {
           return null;
         }
 
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) {
-          return null;
-        }
-
+        // Email verification is enforced by the `authorized` callback in
+        // lib/auth.config.ts: unverified users get a session (so they can hit
+        // /verify-email to resend the link) but are redirected away from any
+        // protected route.
         return {
           id: user.id,
           email: user.email,
@@ -42,92 +151,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
+    // The OAuth providers from `authConfig` are inherited via the spread
+    // above; we don't re-declare them here. (Adding Credentials via the
+    // providers array here would replace the inherited array, so we list
+    // them all together.)
+    ...(authConfig.providers ?? []),
   ],
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user, account, profile }) {
-      if (user) {
-        token.userId = user.id!;
-        token.email = user.email!;
-        token.emailVerified = user.emailVerified ?? false;
-
-        // For OAuth providers, create or link account
-        if (account) {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email! },
-          });
-
-          token.emailVerified = dbUser?.emailVerified ?? false;
-
-          if (dbUser && !dbUser.oauthProvider) {
-            await prisma.user.update({
-              where: { id: dbUser.id },
-              data: {
-                oauthProvider: account.provider,
-                oauthId: account.providerAccountId,
-                emailVerified: true,
-                avatarUrl:
-                  ((profile as Record<string, unknown>)?.image as
-                    | string
-                    | undefined) ?? dbUser.avatarUrl,
-              },
-            });
-            token.emailVerified = true;
-          }
-        }
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        // `session.user` is augmented via the module declaration at the
-        // bottom of this file — no cast needed.
-        session.user.id = token.userId;
-        session.user.emailVerified = token.emailVerified;
-      }
-      return session;
-    },
-    async signIn({ user, account }) {
-      if (
-        account &&
-        (account.provider === "google" || account.provider === "github")
-      ) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-        });
-
-        if (!existingUser) {
-          await prisma.user.create({
-            data: {
-              email: user.email!,
-              name: user.name,
-              avatarUrl: user.image,
-              oauthProvider: account.provider,
-              oauthId: account.providerAccountId,
-              emailVerified: true,
-            },
-          });
-        }
-      }
-
-      return true;
-    },
-  },
 });
 
 declare module "next-auth" {

@@ -1,301 +1,172 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { fadeUpStagger, containerVariants } from '@/lib/motion';
-import { MagneticButton } from '@/components/ui/magnetic-button';
-import {
-  LayoutGrid,
-  Eye,
-  Zap,
-  Move,
-  Palette,
-  Type,
-  Layers,
-  Sparkles,
-} from 'lucide-react';
+import { motion } from "framer-motion";
+import { ArrowRight, Github } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { TOOL_COUNT } from "@/data/tools";
+import { EASE_OUT_QUART, fadeUp, staggerContainer } from "@/lib/motion";
 
-// Framework/CMS compatibility logos (text-based for zero external deps)
-const compatibilityItems = [
-  { label: 'React' },
-  { label: 'Vue' },
-  { label: 'Angular' },
-  { label: 'Svelte' },
-  { label: 'Next.js' },
-  { label: 'Nuxt' },
-  { label: 'WordPress' },
-  { label: 'Webflow' },
-  { label: 'Shopify' },
+const DOWNLOAD_URL =
+  "https://github.com/rejisterjack/frontend-dev-helper/releases";
+const GITHUB_URL = "https://github.com/rejisterjack/frontend-dev-helper";
+
+const trustPoints = [
+  "Zero telemetry",
+  "No data collection",
+  "MIT licensed",
+  "Manifest V3",
 ];
 
-export const Hero = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    const check = () => {
-      const ua = navigator.userAgent;
-      const isMobileUA = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(ua);
-      const isNarrowScreen = window.innerWidth < 768;
-      setIsMobile(isMobileUA || isNarrowScreen);
-    };
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  const handleMobileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-    }
-  };
-
-  if (isMobile) {
-    return (
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none -z-10 bg-[#000]">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-brand-cyan/10 rounded-full blur-[100px]" />
-        </div>
-
-        <div className="max-w-lg mx-auto text-center z-10">
-          <div className="mb-8 inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-cyan" />
-            </span>
-            <span className="text-xs-technical text-brand-cyan">Manifest V3 Certified</span>
-          </div>
-
-          <h1 className="text-5xl font-black tracking-tighter text-white mb-8 leading-[0.85]">
-            Master Your <br />
-            <span className="gradient-text">Frontend Craft.</span>
-          </h1>
-
-          <p className="text-neutral-500 text-lg mb-8 font-medium leading-relaxed">
-            39 surgical debugging tools in one browser extension.
-          </p>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-brand-cyan/10 border border-brand-cyan/20 flex items-center justify-center mx-auto mb-4">
-              <Zap className="w-6 h-6 text-brand-cyan" />
-            </div>
-            <h3 className="text-white font-black text-lg mb-2">Desktop Browser Required</h3>
-            <p className="text-neutral-500 text-sm leading-relaxed mb-6">
-              FrontendDevHelper is a browser extension. Open this page on Chrome, Firefox, or Edge to install.
-            </p>
-
-            {!submitted ? (
-              <form onSubmit={handleMobileSubmit} className="flex gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-neutral-600 focus:outline-none focus:border-brand-cyan/40"
-                />
-                <button
-                  type="submit"
-                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black text-sm font-black"
-                >
-                  Remind Me
-                </button>
-              </form>
-            ) : (
-              <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold">
-                We'll send you a link to install on desktop.
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {['Chrome', 'Firefox', 'Edge', 'Brave'].map((browser) => (
-              <span key={browser} className="px-3 py-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                {browser}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
+export function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center pt-40 pb-32 overflow-hidden">
-      {/* Background Layer */}
-      <div className="absolute inset-0 pointer-events-none -z-10 bg-[#000]">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[1200px] h-[800px] bg-brand-cyan/20 rounded-full blur-[140px] mix-blend-screen opacity-50" />
-        <div className="absolute top-[10%] left-1/4 w-[600px] h-[600px] bg-brand-purple/10 rounded-full blur-[120px] opacity-30" />
-        <div className="absolute inset-0 bg-grid opacity-10" />
-        <div className="absolute inset-0 bg-grid-fade" />
+    <section className="relative overflow-hidden pt-36 pb-24 md:pt-44 md:pb-32">
+      {/* Background: one accent glow + grid + fade. Refused the 3-stack glow +
+          scanline + parallax from the old design — restraint. */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        aria-hidden="true"
+      >
+        <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-brand-cyan/12 blur-[120px]" />
+        <div className="absolute inset-0 bg-grid bg-grid-fade opacity-60" />
       </div>
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="max-w-7xl mx-auto text-center z-10 px-6"
-      >
-        <motion.div variants={fadeUpStagger} className="mb-12 inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-cyan" />
-          </span>
-          <span className="text-xs-technical text-brand-cyan">Manifest V3 Certified</span>
-        </motion.div>
-
-        <motion.h1
-          variants={fadeUpStagger}
-          className="text-7xl md:text-[10rem] font-black tracking-tighter text-white mb-12 leading-[0.8] text-balance"
-        >
-          Master Your <br />
-          <span className="gradient-text">Frontend Craft.</span>
-        </motion.h1>
-
-        <motion.p
-          variants={fadeUpStagger}
-          className="text-xl md:text-2xl text-neutral-500 max-w-3xl mx-auto mb-16 font-medium leading-relaxed"
-        >
-          The most advanced visual debugging toolkit for professional engineers.
-          39 surgical tools consolidated into one high-performance experience.
-        </motion.p>
-
-        <motion.div variants={fadeUpStagger} className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-16">
-          <MagneticButton
-            onClick={() => {
-              if (typeof (window as any).plausible === 'function') {
-                (window as any).plausible('download_click', { props: { source: 'hero' } });
-              }
-              window.open('https://github.com/rejisterjack/frontend-dev-helper/releases', '_blank');
-            }}
-            className="bg-white text-black px-16 py-6 text-xl font-black rounded-full hover:bg-neutral-200 transition-all shadow-[0_20px_60px_rgba(255,255,255,0.2)]"
-          >
-            Install Free for Chrome
-          </MagneticButton>
-
-          <div className="flex flex-col items-start px-6 border-l border-white/10">
-            <div className="flex items-center gap-2 text-brand-amber text-xs font-black uppercase tracking-widest">
-              <span className="w-2 h-2 rounded-full bg-brand-amber animate-pulse" />
-              Chrome Web Store
-            </div>
-            <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest mt-1">Coming Soon</span>
-          </div>
-        </motion.div>
-
-        {/* Trust signals */}
-        <motion.div variants={fadeUpStagger} className="flex flex-wrap items-center justify-center gap-6 mb-12">
-          {[
-            { label: 'Zero telemetry', detail: 'No usage tracking' },
-            { label: 'No data collection', detail: 'Your code stays local' },
-            { label: 'Open source', detail: 'MIT licensed' },
-            { label: 'Manifest V3', detail: 'Latest standard' },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.06] bg-white/[0.02]">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[11px] font-black text-neutral-400 uppercase tracking-widest">{item.label}</span>
-              <span className="text-[10px] font-bold text-neutral-600 hidden sm:inline">— {item.detail}</span>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Framework compatibility trust bar */}
-        <motion.div variants={fadeUpStagger} className="mb-24">
-          <p className="text-[10px] font-black text-neutral-700 uppercase tracking-widest text-center mb-6">
-            Works on any site — React, Vue, Angular, Svelte, WordPress, and more
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {compatibilityItems.map((item) => (
-              <span
-                key={item.label}
-                className="px-4 py-2 rounded-full border border-white/[0.06] bg-white/[0.02] text-xs font-black text-neutral-500 uppercase tracking-widest hover:text-white hover:border-white/20 transition-all"
-              >
-                {item.label}
-              </span>
-            ))}
-            <span className="px-4 py-2 rounded-full border border-dashed border-white/[0.06] text-xs font-black text-neutral-700 uppercase tracking-widest">
-              + any website
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Massive Perspective Mockup */}
+      <Container>
         <motion.div
-          variants={fadeUpStagger}
-          className="relative max-w-6xl mx-auto perspective-1000 group"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+          className="mx-auto max-w-4xl text-center"
         >
-          <motion.div
-            initial={{ rotateX: 15, y: 100, opacity: 0 }}
-            animate={{ rotateX: 0, y: 0, opacity: 1 }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            className="relative rounded-[3rem] border border-white/[0.08] bg-surface-900 overflow-hidden shadow-[0_64px_120px_-24px_rgba(0,0,0,1)] ring-1 ring-white/10 backface-hidden"
-          >
-            {/* UI Mockup Content */}
-            <div className="aspect-[16/10] bg-[#020202] relative overflow-hidden">
-               <div className="absolute inset-0 bg-grid opacity-10" />
-
-               {/* Simulated Chrome Extension UI */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] glass-card rounded-[2rem] overflow-hidden border-white/10">
-                  <div className="p-8 grid grid-cols-4 gap-4">
-                     {[LayoutGrid, Eye, Palette, Move, Type, Layers, Zap, Sparkles].map((Icon, i) => (
-                       <div key={i} className="aspect-square rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center group/icon hover:bg-brand-cyan/10 transition-colors">
-                          <Icon className="w-6 h-6 text-neutral-500 group-hover/icon:text-brand-cyan transition-colors" />
-                       </div>
-                     ))}
-                  </div>
-                  <div className="px-8 py-4 border-t border-white/5 bg-white/[0.02] flex items-center justify-between">
-                     <div className="flex gap-1">
-                        {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full bg-white/5 border border-white/5" />)}
-                     </div>
-                     <span className="text-xs-technical text-neutral-600">v1.2.0 Active</span>
-                  </div>
-               </div>
-
-               {/* Ambient Glows */}
-               <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] bg-brand-cyan/20 rounded-full blur-[100px]" />
-            </div>
-
-            {/* Scanline Effect */}
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-brand-cyan/[0.03] to-transparent h-1/2 animate-scan" />
+          <motion.div variants={fadeUp} className="flex justify-center">
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 rounded-full border border-line-subtle bg-bg-elevated/60 py-1.5 pl-2 pr-3 text-xs text-text-secondary backdrop-blur-md transition-colors hover:border-line hover:text-text-primary"
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cyan/12 px-2 py-0.5 text-[11px] font-medium text-brand-cyan">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-cyan" />
+                v1.2.0
+              </span>
+              Open source on GitHub
+              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+            </a>
           </motion.div>
 
-          {/* Floating Technical Badges */}
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-12 -right-8 glass-card px-8 py-4 rounded-2xl z-30 hidden lg:block border-brand-cyan/20 shadow-brand-cyan/10"
+          <motion.h1
+            variants={fadeUp}
+            className="mt-8 text-balance text-5xl font-semibold tracking-[-0.03em] text-text-primary sm:text-6xl"
+            style={{ lineHeight: 1.02 }}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center border border-brand-cyan/20">
-                 <Zap className="w-5 h-5 text-brand-cyan" />
-              </div>
-              <div>
-                <p className="text-xs-technical text-neutral-500 mb-1">Response Time</p>
-                <p className="text-lg font-black text-white leading-none">0.2ms</p>
-              </div>
-            </div>
-          </motion.div>
+            Master your frontend craft.
+          </motion.h1>
+
+          <motion.p
+            variants={fadeUp}
+            className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-text-tertiary sm:text-xl"
+          >
+            {TOOL_COUNT} surgical debugging tools in one Manifest V3 browser
+            extension. Replace the pile of zombie extensions with one fast,
+            private, open-source toolkit.
+          </motion.p>
 
           <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute top-1/2 -left-12 glass-card px-8 py-4 rounded-2xl z-30 hidden lg:block border-brand-purple/20 shadow-brand-purple/10"
+            variants={fadeUp}
+            className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-purple/10 flex items-center justify-center border border-brand-purple/20">
-                 <Layers className="w-5 h-5 text-brand-purple" />
-              </div>
-              <div>
-                <p className="text-xs-technical text-neutral-500 mb-1">Stack Depth</p>
-                <p className="text-lg font-black text-white leading-none">Infinite</p>
-              </div>
-            </div>
+            <Button
+              href={DOWNLOAD_URL}
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                if (typeof window.plausible === "function") {
+                  window.plausible("download_click", {
+                    props: { source: "hero" },
+                  });
+                }
+              }}
+            >
+              Download for Chrome
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button
+              href={GITHUB_URL}
+              variant="secondary"
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              <Github className="h-4 w-4" />
+              View on GitHub
+            </Button>
           </motion.div>
+
+          <motion.p variants={fadeUp} className="mt-4 text-xs text-text-muted">
+            Also works on Firefox, Edge, and Brave. Chrome Web Store listing
+            coming soon — install via GitHub in the meantime.
+          </motion.p>
+
+          {/* Trust strip */}
+          <motion.ul
+            variants={fadeUp}
+            className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-text-muted"
+          >
+            {trustPoints.map((point) => (
+              <li key={point} className="flex items-center gap-2">
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-success"
+                  aria-hidden="true"
+                />
+                {point}
+              </li>
+            ))}
+          </motion.ul>
         </motion.div>
-      </motion.div>
+
+        {/* Product mock — single subtle elevated card with the tool grid inside. */}
+        <motion.div
+          initial={{ opacity: 0, y: 60, rotateX: 8 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ duration: 1, ease: EASE_OUT_QUART, delay: 0.3 }}
+          className="perspective-1000 mx-auto mt-20 max-w-5xl"
+        >
+          <div className="overflow-hidden rounded-2xl border border-line-subtle bg-bg-elevated shadow-elevated">
+            {/* Mock browser top bar */}
+            <div className="flex items-center gap-2 border-b border-line-subtle bg-bg-subtle px-4 py-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-danger/60" />
+              <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+              <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
+              <div className="ml-3 flex-1">
+                <div className="h-5 max-w-md rounded-md bg-bg-base/60 px-3 py-0.5 font-mono text-[11px] text-text-muted">
+                  localhost:3000/dashboard
+                </div>
+              </div>
+            </div>
+            {/* Mock extension panel */}
+            <div className="grid grid-cols-4 gap-3 bg-bg-base p-6 sm:p-8">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="group flex aspect-square items-center justify-center rounded-lg border border-line-subtle bg-bg-elevated transition-colors hover:border-brand-cyan/40 hover:bg-brand-cyan/5"
+                >
+                  <div className="h-6 w-6 rounded-md bg-line-subtle transition-colors group-hover:bg-brand-cyan/60" />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between border-t border-line-subtle bg-bg-subtle px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-md bg-line-subtle" />
+                <div className="h-5 w-5 rounded-md bg-line-subtle" />
+                <div className="h-5 w-5 rounded-md bg-line-subtle" />
+              </div>
+              <Eyebrow>{TOOL_COUNT} tools · active</Eyebrow>
+            </div>
+          </div>
+        </motion.div>
+      </Container>
     </section>
   );
-};
+}
 
 export default Hero;

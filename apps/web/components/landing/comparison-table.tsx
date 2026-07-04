@@ -1,160 +1,238 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { Check, X, AlertTriangle, Trophy } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Check, X, AlertTriangle } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { fadeUp, staggerContainer, viewportOnce } from "@/lib/motion";
 
-const comparisons = [
-  { feature: 'DOM Outliner', fdh: true, pesticide: true, visbug: true, other: 'separate' },
-  { feature: 'Spacing Visualizer', fdh: true, pesticide: false, visbug: true, other: 'separate' },
-  { feature: 'Font Inspector + Source', fdh: true, pesticide: false, visbug: 'limited', other: 'separate' },
-  { feature: 'Color Picker + Palette', fdh: true, pesticide: false, visbug: true, other: 'separate' },
-  { feature: 'Pixel Ruler (px + rem)', fdh: true, pesticide: false, visbug: true, other: 'separate' },
-  { feature: 'Breakpoint Overlay', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'CSS Inspector (11 cats)', fdh: true, pesticide: false, visbug: 'limited', other: false },
-  { feature: 'Contrast WCAG AA/AAA', fdh: true, pesticide: false, visbug: 'basic', other: 'separate' },
-  { feature: 'Flex + Grid Visualizer', fdh: true, pesticide: false, visbug: 'limited', other: false },
-  { feature: 'Z-Index + 3D View', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Tech Detector (20+)', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Accessibility Audit', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Site Report (JSON/PDF)', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Live CSS Editor', fdh: true, pesticide: false, visbug: 'limited', other: 'separate' },
-  { feature: 'Screenshot + Annotate', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Animation Inspector', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Responsive Preview', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Design System Validator', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Network Analyzer', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Command Palette', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Storage Inspector', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'AI Suggestions + Fixes', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Component Tree', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Performance Flame Graph', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Focus Debugger', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Form Debugger', fdh: true, pesticide: false, visbug: false, other: false },
-  { feature: 'Visual Regression', fdh: true, pesticide: false, visbug: false, other: 'separate' },
-  { feature: 'Export & Reports', fdh: true, pesticide: false, visbug: false, other: false },
+type Cell = boolean | "limited" | "separate";
+type Row = {
+  feature: string;
+  fdh: Cell;
+  pesticide: Cell;
+  visbug: Cell;
+  other: Cell;
+};
+
+// Trimmed to ~12 high-signal rows (was 28 — too much noise).
+const rows: Row[] = [
+  {
+    feature: "DOM Outliner",
+    fdh: true,
+    pesticide: true,
+    visbug: true,
+    other: "separate",
+  },
+  {
+    feature: "Spacing Visualizer",
+    fdh: true,
+    pesticide: false,
+    visbug: true,
+    other: "separate",
+  },
+  {
+    feature: "Color Picker + Palette",
+    fdh: true,
+    pesticide: false,
+    visbug: true,
+    other: "separate",
+  },
+  {
+    feature: "Pixel Ruler (px + rem)",
+    fdh: true,
+    pesticide: false,
+    visbug: true,
+    other: "separate",
+  },
+  {
+    feature: "CSS Inspector (11 cats)",
+    fdh: true,
+    pesticide: false,
+    visbug: "limited",
+    other: false,
+  },
+  {
+    feature: "3D Z-Index View",
+    fdh: true,
+    pesticide: false,
+    visbug: false,
+    other: false,
+  },
+  {
+    feature: "Accessibility Audit",
+    fdh: true,
+    pesticide: false,
+    visbug: false,
+    other: "separate",
+  },
+  {
+    feature: "Contrast WCAG AA/AAA",
+    fdh: true,
+    pesticide: false,
+    visbug: "limited",
+    other: "separate",
+  },
+  {
+    feature: "Performance Flame Graph",
+    fdh: true,
+    pesticide: false,
+    visbug: false,
+    other: false,
+  },
+  {
+    feature: "Network Analyzer",
+    fdh: true,
+    pesticide: false,
+    visbug: false,
+    other: "separate",
+  },
+  {
+    feature: "Command Palette",
+    fdh: true,
+    pesticide: false,
+    visbug: false,
+    other: false,
+  },
+  {
+    feature: "AI Suggestions + Fixes",
+    fdh: true,
+    pesticide: false,
+    visbug: false,
+    other: false,
+  },
 ];
 
-function StatusCell({ value }: { value: boolean | string }) {
+function Status({ value }: { value: Cell }) {
   if (value === true) {
-    return <Check className="w-5 h-5 text-green-400 mx-auto" />;
+    return <Check className="mx-auto h-4 w-4 text-success" strokeWidth={2.5} />;
   }
   if (value === false) {
-    return <X className="w-5 h-5 text-red-400/60 mx-auto" />;
+    return <X className="mx-auto h-4 w-4 text-text-muted" strokeWidth={2} />;
   }
-  if (value === 'limited') {
-    return (
-      <div className="flex items-center justify-center gap-1">
-        <AlertTriangle className="w-4 h-4 text-yellow-400" />
-        <span className="text-xs text-yellow-400/80">Limited</span>
-      </div>
-    );
-  }
-  if (value === 'separate') {
-    return (
-      <div className="flex items-center justify-center gap-1">
-        <AlertTriangle className="w-4 h-4 text-yellow-400" />
-        <span className="text-xs text-yellow-400/80">Separate ext</span>
-      </div>
-    );
-  }
-  return <span className="text-white/30">&mdash;</span>;
+  const label = value === "limited" ? "Limited" : "Separate ext";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-text-tertiary">
+      <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+      {label}
+    </span>
+  );
 }
 
-export default function ComparisonTable() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
-
+export function ComparisonTable() {
   return (
-    <section id="comparison" className="py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-10 -z-10" />
-      <div className="max-w-6xl mx-auto px-6" ref={ref}>
+    <section
+      id="comparison"
+      className="section-y border-y border-line-subtle bg-bg-elevated/30"
+    >
+      <Container>
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-24"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewportOnce}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-8">
-            <Trophy className="w-5 h-5 text-purple-400" />
-            <span className="text-sm font-black text-purple-300 uppercase tracking-widest">The Toolkit King</span>
-          </div>
-          <h2 className="text-4xl md:text-7xl font-black text-white mb-8 tracking-tight">
-            Stop Settling for <span className="text-neutral-700">Less.</span>
-          </h2>
-          <p className="text-neutral-400 text-xl max-w-3xl mx-auto font-medium leading-relaxed">
-            One extension replaces 12+ legacy tools. See how FrontendDevHelper
-            destroys the fragmented status quo.
-          </p>
-        </motion.div>
+          <SectionHeading
+            eyebrow="The difference"
+            title={
+              <>
+                One extension vs.{" "}
+                <span className="text-text-muted">twelve.</span>
+              </>
+            }
+            lead="The features most engineers actually reach for — and which legacy tools provide them."
+          />
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="glass-card rounded-3xl overflow-hidden shadow-2xl border-white/5 ring-1 ring-white/10"
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+          {/* Desktop: table. Mobile: stacked cards. */}
+          <motion.div
+            variants={fadeUp}
+            className="mt-12 hidden overflow-hidden rounded-2xl border border-line-subtle bg-bg-elevated md:block"
+          >
+            <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.02]">
-                  <th className="text-left p-6 text-xs font-black text-neutral-500 uppercase tracking-widest sticky left-0 bg-[#050505] z-10">
-                    Professional Feature
+                <tr className="border-b border-line-subtle bg-bg-subtle/60">
+                  <th className="p-4 text-left">
+                    <Eyebrow>Capability</Eyebrow>
                   </th>
-                  <th className="text-center p-6 text-sm font-black text-cyan-400 bg-cyan-500/10 border-x border-white/5">
-                    FrontendDevHelper
+                  <th className="bg-brand-cyan/[0.06] p-4 text-center">
+                    <span className="text-sm font-semibold text-text-primary">
+                      FrontendDevHelper
+                    </span>
                   </th>
-                  <th className="text-center p-6 text-xs font-black text-neutral-500 uppercase tracking-widest">
-                    Pesticide
+                  <th className="p-4 text-center">
+                    <Eyebrow>Pesticide</Eyebrow>
                   </th>
-                  <th className="text-center p-6 text-xs font-black text-neutral-500 uppercase tracking-widest">
-                    VisBug
+                  <th className="p-4 text-center">
+                    <Eyebrow>VisBug</Eyebrow>
                   </th>
-                  <th className="text-center p-6 text-xs font-black text-neutral-500 uppercase tracking-widest">
-                    Others
+                  <th className="p-4 text-center">
+                    <Eyebrow>Others</Eyebrow>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {comparisons.map((row, i) => (
-                  <motion.tr
+              <tbody>
+                {rows.map((row) => (
+                  <tr
                     key={row.feature}
-                    initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.4 + i * 0.02 }}
-                    className="hover:bg-white/[0.03] transition-colors group"
+                    className="border-b border-line-subtle last:border-0 transition-colors hover:bg-bg-subtle/40"
                   >
-                    <td className="p-5 text-sm font-bold text-white/80 sticky left-0 bg-[#050505] z-10 group-hover:text-white transition-colors">
+                    <td className="p-4 text-sm text-text-secondary">
                       {row.feature}
                     </td>
-                    <td className="p-5 bg-cyan-500/[0.05] border-x border-white/5">
-                      <StatusCell value={row.fdh} />
+                    <td className="bg-brand-cyan/[0.04] p-4 text-center">
+                      <Status value={row.fdh} />
                     </td>
-                    <td className="p-5 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <StatusCell value={row.pesticide} />
+                    <td className="p-4 text-center">
+                      <Status value={row.pesticide} />
                     </td>
-                    <td className="p-5 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <StatusCell value={row.visbug} />
+                    <td className="p-4 text-center">
+                      <Status value={row.visbug} />
                     </td>
-                    <td className="p-5 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <StatusCell value={row.other} />
+                    <td className="p-4 text-center">
+                      <Status value={row.other} />
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </motion.div>
 
-          {/* Summary bar */}
-          <div className="p-8 border-t border-white/10 bg-cyan-500/10 backdrop-blur-xl">
-          <div className="flex items-center justify-center gap-4 text-lg">
-            <span className="font-black text-cyan-400 tracking-tight">39 PROFESSIONAL TOOLS</span>
-            <span className="text-white/20 font-light">|</span>
-            <span className="text-white/60 font-bold italic text-sm">ONE UNIFIED EXPERIENCE</span>
-          </div>
-          </div>
+          {/* Mobile: accordion-style cards */}
+          <motion.div variants={fadeUp} className="mt-12 space-y-2 md:hidden">
+            {rows.map((row) => (
+              <div
+                key={row.feature}
+                className="rounded-xl border border-line-subtle bg-bg-elevated p-4"
+              >
+                <p className="mb-3 text-sm font-medium text-text-primary">
+                  {row.feature}
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                  <dt className="text-text-muted">FrontendDevHelper</dt>
+                  <dd className="text-right">
+                    <Status value={row.fdh} />
+                  </dd>
+                  <dt className="text-text-muted">Pesticide</dt>
+                  <dd className="text-right">
+                    <Status value={row.pesticide} />
+                  </dd>
+                  <dt className="text-text-muted">VisBug</dt>
+                  <dd className="text-right">
+                    <Status value={row.visbug} />
+                  </dd>
+                  <dt className="text-text-muted">Others</dt>
+                  <dd className="text-right">
+                    <Status value={row.other} />
+                  </dd>
+                </dl>
+              </div>
+            ))}
+          </motion.div>
         </motion.div>
-      </div>
+      </Container>
     </section>
   );
 }
+
+export default ComparisonTable;

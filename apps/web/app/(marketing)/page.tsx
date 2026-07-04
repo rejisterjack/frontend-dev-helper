@@ -1,13 +1,12 @@
-import Hero from '@/components/landing/hero';
-import ProblemSolution from '@/components/landing/problem-solution';
-import FeatureBento from '@/components/landing/feature-bento';
-import AISuggestionsSection from '@/components/landing/ai-suggestions-section';
-import AllToolsShowcase from '@/components/landing/all-tools-showcase';
-import ComparisonTable from '@/components/landing/comparison-table';
-import Testimonials from '@/components/landing/testimonials';
-import FAQSection from '@/components/landing/faq-section';
-import CTASection from '@/components/landing/cta-section';
-import ManualInstall from '@/components/landing/manual-install';
+import Hero from "@/components/landing/hero";
+import ProblemSolution from "@/components/landing/problem-solution";
+import FeatureBento from "@/components/landing/feature-bento";
+import AISuggestionsSection from "@/components/landing/ai-suggestions-section";
+import AllToolsShowcase from "@/components/landing/all-tools-showcase";
+import ComparisonTable from "@/components/landing/comparison-table";
+import Community from "@/components/landing/community";
+import FAQSection from "@/components/landing/faq-section";
+import CTASection from "@/components/landing/cta-section";
 
 export default function HomePage() {
   return (
@@ -18,10 +17,9 @@ export default function HomePage() {
       <AISuggestionsSection />
       <AllToolsShowcase />
       <ComparisonTable />
-      <Testimonials />
+      <Community />
       <FAQSection />
       <CTASection />
-      <ManualInstall />
     </>
   );
 }

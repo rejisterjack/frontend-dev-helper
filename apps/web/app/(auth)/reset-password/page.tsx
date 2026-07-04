@@ -2,7 +2,11 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { AuthShell } from "@/components/ui/auth-shell";
+import { AuthInput } from "@/components/ui/auth-input";
+import { Button } from "@/components/ui/button";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
@@ -55,120 +59,107 @@ function ResetPasswordContent() {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black px-6">
-        <div className="w-full max-w-md text-center">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-8">
-            <XCircle className="w-7 h-7 text-red-400" aria-hidden="true" />
+      <AuthShell>
+        <div className="text-center">
+          <div className="mx-auto mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-danger/20 bg-danger/10">
+            <XCircle className="h-6 w-6 text-danger" aria-hidden="true" />
           </div>
-          <h1 className="text-3xl font-black text-white mb-4">Invalid Link</h1>
-          <p role="alert" className="text-neutral-400 mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+            Invalid link
+          </h1>
+          <p role="alert" className="mt-3 text-text-tertiary">
             {error}
           </p>
-          <a
-            href="/forgot-password"
-            className="px-6 py-3 rounded-xl border border-white/10 text-white font-bold text-sm inline-block hover:bg-white/5"
-          >
-            Request New Link
-          </a>
+          <Link href="/forgot-password" className="mt-6 inline-block">
+            <Button variant="secondary">Request new link</Button>
+          </Link>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   if (status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black px-6">
-        <div className="w-full max-w-md text-center">
-          <div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-8">
-            <CheckCircle
-              className="w-7 h-7 text-green-400"
-              aria-hidden="true"
-            />
+      <AuthShell>
+        <div className="text-center">
+          <div className="mx-auto mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-success/20 bg-success/10">
+            <CheckCircle className="h-6 w-6 text-success" aria-hidden="true" />
           </div>
-          <h1 className="text-3xl font-black text-white mb-4">
-            Password Reset!
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+            Password reset
           </h1>
-          <p className="text-neutral-400 mb-8">
+          <p className="mt-3 text-text-tertiary">
             Your password has been updated. You can now log in with your new
             password.
           </p>
-          <a
-            href="/login"
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold text-sm inline-block"
-          >
-            Log In
-          </a>
+          <Link href="/login" className="mt-6 inline-block">
+            <Button>Log in</Button>
+          </Link>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   const hasError = Boolean(error);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-6">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-black text-white mb-2 text-center">
-          Set New Password
-        </h1>
-        <p className="text-neutral-500 text-center mb-8">
-          Enter your new password below.
+    <AuthShell eyebrow="Set new password">
+      <p className="mb-6 text-center text-sm text-text-tertiary">
+        Enter your new password below.
+      </p>
+      {error && (
+        <p
+          role="alert"
+          aria-live="polite"
+          className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-4 py-3 text-center text-sm text-danger"
+        >
+          {error}
         </p>
-        {error && (
-          <p
-            role="alert"
-            aria-live="polite"
-            className="text-red-400 text-sm mb-4 text-center"
-          >
-            {error}
-          </p>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label htmlFor="reset-password" className="sr-only">
-              New password (min 8 characters)
-            </label>
-            <input
-              id="reset-password"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="New password (min 8 characters)"
-              required
-              minLength={8}
-              aria-required="true"
-              aria-invalid={hasError}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="reset-confirm" className="sr-only">
-              Confirm new password
-            </label>
-            <input
-              id="reset-confirm"
-              type="password"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
-              required
-              aria-required="true"
-              aria-invalid={hasError}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold disabled:opacity-50"
-          >
-            {loading ? "Resetting..." : "Reset Password"}
-          </button>
-        </form>
-      </div>
-    </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-1">
+          <label htmlFor="reset-password" className="sr-only">
+            New password (min 8 characters)
+          </label>
+          <AuthInput
+            id="reset-password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="New password (min 8 characters)"
+            required
+            minLength={8}
+            aria-required="true"
+            aria-invalid={hasError}
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="reset-confirm" className="sr-only">
+            Confirm new password
+          </label>
+          <AuthInput
+            id="reset-confirm"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm new password"
+            required
+            aria-required="true"
+            aria-invalid={hasError}
+          />
+        </div>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={loading}
+          className="mt-2 w-full"
+        >
+          {loading ? "Resetting…" : "Reset password"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }
 
@@ -176,9 +167,9 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex min-h-screen items-center justify-center bg-bg-base">
           <Loader2
-            className="w-8 h-8 text-cyan-400 animate-spin"
+            className="h-6 w-6 animate-spin text-brand-cyan"
             aria-label="Loading"
           />
         </div>

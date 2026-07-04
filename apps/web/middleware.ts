@@ -1,5 +1,23 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
+
+/**
+ * NextAuth-powered middleware.
+ *
+ * IMPORTANT: middleware runs in the Edge runtime, which can't resolve Node
+ * modules. We initialize NextAuth with the edge-safe `authConfig` from
+ * `lib/auth.config.ts` — NEVER `lib/auth.ts`, which pulls Prisma (`node:*`)
+ * and bcrypt into its graph. The `authorized` callback defined in
+ * `authConfig` is what does the actual session gating; we add CSP nonce
+ * generation here because that has to happen per-request.
+ *
+ * The auth-gating decision and the session lookup both happen in the Edge
+ * runtime via this construction. The full Node-runtime auth setup
+ * (`lib/auth.ts`) is responsible for issuing/stamping the JWT — the same JWT
+ * is readable here without needing Prisma.
+ */
+const { auth } = NextAuth(authConfig);
 
 /**
  * Generate a per-request CSP nonce.
@@ -21,23 +39,43 @@ function generateNonce(): string {
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Per-request nonce, used by the CSP header and (eventually) `<Script nonce>`.
+  // Per-request nonce. It is forwarded to the React tree via the
+  // `x-nonce` request header (which `headers()` reads in server components)
+  // AND echoed on the response for diagnostics. Layout scripts read it via
+  // `headers().get('x-nonce')` and pass it to `<Script nonce={...}>`.
   const nonce = generateNonce();
 
-  // Build the Content-Security-Policy. The nonce is interpolated into the
-  // script-src and style-src directives so Next.js's inline runtime scripts
-  // (which it tags with the same nonce via the `x-forwarded-nonce` mechanism
-  // in production) are allowed to execute.
+  // Sentry ingest endpoint. Once your Sentry org is provisioned, replace the
+  // wildcard with your specific ingest host, e.g.
+  //   https://o12345.ingest.sentry.io
+  // to tighten the rule. Until then `*.sentry.io` is the accepted risk —
+  // it only allows CONNECT to Sentry endpoints, not script execution.
+  const sentryIngestHost = process.env.SENTRY_CSP_INGEST_HOST
+    ? `https://${process.env.SENTRY_CSP_INGEST_HOST}`
+    : "https://*.sentry.io";
+
+  const isDev = process.env.NODE_ENV === "development";
+
+  // Build the Content-Security-Policy.
   const csp = [
     `default-src 'self'`,
-    // 'unsafe-inline' on style-src is required by Next.js + styled-components
-    // even with nonces (style tags injected at runtime). Tightening this is
-    // a Phase 2 task.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://plausible.io`,
+    // 'unsafe-inline' on style-src is required by Next.js (runtime-injected
+    // style tags for styled-components / RSC styling). Tightening this to a
+    // nonce-based policy is tracked as a follow-up.
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+    // The nonce is applied to <script> tags in app/layout.tsx via
+    // `<Script nonce={nonce}>`. 'strict-dynamic' lets nonced scripts spawn
+    // trust-bearing children without listing them explicitly.
+    // In development, Next.js uses `eval()` for React Refresh / HMR, so we
+    // must add 'unsafe-eval' to script-src or every page throws EvalError.
+    // Production builds don't need it.
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://plausible.io${
+      isDev ? " 'unsafe-eval'" : ""
+    }`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://plausible.io`,
     `img-src 'self' data: blob: https:`,
     `font-src 'self' data: https://fonts.gstatic.com`,
-    `connect-src 'self' https://plausible.io https://*.sentry.io`,
+    `connect-src 'self' https://plausible.io ${sentryIngestHost}`,
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
@@ -45,44 +83,31 @@ export default auth((req) => {
     `upgrade-insecure-requests`,
   ].join("; ");
 
-  // Allow auth routes, API routes, and static assets
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/verify-email") ||
-    pathname.startsWith("/forgot-password") ||
-    pathname.startsWith("/reset-password") ||
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/tools/") ||
-    pathname.startsWith("/privacy") ||
-    pathname.startsWith("/terms") ||
-    pathname === "/"
-  ) {
-    const res = NextResponse.next();
-    res.headers.set("Content-Security-Policy", csp);
-    // Expose the nonce to the server component layer so layout scripts can
-    // pick it up via `headers()`.
-    res.headers.set("x-nonce", nonce);
-    return res;
-  }
+  // Forward the nonce to the React tree by setting a request header on the
+  // response that wraps the rewritten/forwarded request. Server components
+  // then read it via `headers().get('x-nonce')`.
+  const res = NextResponse.next();
+  res.headers.set("Content-Security-Policy", csp);
+  res.headers.set("x-nonce", nonce);
+  // Also stamp the nonce on a request header so downstream `headers()` reads
+  // (which see request headers, not response headers) can find it.
+  req.headers.set("x-nonce", nonce);
 
-  // Protect dashboard routes
-  if (
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/licenses") ||
-    pathname.startsWith("/teams")
-  ) {
+  // The NextAuth `auth()` wrapper runs `authConfig.callbacks.authorized`
+  // against the resolved session. If `authorized` returned false, the wrapper
+  // itself emits the redirect. As a belt-and-braces check, we also redirect
+  // unauthenticated users hitting protected prefixes here.
+  const protectedPrefixes = ["/dashboard", "/licenses", "/teams"];
+  if (protectedPrefixes.some((p) => pathname.startsWith(p))) {
     if (!req.auth) {
-      const redirect = NextResponse.redirect(new URL("/login", req.url));
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      const redirect = NextResponse.redirect(loginUrl);
       redirect.headers.set("Content-Security-Policy", csp);
       return redirect;
     }
   }
 
-  const res = NextResponse.next();
-  res.headers.set("Content-Security-Policy", csp);
-  res.headers.set("x-nonce", nonce);
   return res;
 });
 

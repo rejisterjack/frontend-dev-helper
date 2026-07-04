@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Check, ArrowRight, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
-import type { ToolPageData } from '@/data/tools';
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Check, Download } from "lucide-react";
+import Link from "next/link";
+import type { ToolPageData } from "@/data/tools";
+import { Container } from "@/components/ui/container";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { fadeUp, staggerContainer, viewportOnce } from "@/lib/motion";
+
+const DOWNLOAD_URL =
+  "https://github.com/rejisterjack/frontend-dev-helper/releases";
 
 export default function ToolPageContent({
   tool,
@@ -13,145 +22,183 @@ export default function ToolPageContent({
   relatedTools: ToolPageData[];
 }) {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-bg-base">
       {/* Hero */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto">
+      <section className="relative overflow-hidden pb-20 pt-32 md:pt-40">
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          aria-hidden="true"
+        >
+          <div className="absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-brand-cyan/10 blur-[120px]" />
+        </div>
+        <Container>
           <Link
-            href="/"
-            className="text-sm text-neutral-500 hover:text-cyan-400 transition-colors mb-8 inline-block"
+            href="/#tools"
+            className="inline-flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-text-secondary"
           >
-            &larr; All Tools
+            <ArrowLeft className="h-3.5 w-3.5" /> All tools
           </Link>
-          <motion.h1
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight"
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-8 max-w-3xl"
           >
-            {tool.name}
-          </motion.h1>
-          <p className="text-xl text-neutral-400 mb-4 font-medium">
-            {tool.tagline}
-          </p>
-          <p className="text-neutral-500 leading-relaxed max-w-2xl">
-            {tool.description}
-          </p>
-          <div className="flex gap-4 mt-8">
-            <a
-              href="https://github.com/rejisterjack/frontend-dev-helper/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold text-sm inline-flex items-center gap-2"
-            >
-              Install Free <ExternalLink className="w-4 h-4" />
-            </a>
-            <a
-              href="#features"
-              className="px-6 py-3 rounded-2xl border border-white/10 text-white font-bold text-sm hover:bg-white/5 transition-colors"
-            >
-              See Features
-            </a>
-          </div>
-        </div>
+            <Eyebrow tone="brand">Tool</Eyebrow>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-text-primary sm:text-5xl md:text-6xl">
+              {tool.name}
+            </h1>
+            <p className="mt-5 text-lg text-text-tertiary">{tool.tagline}</p>
+            <p className="mt-3 max-w-2xl leading-relaxed text-text-tertiary">
+              {tool.description}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button href={DOWNLOAD_URL} size="lg">
+                <Download className="h-4 w-4" />
+                Install free
+              </Button>
+              <Button href="#features" variant="secondary" size="lg">
+                See features
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+        </Container>
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20 px-6 bg-[#050505]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-black text-white mb-16">
-            Features
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {tool.features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="rounded-2xl border border-white/5 bg-white/[0.02] p-8"
-              >
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-4">
-                  <Check className="w-5 h-5 text-cyan-400" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">
-                  {f.title}
-                </h3>
-                <p className="text-sm text-neutral-400 leading-relaxed">
-                  {f.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+      <section id="features" className="section-y border-y border-line-subtle">
+        <Container>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={viewportOnce}
+          >
+            <SectionHeading eyebrow="Features" title="What it does" />
+            <div className="mt-12 grid gap-4 md:grid-cols-2 md:gap-5">
+              {tool.features.map((f) => (
+                <motion.div key={f.title} variants={fadeUp}>
+                  <Card className="h-full p-6 sm:p-7">
+                    <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-cyan/20 bg-brand-cyan/10">
+                      <Check
+                        className="h-4 w-4 text-brand-cyan"
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      {f.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-text-tertiary">
+                      {f.description}
+                    </p>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </Container>
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-black text-white mb-16">
-            How It Works
-          </h2>
-          <div className="space-y-12">
-            {tool.howItWorks.map((step, i) => (
-              <div key={i} className="flex gap-8">
-                <div className="text-5xl font-black text-neutral-800">
-                  {step.step}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {step.title}
-                  </h3>
-                  <p className="text-neutral-400">{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="section-y">
+        <Container>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={viewportOnce}
+          >
+            <SectionHeading eyebrow="How it works" title="Three steps." />
+            <ol className="mt-12 space-y-6">
+              {tool.howItWorks.map((step) => (
+                <motion.li
+                  key={step.step}
+                  variants={fadeUp}
+                  className="flex gap-5 sm:gap-7"
+                >
+                  <span className="shrink-0 font-mono text-2xl font-medium text-brand-cyan">
+                    {step.step}
+                  </span>
+                  <div className="border-l border-line-subtle pl-5 sm:pl-7">
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1 leading-relaxed text-text-tertiary">
+                      {step.description}
+                    </p>
+                  </div>
+                </motion.li>
+              ))}
+            </ol>
+          </motion.div>
+        </Container>
       </section>
 
       {/* FAQ */}
-      <section className="py-20 px-6 bg-[#050505]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-black text-white mb-16">
-            FAQ
-          </h2>
-          <div className="space-y-8">
-            {tool.faq.map((item, i) => (
-              <div key={i}>
-                <h3 className="text-lg font-bold text-white mb-3">
-                  {item.question}
-                </h3>
-                <p className="text-neutral-400 leading-relaxed">
-                  {item.answer}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="section-y border-y border-line-subtle">
+        <Container size="narrow">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={viewportOnce}
+          >
+            <SectionHeading eyebrow="FAQ" title="Common questions." />
+            <motion.div
+              variants={fadeUp}
+              className="mt-12 divide-y divide-line-subtle border-y border-line-subtle"
+            >
+              {tool.faq.map((item) => (
+                <div key={item.question} className="py-5">
+                  <h3 className="text-base font-medium text-text-primary">
+                    {item.question}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-text-tertiary">
+                    {item.answer}
+                  </p>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </Container>
       </section>
 
       {/* Related Tools */}
       {relatedTools.length > 0 && (
-        <section className="py-20 px-6">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-black text-white mb-12">
-              Related Tools
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {relatedTools.map((t) => (
-                <Link
-                  key={t.slug}
-                  href={`/tools/${t.slug}`}
-                  className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 hover:border-cyan-500/20 transition-colors group"
-                >
-                  <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">
-                    {t.name}
-                  </h3>
-                  <p className="text-sm text-neutral-500">{t.tagline}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
+        <section className="section-y">
+          <Container>
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={viewportOnce}
+            >
+              <SectionHeading eyebrow="More tools" title="Related." />
+              <div className="mt-12 grid gap-4 sm:grid-cols-2 md:gap-5">
+                {relatedTools.map((t) => (
+                  <motion.div key={t.slug} variants={fadeUp}>
+                    <Link href={`/tools/${t.slug}`}>
+                      <Card
+                        variant="interactive"
+                        className="flex items-center justify-between p-5"
+                      >
+                        <div>
+                          <h3 className="font-medium text-text-primary">
+                            {t.name}
+                          </h3>
+                          <p className="mt-0.5 text-sm text-text-tertiary">
+                            {t.tagline}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 shrink-0 text-text-muted" />
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </Container>
         </section>
       )}
     </div>

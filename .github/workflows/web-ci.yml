@@ -31,9 +31,10 @@ jobs:
 
     env:
       # Next.js build will fail if these are missing; provide inert values so
-      # the build can complete in CI without real secrets. Prisma generate is
-      # the only thing that needs DATABASE_URL at install time.
-      DATABASE_URL: "postgresql://ci:ci@ep-ci-pooler.us-east-1.aws.neon.tech/ci?sslmode=require"
+      # the build can complete in CI without real secrets. DATABASE_URL is
+      # only used by `prisma generate` (no live query) — using a clearly-fake
+      # hostname so no accidental external connection can ever happen.
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/db?sslmode=disable"
       NEXTAUTH_SECRET: "ci-not-a-real-secret-just-for-build"
       NEXTAUTH_URL: "http://localhost:7393"
       GOOGLE_CLIENT_ID: "ci-placeholder"
@@ -64,6 +65,14 @@ jobs:
 
       - name: Build
         working-directory: apps/web
+        env:
+          # When SENTRY_AUTH_TOKEN is present, the Sentry webpack plugin uploads
+          # source maps after the build. Provided by the repo's Actions secrets.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
         run: bun run build
 
       - name: Upload build artifact

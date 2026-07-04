@@ -2,6 +2,10 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import Link from "next/link";
+import { AuthShell } from "@/components/ui/auth-shell";
+import { AuthInput } from "@/components/ui/auth-input";
+import { Button } from "@/components/ui/button";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -39,7 +43,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Auto sign in after registration
       await signIn("credentials", {
         email,
         password,
@@ -55,119 +58,122 @@ export default function SignupPage() {
   const hasError = Boolean(error);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-6">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-black text-white mb-8 text-center">
-          Create Account
-        </h1>
-        {error && (
-          <p
-            role="alert"
-            aria-live="polite"
-            className="text-red-400 text-sm mb-4 text-center"
-          >
-            {error}
-          </p>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label htmlFor="signup-name" className="sr-only">
-              Name
-            </label>
-            <input
-              id="signup-name"
-              type="text"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
-              required
-              aria-required="true"
-              aria-invalid={hasError}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="signup-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="signup-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              aria-required="true"
-              aria-invalid={hasError}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="signup-password" className="sr-only">
-              Password (min 8 characters)
-            </label>
-            <input
-              id="signup-password"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password (min 8 characters)"
-              required
-              minLength={8}
-              aria-required="true"
-              aria-invalid={hasError}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="signup-confirm" className="sr-only">
-              Confirm password
-            </label>
-            <input
-              id="signup-confirm"
-              type="password"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm password"
-              required
-              aria-required="true"
-              aria-invalid={hasError}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold disabled:opacity-50"
-          >
-            {loading ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
-        <div className="mt-6 flex gap-3">
-          <button
-            onClick={() => signIn("google", { redirectTo: "/dashboard" })}
-            className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold text-sm hover:bg-white/5"
-          >
-            Google
-          </button>
-          <button
-            onClick={() => signIn("github", { redirectTo: "/dashboard" })}
-            className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold text-sm hover:bg-white/5"
-          >
-            GitHub
-          </button>
-        </div>
-        <p className="text-center text-neutral-500 text-sm mt-6">
-          Already have an account?{" "}
-          <a href="/login" className="text-cyan-400 hover:underline">
-            Log In
-          </a>
+    <AuthShell eyebrow="Create account">
+      {error && (
+        <p
+          role="alert"
+          aria-live="polite"
+          className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-4 py-3 text-center text-sm text-danger"
+        >
+          {error}
         </p>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-1">
+          <label htmlFor="signup-name" className="sr-only">
+            Name
+          </label>
+          <AuthInput
+            id="signup-name"
+            type="text"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name"
+            required
+            aria-required="true"
+            aria-invalid={hasError}
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="signup-email" className="sr-only">
+            Email address
+          </label>
+          <AuthInput
+            id="signup-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            aria-required="true"
+            aria-invalid={hasError}
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="signup-password" className="sr-only">
+            Password (min 8 characters)
+          </label>
+          <AuthInput
+            id="signup-password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password (min 8 characters)"
+            required
+            minLength={8}
+            aria-required="true"
+            aria-invalid={hasError}
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="signup-confirm" className="sr-only">
+            Confirm password
+          </label>
+          <AuthInput
+            id="signup-confirm"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm password"
+            required
+            aria-required="true"
+            aria-invalid={hasError}
+          />
+        </div>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={loading}
+          className="mt-2 w-full"
+        >
+          {loading ? "Creating account…" : "Sign up"}
+        </Button>
+      </form>
+
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-line-subtle" />
+        <span className="text-xs text-text-muted">or continue with</span>
+        <div className="h-px flex-1 bg-line-subtle" />
       </div>
-    </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          variant="secondary"
+          onClick={() => signIn("google", { redirectTo: "/dashboard" })}
+        >
+          Google
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => signIn("github", { redirectTo: "/dashboard" })}
+        >
+          GitHub
+        </Button>
+      </div>
+
+      <p className="mt-6 text-center text-sm text-text-tertiary">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-brand-cyan underline-offset-4 hover:underline"
+        >
+          Log in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

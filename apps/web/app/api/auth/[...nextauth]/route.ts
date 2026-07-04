@@ -1,12 +1,13 @@
 import { handlers } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import type { NextRequest } from "next/server";
 
 // NextAuth exports GET (signin UI + callback) and POST (credential submit).
 // We only want to throttle the credential POST; the GET UI render should be
 // cached / free.
 const { GET } = handlers;
 
-async function POST(request: Request) {
+async function POST(request: NextRequest) {
   // 10 login attempts per IP per minute — comfortably above legitimate
   // retry behavior, well below credential-stuffing throughput.
   const limited = await enforceRateLimit(request, {

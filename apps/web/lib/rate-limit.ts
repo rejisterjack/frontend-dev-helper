@@ -80,19 +80,39 @@ export class MemoryRateLimiter implements RateLimiter {
  *
  * Loaded dynamically so the dependency is optional — the app still boots
  * without `@upstash/ratelimit` installed (falls back to in-memory).
+ *
+ * Implementation note: `@upstash/ratelimit`'s `slidingWindow` is configured at
+ * client construction time, not per-call. We therefore keep a small cache of
+ * `Ratelimit` clients keyed by `${limit}:${windowSeconds}` so each distinct
+ * (limit, window) tuple gets its own correctly-sized bucket. Without this,
+ * every endpoint silently runs at the same hard-coded rate regardless of what
+ * callers ask for.
  */
 export class UpstashRateLimiter implements RateLimiter {
-  private readonly ratelimit: {
-    limit: (id: string) => Promise<{
-      success: boolean;
-      limit: number;
-      remaining: number;
-      reset: number;
-    }>;
-  };
+  // Keyed by `${limit}:${windowSeconds}` -> a Ratelimit client sized for that bucket.
+  // We deliberately type the value loosely (`UpstashClient`) because the exact
+  // type is private to `@upstash/ratelimit` and exposing it would force every
+  // consumer to depend on the package.
+  private readonly clients = new Map<string, UpstashClient>();
+  private readonly redis: unknown;
+  // The constructor + slidingWindow helper are passed in (rather than imported
+  // at module top-level) so this file can be loaded even if the optional
+  // `@upstash/ratelimit` package isn't resolvable.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly RatelimitCtor: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly slidingWindow: any;
 
-  constructor(ratelimit: { limit: (id: string) => Promise<RateLimitResult> }) {
-    this.ratelimit = ratelimit;
+  constructor(opts: {
+    redis: unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Ratelimit: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    slidingWindow: any;
+  }) {
+    this.redis = opts.redis;
+    this.RatelimitCtor = opts.Ratelimit;
+    this.slidingWindow = opts.slidingWindow;
   }
 
   async limit(
@@ -100,11 +120,21 @@ export class UpstashRateLimiter implements RateLimiter {
     limit: number,
     windowSeconds: number,
   ): Promise<RateLimitResult> {
-    // Upstash `slidingWindow` is configured at client construction time, not
-    // per-call. We build the client per (limit, window) key lazily.
-    const result = await this.ratelimit.limit(
-      `${identifier}:${limit}:${windowSeconds}`,
-    );
+    const key = `${limit}:${windowSeconds}`;
+    let client = this.clients.get(key);
+    if (!client) {
+      // Build the window string in the format @upstash/ratelimit expects
+      // (e.g. "60 s"). The library parses this with a `Duration` template
+      // literal type; the runtime value is what matters.
+      client = new this.RatelimitCtor({
+        redis: this.redis,
+        limiter: this.slidingWindow(limit, `${windowSeconds} s`),
+        prefix: "fdh:",
+      }) as UpstashClient;
+      this.clients.set(key, client);
+    }
+
+    const result = await client.limit(identifier);
     return {
       success: result.success,
       limit,
@@ -112,6 +142,12 @@ export class UpstashRateLimiter implements RateLimiter {
       reset: result.reset,
     };
   }
+}
+
+// Minimal structural type covering the only method we call on the Upstash
+// Ratelimit client. Keeps us decoupled from the library's exact return shape.
+interface UpstashClient {
+  limit: (id: string) => Promise<RateLimitResult>;
 }
 
 // Lazily resolve the active limiter. Doing this at module load time would
@@ -132,13 +168,11 @@ async function getLimiter(): Promise<RateLimiter> {
       const { Ratelimit } = await import("@upstash/ratelimit");
       const { Redis } = await import("@upstash/redis");
       const redis = new Redis({ url: restUrl, token: restToken });
-      cachedLimiter = new UpstashRateLimiter(
-        new Ratelimit({
-          redis,
-          limiter: Ratelimit.slidingWindow(60, "1 m"), // overridden per-call via identifier
-          prefix: "fdh:",
-        }),
-      );
+      cachedLimiter = new UpstashRateLimiter({
+        redis,
+        Ratelimit,
+        slidingWindow: Ratelimit.slidingWindow,
+      });
       return cachedLimiter;
     } catch {
       // Fall through to memory limiter

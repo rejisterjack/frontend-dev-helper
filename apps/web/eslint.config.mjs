@@ -1,4 +1,4 @@
-import nextJsConfig from "@repo/eslint-config/next-js";
+import { nextJsConfig } from "@repo/eslint-config/next-js";
 
 /**
  * ESLint flat config for the Next.js web app.
@@ -19,6 +19,10 @@ export default [
       "public/**",
       "next-env.d.ts",
       "prisma/migrations/**",
+      // CommonJS config files use `module.exports` — the ESM-oriented rules
+      // flag `module` as undefined. They're build-time configs, not app code.
+      "postcss.config.js",
+      "lighthouserc.cjs",
     ],
   },
 ];

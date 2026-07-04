@@ -11,6 +11,10 @@ export function register() {
   if (process.env.NEXT_RUNTIME === "client") {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+      // Map errors to the deployed release so they can be tied back to a
+      // commit / Vercel deployment. Set NEXT_PUBLIC_SENTRY_RELEASE in your
+      // build environment (typically to the commit SHA or Vercel release ID).
+      release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
       // Lower in production once we know the noise floor.
       tracesSampleRate: 0.1,
       // Don't record session replays by default — privacy-preserving. Capture

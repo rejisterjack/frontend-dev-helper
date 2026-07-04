@@ -24,14 +24,17 @@ export async function POST(request: Request) {
     const { token, password } = schema.parse(body);
 
     // Tokens are stored as SHA-256 hashes — hash the input and look it up.
-    const user = await prisma.user.findFirst({
-      where: {
-        resetToken: hashToken(token),
-        resetTokenExpiry: { gt: new Date() },
-      },
+    // `resetToken` is `@unique` so we can use `findUnique` for an index-backed
+    // lookup; the expiry filter is applied after the lookup as a guard.
+    const user = await prisma.user.findUnique({
+      where: { resetToken: hashToken(token) },
     });
 
-    if (!user) {
+    if (
+      !user ||
+      !user.resetTokenExpiry ||
+      user.resetTokenExpiry <= new Date()
+    ) {
       return Response.json(
         { error: "Invalid or expired reset token" },
         { status: 400 },

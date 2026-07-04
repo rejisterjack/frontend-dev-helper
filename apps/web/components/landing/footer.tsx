@@ -1,103 +1,141 @@
-'use client';
+"use client";
 
-import { Github, FileText, Shield, Heart, Mail, Twitter, ExternalLink, Wrench as WrenchIcon } from 'lucide-react';
-import Link from 'next/link';
+import Link from "next/link";
+import { Github, MessageSquare, Bug, ExternalLink } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { Logo } from "@/components/ui/logo";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { TOOL_COUNT } from "@/data/tools";
 
-const footerLinks = [
+const GITHUB_URL = "https://github.com/rejisterjack/frontend-dev-helper";
+
+const columns = [
   {
-    title: 'Product',
+    title: "Product",
     links: [
-      { label: 'Features', href: '#features' },
-      { label: 'How It Works', href: '#how-it-works' },
-      { label: 'Download', href: '#install-guide' },
-      { label: 'Changelog', href: 'https://github.com/rejisterjack/frontend-dev-helper/blob/main/CHANGELOG.md' },
+      { label: "Features", href: "#features", external: false },
+      { label: "All tools", href: "#tools", external: false },
+      { label: "Comparison", href: "#comparison", external: false },
+      { label: "Install", href: "#install", external: false },
+      {
+        label: "Changelog",
+        href: `${GITHUB_URL}/blob/main/CHANGELOG.md`,
+        external: true,
+      },
     ],
   },
   {
-    title: 'Tools',
+    title: "Tools",
     links: [
-      { label: 'CSS Debugger', href: '/tools/css-debugger' },
-      { label: 'Accessibility Checker', href: '/tools/accessibility-checker' },
-      { label: 'Performance Profiler', href: '/tools/performance-profiler' },
-      { label: 'Color Picker', href: '/tools/color-picker' },
-      { label: 'DOM Inspector', href: '/tools/dom-inspector' },
+      { label: "CSS Debugger", href: "/tools/css-debugger", external: false },
+      {
+        label: "Accessibility Checker",
+        href: "/tools/accessibility-checker",
+        external: false,
+      },
+      {
+        label: "Performance Profiler",
+        href: "/tools/performance-profiler",
+        external: false,
+      },
+      { label: "Color Picker", href: "/tools/color-picker", external: false },
+      { label: "DOM Inspector", href: "/tools/dom-inspector", external: false },
     ],
   },
   {
-    title: 'Resources',
+    title: "Resources",
     links: [
-      { label: 'Documentation', href: 'https://github.com/rejisterjack/frontend-dev-helper#readme' },
-      { label: 'GitHub', href: 'https://github.com/rejisterjack/frontend-dev-helper' },
-      { label: 'Contributing', href: 'https://github.com/rejisterjack/frontend-dev-helper/blob/main/CONTRIBUTING.md' },
-      { label: 'Firefox Add-ons', href: 'https://addons.mozilla.org/en-US/firefox/addon/frontenddevhelper/' },
-      { label: 'Report a Bug', href: 'https://github.com/rejisterjack/frontend-dev-helper/issues' },
+      { label: "Documentation", href: `${GITHUB_URL}#readme`, external: true },
+      { label: "GitHub", href: GITHUB_URL, external: true },
+      {
+        label: "Contributing",
+        href: `${GITHUB_URL}/blob/main/CONTRIBUTING.md`,
+        external: true,
+      },
+      {
+        label: "Firefox Add-ons",
+        href: "https://addons.mozilla.org/en-US/firefox/addon/frontenddevhelper/",
+        external: true,
+      },
+      { label: "Report a bug", href: `${GITHUB_URL}/issues`, external: true },
     ],
   },
   {
-    title: 'Legal',
+    title: "Legal",
     links: [
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-      { label: 'MIT License', href: 'https://github.com/rejisterjack/frontend-dev-helper/blob/main/LICENSE' },
+      { label: "Privacy Policy", href: "/privacy", external: false },
+      { label: "Terms of Service", href: "/terms", external: false },
+      {
+        label: "MIT License",
+        href: `${GITHUB_URL}/blob/main/LICENSE`,
+        external: true,
+      },
     ],
   },
 ];
 
+const socials = [
+  { icon: Github, href: GITHUB_URL, label: "GitHub" },
+  {
+    icon: MessageSquare,
+    href: `${GITHUB_URL}/discussions`,
+    label: "Discussions",
+  },
+  { icon: Bug, href: `${GITHUB_URL}/issues`, label: "Issues" },
+];
+
 export default function Footer() {
   return (
-    <footer className="border-t border-white/5 pt-24 pb-12 bg-[#050505]">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-12 mb-20">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-3 mb-6 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform">
-                <WrenchIcon className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-black text-xl tracking-tighter text-white">
-                Frontend<span className="text-neutral-500 font-bold">Dev</span>Helper
-              </span>
-            </div>
-            <p className="text-neutral-500 font-bold text-sm leading-relaxed mb-8">
-              The ultimate professional toolkit for elite frontend engineers.
-              39 tools. One extension. 100% Free.
+    <footer className="border-t border-line-subtle bg-bg-elevated/40">
+      <Container>
+        <div className="grid grid-cols-2 gap-10 py-16 md:grid-cols-6 md:gap-8">
+          <div className="col-span-2 md:col-span-2">
+            <Logo />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-text-tertiary">
+              {TOOL_COUNT} visual debugging tools, one Manifest V3 extension.
+              Free and open source under the MIT License.
             </p>
-            <div className="flex items-center gap-4">
-              {[
-              { icon: Github, href: "https://github.com/rejisterjack/frontend-dev-helper" },
-              { icon: Twitter, href: "https://github.com/rejisterjack/frontend-dev-helper/discussions" },
-              { icon: Mail, href: "https://github.com/rejisterjack/frontend-dev-helper/issues" }
-              ].map((social, i) => (
-                <a
-                  key={i}
-                  href={social.href}
-                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all hover:-translate-y-1 border border-white/5"
-                >
-                  <social.icon className="w-4 h-4" />
-                </a>
-              ))}
+            <div className="mt-5 flex items-center gap-2">
+              {socials.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <a
+                    key={s.href}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line-subtle bg-bg-elevated text-text-muted transition-colors hover:border-line hover:text-text-primary"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Link columns */}
-          {footerLinks.map((column) => (
-            <div key={column.title}>
-              <h3 className="font-black text-white text-[12px] uppercase tracking-widest mb-8">{column.title}</h3>
-              <ul className="space-y-4">
-                {column.links.map((link) => (
+          {columns.map((col) => (
+            <div key={col.title}>
+              <h3 className="mb-4">
+                <Eyebrow>{col.title}</Eyebrow>
+              </h3>
+              <ul className="space-y-2.5">
+                {col.links.map((link) => (
                   <li key={link.label}>
-                    {link.href.startsWith('http') || link.href.startsWith('#') ? (
+                    {link.external ? (
                       <a
                         href={link.href}
-                        className="text-sm font-bold text-neutral-500 hover:text-white transition-all inline-flex items-center gap-2 group"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-text-tertiary transition-colors hover:text-text-primary"
                       >
                         {link.label}
-                        {link.href.startsWith('http') && <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                        <ExternalLink className="h-3 w-3 opacity-50" />
                       </a>
                     ) : (
                       <Link
                         href={link.href}
-                        className="text-sm font-bold text-neutral-500 hover:text-white transition-all inline-flex items-center gap-2 group"
+                        className="text-sm text-text-tertiary transition-colors hover:text-text-primary"
                       >
                         {link.label}
                       </Link>
@@ -109,27 +147,15 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-2 text-xs font-black text-neutral-600 uppercase tracking-widest">
-            <span>Built with</span>
-            <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-            <span>for the elite frontend community</span>
-          </div>
-
-          <div className="flex items-center gap-8 text-[10px] font-black text-neutral-600 uppercase tracking-widest">
-             <div className="flex items-center gap-2">
-                <Shield className="w-3.5 h-3.5" />
-                MIT License
-             </div>
-             <div className="flex items-center gap-2">
-                <FileText className="w-3.5 h-3.5" />
-                Manifest V3
-             </div>
-             <span>&copy; 2026 FrontendDevHelper</span>
-          </div>
+        <div className="flex flex-col items-start justify-between gap-3 border-t border-line-subtle py-6 text-xs text-text-muted sm:flex-row sm:items-center">
+          <p>
+            &copy; {new Date().getFullYear()} FrontendDevHelper. MIT Licensed.
+          </p>
+          <p className="font-mono">
+            Manifest V3 · No telemetry · No data collection
+          </p>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

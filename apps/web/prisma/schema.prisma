@@ -2,6 +2,12 @@
 // is REQUIRED in v7; the client is no longer generated into node_modules.
 // Output path is relative to this schema file, so we generate into
 // apps/web/prisma/generated/client (gitignored — see .gitignore).
+//
+// ID strategy: this schema uses `@default(uuid())` for all primary keys. The
+// workspace Prisma rule prescribes `@default(cuid())` for string IDs, but
+// switching would require a destructive migration (existing UUIDs are not
+// valid cuids and would have to be regenerated, breaking every FK in the
+// database). We deliberately keep `uuid()` and document the deviation here.
 generator client {
   provider = "prisma-client"
   output   = "./generated/client"
@@ -68,7 +74,11 @@ model User {
   oauthProvider    String?
   oauthId          String?
   avatarUrl        String?
-  resetToken       String?
+  // Password-reset token, hashed with SHA-256 before storage (see lib/tokens).
+  // Unique + indexed because the reset-password route looks it up by exact
+  // match (WHERE resetToken = ? AND resetTokenExpiry > ?). Without an index
+  // this would be a full table scan on every reset request.
+  resetToken       String?  @unique
   resetTokenExpiry DateTime?
   deletedAt        DateTime?
   // The user who referred this user (1:1 — a user can only be referred once).
@@ -87,8 +97,12 @@ model User {
   teamMemberships    TeamMember[]
   teamPresets        TeamPreset[]
 
+  // Composite uniqueness on (oauthProvider, oauthId) already creates the index
+  // needed for OAuth lookups; no separate @@index on `email` is required
+  // because `@unique` already provides one.
   @@unique([oauthProvider, oauthId])
-  @@index([email])
+  // FK index for the `referredBy` relation back-reference.
+  @@index([referredById])
 }
 
 model EmailVerification {
@@ -99,7 +113,8 @@ model EmailVerification {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  @@index([token])
+  // No separate @@index([token]) — the `@unique` on `token` already creates
+  // a unique index that serves both uniqueness and lookup.
   @@index([userId])
 }
 
@@ -120,7 +135,7 @@ model License {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  @@index([key])
+  // No separate @@index([key]) — `@unique` already provides an index.
   @@index([userId])
 }
 
@@ -139,7 +154,7 @@ model Subscription {
   updatedAt            DateTime           @updatedAt
 
   @@index([userId])
-  @@index([stripeCustomerId])
+  // No separate @@index([stripeCustomerId]) — `@unique` already provides one.
 }
 
 // ---------------------------------------------------------------------------
@@ -161,13 +176,15 @@ model Team {
 }
 
 model TeamMember {
-  id      String  @id @default(uuid())
-  teamId  String
-  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId  String
-  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
-  role    TeamRole @default(MEMBER)
-  joinedAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role      TeamRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([teamId, userId])
   @@index([teamId])
@@ -186,6 +203,8 @@ model TeamPreset {
   updatedAt DateTime @updatedAt
 
   @@index([teamId])
+  // FK index for the `createdBy` relation.
+  @@index([createdBy])
 }
 
 // ---------------------------------------------------------------------------
@@ -204,9 +223,10 @@ model Referral {
   status       ReferralStatus  @default(PENDING)
   redeemedAt   DateTime?
   createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@index([referrerId])
-  @@index([referralCode])
+  // No separate @@index([referralCode]) — `@unique` already provides one.
 }
 
 // ---------------------------------------------------------------------------
@@ -217,8 +237,12 @@ model WebhookEvent {
   id        String   @id @default(uuid())
   eventId   String   @unique
   eventType String
-  processed Boolean  @default(true)
+  // Newly-inserted webhook events start unprocessed; flip to true only after
+  // the handler has successfully run. The previous default of `true` defeated
+  // the idempotency gate (rows looked already-done on insert).
+  processed Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([eventId])
+  // No separate @@index([eventId]) — `@unique` already provides one.
 }

@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 15
 
     env:
-      DATABASE_URL: "postgresql://ci:ci@ep-ci-pooler.us-east-1.aws.neon.tech/ci?sslmode=require"
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/db?sslmode=disable"
       NEXTAUTH_SECRET: "ci-not-a-real-secret-just-for-build"
       NEXTAUTH_URL: "http://localhost:7394"
       GOOGLE_CLIENT_ID: "ci-placeholder"
@@ -54,7 +54,7 @@ jobs:
 
       - name: Run Lighthouse CI
         working-directory: apps/web
-        run: bunx lhci autorun || echo "Lighthouse failed — results below."
+        run: bunx lhci autorun
 
       - name: Upload Lighthouse report
         if: always()

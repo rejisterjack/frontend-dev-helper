@@ -53,3 +53,4 @@ yarn-error.log*
 
 # Memsearch (local memory/index cache)
 .memsearch/
+.tmp*

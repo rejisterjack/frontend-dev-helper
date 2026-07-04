@@ -1,151 +1,137 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { HelpCircle, ChevronDown, MessageCircle } from 'lucide-react';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { TOOL_COUNT } from "@/data/tools";
+import { fadeUp, staggerContainer, viewportOnce } from "@/lib/motion";
 
 const faqs = [
   {
-    question: 'Is FrontendDevHelper free?',
-    answer:
-      'Yes — completely free and open source under the MIT License. All 39 visual debugging tools, AI-powered suggestions, and every feature is available at no cost. No paid tiers, no subscriptions, no hidden fees. Free forever.',
+    question: "Is FrontendDevHelper free?",
+    answer: `Yes — completely free and open source under the MIT License. All ${TOOL_COUNT} tools, AI suggestions, and features are available at no cost. No paid tiers, no subscriptions, no hidden fees.`,
   },
   {
-    question: 'Does it work on Manifest V3?',
+    question: "Does it work on Manifest V3?",
     answer:
-      'Yes. FrontendDevHelper was architected for Manifest V3 from day one. Unlike legacy extensions that are now broken on modern browsers, this toolkit is fully compliant and optimized for modern security models with a single service worker and strict CSP.',
+      "Yes. FrontendDevHelper was built for Manifest V3 from day one. Unlike legacy Manifest V2 extensions that browsers are now disabling, this toolkit is fully compliant and optimized for the modern security model.",
   },
   {
-    question: 'Which browsers are supported?',
+    question: "Which browsers are supported?",
     answer:
-      'Chrome (91+), Brave, and Edge via the GitHub releases page. Firefox is available now on the Firefox Add-ons store (AMO). The Chrome Web Store listing is coming soon — in the meantime, install via the manual "Load unpacked" method described in the install guide above.',
+      'Chrome (91+), Brave, and Edge via GitHub releases. Firefox is available on the Firefox Add-ons store (AMO). The Chrome Web Store listing is coming soon — install via the "Load unpacked" method in the meantime.',
   },
   {
-    question: 'Why does it need broad permissions like access to all URLs?',
+    question: "Why does it need access to all URLs?",
     answer:
-      'Visual debugging tools must run on whichever site you are inspecting — that requires host access to all URLs. The "scripting" permission is needed to inject overlay tools into pages. We request only what the tools actually need, and everything runs locally. You can review the full manifest and source code on GitHub.',
+      'Visual debugging tools have to run on whichever site you are inspecting — that requires host access to all URLs. The "scripting" permission is needed to inject overlays into pages. We request only what the tools need, everything runs locally, and the source is on GitHub for anyone to audit.',
   },
   {
-    question: 'Does the AI feature send my page data externally?',
+    question: "Does the AI feature send my page data externally?",
     answer:
-      'Only if you configure it. AI Suggestions are powered by OpenRouter, and you must provide your own API key in settings before any AI feature activates. When a key is set and you trigger an AI analysis, page-derived content (DOM structure, CSS values, etc.) is sent to OpenRouter. No page data is sent anywhere without your key and your explicit action. You can disable AI entirely in settings.',
+      "Only if you configure it. AI Suggestions use OpenRouter and require your own API key. Without a key, no AI feature activates. With one, page-derived content is sent to OpenRouter only when you explicitly trigger a scan. You can disable AI entirely in settings, or use a local model.",
   },
   {
-    question: 'Does it collect any usage data or telemetry?',
+    question: "Does it collect any usage data or telemetry?",
     answer:
-      'Zero. All tool processing happens locally in your browser. There is no default telemetry, no analytics tracking, no data collection. The extension does not phone home. Even if you use the AI feature, only the content you explicitly send to your configured AI provider leaves your browser.',
+      "Zero. All tool processing happens locally in your browser. No default telemetry, no analytics, no data collection. The extension does not phone home.",
   },
   {
-    question: 'How is this different from Chrome DevTools?',
+    question: "How is this different from Chrome DevTools?",
     answer:
-      'DevTools is for deep source and network debugging. FrontendDevHelper is for visual crafting. It provides on-page overlay tools, 3D visualizations, keyboard-first workflows, battery-in-one site reports, and designer-centric tools that DevTools does not offer as a cohesive experience. They complement each other — use DevTools for step debugging and profiling; use FrontendDevHelper for visual inspection, accessibility audits, and design system validation.',
+      "They complement each other. DevTools is for deep source and network debugging. FrontendDevHelper is for visual crafting — on-page overlays, 3D visualizations, keyboard-first workflows, and designer-centric audits that DevTools does not provide as a cohesive experience.",
   },
   {
-    question: 'Can I use it with React, Vue, Angular, or Svelte?',
+    question: "Can I use it with React, Vue, Angular, or Svelte?",
     answer:
-      'Yes. The Component Tree tool automatically detects and visualizes hierarchies for React, Vue, Angular, and Svelte. You can inspect props, view reactive state, and highlight components directly in the DOM. All other overlay tools work on any website regardless of framework.',
+      "Yes. The Component Tree tool automatically detects and visualizes hierarchies for React, Vue, Angular, and Svelte — inspect props, view reactive state, and highlight components in the DOM. All other overlay tools work on any site regardless of framework.",
   },
   {
-    question: 'Does it work on SPAs, Shadow DOM, or iframes?',
+    question: "Does it work on SPAs, Shadow DOM, or iframes?",
     answer:
-      'Most tools work on any page including single-page applications. Shadow DOM and cross-origin iframes have inherent browser security restrictions that limit some overlay tools — see the documentation on large-DOM and Shadow DOM behavior for details on what degrades gracefully.',
+      "Most tools work on any page including SPAs. Shadow DOM and cross-origin iframes have inherent browser security restrictions that limit some overlays — see the docs for what degrades gracefully.",
   },
 ];
 
-function FAQItem({ faq, index }: { faq: (typeof faqs)[0]; index: number }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.04 }}
-      className="border-b border-white/5 last:border-0"
-    >
+    <div className="border-b border-line-subtle last:border-0">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-6 text-left group"
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 py-5 text-left"
       >
-        <span className="font-medium text-white/80 group-hover:text-white transition-colors pr-4">
-          {faq.question}
-        </span>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-          className="shrink-0"
-        >
-          <ChevronDown className="w-5 h-5 text-white/40" />
-        </motion.div>
+        <span className="text-base font-medium text-text-primary">{q}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-text-muted transition-transform duration-normal ease-out-quart ${
+            open ? "rotate-180" : ""
+          }`}
+        />
       </button>
-
-      <AnimatePresence>
-        {isOpen && (
+      <AnimatePresence initial={false}>
+        {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <p className="pb-6 text-sm text-white/50 leading-relaxed">{faq.answer}</p>
+            <p className="pb-5 text-sm leading-relaxed text-text-tertiary">
+              {a}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
-export default function FAQSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
-
+export function FAQSection() {
   return (
-    <section id="faq" className="py-40 relative overflow-hidden bg-[#000]">
-      <div className="absolute inset-0 bg-grid opacity-10 -z-10" />
-      <div className="max-w-5xl mx-auto px-6 relative" ref={ref}>
+    <section id="faq" className="section-y border-t border-line-subtle">
+      <Container size="narrow">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-32"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewportOnce}
         >
-          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 mb-10 backdrop-blur-md">
-            <HelpCircle className="w-5 h-5 text-neutral-500" />
-            <span className="text-sm font-black text-neutral-500 uppercase tracking-widest">Support</span>
-          </div>
-          <h2 className="text-5xl md:text-9xl font-black text-white mb-10 tracking-tighter leading-[0.85]">
-            Got <span className="text-neutral-700 font-black">Questions?</span>
-          </h2>
-          <p className="text-neutral-400 text-xl md:text-2xl max-w-3xl mx-auto font-medium leading-relaxed">
-            Everything you need to know about the toolkit.
-            For deeper technical questions, open an issue on GitHub.
-          </p>
-        </motion.div>
+          <SectionHeading
+            eyebrow="FAQ"
+            title="Questions, answered."
+            align="center"
+          />
 
-        <div className="grid gap-2">
-          {faqs.map((faq, i) => (
-            <FAQItem key={i} faq={faq} index={i} />
-          ))}
-        </div>
+          <motion.div variants={fadeUp} className="mt-12">
+            {faqs.map((f) => (
+              <FAQItem key={f.question} q={f.question} a={f.answer} />
+            ))}
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.6 }}
-          className="mt-24 text-center"
-        >
-          <a
-            href="https://github.com/rejisterjack/frontend-dev-helper/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-all text-sm font-black text-white uppercase tracking-widest group"
+          <motion.p
+            variants={fadeUp}
+            className="mt-10 text-center text-sm text-text-muted"
           >
-            <MessageCircle className="w-5 h-5 text-neutral-500 group-hover:text-white transition-colors" />
-            Ask on GitHub Issues
-          </a>
+            Still curious?{" "}
+            <a
+              href="https://github.com/rejisterjack/frontend-dev-helper/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-brand-cyan underline-offset-4 hover:underline"
+            >
+              Open an issue on GitHub
+            </a>
+            .
+          </motion.p>
         </motion.div>
-      </div>
+      </Container>
     </section>
   );
 }
+
+export default FAQSection;

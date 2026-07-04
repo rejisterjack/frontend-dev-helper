@@ -1,41 +1,56 @@
-'use client';
+"use client";
 
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
+import { TOOL_COUNT } from "@/data/tools";
+import { Card } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 export default function DashboardContent() {
   const { data: session, status } = useSession();
 
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-neutral-500">Loading...</div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-text-muted">Loading…</div>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-black text-white mb-2">Dashboard</h1>
-      <p className="text-neutral-500 mb-8">Welcome to your dashboard</p>
+      <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
+        Dashboard
+      </h1>
+      <p className="mt-1 text-text-tertiary">
+        Welcome back{session?.user?.name ? `, ${session.user.name}` : ""}.
+      </p>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
-          <h2 className="text-sm font-bold text-neutral-500 uppercase tracking-wider mb-4">Account</h2>
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <Card className="p-6">
+          <h2 className="mb-4">
+            <Eyebrow>Account</Eyebrow>
+          </h2>
           {session?.user ? (
-            <div className="space-y-2">
-              <p className="text-white font-medium">{session.user.name || 'User'}</p>
-              <p className="text-neutral-400 text-sm">{session.user.email}</p>
+            <div className="space-y-1.5">
+              <p className="font-medium text-text-primary">
+                {session.user.name || "User"}
+              </p>
+              <p className="text-sm text-text-tertiary">{session.user.email}</p>
             </div>
           ) : (
-            <p className="text-neutral-500 text-sm">Not signed in</p>
+            <p className="text-sm text-text-muted">Not signed in.</p>
           )}
-        </div>
+        </Card>
 
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
-          <h2 className="text-sm font-bold text-neutral-500 uppercase tracking-wider mb-4">Extension</h2>
-          <p className="text-xl font-bold text-white">100% Free</p>
-          <p className="text-neutral-500 text-sm mt-1">All 39 tools available</p>
-        </div>
+        <Card className="p-6">
+          <h2 className="mb-4">
+            <Eyebrow>Extension</Eyebrow>
+          </h2>
+          <p className="text-xl font-semibold text-text-primary">Free plan</p>
+          <p className="mt-1 text-sm text-text-tertiary">
+            All {TOOL_COUNT} tools available.
+          </p>
+        </Card>
       </div>
     </div>
   );

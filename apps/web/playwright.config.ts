@@ -33,12 +33,15 @@ export default defineConfig({
     },
   ],
 
-  // Boot the Next.js dev server automatically when running locally. In CI we
-  // typically point at a preview URL instead (set E2E_BASE_URL).
+  // Boot the Next.js server automatically. In CI we run against the
+  // production build (next start) so middleware CSP / redirects / RSC behavior
+  // match what users get. Locally we fall back to dev HMR for convenience.
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: "bun run dev",
+        command: process.env.CI
+          ? "bun run start -- --port 7393"
+          : "bun run dev",
         url: "http://localhost:7393",
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,

@@ -10,8 +10,12 @@ import * as Sentry from "@sentry/nextjs";
  * root layout. It MUST include its own `<html>` and `<body>` because
  * `global-error.tsx` replaces the root layout entirely when it triggers.
  *
+ * Note: we use a plain `<a>` rather than `next/link` here because there is no
+ * App Router context available when global-error replaces the root layout.
+ *
  * See: https://nextjs.org/docs/app/api-reference/file-conventions/error
  */
+/* eslint-disable @next/next/no-html-link-for-pages */
 export default function GlobalError({
   error,
   reset,

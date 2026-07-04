@@ -51,6 +51,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Suppress the X-Powered-By: Next.js response header (minor info disclosure).
+  poweredByHeader: false,
+  // Prisma v7 + driver adapter must run server-side only. Marking it as a
+  // server external package keeps webpack from trying to bundle Node-only
+  // modules like `node:path`, `node:os`, and the generated client's internal
+  // ESM runtime — which would otherwise fail the client bundle build.
+  serverExternalPackages: ["@prisma/client", "@node-rs/argon2"],
   images: {
     remotePatterns: [
       {

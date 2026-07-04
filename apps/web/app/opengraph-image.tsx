@@ -1,19 +1,19 @@
 import { ImageResponse } from "next/og";
+import { TOOL_COUNT } from "@/data/tools";
 
 export const runtime = "edge";
-export const alt =
-  "Frontend Dev Helper — 40+ visual debugging tools in one browser extension";
+export const alt = `FrontendDevHelper — ${TOOL_COUNT} visual debugging tools in one browser extension`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 /**
  * Dynamic Open Graph image.
  *
- * Replaces the static `/og-image.png` referenced in the old layout. This is
- * rendered on-demand by Next.js at build/runtime via the edge runtime; no
- * binary asset needs to be checked in.
- *
- * See: https://nextjs.org/docs/app/api-reference/file-conventions/metadata-opengraph-image
+ * Rendered on-demand via the edge runtime. Matches the new brand palette
+ * (cyan → violet gradient on near-black) and uses the brand mark + wordmark
+ * composition. The font is system sans-serif because edge OG can't easily
+ * load Geist without bundling the font binary; the visual identity comes
+ * from the logo + color + composition.
  */
 export default function OgImage() {
   return new ImageResponse(
@@ -23,46 +23,83 @@ export default function OgImage() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        padding: "80px",
-        background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
-        color: "#fafafa",
+        justifyContent: "space-between",
+        padding: "72px",
+        background:
+          "radial-gradient(ellipse 1000px 600px at 20% 0%, rgba(34,211,238,0.18) 0%, transparent 60%), radial-gradient(ellipse 800px 500px at 90% 100%, rgba(167,139,250,0.14) 0%, transparent 60%), #08090C",
+        color: "#F5F6F8",
         fontFamily: "sans-serif",
+        position: "relative",
       }}
     >
-      <div style={{ display: "flex", marginBottom: "32px" }}>
-        <span
+      {/* Brand row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <div
           style={{
-            fontSize: "28px",
-            fontWeight: 600,
-            padding: "8px 20px",
-            borderRadius: "999px",
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            width: 56,
+            height: 56,
+            borderRadius: 14,
+            background: "linear-gradient(135deg, #22D3EE 0%, #A78BFA 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 32,
+            color: "#08090C",
+            fontWeight: 800,
           }}
         >
-          Free &amp; Open Source
-        </span>
+          {"</>"}
+        </div>
+        <div
+          style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.01em" }}
+        >
+          FrontendDevHelper
+        </div>
       </div>
+
+      {/* Headline */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div
+          style={{
+            fontSize: 84,
+            fontWeight: 700,
+            lineHeight: 1.02,
+            letterSpacing: "-0.035em",
+            maxWidth: 1000,
+          }}
+        >
+          Master your frontend craft.
+        </div>
+        <div
+          style={{
+            fontSize: 32,
+            color: "#8B909C",
+            lineHeight: 1.3,
+            maxWidth: 900,
+          }}
+        >
+          {`${TOOL_COUNT} visual debugging tools in one Manifest V3 browser extension. Free & open source.`}
+        </div>
+      </div>
+
+      {/* Footer row */}
       <div
         style={{
-          fontSize: "76px",
-          fontWeight: 800,
-          lineHeight: 1.05,
-          letterSpacing: "-0.02em",
-          marginBottom: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: 22,
+          color: "#5A6070",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          paddingTop: 28,
         }}
       >
-        Frontend Dev Helper
-      </div>
-      <div style={{ fontSize: "34px", color: "#a3a3a3", lineHeight: 1.3 }}>
-        40+ visual debugging tools in one
-        <br />
-        Manifest V3 browser extension.
-      </div>
-      <div style={{ marginTop: "auto", fontSize: "24px", color: "#525252" }}>
-        frontenddevhelper.com
+        <div style={{ display: "flex", gap: 28 }}>
+          <span>MIT licensed</span>
+          <span>Manifest V3</span>
+          <span>No telemetry</span>
+        </div>
+        <div>frontenddevhelper.com</div>
       </div>
     </div>,
     size,
