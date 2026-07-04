@@ -56,10 +56,12 @@ async function getOrCreateKey(): Promise<CryptoKey> {
     return cachedKey;
   }
 
-  // First run — generate a new 256-bit key.
+  // First run — generate a new 256-bit key. We MUST mark it extractable
+  // so we can persist the raw key bytes to chrome.storage.session; otherwise
+  // `exportKey` throws `InvalidAccessException: key is not extractable`.
   const key = await crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },
-    false,
+    true,
     ["encrypt", "decrypt"],
   );
   const raw = await crypto.subtle.exportKey("raw", key);

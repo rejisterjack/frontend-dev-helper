@@ -56,6 +56,8 @@ export const screenshotStudio: ToolDefinition = {
     const captureMode = (cfg.captureMode as string) ?? "viewport";
     const format = (cfg.format as string) ?? "png";
     const quality = ((cfg.quality as number) ?? 90) / 100;
+    const showAnnotations = (cfg.showAnnotations as boolean) ?? true;
+    const includeMetadata = (cfg.includeMetadata as boolean) ?? false;
 
     const overlays: HTMLElement[] = [];
     let disposed = false;
@@ -301,7 +303,14 @@ export const screenshotStudio: ToolDefinition = {
       dlBtn.onclick = () => {
         const a = document.createElement("a");
         a.href = dataUrl;
-        a.download = `screenshot-${mode}-${Date.now()}.${format === "jpeg" ? "jpg" : format}`;
+        const parts = [`screenshot-${mode}-${Date.now()}`];
+        // When includeMetadata is on, embed viewport + timestamp in the
+        // filename so captures are self-describing when shared.
+        if (includeMetadata) {
+          parts.push(`${window.innerWidth}x${window.innerHeight}`);
+          parts.push(new Date().toISOString().slice(0, 10));
+        }
+        a.download = `${parts.join("-")}.${format === "jpeg" ? "jpg" : format}`;
         a.click();
       };
 
@@ -323,7 +332,17 @@ export const screenshotStudio: ToolDefinition = {
       };
 
       actions.append(dlBtn, copyBtn);
-      preview.append(img, actions);
+      // When showAnnotations is enabled, render a small caption strip below the
+      // image with the URL, capture mode, and timestamp — useful for QA notes.
+      if (showAnnotations) {
+        const caption = document.createElement("div");
+        caption.style.cssText =
+          "padding:6px 8px;background:#0f172a;color:#64748b;font-size:10px;border-top:1px solid #334155;";
+        caption.textContent = `${window.location.href} · ${mode} · ${new Date().toLocaleString()}`;
+        preview.append(img, actions, caption);
+      } else {
+        preview.append(img, actions);
+      }
       body.appendChild(preview);
     }
 

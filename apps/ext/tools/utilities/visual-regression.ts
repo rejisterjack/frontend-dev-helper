@@ -388,6 +388,7 @@ export const visualRegression: ToolDefinition = {
         ? "fullpage"
         : "viewport";
     const highlightDiffs = (config?.highlightDiffs as boolean) ?? true;
+    const diffColor = (config?.diffColor as string) ?? "#ff00ff";
 
     // Active overlays we need to clean up
     const overlays: HTMLElement[] = [];
@@ -832,7 +833,7 @@ export const visualRegression: ToolDefinition = {
       row.appendChild(makeColumn("Baseline", baseline.dataUrl, "#94a3b8"));
       row.appendChild(makeColumn("Current", r.currentDataUrl, "#94a3b8"));
       if (r.diffDataUrl) {
-        row.appendChild(makeColumn("Diff", r.diffDataUrl, "#ff00ff"));
+        row.appendChild(makeColumn("Diff", r.diffDataUrl, diffColor));
       }
 
       overlay.appendChild(row);

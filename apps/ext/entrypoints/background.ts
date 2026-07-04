@@ -113,7 +113,42 @@ async function getActiveTabId(): Promise<number | undefined> {
   return tab?.id;
 }
 
+/**
+ * Deep-merge two settings objects. Plain objects are merged recursively;
+ * arrays, primitives, and null are replaced wholesale (matches the
+ * behavior callers expect from `setState({...})` semantics).
+ */
+function deepMergeSettings(
+  base: Record<string, unknown> | undefined,
+  incoming: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (!incoming) return base ?? {};
+  if (!base) return incoming;
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(incoming)) {
+    if (
+      value !== null &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      typeof out[key] === "object" &&
+      !Array.isArray(out[key] as unknown) &&
+      out[key] !== null
+    ) {
+      out[key] = deepMergeSettings(
+        out[key] as Record<string, unknown>,
+        value as Record<string, unknown>,
+      );
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 async function getActiveToolsCount(tabId?: number): Promise<number> {
+  // The storage shape is global (not per-tab), so tabId is informational only.
+  // We accept it for API symmetry but read from the shared store.
+  void tabId;
   const result = await browser.storage.local.get("fdh-tools-storage");
   const state = result["fdh-tools-storage"] as { state?: any } | undefined;
   if (!state?.state?.activeTools) return 0;
@@ -377,7 +412,7 @@ function buildContextMenus() {
     const perfTools = [
       { id: "network-analyzer", title: "Network Analyzer" },
       { id: "performance-budget", title: "Performance Budget" },
-      { id: "flame-graph", title: "Performance Entries" },
+      { id: "flame-graph", title: "Performance Entries Viewer" },
     ];
     for (const tool of perfTools) {
       browser.contextMenus.create({
@@ -396,7 +431,7 @@ function buildContextMenus() {
     });
     const a11yTools = [
       { id: "accessibility-audit", title: "Accessibility Audit" },
-      { id: "focus-debugger", title: "Focus Debugger" },
+      { id: "focus-debugger-a11y", title: "Focus Debugger (A11y)" },
     ];
     for (const tool of a11yTools) {
       browser.contextMenus.create({
@@ -534,11 +569,27 @@ export default defineBackground(() => {
       }
 
       case "POPUP_UPDATE_SETTINGS": {
-        browser.storage.local.set({
-          "fdh-settings-storage": { state: msg.settings },
-        });
-        sendResponse({ success: true });
-        return false;
+        // Deep-merge the incoming settings into the existing settings store
+        // rather than replacing wholesale — a partial update from the popup
+        // would otherwise wipe unrelated keys (apiKeys, theme, etc.).
+        (async () => {
+          try {
+            const existing = await browser.storage.local.get(
+              "fdh-settings-storage",
+            );
+            const existingState = (
+              existing["fdh-settings-storage"] as { state?: any } | undefined
+            )?.state;
+            const merged = deepMergeSettings(existingState, msg.settings);
+            await browser.storage.local.set({
+              "fdh-settings-storage": { state: merged },
+            });
+            sendResponse({ success: true });
+          } catch (err) {
+            sendResponse({ success: false, error: String(err) });
+          }
+        })();
+        return true;
       }
 
       case "POPUP_SEND_AI_PROMPT": {

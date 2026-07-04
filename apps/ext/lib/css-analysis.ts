@@ -19,6 +19,11 @@ export interface CascadedRule {
   isInline: boolean;
   isImportant: Set<string>;
   sourceIndex: number;
+  // Cascade layer information. `layerOrder` is -1 for unlayered rules (which
+  // ALWAYS win over layered rules in the cascade per CSS Cascade Layers spec).
+  // Higher numbers = declared later = higher priority within layers.
+  layerOrder: number;
+  layerName: string | null;
 }
 
 export interface PropertyConflict {
@@ -42,38 +47,99 @@ export interface VariableNode {
 // ---------------------------------------------------------------------------
 
 const ID_RE = /#[a-zA-Z0-9_-]+/g;
-const CLASS_ATTR_RE = /\.[a-zA-Z0-9_-]+|\[[^\]]+\]|:[a-zA-Z-]+(?:\([^)]*\))?/g;
+const CLASS_ATTR_RE = /\.[a-zA-Z0-9_-]+|\[[^\]]+\]/g;
+const PSEUDO_CLASS_RE = /:(?:where|is|matches|not)\(([^)]*)\)/g;
+const NESTED_PSEUDO_RE = /:(?:nth-child|nth-of-type|has|dir|lang)\(([^)]*)\)/g;
+const SIMPLE_PSEUDO_RE = /:[a-zA-Z-]+/g;
 const TYPE_RE = /^[a-zA-Z][a-zA-Z0-9]*/;
 const PSEUDO_ELEMENT_RE = /::[a-zA-Z-]+/g;
 
+/**
+ * Compute the (a, b, c) specificity tuple for a selector per the CSS spec.
+ * Handles `:where()` (always 0,0,0), `:is()`/`:matches()`/`:not()` (use the
+ * most specific argument), and pseudo-elements (count as type selectors).
+ */
 export function computeSpecificity(selector: string): Specificity {
   const spec: Specificity = { a: 0, b: 0, c: 0 };
+  let work = selector;
 
-  // Remove pseudo-elements before computing (they count as type selectors)
-  const cleaned = selector.replace(PSEUDO_ELEMENT_RE, (m) => {
+  // :where(...) always contributes (0,0,0); strip it before counting.
+  // :is / :matches / :not — their specificity equals the MOST specific
+  // comma-separated argument (per CSS Selectors spec). We split on commas,
+  // compute each, and merge the max.
+  work = work.replace(PSEUDO_CLASS_RE, (whole, inner: string) => {
+    const keyword = whole.slice(1).match(/^[a-zA-Z-]+/)?.[0] ?? "";
+    if (/^where$/i.test(keyword)) {
+      return ""; // :where — strip entirely, contributes nothing
+    }
+    const args = inner
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let best: Specificity = { a: 0, b: 0, c: 0 };
+    for (const arg of args) {
+      const argSpec = computeSpecificity(arg);
+      if (
+        argSpec.a > best.a ||
+        (argSpec.a === best.a && argSpec.b > best.b) ||
+        (argSpec.a === best.a && argSpec.b === best.b && argSpec.c > best.c)
+      ) {
+        best = argSpec;
+      }
+    }
+    spec.a += best.a;
+    spec.b += best.b;
+    spec.c += best.c;
+    return "";
+  });
+
+  // Pseudo-elements (::before, ::placeholder, etc.) count as one type (c).
+  work = work.replace(PSEUDO_ELEMENT_RE, () => {
     spec.c++;
     return "";
   });
 
-  // Count ID selectors
-  const idMatches = cleaned.match(ID_RE);
+  // nth-child(...) etc. carry an argument that may contain a selector — but
+  // the selector part contributes to specificity. For simplicity and to match
+  // the common case, count the pseudo-class itself only; the bare type inside
+  // `:nth-child(2n of .foo)` is rare.
+  work = work.replace(NESTED_PSEUDO_RE, (whole, _inner: string) => {
+    spec.b++;
+    return whole; // keep for further parsing if needed
+  });
+
+  // Count ID selectors.
+  const idMatches = work.match(ID_RE);
   if (idMatches) spec.a += idMatches.length;
 
-  // Count class, attribute, and pseudo-class selectors
-  const classMatches = cleaned.match(CLASS_ATTR_RE);
-  if (classMatches) {
-    for (const m of classMatches) {
+  // Count class and attribute selectors.
+  const classMatches = work.match(CLASS_ATTR_RE);
+  if (classMatches) spec.b += classMatches.length;
+
+  // Count simple pseudo-classes that remain (e.g. :hover).
+  const simplePseudo = work.match(SIMPLE_PSEUDO_RE);
+  if (simplePseudo) {
+    for (const m of simplePseudo) {
       if (!m.startsWith("::")) spec.b++;
     }
   }
 
-  // Count type selectors (but not in pseudo-class arguments)
-  const parts = cleaned.split(/[:\[\].#]/);
+  // Count type selectors (the leading word in each compound).
+  // We strip out everything that's already counted (ids, classes, attrs,
+  // pseudos) so only the type tokens remain.
+  const withoutCompoundMarkers = work
+    .replace(ID_RE, " ")
+    .replace(CLASS_ATTR_RE, " ")
+    .replace(SIMPLE_PSEUDO_RE, " ")
+    .replace(NESTED_PSEUDO_RE, " ");
+  const parts = withoutCompoundMarkers.split(/[\s>+~]+/);
   for (const part of parts) {
     const trimmed = part.trim();
-    if (trimmed && TYPE_RE.test(trimmed) && !trimmed.startsWith("-")) {
-      spec.c++;
-    }
+    if (!trimmed) continue;
+    // Strip a leading * (universal) — it contributes 0 specificity.
+    if (trimmed === "*") continue;
+    const m = trimmed.match(TYPE_RE);
+    if (m) spec.c++;
   }
 
   return spec;
@@ -97,14 +163,34 @@ function collectMatchingRulesFromList(
   sourceIndex: number,
   rules: CascadedRule[],
   seenSelectors: Set<string>,
+  layerOrder: { order: number; name: string | null } = { order: 0, name: null },
 ): void {
   for (let ri = 0; ri < ruleList.length; ri++) {
     const cssRule = ruleList[ri];
-    if (
-      cssRule instanceof CSSMediaRule ||
-      cssRule instanceof CSSSupportsRule ||
-      cssRule instanceof CSSLayerBlockRule
-    ) {
+    if (cssRule instanceof CSSLayerBlockRule) {
+      try {
+        // Each layer gets a monotonically increasing order; nested layers
+        // inherit the parent's name prefix.
+        const childOrder = {
+          order: layerOrder.order + 1,
+          name: layerOrder.name
+            ? `${layerOrder.name}.${cssRule.name}`
+            : cssRule.name,
+        };
+        collectMatchingRulesFromList(
+          cssRule.cssRules,
+          element,
+          sourceIndex,
+          rules,
+          seenSelectors,
+          childOrder,
+        );
+      } catch {
+        /* nested cross-origin */
+      }
+      continue;
+    }
+    if (cssRule instanceof CSSMediaRule || cssRule instanceof CSSSupportsRule) {
       try {
         collectMatchingRulesFromList(
           cssRule.cssRules,
@@ -112,6 +198,7 @@ function collectMatchingRulesFromList(
           sourceIndex,
           rules,
           seenSelectors,
+          layerOrder,
         );
       } catch {
         /* nested cross-origin */
@@ -128,7 +215,7 @@ function collectMatchingRulesFromList(
     }
     if (!matches) continue;
 
-    const key = `${cssRule.selectorText}@${sourceIndex}`;
+    const key = `${cssRule.selectorText}@${sourceIndex}:${layerOrder.name ?? ""}`;
     if (seenSelectors.has(key)) continue;
     seenSelectors.add(key);
 
@@ -157,6 +244,8 @@ function collectMatchingRulesFromList(
       isInline: false,
       isImportant,
       sourceIndex,
+      layerOrder: layerOrder.order,
+      layerName: layerOrder.name,
     });
   }
 }
@@ -204,6 +293,8 @@ export function collectCascadedRules(element: HTMLElement): CascadedRule[] {
         isInline: true,
         isImportant,
         sourceIndex: -1,
+        layerOrder: -1,
+        layerName: null,
       });
     }
   }
@@ -237,11 +328,22 @@ export function detectConflicts(rules: CascadedRule[]): PropertyConflict[] {
     if (entries.length < 2) continue;
 
     const sorted = [...entries].sort((a, b) => {
+      // Cascade per CSS Cascade spec, in priority order:
+      //   1. !important wins over normal
       if (a.important !== b.important) return b.important ? 1 : -1;
-      if (a.rule.isInline !== b.rule.isInline) return b.rule.isInline ? 1 : -1;
+      //   2. Within the same origin/importance, unlayered (-1) > layered.
+      //      Among layered rules, later layer wins.
+      const aLayer = a.rule.layerOrder;
+      const bLayer = b.rule.layerOrder;
+      const aUnlayered = aLayer === -1 || a.rule.isInline;
+      const bUnlayered = bLayer === -1 || b.rule.isInline;
+      if (aUnlayered !== bUnlayered) return bUnlayered ? 1 : -1;
+      if (!aUnlayered && aLayer !== bLayer) return bLayer - aLayer;
+      //   3. Specificity
       if (a.rule.specificityScore !== b.rule.specificityScore) {
         return b.rule.specificityScore - a.rule.specificityScore;
       }
+      //   4. Order of appearance
       return b.rule.sourceIndex - a.rule.sourceIndex;
     });
 
@@ -291,20 +393,23 @@ export function getPropertyCascade(
   for (const cascRule of rules) {
     const value = cascRule.properties.get(property);
     if (value === undefined) continue;
+    const isImp = cascRule.isImportant.has(property);
+    const isUnlayered = cascRule.layerOrder === -1 || cascRule.isInline;
     entries.push({
       rule: cascRule,
       value,
-      isImportant: cascRule.isImportant.has(property),
-      score: cascRule.isImportant.has(property)
-        ? 1_000_000 + cascRule.specificityScore
-        : cascRule.specificityScore,
+      isImportant: isImp,
+      score: computeCascadeScore(
+        isImp,
+        isUnlayered,
+        cascRule.layerOrder,
+        cascRule.specificityScore,
+        cascRule.sourceIndex,
+      ),
     });
   }
 
-  entries.sort((a, b) => {
-    if (a.score !== b.score) return b.score - a.score;
-    return b.rule.sourceIndex - a.rule.sourceIndex;
-  });
+  entries.sort((a, b) => b.score - a.score);
 
   return entries.map((e, i) => ({
     rule: e.rule,
@@ -312,6 +417,31 @@ export function getPropertyCascade(
     isWinning: i === 0,
     isImportant: e.isImportant,
   }));
+}
+
+/**
+ * Compute a single numeric cascade score that respects the CSS Cascade spec:
+ *   origin/importance > cascade-layer > specificity > order of appearance
+ * Each tier gets its own digit-block so higher tiers strictly dominate.
+ */
+function computeCascadeScore(
+  important: boolean,
+  unlayered: boolean,
+  layerOrder: number,
+  specificityScore: number,
+  sourceIndex: number,
+): number {
+  // Important + unlayered > important + layered > normal + unlayered > ...
+  const tier = important ? (unlayered ? 4 : 3) : unlayered ? 2 : 1;
+  // Within a tier, layer order matters only for layered rules.
+  const layer = unlayered ? 0 : layerOrder;
+  // specificityScore can be up to ~1e8; sourceIndex typically < 1e4.
+  return (
+    tier * 1e12 +
+    layer * 1e10 +
+    Math.min(specificityScore, 1e9) +
+    Math.min(sourceIndex, 1e6)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -451,8 +581,10 @@ function resolveToTerminal(
   let resolved = value;
   for (const ref of refs) {
     const terminal = resolveToTerminal(ref, computedStyle, visited);
+    // Replace the entire `var(--ref)` expression — including optional
+    // whitespace and a fallback clause — with the resolved terminal value.
     resolved = resolved.replace(
-      new RegExp(escapeRegexForVar(ref), "g"),
+      new RegExp(`var\\(\\s*${escapeRegexForVar(ref)}\\s*(?:,[^)]*)?\\)`, "g"),
       terminal,
     );
   }

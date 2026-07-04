@@ -36,7 +36,6 @@ export class ToolRunner {
 
       const cleanup = definition.run(this.ctx, config);
       this.activeMap.set(toolId, { cleanup });
-      console.log(`[FDH] Tool activated: ${toolId}`);
 
       // Dispatch a CustomEvent so in-page observers (e.g. session-replay)
       // can record tool activations without coupling to the runner. The
@@ -77,7 +76,6 @@ export class ToolRunner {
         console.error(`[FDH] Tool cleanup error: ${toolId}`, error);
       }
       this.activeMap.delete(toolId);
-      console.log(`[FDH] Tool deactivated: ${toolId}`);
       const meta = toolMetadata[toolId];
       document.dispatchEvent(
         new CustomEvent("fdh-tool-deactivated", {

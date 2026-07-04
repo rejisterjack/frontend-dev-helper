@@ -2,6 +2,7 @@ import {
   addOverlayElement,
   removeOverlayElement,
 } from "../../content/overlay-manager";
+import { getBridge } from "@/lib/vscode-bridge";
 import type { ToolDefinition } from "../types";
 
 export const performanceBudget: ToolDefinition = {
@@ -21,6 +22,7 @@ export const performanceBudget: ToolDefinition = {
     maxFCP: { type: "number", label: "Max FCP (ms)", default: 1800 },
     maxLCP: { type: "number", label: "Max LCP (ms)", default: 2500 },
     maxCLS: { type: "number", label: "Max CLS", default: 0.1 },
+    maxINP: { type: "number", label: "Max INP (ms)", default: 200 },
   },
   run: (ctx, config) => {
     const cfg = config ?? {};
@@ -30,9 +32,19 @@ export const performanceBudget: ToolDefinition = {
     const maxFCP = (cfg.maxFCP as number) ?? 1800;
     const maxLCP = (cfg.maxLCP as number) ?? 2500;
     const maxCLS = (cfg.maxCLS as number) ?? 0.1;
+    const maxINP = (cfg.maxINP as number) ?? 200;
 
     const overlays: HTMLElement[] = [];
     let disposed = false;
+    let lastSnapshot: {
+      overallScore: number;
+      budgets: Array<{
+        label: string;
+        actual: number;
+        budget: number;
+        unit: string;
+      }>;
+    } | null = null;
 
     const panel = document.createElement("div");
     panel.style.cssText =
@@ -53,7 +65,45 @@ export const performanceBudget: ToolDefinition = {
       "background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:16px;";
     closeBtn.textContent = "×";
     closeBtn.onclick = cleanup;
-    header.append(title, closeBtn);
+
+    const vscodeBtn = document.createElement("button");
+    vscodeBtn.textContent = "Send to VS Code";
+    vscodeBtn.style.cssText =
+      "background:#6366f1;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;";
+    vscodeBtn.onclick = () => {
+      try {
+        if (!lastSnapshot) return;
+        getBridge().send({
+          type: "PerformanceAudit",
+          payload: {
+            url: location.href,
+            timestamp: Date.now(),
+            overallScore: lastSnapshot.overallScore,
+            metrics: lastSnapshot.budgets.map((b) => ({
+              metric: b.label,
+              value: b.actual,
+              rating:
+                b.actual <= b.budget
+                  ? ("good" as const)
+                  : b.actual <= b.budget * 1.5
+                    ? ("needs-improvement" as const)
+                    : ("poor" as const),
+            })),
+            longTasks: [],
+            opportunities: lastSnapshot.budgets
+              .filter((b) => b.actual > b.budget)
+              .map((b) => ({
+                id: b.label,
+                title: `Reduce ${b.label} below ${b.budget}${b.unit}`,
+                savingsMs: Math.round(b.actual - b.budget),
+              })),
+          },
+        } as Parameters<ReturnType<typeof getBridge>["send"]>[0]);
+      } catch {
+        /* best-effort */
+      }
+    };
+    header.append(title, vscodeBtn, closeBtn);
 
     const body = document.createElement("div");
     body.style.cssText =
@@ -144,6 +194,27 @@ export const performanceBudget: ToolDefinition = {
         /* ignore */
       }
 
+      // INP — worst interaction duration from "event" entries, bucketed by
+      // 100ms start-time proximity (the same proxy the web-vitals library
+      // used before native INP support landed).
+      let inp = 0;
+      try {
+        const events = (
+          performance.getEntriesByType("event") as unknown as Array<{
+            startTime: number;
+            duration: number;
+          }>
+        ).filter((e) => e.duration >= 16);
+        const buckets = new Map<number, number>();
+        for (const e of events) {
+          const bucket = Math.floor(e.startTime / 100);
+          buckets.set(bucket, Math.max(buckets.get(bucket) ?? 0, e.duration));
+        }
+        for (const v of buckets.values()) if (v > inp) inp = v;
+      } catch {
+        /* ignore */
+      }
+
       type Budget = {
         label: string;
         actual: number;
@@ -157,6 +228,7 @@ export const performanceBudget: ToolDefinition = {
         { label: "FCP", actual: fcp, budget: maxFCP, unit: "ms" },
         { label: "LCP", actual: lcp, budget: maxLCP, unit: "ms" },
         { label: "CLS", actual: cls, budget: maxCLS, unit: "" },
+        { label: "INP", actual: inp, budget: maxINP, unit: "ms" },
       ];
 
       let passed = 0;
@@ -201,6 +273,11 @@ export const performanceBudget: ToolDefinition = {
       scoreDiv.style.cssText = `text-align:center;padding:12px 0;font-size:24px;font-weight:700;color:${score >= 80 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444"};`;
       scoreDiv.textContent = `${score}% passed (${passed}/${budgets.length})`;
       body.appendChild(scoreDiv);
+
+      lastSnapshot = {
+        overallScore: score,
+        budgets,
+      };
     }
 
     measure();

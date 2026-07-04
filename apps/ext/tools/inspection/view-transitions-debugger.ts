@@ -24,6 +24,46 @@ function isSupported(): boolean {
   return "startViewTransition" in document;
 }
 
+function hasStylesheetViewTransitionRules(): boolean {
+  // Recursively walk any rule that has nested cssRules (media, supports,
+  // layer, container, import, etc.) rather than just CSSImportRule, so we
+  // find `::view-transition-*` rules hidden inside `@media` or `@layer`.
+  function walk(rules: CSSRuleList): boolean {
+    for (const rule of rules) {
+      if (rule instanceof CSSStyleRule) {
+        const selector = rule.selectorText;
+        if (selector && selector.includes("::view-transition")) {
+          return true;
+        }
+      }
+      if ("cssRules" in rule && rule.cssRules) {
+        try {
+          if (walk(rule.cssRules as CSSRuleList)) return true;
+        } catch {
+          // cross-origin nested rules
+        }
+      }
+    }
+    return false;
+  }
+
+  const sheets = document.styleSheets;
+  for (const sheet of sheets) {
+    let rules: CSSRuleList;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      continue;
+    }
+    if (walk(rules)) return true;
+  }
+  return false;
+}
+
+function isViewTransitionsActive(): boolean {
+  return isSupported() || hasStylesheetViewTransitionRules();
+}
+
 function detectTransitionState(recentEvents: string[]): ViewTransitionInfo {
   const info: ViewTransitionInfo = {
     isActive: false,
@@ -339,7 +379,7 @@ export const viewTransitionsDebugger: ToolDefinition = {
       header.append(titleDiv, statusSpan, closeBtn);
       panel.appendChild(header);
 
-      if (!isSupported()) {
+      if (!isViewTransitionsActive()) {
         const warning = document.createElement("div");
         warning.className = "warning";
         warning.textContent =

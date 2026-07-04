@@ -905,6 +905,16 @@ export const toolMetadata: Record<string, ToolMetadata> = {
           { label: "Level AAA", value: "aaa" },
         ],
       },
+      resultTypes: {
+        type: "select",
+        label: "Show Result Types",
+        default: "violations",
+        options: [
+          { label: "Violations only", value: "violations" },
+          { label: "Violations + Incomplete", value: "violations-incomplete" },
+          { label: "All (incl. Passes)", value: "all" },
+        ],
+      },
     },
     loader: () => import("./accessibility/accessibility-audit"),
   },

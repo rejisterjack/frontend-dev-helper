@@ -5,54 +5,125 @@ import {
 } from "@/content/overlay-manager";
 import { getBridge } from "@/lib/vscode-bridge";
 
+type CWVMetric = "LCP" | "CLS" | "INP" | "FCP" | "TTFB";
+
 interface MetricScore {
-  name: string;
+  name: CWVMetric;
   value: number;
   unit: string;
   rating: "good" | "needs-improvement" | "poor";
-  score: number; // 0-100
+  score: number;
   suggestion: string;
+}
+
+interface LongTaskEntry {
+  duration: number;
+  startTime: number;
+}
+
+interface OpportunityEntry {
+  id: string;
+  title: string;
+  savingsMs: number;
 }
 
 interface PerformanceResult {
   vitals: MetricScore[];
+  overallScore: number;
   resources: { total: number; size: string; slowRequests: number };
   dom: { nodes: number; depth: number; width: number };
-  longTasks: { count: number; totalDuration: number };
+  longTasks: {
+    count: number;
+    totalDuration: number;
+    entries: LongTaskEntry[];
+  };
+  opportunities: OpportunityEntry[];
   timestamp: number;
 }
+
+const RATINGS: Record<CWVMetric, [number, number]> = {
+  LCP: [2500, 4000],
+  CLS: [0.1, 0.25],
+  INP: [200, 500],
+  FCP: [1800, 3000],
+  TTFB: [800, 1800],
+};
+
+const LINEAR_FALLBACK: Record<CWVMetric, [number, number]> = RATINGS;
+
+const LH_PROFILES: Record<CWVMetric, { median: number; pod: number }> = {
+  LCP: { median: 2500, pod: 0.1 },
+  CLS: { median: 0.1, pod: 0.1 },
+  INP: { median: 200, pod: 0.3 },
+  FCP: { median: 1800, pod: 0.1 },
+  TTFB: { median: 800, pod: 0.08 },
+};
+
+const LH_WEIGHTS: Record<CWVMetric, number> = {
+  LCP: 0.25,
+  INP: 0.3,
+  CLS: 0.25,
+  FCP: 0.1,
+  TTFB: 0.1,
+};
 
 export function getRating(
   metric: string,
   value: number,
 ): "good" | "needs-improvement" | "poor" {
-  const thresholds: Record<string, [number, number]> = {
-    LCP: [2500, 4000],
-    FID: [100, 300],
-    CLS: [0.1, 0.25],
-    INP: [200, 500],
-    FCP: [1800, 3000],
-    TTFB: [800, 1800],
-  };
-  const [good, poor] = thresholds[metric] || [Infinity, Infinity];
+  const thresholds = RATINGS[metric as CWVMetric];
+  if (!thresholds) return "good";
+  const [good, poor] = thresholds;
   if (value <= good) return "good";
   if (value <= poor) return "needs-improvement";
   return "poor";
 }
 
-function getScore(metric: string, value: number): number {
-  const thresholds: Record<string, [number, number]> = {
-    LCP: [2500, 4000],
-    FID: [100, 300],
-    CLS: [0.1, 0.25],
-    INP: [200, 500],
-    FCP: [1800, 3000],
-    TTFB: [800, 1800],
-  };
-  const [good, poor] = thresholds[metric] || [0, 100];
-  if (value <= good) return 100;
-  if (value >= poor) return 0;
-  return Math.round(100 * (1 - (value - good) / (poor - good)));
+function logNormalCdf(z: number): number {
+  if (z < -5.5) return 0;
+  return (
+    1 -
+    Math.exp(-0.5 * z * z) -
+    (1 / 12) * Math.pow(z, 5) -
+    (1 / 4) * Math.pow(z, 3) +
+    (1 / 2) * z
+  );
+}
+
+function lighthouseScore(median: number, pod: number, value: number): number {
+  if (value <= 0) return 100;
+  const location = Math.log(median);
+  const scale = Math.log(1 + pod * pod) / Math.sqrt(2 * Math.log(2));
+  const z0 = (Math.log(median * (1 + pod)) - location) / scale;
+  const cdfZ0 = logNormalCdf(z0);
+  if (cdfZ0 <= 0) return 0;
+  const cdfVal = logNormalCdf((Math.log(value) - location) / scale);
+  const score = (1 - cdfVal) / (1 - cdfZ0);
+  return Math.max(0, Math.min(1, score)) * 100;
+}
+
+function getScore(metric: CWVMetric, value: number): number {
+  const profile = LH_PROFILES[metric];
+  if (!profile || value <= 0 || !Number.isFinite(value)) {
+    const [good, poor] = LINEAR_FALLBACK[metric] ?? [0, 100];
+    if (value <= good) return 100;
+    if (value >= poor) return 0;
+    return Math.round(100 * (1 - (value - good) / (poor - good)));
+  }
+  return lighthouseScore(profile.median, profile.pod, value);
+}
+
+function computeOverallScore(metrics: MetricScore[]): number {
+  let weighted = 0;
+  let weight = 0;
+  for (const m of metrics) {
+    const w = LH_WEIGHTS[m.name];
+    if (w === undefined) continue;
+    weighted += m.score * w;
+    weight += w;
+  }
+  if (weight === 0) return 0;
+  return Math.round(weighted / weight);
 }
 
 function getSuggestion(metric: string, value: number, rating: string): string {
@@ -87,6 +158,52 @@ function getSuggestion(metric: string, value: number, rating: string): string {
   return suggestions[metric]?.[rating] || "Consider optimizing this metric";
 }
 
+function deriveOpportunities(
+  metrics: MetricScore[],
+  longTasks: LongTaskEntry[],
+): OpportunityEntry[] {
+  const ops: OpportunityEntry[] = [];
+  for (const m of metrics) {
+    if (m.rating === "good") continue;
+    const thresholds = RATINGS[m.name];
+    const target = thresholds?.[0];
+    const savings =
+      typeof target === "number" && m.unit === "ms"
+        ? Math.max(0, Math.round(m.value - target))
+        : 0;
+    const title = getSuggestion(m.name, m.value, m.rating).split(/[.:]/)[0];
+    ops.push({
+      id: `reduce-${m.name.toLowerCase()}`,
+      title,
+      savingsMs: savings,
+    });
+  }
+  if (longTasks.length > 0) {
+    const over = longTasks.reduce(
+      (sum, t) => sum + Math.max(0, t.duration - 50),
+      0,
+    );
+    ops.push({
+      id: "reduce-long-tasks",
+      title: "Break up long JavaScript tasks",
+      savingsMs: Math.round(over),
+    });
+  }
+  return ops;
+}
+
+function makeMetric(name: CWVMetric, value: number, unit: string): MetricScore {
+  const rating = getRating(name, value);
+  return {
+    name,
+    value: unit === "" ? parseFloat(value.toFixed(3)) : Math.round(value),
+    unit,
+    rating,
+    score: Math.round(getScore(name, value)),
+    suggestion: getSuggestion(name, value, rating),
+  };
+}
+
 function collectWebVitals(): Promise<{
   metrics: MetricScore[];
   observers: PerformanceObserver[];
@@ -96,30 +213,19 @@ function collectWebVitals(): Promise<{
     const observers: PerformanceObserver[] = [];
     let resolved = false;
 
+    const setMetric = (m: MetricScore) => {
+      const idx = metrics.findIndex((x) => x.name === m.name);
+      if (idx >= 0) metrics[idx] = m;
+      else metrics.push(m);
+    };
+
     const finish = () => {
       if (resolved) return;
       resolved = true;
+      settleLcp();
+      flushCls();
+      flushInp();
       resolve({ metrics, observers });
-    };
-
-    // LCP: don't snapshot at 500ms — observe until the page is hidden or
-    // 2.5s elapses with no new LCP candidate. Browsers keep updating the LCP
-    // candidate as larger elements paint.
-    let lastLcpEntry: PerformanceEntry | null = null;
-    let lcpSettledTimer: number | null = null;
-    const settleLcp = () => {
-      if (lastLcpEntry && !metrics.some((m) => m.name === "LCP")) {
-        const value = lastLcpEntry.startTime;
-        const rating = getRating("LCP", value);
-        metrics.push({
-          name: "LCP",
-          value: Math.round(value),
-          unit: "ms",
-          rating,
-          score: getScore("LCP", value),
-          suggestion: getSuggestion("LCP", value, rating),
-        });
-      }
     };
 
     const observe = (
@@ -133,48 +239,59 @@ function collectWebVitals(): Promise<{
         observer.observe({ type, buffered: true });
         observers.push(observer);
       } catch {
-        // Type not supported in this browser.
+        // type unsupported
       }
     };
 
-    // LCP
+    // LCP: resolves on visibilitychange→hidden, 5s ceiling, or 1s idle
+    // after the last candidate.
+    let lastLcpEntry: PerformanceEntry | null = null;
+    let lcpSettled = false;
+    let lcpIdleTimer: number | null = null;
+    const lcpCeiling = window.setTimeout(finish, 5000);
+
+    const settleLcp = () => {
+      if (lcpSettled) return;
+      if (!lastLcpEntry) return;
+      lcpSettled = true;
+      if (lcpIdleTimer !== null) {
+        clearTimeout(lcpIdleTimer);
+        lcpIdleTimer = null;
+      }
+      setMetric(makeMetric("LCP", lastLcpEntry.startTime, "ms"));
+    };
+
     observe("largest-contentful-paint", (entries) => {
       const last = entries[entries.length - 1];
-      if (last) {
-        lastLcpEntry = last;
-        if (lcpSettledTimer !== null) clearTimeout(lcpSettledTimer);
-        // Reset the settle timer each time a new candidate arrives.
-        lcpSettledTimer = window.setTimeout(settleLcp, 2500);
-      }
+      if (!last) return;
+      lastLcpEntry = last;
+      if (lcpIdleTimer !== null) clearTimeout(lcpIdleTimer);
+      lcpIdleTimer = window.setTimeout(settleLcp, 1000);
     });
 
-    // FCP
+    // FCP: resolves immediately when its entry arrives.
     observe("paint", (entries) => {
       for (const entry of entries) {
-        if (
-          entry.name === "first-contentful-paint" &&
-          !metrics.some((m) => m.name === "FCP")
-        ) {
-          const value = entry.startTime;
-          const rating = getRating("FCP", value);
-          metrics.push({
-            name: "FCP",
-            value: Math.round(value),
-            unit: "ms",
-            rating,
-            score: getScore("FCP", value),
-            suggestion: getSuggestion("FCP", value, rating),
-          });
+        if (entry.name === "first-contentful-paint") {
+          setMetric(makeMetric("FCP", entry.startTime, "ms"));
+          break;
         }
       }
     });
 
-    // CLS — session-window algorithm (5s window, 1s gap, max session value).
-    // This is the spec definition since 2020; summing all shifts over-counts
-    // long-lived SPAs.
+    // CLS — session-window with a 1s gap and 5s ceiling (the Google spec).
     let clsValue = 0;
     let sessionValue = 0;
     let sessionStart = -Infinity;
+    let clsFlushed = false;
+
+    const flushCls = () => {
+      if (clsFlushed) return;
+      clsFlushed = true;
+      if (sessionValue > clsValue) clsValue = sessionValue;
+      if (clsValue > 0) setMetric(makeMetric("CLS", clsValue, ""));
+    };
+
     observe("layout-shift", (entries) => {
       for (const entry of entries) {
         const e = entry as unknown as {
@@ -192,113 +309,57 @@ function collectWebVitals(): Promise<{
           sessionStart = e.startTime;
         }
         sessionValue += e.value;
-        sessionStart = Math.max(sessionStart, e.startTime);
+        if (sessionValue > clsValue) clsValue = sessionValue;
       }
-      if (sessionValue > clsValue) clsValue = sessionValue;
-      if (!metrics.some((m) => m.name === "CLS")) {
-        const rating = getRating("CLS", clsValue);
-        metrics.push({
-          name: "CLS",
-          value: parseFloat(clsValue.toFixed(3)),
-          unit: "",
-          rating,
-          score: getScore("CLS", clsValue),
-          suggestion: getSuggestion("CLS", clsValue, rating),
-        });
-      } else {
-        // Update in place as new shifts accumulate.
-        const idx = metrics.findIndex((m) => m.name === "CLS");
-        if (idx >= 0) {
-          const rating = getRating("CLS", clsValue);
-          metrics[idx] = {
-            name: "CLS",
-            value: parseFloat(clsValue.toFixed(3)),
-            unit: "",
-            rating,
-            score: getScore("CLS", clsValue),
-            suggestion: getSuggestion("CLS", clsValue, rating),
-          };
-        }
-      }
+      setMetric(makeMetric("CLS", clsValue, ""));
     });
 
-    // INP — worst interaction (highest duration of the slowest event in any
-    // interaction), per the spec. We approximate "interaction" by grouping
-    // pointerdown/pointerup/click/keydown on a nearby start time; the
-    // simplified worst-event-duration proxy used here is what most early
-    // web-vitals versions did and is much closer to real INP than max-event.
-    const interactionBuckets = new Map<number, number>();
+    // INP — worst interaction latency over the audit window. Track the
+    // max event duration observed via the 'event' PerformanceObserver.
     let worstInteraction = 0;
+    let inpFlushed = false;
+
+    const flushInp = () => {
+      if (inpFlushed) return;
+      inpFlushed = true;
+      if (worstInteraction > 0) {
+        setMetric(makeMetric("INP", worstInteraction, "ms"));
+      }
+    };
+
     observe("event", (entries) => {
       for (const entry of entries) {
-        const e = entry as unknown as {
-          startTime: number;
-          duration: number;
-          name: string;
-        };
-        if (!e.duration || e.duration < 16) continue;
-        // Bucket events into interactions by 100ms start-time proximity.
-        const bucket = Math.floor(e.startTime / 100);
-        interactionBuckets.set(
-          bucket,
-          Math.max(interactionBuckets.get(bucket) ?? 0, e.duration),
-        );
+        const e = entry as unknown as { duration: number };
+        if (e.duration > worstInteraction) worstInteraction = e.duration;
       }
-      // INP is the worst interaction, not the worst single event. We take
-      // the max bucket as the proxy.
-      let max = 0;
-      for (const v of interactionBuckets.values()) if (v > max) max = v;
-      worstInteraction = max;
+      if (worstInteraction > 0) {
+        setMetric(makeMetric("INP", worstInteraction, "ms"));
+      }
     });
 
-    // TTFB (synchronous, no observer needed)
+    // TTFB — synchronous, no observer needed.
     const navEntries = performance.getEntriesByType(
       "navigation",
     ) as PerformanceNavigationTiming[];
     if (navEntries.length > 0) {
       const nav = navEntries[0];
       const ttfb = nav.responseStart - nav.requestStart;
-      const rating = getRating("TTFB", ttfb);
-      metrics.push({
-        name: "TTFB",
-        value: Math.round(ttfb),
-        unit: "ms",
-        rating,
-        score: getScore("TTFB", ttfb),
-        suggestion: getSuggestion("TTFB", ttfb, rating),
-      });
+      if (ttfb > 0) setMetric(makeMetric("TTFB", ttfb, "ms"));
     }
 
-    // Resolve after a grace period. LCP may settle later via its own timer;
-    // we accept the snapshot but keep observers alive so cleanup can stop
-    // them. If the page becomes hidden, also resolve early.
-    setTimeout(() => {
-      settleLcp();
-      if (worstInteraction > 0 && !metrics.some((m) => m.name === "INP")) {
-        const rating = getRating("INP", worstInteraction);
-        metrics.push({
-          name: "INP",
-          value: Math.round(worstInteraction),
-          unit: "ms",
-          rating,
-          score: getScore("INP", worstInteraction),
-          suggestion: getSuggestion("INP", worstInteraction, rating),
-        });
-      }
-      finish();
-    }, 1500);
-
-    // Resolve immediately if the page is hidden — no more paints will arrive.
+    // CLS resolves on tab-hidden; LCP resolves on tab-hidden or settles
+    // via its own idle/ceiling timers. Both are finalized in finish().
     document.addEventListener(
       "visibilitychange",
       () => {
-        if (document.visibilityState === "hidden") {
-          settleLcp();
-          finish();
-        }
+        if (document.visibilityState === "hidden") finish();
       },
       { once: true },
     );
+
+    // Global 5s ceiling for the whole audit.
+    window.clearTimeout(lcpCeiling);
+    window.setTimeout(finish, 5000);
   });
 }
 
@@ -350,9 +411,10 @@ function collectDOMInfo(): { nodes: number; depth: number; width: number } {
 function collectLongTasks(): {
   count: number;
   totalDuration: number;
+  entries: LongTaskEntry[];
   observer: PerformanceObserver | null;
 } {
-  let count = 0;
+  const entries: LongTaskEntry[] = [];
   let totalDuration = 0;
   let observer: PerformanceObserver | null = null;
 
@@ -360,19 +422,25 @@ function collectLongTasks(): {
     observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         if (entry.duration > 50) {
-          count++;
+          entries.push({
+            duration: Math.round(entry.duration),
+            startTime: Math.round(entry.startTime),
+          });
           totalDuration += entry.duration;
         }
       }
     });
-    // buffered:true returns entries that fired before the observer was set
-    // up — without this the previous implementation always saw zero.
     observer.observe({ type: "longtask", buffered: true });
   } catch {
     // longtask not supported
   }
 
-  return { count, totalDuration: Math.round(totalDuration), observer };
+  return {
+    count: entries.length,
+    totalDuration: Math.round(totalDuration),
+    entries,
+    observer,
+  };
 }
 
 async function runPerformanceAudit(): Promise<
@@ -385,15 +453,20 @@ async function runPerformanceAudit(): Promise<
   const resources = collectResourceInfo();
   const dom = collectDOMInfo();
   const longTasks = collectLongTasks();
+  const opportunities = deriveOpportunities(metrics, longTasks.entries);
+  const overallScore = computeOverallScore(metrics);
 
   return {
     vitals: metrics,
+    overallScore,
     resources,
     dom,
     longTasks: {
       count: longTasks.count,
       totalDuration: longTasks.totalDuration,
+      entries: longTasks.entries,
     },
+    opportunities,
     timestamp: Date.now(),
     observers,
     longTaskObserver: longTasks.observer,
@@ -556,16 +629,18 @@ export const performanceAudit: ToolDefinition = {
           pendingObservers.push(result.longTaskObserver);
         lastResult = {
           vitals: result.vitals,
+          overallScore: result.overallScore,
           resources: result.resources,
           dom: result.dom,
           longTasks: {
             count: result.longTasks.count,
             totalDuration: result.longTasks.totalDuration,
+            entries: result.longTasks.entries,
           },
+          opportunities: result.opportunities,
           timestamp: result.timestamp,
         };
         if (disposed) {
-          // User closed the panel during collection.
           for (const o of pendingObservers) {
             try {
               o.disconnect();
@@ -577,14 +652,7 @@ export const performanceAudit: ToolDefinition = {
         }
         if (loading.parentNode) loading.parentNode.removeChild(loading);
 
-        // Overall score
-        const avgScore =
-          result.vitals.length > 0
-            ? Math.round(
-                result.vitals.reduce((sum, m) => sum + m.score, 0) /
-                  result.vitals.length,
-              )
-            : 0;
+        const avgScore = result.overallScore;
         const overallColor =
           avgScore >= 90 ? "#a6e3a1" : avgScore >= 50 ? "#f9e2af" : "#f38ba8";
 
@@ -615,7 +683,6 @@ export const performanceAudit: ToolDefinition = {
 
         panel.appendChild(scoreBar);
 
-        // Web Vitals section
         const vitalsHeader = document.createElement("div");
         vitalsHeader.style.cssText =
           "padding:10px 16px;color:#6c7086;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #313244;";
@@ -626,7 +693,6 @@ export const performanceAudit: ToolDefinition = {
           panel.appendChild(renderMetric(metric));
         }
 
-        // Resources section
         const resHeader = document.createElement("div");
         resHeader.style.cssText =
           "padding:10px 16px;color:#6c7086;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #313244;";
@@ -665,7 +731,6 @@ export const performanceAudit: ToolDefinition = {
         }
         panel.appendChild(resRow);
 
-        // DOM section
         const domRow = document.createElement("div");
         domRow.style.cssText =
           "padding:12px 16px;border-bottom:1px solid #313244;display:flex;gap:20px;";
@@ -702,7 +767,6 @@ export const performanceAudit: ToolDefinition = {
         }
         panel.appendChild(domRow);
 
-        // Long tasks
         if (result.longTasks.count > 0) {
           const ltRow = document.createElement("div");
           ltRow.style.cssText =
@@ -715,6 +779,7 @@ export const performanceAudit: ToolDefinition = {
         }
 
         vscodeBtn.style.display = "inline-block";
+        sendPerformanceToVsCode(lastResult);
       })
       .catch(() => {
         if (loading.parentNode) loading.parentNode.removeChild(loading);
@@ -732,17 +797,32 @@ export const performanceAudit: ToolDefinition = {
         }
       });
 
-    // Send to VS Code — previously a no-op. Now sends the captured audit
-    // payload so the editor side can render it / file issues.
-    vscodeBtn.addEventListener("click", () => {
-      const bridge = getBridge();
-      if (!bridge.connected) {
-        vscodeBtn.textContent = "Not connected";
-        setTimeout(() => {
-          vscodeBtn.textContent = "Send to VS Code";
-        }, 2000);
-        return;
+    const sendPerformanceToVsCode = (result: PerformanceResult): boolean => {
+      if (disposed) return false;
+      try {
+        const bridge = getBridge();
+        if (!bridge.connected) return false;
+        return bridge.send({
+          type: "PerformanceAudit",
+          payload: {
+            url: location.href,
+            timestamp: result.timestamp,
+            overallScore: result.overallScore,
+            metrics: result.vitals.map((m) => ({
+              metric: m.name,
+              value: m.value,
+              rating: m.rating,
+            })),
+            longTasks: result.longTasks.entries,
+            opportunities: result.opportunities,
+          },
+        });
+      } catch {
+        return false;
       }
+    };
+
+    vscodeBtn.addEventListener("click", () => {
       if (!lastResult) {
         vscodeBtn.textContent = "Nothing to send";
         setTimeout(() => {
@@ -750,11 +830,12 @@ export const performanceAudit: ToolDefinition = {
         }, 2000);
         return;
       }
-      const sent = bridge.send({
-        type: "PerformanceAudit",
-        payload: lastResult,
-      } as unknown as Parameters<typeof bridge.send>[0]);
-      vscodeBtn.textContent = sent ? "Sent!" : "Failed";
+      const sent = sendPerformanceToVsCode(lastResult);
+      if (!getBridge().connected) {
+        vscodeBtn.textContent = "Not connected";
+      } else {
+        vscodeBtn.textContent = sent ? "Sent!" : "Failed";
+      }
       setTimeout(() => {
         vscodeBtn.textContent = "Send to VS Code";
       }, 2000);

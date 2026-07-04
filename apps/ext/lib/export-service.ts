@@ -412,26 +412,140 @@ export interface CapturedRequestForExport {
   timestamp: number;
 }
 
-function shellEscape(str: string): string {
-  return `'${str.replace(/'/g, "'\\''")}'`;
+export type ShellFormat = "bash" | "cmd" | "powershell";
+
+function shellEscape(str: string, format: ShellFormat = "bash"): string {
+  switch (format) {
+    case "cmd": {
+      // cmd.exe has no robust quoting; wrap in double quotes and escape the
+      // small set of special characters with `^`. Newlines/TABs are unsafe in
+      // cmd arguments — callers should avoid them.
+      const escaped = str
+        .replace(/[\t\r\n]/g, " ")
+        .replace(/(["^&<>|()%])/g, "^$1");
+      return `"${escaped}"`;
+    }
+    case "powershell": {
+      // PowerShell single-quote escaping: double embedded single quotes.
+      return `'${str.replace(/'/g, "''")}'`;
+    }
+    case "bash":
+    default: {
+      // POSIX sh single-quote escaping.
+      return `'${str.replace(/'/g, "'\\''")}'`;
+    }
+  }
 }
 
 const SENSITIVE_HEADER_NAMES = new Set([
   "authorization",
+  "proxy-authorization",
   "cookie",
   "set-cookie",
+  "x-api-key",
+  "api-key",
+  "x-auth-token",
+  "x-csrf-token",
+  "csrf-token",
 ]);
+
+const SENSITIVE_HEADER_SUFFIXES = ["-token", "-secret", "-key"];
+
+function isSensitiveHeader(name: string): boolean {
+  const lower = name.toLowerCase();
+  if (SENSITIVE_HEADER_NAMES.has(lower)) return true;
+  return SENSITIVE_HEADER_SUFFIXES.some((suffix) => lower.endsWith(suffix));
+}
 
 function redactSensitiveHeaders(
   headers: Record<string, string>,
 ): Record<string, string> {
   const redacted: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
-    redacted[key] = SENSITIVE_HEADER_NAMES.has(key.toLowerCase())
-      ? "<redacted>"
-      : value;
+    redacted[key] = isSensitiveHeader(key) ? "<redacted>" : value;
   }
   return redacted;
+}
+
+const SENSITIVE_BODY_KEYS = new Set([
+  "password",
+  "pwd",
+  "passwd",
+  "secret",
+  "client_secret",
+  "clientsecret",
+  "api_key",
+  "apikey",
+  "api-key",
+  "access_token",
+  "accesstoken",
+  "refresh_token",
+  "refreshtoken",
+  "id_token",
+  "token",
+  "authorization",
+  "private_key",
+  "privatekey",
+]);
+
+function isSensitiveBodyKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  if (SENSITIVE_BODY_KEYS.has(lower)) return true;
+  if (lower.endsWith("_token") || lower.endsWith("_secret")) return true;
+  if (lower.endsWith("token") || lower.endsWith("secret")) return true;
+  return false;
+}
+
+function redactJsonBody(parsed: unknown): unknown {
+  if (Array.isArray(parsed)) {
+    return parsed.map(redactJsonBody);
+  }
+  if (parsed && typeof parsed === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      out[k] = isSensitiveBodyKey(k) ? "<redacted>" : redactJsonBody(v);
+    }
+    return out;
+  }
+  return parsed;
+}
+
+function redactFormBody(body: string): string {
+  return body
+    .split("&")
+    .map((pair) => {
+      const eq = pair.indexOf("=");
+      if (eq === -1) return pair;
+      const key = decodeURIComponent(pair.slice(0, eq));
+      if (isSensitiveBodyKey(key)) {
+        return `${pair.slice(0, eq + 1)}<redacted>`;
+      }
+      return pair;
+    })
+    .join("&");
+}
+
+function redactRequestBody(
+  body: string | null,
+  contentType: string,
+): string | null {
+  if (!body) return body;
+  const ct = contentType.toLowerCase();
+  if (ct.includes("application/json")) {
+    try {
+      const parsed = JSON.parse(body);
+      return JSON.stringify(redactJsonBody(parsed));
+    } catch {
+      return body;
+    }
+  }
+  if (
+    ct.includes("application/x-www-form-urlencoded") ||
+    ct.includes("multipart/form-data")
+  ) {
+    return redactFormBody(body);
+  }
+  return body;
 }
 
 function parsePostmanUrl(url: string): Record<string, unknown> {
@@ -459,29 +573,31 @@ function parsePostmanUrl(url: string): Record<string, unknown> {
   }
 }
 
-export function exportAsCurl(request: CapturedRequestForExport): string {
+export function exportAsCurl(
+  request: CapturedRequestForExport,
+  options: { shell?: ShellFormat } = {},
+): string {
+  const shell: ShellFormat = options.shell ?? "bash";
   const parts: string[] = ["curl"];
   const headers = redactSensitiveHeaders(request.requestHeaders);
+  const body = redactRequestBody(request.requestBody, request.contentType);
 
   if (request.method !== "GET") {
-    parts.push(`-X ${request.method}`);
+    if (shell === "cmd") parts.push("-X " + request.method);
+    else parts.push(`-X ${request.method}`);
   }
 
   for (const [key, value] of Object.entries(headers)) {
-    parts.push(`-H ${shellEscape(`${key}: ${value}`)}`);
+    parts.push(`-H ${shellEscape(`${key}: ${value}`, shell)}`);
   }
 
-  if (
-    request.requestBody &&
-    request.method !== "GET" &&
-    request.method !== "HEAD"
-  ) {
-    parts.push(`-d ${shellEscape(request.requestBody)}`);
+  if (body && request.method !== "GET" && request.method !== "HEAD") {
+    parts.push(`-d ${shellEscape(body, shell)}`);
   }
 
-  parts.push(shellEscape(request.url));
+  parts.push(shellEscape(request.url, shell));
 
-  return parts.join(" \\\n  ");
+  return parts.join(shell === "cmd" ? " ^\n  " : " \\\n  ");
 }
 
 export function exportAsFetch(request: CapturedRequestForExport): string {
@@ -494,12 +610,19 @@ export function exportAsFetch(request: CapturedRequestForExport): string {
     init.headers = headers;
   }
 
-  if (
-    request.requestBody &&
-    request.method !== "GET" &&
-    request.method !== "HEAD"
-  ) {
-    init.body = request.requestBody;
+  const body = redactRequestBody(request.requestBody, request.contentType);
+  if (body && request.method !== "GET" && request.method !== "HEAD") {
+    init.body = body;
+  }
+
+  // If the original request carried a Cookie or Authorization header, exported
+  // fetch must opt into credentials or the request will arrive unauthenticated.
+  const hadCreds = Object.keys(request.requestHeaders).some((k) => {
+    const lower = k.toLowerCase();
+    return lower === "cookie" || lower === "authorization";
+  });
+  if (hadCreds) {
+    init.credentials = "include";
   }
 
   return `fetch(${JSON.stringify(request.url)}, ${JSON.stringify(init, null, 2)});`;
@@ -513,6 +636,7 @@ export function exportAsPostmanCollection(
     const headerItems = Object.entries(headers).map(([key, value]) => ({
       key,
       value,
+      type: "text",
     }));
 
     const item: Record<string, unknown> = {
@@ -525,10 +649,53 @@ export function exportAsPostmanCollection(
     };
 
     if (req.requestBody && req.method !== "GET" && req.method !== "HEAD") {
-      (item.request as Record<string, unknown>).body = {
-        mode: "raw",
-        raw: req.requestBody,
-      };
+      const ct = (req.contentType || "").toLowerCase();
+      const reqObj = item.request as Record<string, unknown>;
+      const body = redactRequestBody(req.requestBody, req.contentType);
+
+      if (ct.includes("application/x-www-form-urlencoded") && body) {
+        reqObj.body = {
+          mode: "urlencoded",
+          urlencoded: body.split("&").map((pair) => {
+            const eq = pair.indexOf("=");
+            const key = eq === -1 ? pair : pair.slice(0, eq);
+            const value = eq === -1 ? "" : pair.slice(eq + 1);
+            return {
+              key: decodeURIComponent(key),
+              value: decodeURIComponent(value.replace(/\+/g, " ")),
+              type: "text",
+            };
+          }),
+        };
+      } else if (ct.includes("multipart/form-data") && body) {
+        reqObj.body = {
+          mode: "formdata",
+          formdata: body
+            .split(/--[\r\n]*[^\r\n]*[\r\n]+/)
+            .filter(Boolean)
+            .map((part) => {
+              const m = part.match(/name="([^"]+)"/);
+              const valueMatch = part.match(/[\r\n]{2}([^\r\n]*)/);
+              return {
+                key: m ? m[1] : "field",
+                value: valueMatch ? valueMatch[1] : "",
+                type: "text",
+              };
+            }),
+        };
+      } else {
+        reqObj.body = {
+          mode: "raw",
+          raw: body ?? req.requestBody,
+          options: ct.includes("json")
+            ? { raw: { language: "json" } }
+            : ct.includes("xml")
+              ? { raw: { language: "xml" } }
+              : ct.includes("html")
+                ? { raw: { language: "html" } }
+                : undefined,
+        };
+      }
     }
 
     return item;

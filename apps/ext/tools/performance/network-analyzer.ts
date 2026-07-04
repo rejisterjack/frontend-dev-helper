@@ -4,7 +4,6 @@ import {
 } from "../../content/overlay-manager";
 import type { ToolDefinition } from "../types";
 import { NetworkCapture } from "@/lib/network-capture";
-import type { CapturedRequest } from "@/lib/network-capture";
 
 export const networkAnalyzer: ToolDefinition = {
   id: "network-analyzer",
@@ -54,21 +53,19 @@ export const networkAnalyzer: ToolDefinition = {
       other: "#6b7280",
     };
 
-    // Phase A: delegate capture to NetworkCapture (lib/network-capture.ts).
-    // The previous inlined implementation patched fetch/XHR itself and never
-    // restored them, leaking one wrapper per activation. NetworkCapture owns
-    // the patch lifecycle (start()/stop()) and captures method, status,
-    // headers, size, and timing correctly.
     const capture = new NetworkCapture({
       captureXHR,
       captureFetch,
       maxBodySize: 100 * 1024,
     });
 
-    function shouldShow(req: CapturedRequest): boolean {
-      if (req.resourceType === "image" && !captureImages) return false;
-      if (req.resourceType === "script" && !captureScripts) return false;
-      return true;
+    const excludedTypes: string[] = [];
+    if (!captureImages) excludedTypes.push("image");
+    if (!captureScripts) excludedTypes.push("script");
+
+    function buildFilter(): Parameters<NetworkCapture["getRequests"]>[0] {
+      if (excludedTypes.length === 0) return undefined;
+      return { excludeResourceTypes: excludedTypes };
     }
 
     const panel = document.createElement("div");
@@ -112,7 +109,7 @@ export const networkAnalyzer: ToolDefinition = {
     function renderList() {
       while (listContainer.firstChild)
         listContainer.removeChild(listContainer.firstChild);
-      const all = capture.getRequests().filter(shouldShow);
+      const all = capture.getRequests(buildFilter());
       if (all.length === 0) {
         const empty = document.createElement("div");
         empty.style.cssText = "padding:30px;text-align:center;color:#64748b;";
@@ -124,10 +121,17 @@ export const networkAnalyzer: ToolDefinition = {
       const display = all.slice(-maxEntries);
       let totalSize = 0,
         totalDuration = 0;
+      let earliestStart = Infinity;
+      let latestEnd = 0;
       for (const r of display) {
         totalSize += r.size;
         totalDuration += r.timing.duration;
+        const start = (r.timing as { startTime?: number }).startTime ?? 0;
+        const end = start + r.timing.duration;
+        if (start < earliestStart) earliestStart = start;
+        if (end > latestEnd) latestEnd = end;
       }
+      const span = Math.max(1, latestEnd - earliestStart);
 
       statsBar.textContent = `${display.length} requests | ${(totalSize / 1024).toFixed(1)}KB | ${totalDuration.toFixed(0)}ms`;
 
@@ -179,7 +183,28 @@ export const networkAnalyzer: ToolDefinition = {
         statusTag.style.cssText = `font-size:10px;min-width:30px;text-align:right;flex-shrink:0;color:${req.statusCode >= 400 ? "#ef4444" : req.statusCode >= 300 ? "#f59e0b" : "#94a3b8"};`;
         statusTag.textContent = String(req.statusCode);
 
-        row.append(dot, name, typeTag, sizeTag, durTag, statusTag);
+        // Waterfall column: a 60px-wide track with a proportional bar showing
+        // when the request started and how long it ran, normalized to the
+        // captured span. Mirrors the Chrome DevTools Network waterfall.
+        const start =
+          (req.timing as { startTime?: number }).startTime ?? earliestStart;
+        const leftPct = Math.max(
+          0,
+          Math.min(100, ((start - earliestStart) / span) * 100),
+        );
+        const widthPct = Math.max(
+          2,
+          Math.min(100, (req.timing.duration / span) * 100),
+        );
+        const waterfall = document.createElement("div");
+        waterfall.style.cssText =
+          "position:relative;width:60px;height:8px;background:#1e293b;border-radius:2px;flex-shrink:0;overflow:hidden;";
+        const bar = document.createElement("div");
+        bar.style.cssText = `position:absolute;left:${leftPct}%;top:0;height:100%;width:${widthPct}%;background:${TYPE_COLORS[req.resourceType] || "#6366f1"};border-radius:2px;`;
+        bar.title = `Start: ${(start - earliestStart).toFixed(0)}ms · Duration: ${req.timing.duration.toFixed(0)}ms`;
+        waterfall.appendChild(bar);
+
+        row.append(dot, name, typeTag, sizeTag, durTag, statusTag, waterfall);
         listContainer.appendChild(row);
       }
       listContainer.scrollTop = listContainer.scrollHeight;

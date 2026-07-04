@@ -22,6 +22,7 @@ export type BridgeMessageType =
   | "PublishDiagnostics"
   | "ClearDiagnostics"
   | "CreateFile"
+  | "PerformanceAudit"
   | "Request"
   | "Response"
   | "Auth"
@@ -155,6 +156,32 @@ export interface CreateFilePayload {
 }
 
 // ---------------------------------------------------------------------------
+// Performance audit (Phase 5) — sent from ext to VS Code for surfacing in
+// the Problems panel or a dedicated webview.
+// ---------------------------------------------------------------------------
+
+export type CWVMetric = "LCP" | "CLS" | "INP" | "FCP" | "TTFB";
+
+export interface PerformanceMetricEntry {
+  metric: CWVMetric;
+  /** Numeric value in the metric's natural unit (ms for LCP/INP/FCP/TTFB, unitless for CLS). */
+  value: number;
+  /** Numeric rating per the metric's scoring thresholds. */
+  rating: "good" | "needs-improvement" | "poor";
+}
+
+export interface PerformanceAuditPayload {
+  url: string;
+  timestamp: number;
+  overallScore: number;
+  metrics: PerformanceMetricEntry[];
+  /** Long tasks (>50ms) observed during the audit window, in ms. */
+  longTasks: Array<{ duration: number; startTime: number }>;
+  /** Free-form opportunities (e.g. "Reduce unused CSS", "Preconnect to origin"). */
+  opportunities: Array<{ id: string; title: string; savingsMs: number }>;
+}
+
+// ---------------------------------------------------------------------------
 // Auth handshake (Phase 0.3 of the ext audit)
 // ---------------------------------------------------------------------------
 
@@ -202,6 +229,7 @@ export interface BridgePayloadMap {
   PublishDiagnostics: PublishDiagnosticsPayload;
   ClearDiagnostics: ClearDiagnosticsPayload;
   CreateFile: CreateFilePayload;
+  PerformanceAudit: PerformanceAuditPayload;
   Request: Record<string, unknown>;
   Response: Record<string, unknown>;
   Auth: AuthPayload;

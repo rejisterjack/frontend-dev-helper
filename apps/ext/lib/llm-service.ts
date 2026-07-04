@@ -91,6 +91,15 @@ export function isEnabled(): boolean {
 
 async function sendRequest(messages: LLMMessage[]): Promise<string | null> {
   const provider = getProvider(config.provider);
+  // Enforce a default 60s timeout so a hung LLM provider doesn't keep the
+  // extension waiting forever. AbortSignal.timeout() is supported in Chrome
+  // ≥103. If unsupported, the request simply has no timeout (graceful).
+  let signal: AbortSignal | undefined;
+  try {
+    signal = AbortSignal.timeout(60_000);
+  } catch {
+    signal = undefined;
+  }
   return provider.sendMessage(
     {
       apiKey: config.apiKey,
@@ -100,6 +109,7 @@ async function sendRequest(messages: LLMMessage[]): Promise<string | null> {
       temperature: config.temperature,
     },
     messages,
+    signal,
   );
 }
 

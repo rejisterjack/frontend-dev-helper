@@ -6,6 +6,11 @@ import {
 import { computeDiff, applyFix, type DiffLine } from "@/lib/diff-utils";
 import { resolveElementSource } from "@/lib/element-source-resolver";
 import { getBridge } from "@/lib/vscode-bridge";
+import type {
+  ApplySourceFixPayload,
+  PreviewFixPayload,
+  SourceFixRange,
+} from "@repo/bridge-protocol/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,19 +25,36 @@ interface ScannedIssue {
   selector?: string;
 }
 
+interface StyleChangeEntry {
+  selector: string;
+  property: string;
+  oldValue: string;
+  newValue: string;
+}
+
 interface AIFix {
   html?: string;
   css?: string;
   styleChanges?: Record<string, string>;
   description: string;
+  styleChangeEntries?: StyleChangeEntry[];
+}
+
+interface StyleSnapshot {
+  selector: string;
+  element: HTMLElement;
+  cssText: string;
 }
 
 interface AppliedFixRecord {
   issueId: string;
   selector: string;
   originalHTML: string;
+  styleSnapshots: StyleSnapshot[];
   fix: AIFix;
 }
+
+const AI_AUTO_FIX_FENCE_RE = /```(\w+)?\n([\s\S]*?)```/g;
 
 // ---------------------------------------------------------------------------
 // Page scan helpers (lightweight a11y + best-practices)
@@ -230,15 +252,11 @@ Only fix the specific issue. Do not alter unrelated attributes or content.`;
     if (signal?.aborted) return null;
     if (!response?.fix) return null;
 
-    // The response may come back as a string that needs parsing, or already parsed
-    let fix: AIFix;
+    let fix: AIFix | null = null;
     if (typeof response.fix === "string") {
-      // Strip markdown code fences if present
-      const cleaned = response.fix
-        .replace(/```json?\n?/g, "")
-        .replace(/```/g, "")
-        .trim();
-      fix = JSON.parse(cleaned);
+      const cleaned = stripCodeFences(response.fix);
+      fix = cleaned ? parseJsonObjectResponse<AIFix>(cleaned) : null;
+      if (!fix) return null;
     } else {
       fix = response.fix as AIFix;
     }
@@ -277,6 +295,124 @@ function clearContainer(container: HTMLElement): void {
   while (container.firstChild) container.removeChild(container.firstChild);
 }
 
+export function stripCodeFences(raw: string): string {
+  // Use non-greedy fence stripping to avoid swallowing across multiple blocks.
+  AI_AUTO_FIX_FENCE_RE.lastIndex = 0;
+  const stripped = raw
+    .replace(AI_AUTO_FIX_FENCE_RE, (_m, _lang, body) => body as string)
+    .trim();
+  return stripped;
+}
+
+export function parseJsonObjectResponse<T>(raw: string): T | null {
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function parseJsonArrayResponse<T>(raw: string): T[] | null {
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+function snapshotStyle(
+  target: HTMLElement,
+  selector: string,
+  fix: AIFix,
+): StyleSnapshot[] {
+  const snapshots: StyleSnapshot[] = [
+    { selector, element: target, cssText: target.style.cssText },
+  ];
+  const props = fix.styleChanges ? Object.keys(fix.styleChanges) : [];
+  if (props.length === 0) return snapshots;
+  return snapshots;
+}
+
+function computeStyleDiff(
+  snapshots: StyleSnapshot[],
+  currentTarget: HTMLElement,
+  selector: string,
+  fix: AIFix,
+): StyleChangeEntry[] {
+  const entries: StyleChangeEntry[] = [];
+  if (!fix.styleChanges) return entries;
+  const originalCssText = snapshots[0]?.cssText ?? "";
+  const originalMap = parseInlineStyles(originalCssText);
+  const currentMap = parseInlineStyles(currentTarget.style.cssText);
+  for (const [prop, newValue] of Object.entries(fix.styleChanges)) {
+    const oldValue = originalMap[prop] ?? "";
+    const applied = currentMap[prop] ?? "";
+    if (oldValue === applied && applied === newValue) {
+      entries.push({ selector, property: prop, oldValue, newValue });
+    } else {
+      entries.push({ selector, property: prop, oldValue, newValue });
+    }
+  }
+  return entries;
+}
+
+function parseInlineStyles(cssText: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!cssText) return out;
+  for (const decl of cssText.split(";")) {
+    const idx = decl.indexOf(":");
+    if (idx === -1) continue;
+    const prop = decl.slice(0, idx).trim();
+    const value = decl.slice(idx + 1).trim();
+    if (prop) out[prop] = value;
+  }
+  return out;
+}
+
+function computeLineColumn(
+  source: string,
+  needle: string,
+): SourceFixRange | null {
+  if (!needle || !source.includes(needle)) return null;
+  const before = source.slice(0, source.indexOf(needle));
+  const lines = before.split("\n");
+  const sl = lines.length;
+  const sc = (lines[lines.length - 1]?.length ?? 0) + 1;
+  const needleLines = needle.split("\n");
+  const el = sl + needleLines.length - 1;
+  const lastLine = needleLines[needleLines.length - 1] ?? "";
+  const ec =
+    needleLines.length === 1 ? sc + lastLine.length : lastLine.length + 1;
+  return { sl, sc, el, ec };
+}
+
+async function fetchFileContent(file: string): Promise<string | null> {
+  try {
+    const bridge = getBridge();
+    if (!bridge.connected) return null;
+    const resp = await browser.runtime.sendMessage({
+      type: "READ_SOURCE_FILE",
+      data: { file },
+    });
+    if (resp && typeof resp.content === "string") return resp.content;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function buildFixedPreview(el: HTMLElement, fix: AIFix): string {
+  if (fix.styleChanges && Object.keys(fix.styleChanges).length > 0) {
+    const clone = el.cloneNode(true) as HTMLElement;
+    for (const [prop, value] of Object.entries(fix.styleChanges)) {
+      (clone.style as unknown as Record<string, string>)[prop] = value;
+    }
+    return clone.outerHTML;
+  }
+  return el.outerHTML;
+}
+
 // ---------------------------------------------------------------------------
 // Tool definition
 // ---------------------------------------------------------------------------
@@ -287,8 +423,33 @@ export const aiAutoFix: ToolDefinition = {
   description: "AI-powered automatic fix suggestions with diff preview",
   category: "ai",
   icon: "wand-2",
+  configSchema: {
+    minSeverity: {
+      type: "select",
+      label: "Apply fixes for severity",
+      default: "error",
+      options: [
+        { label: "Errors only", value: "error" },
+        { label: "Errors + warnings", value: "warning" },
+        { label: "All", value: "info" },
+      ],
+    },
+  },
 
-  run(ctx, _config) {
+  run(ctx, config) {
+    const cfg = config ?? {};
+    const minSeverityRaw = (cfg.minSeverity ?? "error") as
+      | "error"
+      | "warning"
+      | "info";
+    const severityRank: Record<string, number> = {
+      error: 3,
+      warning: 2,
+      info: 1,
+    };
+    const minRank = severityRank[minSeverityRaw] ?? severityRank.error;
+    const passesFilter = (sev: string) => (severityRank[sev] ?? 0) >= minRank;
+
     const overlayHost = document.createElement("div");
     overlayHost.style.cssText =
       "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483640;";
@@ -703,35 +864,38 @@ export const aiAutoFix: ToolDefinition = {
           return;
         }
 
+        const originalHTML = el.outerHTML;
+        const fixedHTML = fix.html || "";
+        const description =
+          fix.description || `Fix ${issue.rule}: ${issue.message}`;
+
         if (!source) {
-          // No source found — use DOM-level PreviewFix
-          bridge.send({
-            type: "PreviewFix",
-            payload: {
-              file: issue.selector || "unknown",
-              original: "",
-              fixed: fix.html || "",
-              description:
-                fix.description || `Fix ${issue.rule}: ${issue.message}`,
-              fixId: issue.id,
-            },
-          });
+          const payload: PreviewFixPayload = {
+            file: issue.selector || "unknown",
+            original: originalHTML,
+            fixed: fixedHTML || buildFixedPreview(el, fix),
+            description,
+            fixId: issue.id,
+          };
+          bridge.send({ type: "PreviewFix", payload });
           return;
         }
 
-        // Source found — use precise ApplySourceFix with source context
         const fixPrompt = `Fix the following accessibility issue in the source file.
 Rule: ${issue.rule}
 Message: ${issue.message}
-Current element HTML: ${el.outerHTML.slice(0, 500)}
+Current element HTML: ${originalHTML.slice(0, 500)}
+Suggested fixed HTML: ${fixedHTML.slice(0, 500)}
 Suggested fix description: ${fix.description}
-${fix.styleChanges ? "CSS changes: " + JSON.stringify(fix.styleChanges) : ""}
+${fix.styleChanges ? "Inline style changes: " + JSON.stringify(fix.styleChanges) : ""}
 
 Respond ONLY with a JSON array of edits (no markdown, no code fences):
 [{"range":{"sl":START_LINE,"sc":START_COL,"el":END_LINE,"ec":END_COL},"newText":"replacement text"}]
 
 Only include the minimal edits needed to fix the specific issue. Do not change unrelated code.`;
 
+        let edits: Array<{ range: SourceFixRange; newText: string }> | null =
+          null;
         try {
           const response = await browser.runtime.sendMessage({
             type: "AI_AUTO_FIX",
@@ -739,55 +903,44 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
           });
 
           if (response?.fix) {
-            let edits: Array<{
-              range: { sl: number; sc: number; el: number; ec: number };
-              newText: string;
-            }>;
             if (typeof response.fix === "string") {
-              const cleaned = response.fix
-                .replace(/```json?\n?/g, "")
-                .replace(/```/g, "")
-                .trim();
-              edits = JSON.parse(cleaned);
-            } else {
-              edits = response.fix;
-            }
-
-            if (Array.isArray(edits) && edits.length > 0) {
-              bridge.send({
-                type: "PreviewFix",
-                payload: {
-                  file: source.file,
-                  original: "",
-                  fixed: "",
-                  description:
-                    fix.description || `Fix ${issue.rule}: ${issue.message}`,
-                  fixId: issue.id,
-                },
-              });
-              // Also send the precise source edits
-              bridge.send({
-                type: "ApplySourceFix",
-                payload: {
-                  file: source.file,
-                  edits,
-                },
-              });
+              const cleaned = stripCodeFences(response.fix);
+              edits = cleaned
+                ? parseJsonArrayResponse<(typeof edits)[number]>(cleaned)
+                : null;
+            } else if (Array.isArray(response.fix)) {
+              edits = response.fix as typeof edits;
             }
           }
         } catch {
-          // Fallback to simple preview
-          bridge.send({
-            type: "PreviewFix",
-            payload: {
-              file: source.file,
-              original: "",
-              fixed: fix.html || "",
-              description:
-                fix.description || `Fix ${issue.rule}: ${issue.message}`,
-              fixId: issue.id,
-            },
-          });
+          edits = null;
+        }
+
+        if (!edits || edits.length === 0) {
+          const fallback = await fetchFileContent(source.file);
+          if (fallback != null) {
+            const range =
+              computeLineColumn(fallback, originalHTML) ??
+              computeLineColumn(fallback, fixedHTML);
+            edits = range ? [{ range, newText: fixedHTML }] : [];
+          }
+        }
+
+        if (edits && edits.length > 0) {
+          const applyPayload: ApplySourceFixPayload = {
+            file: source.file,
+            edits,
+          };
+          bridge.send({ type: "ApplySourceFix", payload: applyPayload });
+        } else {
+          const payload: PreviewFixPayload = {
+            file: source.file,
+            original: originalHTML,
+            fixed: fixedHTML || buildFixedPreview(el, fix),
+            description,
+            fixId: issue.id,
+          };
+          bridge.send({ type: "PreviewFix", payload });
         }
       });
       actions.appendChild(vscodeBtn);
@@ -865,10 +1018,10 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
     function rescan() {
       renderLoading("Scanning page...");
       requestAnimationFrame(() => {
-        issues = scanPage();
+        const all = scanPage();
+        issues = all.filter((i) => passesFilter(i.severity));
         renderIssueList();
 
-        // Publish diagnostics to VS Code
         const bridge = getBridge();
         if (bridge.connected && issues.length > 0) {
           const diagnostics = issues.map((issue) => ({
@@ -941,8 +1094,7 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
       }
 
       if (disposed) return;
-      // Re-scan to update the list
-      issues = scanPage();
+      issues = scanPage().filter((i) => passesFilter(i.severity));
       renderIssueList();
       footerLeft.textContent =
         "Applied " +
@@ -959,12 +1111,20 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
       if (!target) return false;
 
       const originalHTML = target.outerHTML;
+      const styleSnapshots = snapshotStyle(target, issue.selector, fix);
       const success = applyFix(target, fix);
       if (success) {
+        fix.styleChangeEntries = computeStyleDiff(
+          styleSnapshots,
+          target,
+          issue.selector,
+          fix,
+        );
         appliedFixes.push({
           issueId: issue.id,
           selector: issue.selector,
           originalHTML,
+          styleSnapshots,
           fix,
         });
       }
@@ -986,18 +1146,31 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
     function handleUndoLast() {
       if (appliedFixes.length === 0) return;
       const last = appliedFixes.pop()!;
-      const target = document.querySelector(
-        last.selector,
-      ) as HTMLElement | null;
-      if (target) {
+
+      for (let i = last.styleSnapshots.length - 1; i >= 0; i--) {
+        const snap = last.styleSnapshots[i];
         try {
-          target.outerHTML = last.originalHTML;
+          const el = snap.element.isConnected
+            ? snap.element
+            : (document.querySelector(last.selector) as HTMLElement | null);
+          if (el && el.style.cssText !== snap.cssText) {
+            el.style.cssText = snap.cssText;
+          }
         } catch {
-          /* element may be gone */
+          // Keep unwinding the rest of the stack even if one entry fails.
         }
       }
-      // Re-scan
-      issues = scanPage();
+
+      try {
+        const target = document.querySelector(
+          last.selector,
+        ) as HTMLElement | null;
+        if (target) target.outerHTML = last.originalHTML;
+      } catch {
+        // Element may be gone; the style restore above already best-effort.
+      }
+
+      issues = scanPage().filter((i) => passesFilter(i.severity));
       renderIssueList();
       footerLeft.textContent =
         "Undo applied. " + appliedFixes.length + " fix(es) remaining.";

@@ -41,13 +41,49 @@ export const scrollAnimationsDebugger: ToolDefinition = {
     const overlays: HTMLElement[] = [];
     const trackedBadges: TrackedBadge[] = [];
     const detachTrackers: Array<() => void> = [];
+    // Animations we paused for freezeScroll, with their original playState for restore.
+    const pausedAnimations = new Map<
+      Animation,
+      "paused" | "running" | "idle"
+    >();
     let disposed = false;
+    // Capture the prior body overflow so we restore the exact value rather than blanking it.
+    const priorBodyOverflow = document.body.style.overflow;
 
-    if (freezeScroll) {
-      // Note: this can pause CSS scroll-driven animations because they need
-      // a scrolling container. It is opt-in and intended for measuring the
-      // static state of an in-progress animation.
-      document.body.style.overflow = "hidden";
+    function applyFreezeScroll(): void {
+      if (!freezeScroll) return;
+      // Real freeze: pause every live Animation (covers CSS scroll-driven, WAAPI,
+      // and time-driven alike). This is the same approach as
+      // tools/css/animation-inspector.ts.
+      try {
+        const animations = document.getAnimations();
+        for (const anim of animations) {
+          if (anim.playState !== "paused") {
+            pausedAnimations.set(anim, anim.playState);
+            try {
+              anim.pause();
+            } catch {
+              // Animation may be in an invalid state; skip.
+            }
+          }
+        }
+      } catch {
+        // getAnimations may throw on older browsers; fall back to nothing —
+        // we intentionally do NOT use body.style.overflow as a fake freeze.
+      }
+    }
+
+    function restoreFreezeScroll(): void {
+      for (const [anim, prevState] of pausedAnimations) {
+        try {
+          if (prevState === "running") anim.play();
+          else if (prevState === "idle") anim.cancel();
+        } catch {
+          // best-effort restore
+        }
+      }
+      pausedAnimations.clear();
+      document.body.style.overflow = priorBodyOverflow;
     }
 
     // Progress bar at top of viewport
@@ -76,14 +112,6 @@ export const scrollAnimationsDebugger: ToolDefinition = {
       if (progressBar) progressBar.style.width = pct + "%";
     }
 
-    function updateFrameStats(): void {
-      // Frame-rate / scroll-jank detector: tracks the worst frame interval
-      // over the last 1s. Cheap enough to run alongside the existing rAF.
-      // (Implementation deferred — this stub keeps the slot without spending
-      // CPU on a high-frequency timer; a real jank detector is tracked as
-      // Phase 2 work.)
-    }
-
     if (showTimeline) {
       timelinePanel = document.createElement("div");
       timelinePanel.style.cssText =
@@ -97,13 +125,10 @@ export const scrollAnimationsDebugger: ToolDefinition = {
       scrollPctLabel.style.cssText = "color:#94a3b8;";
       scrollPctLabel.textContent = "0%";
       const closeBtn = document.createElement("button");
+      closeBtn.setAttribute("aria-label", "Close scroll debugger");
       closeBtn.style.cssText =
         "background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:14px;";
       closeBtn.textContent = "×";
-      // IMPORTANT: bind to the real cleanup function reference, not the
-      // placeholder const. Previously `closeBtn.onclick = cleanup` captured
-      // the no-op placeholder before `cleanup` was reassigned, leaving the
-      // close button dead.
       closeBtn.onclick = () => doCleanup();
       timelinePanel.append(title, scrollPctLabel, closeBtn);
       addOverlayElement(timelinePanel);
@@ -112,35 +137,64 @@ export const scrollAnimationsDebugger: ToolDefinition = {
       window.addEventListener("scroll", updateScrollPosition, {
         passive: true,
       });
-      window.addEventListener("scroll", updateFrameStats, { passive: true });
     }
 
-    // Find scroll-animated elements.
+    // Find scroll-animated elements via the real Animation API.
+    // document.getAnimations() returns every live Animation, including those
+    // driven by ScrollTimeline / ViewTimeline (CSS scroll-driven animations)
+    // and WAAPI animations that were never wired to a CSS rule. This is far
+    // more accurate than sniffing computed styles.
     if (highlightTriggers) {
-      const allEls = document.querySelectorAll("*");
-      const animatedEls: HTMLElement[] = [];
+      const animatedEls = new Set<HTMLElement>();
 
+      // 1. Live Animation objects with a non-default timeline.
+      try {
+        const animations = document.getAnimations();
+        for (const anim of animations) {
+          const timeline = anim.timeline as unknown as {
+            constructor: { name: string };
+          } | null;
+          const ctorName = timeline?.constructor?.name ?? "";
+          if (
+            ctorName === "ScrollTimeline" ||
+            ctorName === "ViewTimeline" ||
+            ctorName === "AnimationTimeline"
+          ) {
+            // AnimationTimeline is the default; only count it if the animation
+            // is bound to a scroll-driven timeline via range effects.
+            const effect = anim.effect as {
+              getTiming?: () => { rangeStart?: unknown };
+            } | null;
+            const hasRange =
+              effect?.getTiming &&
+              typeof effect.getTiming === "function" &&
+              (effect.getTiming() as { rangeStart?: unknown }).rangeStart;
+            if (ctorName !== "AnimationTimeline" || hasRange) {
+              const target = (anim.effect as { target?: Element | null })
+                ?.target;
+              if (target instanceof HTMLElement) animatedEls.add(target);
+            }
+          }
+        }
+      } catch {
+        // getAnimations unsupported; fall through to CSS detection below.
+      }
+
+      // 2. CSS-driven detection via computed animation-timeline / view-timeline.
+      const allEls = document.querySelectorAll("*");
       allEls.forEach((el) => {
         const htmlEl = el as HTMLElement;
         const style = window.getComputedStyle(htmlEl);
-
-        const animName = style.animationName;
-        // animation-timeline / view-timeline are the real CSS signals for
-        // scroll-driven animations. animName !== none alone is far too broad
-        // (catches every spinner, hover transition, marquee).
         const scrollTimeline =
           style.getPropertyValue("animation-timeline") ||
           style.getPropertyValue("view-timeline");
-        const isSticky = style.position === "sticky";
-        const hasTransform = style.transform !== "none";
-
-        if (scrollTimeline.trim() !== "" || (isSticky && hasTransform)) {
-          animatedEls.push(htmlEl);
+        if (scrollTimeline.trim() !== "" && scrollTimeline.trim() !== "auto") {
+          animatedEls.add(htmlEl);
         }
       });
 
       // Highlight detected elements and track them through scroll/resize.
-      for (const el of animatedEls.slice(0, 50)) {
+      for (const el of Array.from(animatedEls).slice(0, 50)) {
         const rect = el.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) continue;
 
@@ -161,7 +215,6 @@ export const scrollAnimationsDebugger: ToolDefinition = {
         addOverlayElement(outline);
         overlays.push(outline);
 
-        // Reposition on scroll/resize so badges don't drift off-target.
         const tracker = () => {
           if (disposed) return;
           const r = el.getBoundingClientRect();
@@ -177,17 +230,14 @@ export const scrollAnimationsDebugger: ToolDefinition = {
         trackedBadges.push({ badge, outline, el });
       }
 
-      // Approximate IO-observer count via getEntriesByType when supported.
-      // Note: the previous implementation monkey-patched window.IntersectionObserver
-      // and never restored the patch — that leak is removed entirely.
+      // content-visibility is the modern, actually-adopted signal for
+      // scroll-driven reveal. The legacy [data-io] convention is virtually
+      // unused in real sites.
       if (timelinePanel) {
         let ioCount = 0;
         try {
-          // There's no public API to enumerate live IntersectionObservers;
-          // we use the presence of any element with an intersecting-related
-          // data attribute as a heuristic instead of leaking a monkey-patch.
           ioCount = document.querySelectorAll(
-            "[data-io],[data-intersection]",
+            "[style*='content-visibility']",
           ).length;
         } catch {
           /* ignore */
@@ -196,22 +246,22 @@ export const scrollAnimationsDebugger: ToolDefinition = {
           ioBadge = document.createElement("span");
           ioBadge.style.cssText =
             "background:#7c3aed;color:white;padding:2px 6px;border-radius:4px;font-size:10px;";
-          ioBadge.textContent = `${ioCount} IO candidates`;
+          ioBadge.textContent = `${ioCount} content-visibility els`;
           timelinePanel.insertBefore(ioBadge, timelinePanel.lastChild);
         }
       }
     }
 
+    applyFreezeScroll();
     updateScrollPosition();
 
     function doCleanup(): void {
       if (disposed) return;
       disposed = true;
-      if (freezeScroll) document.body.style.overflow = "";
+      restoreFreezeScroll();
       for (const detach of detachTrackers) detach();
       detachTrackers.length = 0;
       window.removeEventListener("scroll", updateScrollPosition);
-      window.removeEventListener("scroll", updateFrameStats);
       for (const o of overlays) removeOverlayElement(o);
       overlays.length = 0;
       trackedBadges.length = 0;

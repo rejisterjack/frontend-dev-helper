@@ -133,6 +133,36 @@ export const createFilePayloadSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Performance audit
+// ---------------------------------------------------------------------------
+
+export const performanceMetricSchema = z.object({
+  metric: z.enum(["LCP", "CLS", "INP", "FCP", "TTFB"]),
+  value: z.number().nonnegative(),
+  rating: z.enum(["good", "needs-improvement", "poor"]),
+});
+
+export const performanceAuditPayloadSchema = z.object({
+  url: z.string().min(1),
+  timestamp: z.number().nonnegative(),
+  overallScore: z.number().min(0).max(100),
+  metrics: z.array(performanceMetricSchema),
+  longTasks: z.array(
+    z.object({
+      duration: z.number().nonnegative(),
+      startTime: z.number().nonnegative(),
+    }),
+  ),
+  opportunities: z.array(
+    z.object({
+      id: z.string().min(1),
+      title: z.string().min(1),
+      savingsMs: z.number().nonnegative(),
+    }),
+  ),
+});
+
+// ---------------------------------------------------------------------------
 // Request / Response (RPC envelopes used by apps/ext VSCodeBridge)
 // ---------------------------------------------------------------------------
 
@@ -218,6 +248,10 @@ export const bridgeMessageSchema = z.discriminatedUnion("type", [
     payload: clearDiagnosticsPayloadSchema.optional(),
   }),
   z.object({ type: z.literal("CreateFile"), payload: createFilePayloadSchema }),
+  z.object({
+    type: z.literal("PerformanceAudit"),
+    payload: performanceAuditPayloadSchema,
+  }),
   // RPC + auth envelopes never carry a `payload`; their fields are top-level.
   requestSchema,
   responseSchema,

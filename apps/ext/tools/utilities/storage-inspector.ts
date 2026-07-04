@@ -145,6 +145,7 @@ export const storageInspector: ToolDefinition = {
     const showSS = (cfg.showSessionStorage as boolean) ?? true;
     const showCookies = (cfg.showCookies as boolean) ?? true;
     const showIndexedDB = (cfg.showIndexedDB as boolean) ?? false;
+    const initialSearchQuery = (cfg.searchQuery as string) ?? "";
 
     const overlays: HTMLElement[] = [];
     let disposed = false;
@@ -224,6 +225,9 @@ export const storageInspector: ToolDefinition = {
     searchInput.style.cssText =
       "width:100%;padding:6px 10px;background:#1e293b;border:1px solid #475569;border-radius:4px;color:#e2e8f0;font-size:12px;outline:none;";
     searchInput.placeholder = "Search keys...";
+    // Seed with the config-supplied initial query (if any) so deep-links from
+    // the command palette or popup can pre-filter the storage list.
+    if (initialSearchQuery) searchInput.value = initialSearchQuery;
     searchInput.oninput = () => {
       void renderEntries();
     };

@@ -39,6 +39,7 @@ export const responsivePreview: ToolDefinition = {
     const cfg = config ?? {};
     const showFrame = (cfg.showDeviceFrame as boolean) ?? true;
     const rotated = (cfg.rotate as boolean) ?? false;
+    const scaleToFit = (cfg.scaleToFit as boolean) ?? true;
 
     const overlays: HTMLElement[] = [];
     let disposed = false;
@@ -161,7 +162,10 @@ export const responsivePreview: ToolDefinition = {
       const isRotated = wrap.dataset.rotated === "true";
       const w = isRotated ? dev.h : dev.w;
       const h = isRotated ? dev.w : dev.h;
-      const maxW = Math.min(w, window.innerWidth - 80);
+      // scaleToFit shrinks the device frame to fit the viewport when it would
+      // overflow horizontally. When disabled the frame renders at its true
+      // pixel dimensions and the user scrolls — useful for pixel-accurate QA.
+      const maxW = scaleToFit ? Math.min(w, window.innerWidth - 80) : w;
       const scale = maxW / w;
       wrap.style.width = w + "px";
       wrap.style.height = h + "px";

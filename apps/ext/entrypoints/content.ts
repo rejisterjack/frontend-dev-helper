@@ -93,8 +93,19 @@ export default defineContentScript({
 
         case "BG_COPY_CSS_SELECTOR": {
           const el = lastRightClickedElement;
+          // Clear the captured element immediately so a stale reference is
+          // never reused on a subsequent invocation (e.g. if the element was
+          // since removed from the DOM).
+          lastRightClickedElement = null;
           if (!el) {
             sendResponse({ success: false, error: "No element right-clicked" });
+            return false;
+          }
+          if (!document.body.contains(el)) {
+            sendResponse({
+              success: false,
+              error: "Right-clicked element is no longer in the DOM",
+            });
             return false;
           }
 
@@ -315,8 +326,11 @@ function generateCssSelector(element: HTMLElement): string {
 
     if (current.className && typeof current.className === "string") {
       const classes = current.className.trim().split(/\s+/).filter(Boolean);
-      if (classes.length > 0) {
-        selector += "." + classes.map((c) => CSS.escape(c)).join(".");
+      // Dedupe in deterministic order so the generated selector is stable
+      // across re-renders that reorder class attributes.
+      const unique = Array.from(new Set(classes));
+      if (unique.length > 0) {
+        selector += "." + unique.map((c) => CSS.escape(c)).join(".");
       }
     }
 

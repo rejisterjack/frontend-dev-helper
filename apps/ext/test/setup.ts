@@ -194,3 +194,45 @@ if (typeof NodeFilter === "undefined") {
   if (el.parentNode) el.parentNode.removeChild(el);
 };
 (global as any).clearAllOverlays = () => {};
+
+// Minimal IndexedDB stub. jsdom doesn't ship a real IDB implementation, and
+// several tools (session-replay, session-recorder) call indexedDB.open() at
+// activation. Without this stub they reject with "indexedDB is not defined",
+// producing noisy unhandled-rejection warnings even when the test itself
+// succeeds. The stub resolves immediately with a no-op database.
+(function stubIndexedDB() {
+  if (typeof indexedDB !== "undefined") return;
+  const fakeDB = {
+    objectStoreNames: { contains: () => false },
+    createObjectStore: () => ({}),
+    transaction: () => ({
+      objectStore: () => ({
+        get: () => ({}),
+        put: () => ({}),
+        getAll: () => ({}),
+        delete: () => ({}),
+      }),
+    }),
+    close: () => {},
+  };
+  const fakeRequest: any = {
+    onupgradeneeded: null,
+    onsuccess: null,
+    onerror: null,
+    result: fakeDB,
+    error: null,
+  };
+  (global as any).indexedDB = {
+    open: () => {
+      // fire onsuccess asynchronously so awaiters resolve
+      setTimeout(() => {
+        fakeRequest.onsuccess?.(fakeRequest);
+      }, 0);
+      return fakeRequest;
+    },
+  };
+  (global as any).IDBDatabase = class {};
+  (global as any).IDBRequest = class {};
+  (global as any).IDBTransaction = class {};
+  (global as any).IDBObjectStore = class {};
+})();

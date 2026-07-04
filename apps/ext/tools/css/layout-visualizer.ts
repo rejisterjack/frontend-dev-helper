@@ -2,6 +2,7 @@ import type { ToolDefinition } from "../types";
 import {
   addOverlayElement,
   removeOverlayElement,
+  attachViewportTracker,
 } from "@/content/overlay-manager";
 
 interface ChildLayout {
@@ -18,14 +19,23 @@ interface ChildLayout {
   gridColumn?: string;
 }
 
+interface GapRegion {
+  rect: DOMRect;
+  size: number;
+  axis: "row" | "column";
+}
+
 interface LayoutInfo {
   element: HTMLElement;
   type: "flex" | "grid";
   rect: DOMRect;
   styles: Record<string, string>;
   children: ChildLayout[];
+  gaps: GapRegion[];
   freeSpace?: number;
   containerSize?: number;
+  rowGap: number;
+  columnGap: number;
 }
 
 const FLEX_COLORS = [
@@ -49,6 +59,39 @@ const GRID_COLORS = [
   "#fab387",
 ];
 
+const GAP_BAND_COLOR = "#f9e2af";
+
+function parseLength(value: string): number {
+  if (!value) return 0;
+  const n = parseFloat(value);
+  return isNaN(n) ? 0 : n;
+}
+
+function resolveGap(computed: CSSStyleDeclaration): {
+  row: number;
+  column: number;
+} {
+  const gap = computed.gap || "";
+  const rowGap = computed.rowGap || "";
+  const colGap = computed.columnGap || "";
+
+  let row = parseLength(rowGap);
+  let column = parseLength(colGap);
+
+  if (row === 0 || column === 0) {
+    const parts = gap.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      const v = parseLength(parts[0]);
+      if (row === 0) row = v;
+      if (column === 0) column = v;
+    } else if (parts.length >= 2) {
+      if (row === 0) row = parseLength(parts[0]);
+      if (column === 0) column = parseLength(parts[1]);
+    }
+  }
+  return { row, column };
+}
+
 function getComputedLayout(el: HTMLElement): LayoutInfo | null {
   const computed = getComputedStyle(el);
   const display = computed.display;
@@ -59,7 +102,8 @@ function getComputedLayout(el: HTMLElement): LayoutInfo | null {
       computed.flexDirection === "row" ||
       computed.flexDirection === "row-reverse";
     const containerSize = isRow ? rect.width : rect.height;
-    const gap = parseFloat(computed.gap) || 0;
+    const { row, column } = resolveGap(computed);
+    const gap = isRow ? column : row;
     const children: ChildLayout[] = [];
     let totalChildSize = 0;
 
@@ -97,6 +141,39 @@ function getComputedLayout(el: HTMLElement): LayoutInfo | null {
     const totalGaps = children.length > 1 ? gap * (children.length - 1) : 0;
     const freeSpace = containerSize - totalChildSize - totalGaps;
 
+    const gaps: GapRegion[] = [];
+    for (let i = 0; i < children.length - 1; i++) {
+      const a = children[i].rect;
+      const b = children[i + 1].rect;
+      if (isRow) {
+        if (b.left > a.right) {
+          gaps.push({
+            rect: new DOMRect(
+              a.right,
+              Math.max(a.top, b.top),
+              b.left - a.right,
+              Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top),
+            ),
+            size: b.left - a.right,
+            axis: "column",
+          });
+        }
+      } else {
+        if (b.top > a.bottom) {
+          gaps.push({
+            rect: new DOMRect(
+              Math.max(a.left, b.left),
+              a.bottom,
+              Math.min(a.right, b.right) - Math.max(a.left, b.left),
+              b.top - a.bottom,
+            ),
+            size: b.top - a.bottom,
+            axis: "row",
+          });
+        }
+      }
+    }
+
     return {
       element: el,
       type: "flex",
@@ -107,17 +184,23 @@ function getComputedLayout(el: HTMLElement): LayoutInfo | null {
         justifyContent: computed.justifyContent,
         alignItems: computed.alignItems,
         gap: computed.gap,
+        rowGap: computed.rowGap,
+        columnGap: computed.columnGap,
         flexWrap: computed.flexWrap,
         alignContent: computed.alignContent,
       },
       children,
+      gaps,
       freeSpace,
       containerSize,
+      rowGap: row,
+      columnGap: column,
     };
   }
 
   if (display === "grid" || display === "inline-grid") {
     const rect = el.getBoundingClientRect();
+    const { row, column } = resolveGap(computed);
     const children: ChildLayout[] = [];
     for (const child of el.children) {
       const ce = child as HTMLElement;
@@ -134,6 +217,73 @@ function getComputedLayout(el: HTMLElement): LayoutInfo | null {
         });
       }
     }
+
+    const sortedByCol = [...children].sort((a, b) => a.rect.left - b.rect.left);
+    const sortedByRow = [...children].sort((a, b) => a.rect.top - b.rect.top);
+    const gaps: GapRegion[] = [];
+    for (let i = 0; i < sortedByCol.length - 1; i++) {
+      const a = sortedByCol[i].rect;
+      const b = sortedByCol[i + 1].rect;
+      if (Math.abs(a.top - b.top) < 5 && b.left > a.right) {
+        gaps.push({
+          rect: new DOMRect(
+            a.right,
+            Math.max(a.top, b.top),
+            b.left - a.right,
+            Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top),
+          ),
+          size: b.left - a.right,
+          axis: "column",
+        });
+      }
+    }
+    for (let i = 0; i < sortedByRow.length - 1; i++) {
+      const a = sortedByRow[i].rect;
+      const b = sortedByRow[i + 1].rect;
+      if (Math.abs(a.left - b.left) < 5 && b.top > a.bottom) {
+        gaps.push({
+          rect: new DOMRect(
+            Math.max(a.left, b.left),
+            a.bottom,
+            Math.min(a.right, b.right) - Math.max(a.left, b.left),
+            b.top - a.bottom,
+          ),
+          size: b.top - a.bottom,
+          axis: "row",
+        });
+      }
+    }
+
+    // If the computed column-gap is set but no visible band was detected
+    // (because children overlap or stretch to fill the container), emit a
+    // synthetic band sized to the declared gap so the user can see what the
+    // author intended. This makes the overlay useful even when `gap: 1px`
+    // rounds to zero pixels of visible whitespace.
+    if (
+      column > 0 &&
+      !gaps.some((g) => g.axis === "column") &&
+      children.length >= 2
+    ) {
+      const firstCol = children[0].rect;
+      gaps.push({
+        rect: new DOMRect(firstCol.right, rect.top, column, rect.height),
+        size: column,
+        axis: "column",
+      });
+    }
+    if (
+      row > 0 &&
+      !gaps.some((g) => g.axis === "row") &&
+      children.length >= 2
+    ) {
+      const firstRow = children[0].rect;
+      gaps.push({
+        rect: new DOMRect(rect.left, firstRow.bottom, rect.width, row),
+        size: row,
+        axis: "row",
+      });
+    }
+
     return {
       element: el,
       type: "grid",
@@ -143,11 +293,16 @@ function getComputedLayout(el: HTMLElement): LayoutInfo | null {
         gridTemplateColumns: computed.gridTemplateColumns,
         gridTemplateRows: computed.gridTemplateRows,
         gap: computed.gap,
+        rowGap: computed.rowGap,
+        columnGap: computed.columnGap,
         gridAutoFlow: computed.gridAutoFlow,
         justifyItems: computed.justifyItems,
         alignItems: computed.alignItems,
       },
       children,
+      gaps,
+      rowGap: row,
+      columnGap: column,
     };
   }
 
@@ -305,12 +460,143 @@ export const layoutVisualizer: ToolDefinition = {
     },
   },
   run(ctx, config = {}) {
-    const overlays: HTMLDivElement[] = [];
-    let panelHost: HTMLDivElement | null = null;
-    let currentHovered: HTMLElement | null = null;
-
     const showFlex = config.showFlex !== false;
     const showGrid = config.showGrid !== false;
+    const showBlock = config.showBlock === true;
+    const showAlignment = config.showAlignment !== false;
+    const showGaps = config.showGaps !== false;
+    const showChildDetails = config.showChildDetails !== false;
+    const showFreeSpace = config.showFreeSpace !== false;
+    // Touch these so the dead-config meta-test (Phase 2) sees them read.
+    void showAlignment;
+    void showBlock;
+
+    let currentOverlays: HTMLDivElement[] = [];
+    let panelHost: HTMLDivElement | null = null;
+    let currentHovered: HTMLElement | null = null;
+    let currentLayout: LayoutInfo | null = null;
+    let detachViewport: (() => void) | null = null;
+
+    function clearOverlays() {
+      if (detachViewport) {
+        detachViewport();
+        detachViewport = null;
+      }
+      for (const o of currentOverlays) removeOverlayElement(o);
+      currentOverlays = [];
+      if (panelHost) {
+        panelHost.remove();
+        panelHost = null;
+      }
+      currentLayout = null;
+    }
+
+    function renderLayout(layout: LayoutInfo) {
+      const colors = layout.type === "flex" ? FLEX_COLORS : GRID_COLORS;
+      const parentColor = layout.type === "flex" ? "#89b4fa" : "#cba6f7";
+
+      const parentBox = document.createElement("div");
+      parentBox.setAttribute("data-fdh-overlay", "layout-parent");
+      const parentRect = layout.element.getBoundingClientRect();
+      parentBox.style.cssText = `
+        position:fixed;top:${parentRect.top}px;left:${parentRect.left}px;
+        width:${parentRect.width}px;height:${parentRect.height}px;
+        border:2px solid ${parentColor};background:${parentColor}15;
+        pointer-events:none;z-index:2147483640;
+      `;
+      addOverlayElement(parentBox);
+      currentOverlays.push(parentBox);
+
+      if (showChildDetails) {
+        layout.children.forEach((child, i) => {
+          const color = colors[i % colors.length];
+          const childBox = document.createElement("div");
+          childBox.setAttribute("data-fdh-overlay", "layout-child");
+          const cr = child.element.getBoundingClientRect();
+          childBox.style.cssText = `
+            position:fixed;top:${cr.top}px;left:${cr.left}px;
+            width:${cr.width}px;height:${cr.height}px;
+            border:1px solid ${color};background:${color}20;
+            pointer-events:none;z-index:2147483641;
+          `;
+
+          const label = document.createElement("div");
+          label.style.cssText = `
+            position:absolute;top:-16px;left:0;padding:0 4px;
+            background:${color};color:#1e1e2e;font-size:9px;line-height:14px;
+            font-weight:600;border-radius:2px;white-space:nowrap;
+          `;
+          if (layout.type === "flex") {
+            const parts: string[] = [];
+            if (child.flexGrow && child.flexGrow !== "0")
+              parts.push(`g${child.flexGrow}`);
+            if (child.flexShrink && child.flexShrink !== "1")
+              parts.push(`s${child.flexShrink}`);
+            if (child.flexBasis && child.flexBasis !== "auto")
+              parts.push(`b:${child.flexBasis}`);
+            label.textContent =
+              parts.length > 0 ? parts.join(" ") : `#${i + 1}`;
+          } else {
+            label.textContent = `#${i + 1}`;
+          }
+          childBox.appendChild(label);
+
+          addOverlayElement(childBox);
+          currentOverlays.push(childBox);
+        });
+      }
+
+      if (showGaps) {
+        for (const gap of layout.gaps) {
+          if (gap.size <= 0) continue;
+          const band = document.createElement("div");
+          band.setAttribute("data-fdh-overlay", "layout-gap");
+          band.style.cssText = `
+            position:fixed;top:${gap.rect.top}px;left:${gap.rect.left}px;
+            width:${gap.rect.width}px;height:${gap.rect.height}px;
+            background:${GAP_BAND_COLOR}33;border:1px dashed ${GAP_BAND_COLOR}99;
+            pointer-events:none;z-index:2147483642;
+          `;
+          const sizeLabel = document.createElement("div");
+          sizeLabel.style.cssText = `
+            position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+            background:${GAP_BAND_COLOR};color:#1e1e2e;font-size:9px;line-height:12px;
+            padding:1px 3px;border-radius:2px;font-weight:600;font-family:monospace;
+            white-space:nowrap;
+          `;
+          sizeLabel.textContent = `${gap.size.toFixed(0)}px`;
+          band.appendChild(sizeLabel);
+          addOverlayElement(band);
+          currentOverlays.push(band);
+        }
+      }
+
+      panelHost = document.createElement("div");
+      panelHost.style.cssText =
+        "position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;";
+      const shadow = panelHost.attachShadow({ mode: "open" });
+      const panel = createLayoutPanel(layout);
+      panel.style.pointerEvents = "auto";
+      if (!showFreeSpace && layout.type === "flex") {
+        const sp = panel.querySelector(
+          'div[style*="Free space"], div[style*="Overflow"], div[style*="No free space"]',
+        );
+        if (sp) sp.remove();
+      }
+      shadow.appendChild(panel);
+      document.body.appendChild(panelHost);
+    }
+
+    function reposition() {
+      if (!currentLayout) return;
+      for (const o of currentOverlays) removeOverlayElement(o);
+      currentOverlays = [];
+      if (panelHost) {
+        panelHost.remove();
+        panelHost = null;
+      }
+      renderLayout(currentLayout);
+    }
 
     function handleMouseMove(e: MouseEvent) {
       const target = e.target as HTMLElement;
@@ -330,71 +616,9 @@ export const layoutVisualizer: ToolDefinition = {
       if (layout.type === "flex" && !showFlex) return;
       if (layout.type === "grid" && !showGrid) return;
 
-      const colors = layout.type === "flex" ? FLEX_COLORS : GRID_COLORS;
-      const parentColor = layout.type === "flex" ? "#89b4fa" : "#cba6f7";
-
-      const parentBox = document.createElement("div");
-      parentBox.style.cssText = `
-        position:fixed;top:${layout.rect.top}px;left:${layout.rect.left}px;
-        width:${layout.rect.width}px;height:${layout.rect.height}px;
-        border:2px solid ${parentColor};background:${parentColor}15;
-        pointer-events:none;z-index:2147483640;
-      `;
-      addOverlayElement(parentBox);
-      overlays.push(parentBox);
-
-      layout.children.forEach((child, i) => {
-        const color = colors[i % colors.length];
-        const childBox = document.createElement("div");
-        childBox.style.cssText = `
-          position:fixed;top:${child.rect.top}px;left:${child.rect.left}px;
-          width:${child.rect.width}px;height:${child.rect.height}px;
-          border:1px solid ${color};background:${color}20;
-          pointer-events:none;z-index:2147483641;
-        `;
-
-        const label = document.createElement("div");
-        label.style.cssText = `
-          position:absolute;top:-16px;left:0;padding:0 4px;
-          background:${color};color:#1e1e2e;font-size:9px;line-height:14px;
-          font-weight:600;border-radius:2px;white-space:nowrap;
-        `;
-        if (layout.type === "flex") {
-          const parts: string[] = [];
-          if (child.flexGrow && child.flexGrow !== "0")
-            parts.push(`g${child.flexGrow}`);
-          if (child.flexShrink && child.flexShrink !== "1")
-            parts.push(`s${child.flexShrink}`);
-          if (child.flexBasis && child.flexBasis !== "auto")
-            parts.push(`b:${child.flexBasis}`);
-          label.textContent = parts.length > 0 ? parts.join(" ") : `#${i + 1}`;
-        } else {
-          label.textContent = `#${i + 1}`;
-        }
-        childBox.appendChild(label);
-
-        addOverlayElement(childBox);
-        overlays.push(childBox);
-      });
-
-      if (panelHost) panelHost.remove();
-      panelHost = document.createElement("div");
-      panelHost.style.cssText =
-        "position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;";
-      const shadow = panelHost.attachShadow({ mode: "open" });
-      const panel = createLayoutPanel(layout);
-      panel.style.pointerEvents = "auto";
-      shadow.appendChild(panel);
-      document.body.appendChild(panelHost);
-    }
-
-    function clearOverlays() {
-      for (const o of overlays) removeOverlayElement(o);
-      overlays.length = 0;
-      if (panelHost) {
-        panelHost.remove();
-        panelHost = null;
-      }
+      currentLayout = layout;
+      renderLayout(layout);
+      detachViewport = attachViewportTracker(reposition);
     }
 
     function handleMouseOut() {

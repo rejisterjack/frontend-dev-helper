@@ -1,4 +1,4 @@
-import type { LLMMessage } from '../types';
+import type { LLMMessage } from "../types";
 
 export interface LLMProviderConfig {
   apiKey: string;
@@ -16,12 +16,18 @@ export interface StreamChunk {
 
 export interface LLMProvider {
   readonly name: string;
-  sendMessage(config: LLMProviderConfig, messages: LLMMessage[]): Promise<string | null>;
+  sendMessage(
+    config: LLMProviderConfig,
+    messages: LLMMessage[],
+    signal?: AbortSignal,
+  ): Promise<string | null>;
   sendStreamingMessage(
     config: LLMProviderConfig,
     messages: LLMMessage[],
     onChunk: (chunk: StreamChunk) => void,
     signal?: AbortSignal,
   ): Promise<void>;
-  testConnection(config: LLMProviderConfig): Promise<{ success: boolean; message: string }>;
+  testConnection(
+    config: LLMProviderConfig,
+  ): Promise<{ success: boolean; message: string }>;
 }

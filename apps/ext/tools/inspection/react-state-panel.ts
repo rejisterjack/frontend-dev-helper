@@ -1,14 +1,26 @@
-import type { ToolDefinition } from '../types';
-import { ToolPanel, createBadge, createTabBar, createScrollList } from '@/content/tool-panel';
-import { getOverlayContainer } from '@/content/overlay-manager';
-import { getBridge } from '@/lib/vscode-bridge';
+import type { ToolDefinition } from "../types";
+import {
+  ToolPanel,
+  createBadge,
+  createTabBar,
+  createScrollList,
+} from "@/content/tool-panel";
+import { getOverlayContainer } from "@/content/overlay-manager";
+import { getBridge } from "@/lib/vscode-bridge";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface ReactHook {
-  type: 'useState' | 'useEffect' | 'useContext' | 'useMemo' | 'useCallback' | 'useRef' | 'other';
+  type:
+    | "useState"
+    | "useEffect"
+    | "useContext"
+    | "useMemo"
+    | "useCallback"
+    | "useRef"
+    | "other";
   value: unknown;
   name?: string;
 }
@@ -26,7 +38,7 @@ interface ReactFiber {
   memoizedState?: {
     queue?: { name?: string; lastRenderedState?: unknown };
     memoizedState?: unknown;
-    next?: ReactFiber['memoizedState'] | null;
+    next?: ReactFiber["memoizedState"] | null;
     // Effect-specific fields
     tag?: number;
     create?: () => unknown;
@@ -50,7 +62,8 @@ const MAX_HOOKS = 50;
 
 function getFiberFromElement(element: HTMLElement): ReactFiber | null {
   const key = Object.keys(element).find(
-    (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'),
+    (k) =>
+      k.startsWith("__reactFiber$") || k.startsWith("__reactInternalInstance$"),
   );
   if (!key) return null;
   return (element as unknown as Record<string, ReactFiber>)[key] ?? null;
@@ -59,7 +72,7 @@ function getFiberFromElement(element: HTMLElement): ReactFiber | null {
 function findNearestComponentFiber(fiber: ReactFiber): ReactFiber | null {
   let current: ReactFiber | undefined = fiber;
   while (current) {
-    const typeName = typeof current.type === 'function' ? current.type : null;
+    const typeName = typeof current.type === "function" ? current.type : null;
     if (typeName) return current;
     current = current._debugOwner || current.return;
   }
@@ -68,27 +81,30 @@ function findNearestComponentFiber(fiber: ReactFiber): ReactFiber | null {
 
 function getComponentName(fiber: ReactFiber): string {
   const type = fiber.type;
-  if (typeof type === 'function') {
+  if (typeof type === "function") {
     const fn = type as Function & { displayName?: string; name?: string };
-    return fn.displayName || fn.name || 'Anonymous';
+    return fn.displayName || fn.name || "Anonymous";
   }
-  if (typeof type === 'object' && type !== null) {
+  if (typeof type === "object" && type !== null) {
     const t = type as { displayName?: string; name?: string };
-    return t.displayName || t.name || 'Anonymous';
+    return t.displayName || t.name || "Anonymous";
   }
-  return 'Unknown';
+  return "Unknown";
 }
 
 function classifyHook(
-  stateNode: NonNullable<ReactFiber['memoizedState']>,
+  stateNode: NonNullable<ReactFiber["memoizedState"]>,
   index: number,
 ): ReactHook {
   const tag = stateNode.tag;
 
   // useState (tag 1 or with queue.lastRenderedState)
-  if (tag === 1 || (stateNode.queue && 'lastRenderedState' in (stateNode.queue as object))) {
+  if (
+    tag === 1 ||
+    (stateNode.queue && "lastRenderedState" in (stateNode.queue as object))
+  ) {
     return {
-      type: 'useState',
+      type: "useState",
       value: stateNode.memoizedState,
       name: stateNode.queue?.name,
     };
@@ -97,17 +113,21 @@ function classifyHook(
   // useEffect / useLayoutEffect
   if (tag === HOOK_TAG_EFFECT || tag === HOOK_TAG_LAYOUT_EFFECT) {
     return {
-      type: 'useEffect',
-      value: stateNode.create ? '[effect fn]' : undefined,
+      type: "useEffect",
+      value: stateNode.create ? "[effect fn]" : undefined,
     };
   }
 
   // useRef
-  if (tag === HOOK_TAG_REF && stateNode.memoizedState && typeof stateNode.memoizedState === 'object') {
+  if (
+    tag === HOOK_TAG_REF &&
+    stateNode.memoizedState &&
+    typeof stateNode.memoizedState === "object"
+  ) {
     const val = stateNode.memoizedState as { current?: unknown };
-    if ('current' in val) {
+    if ("current" in val) {
       return {
-        type: 'useRef',
+        type: "useRef",
         value: val.current,
       };
     }
@@ -116,14 +136,14 @@ function classifyHook(
   // useMemo / useCallback (tag 8, with an array-like deps)
   if (tag === 8) {
     // Check if the memoized value is a function — likely useCallback
-    if (typeof stateNode.memoizedState === 'function') {
+    if (typeof stateNode.memoizedState === "function") {
       return {
-        type: 'useCallback',
-        value: '[callback fn]',
+        type: "useCallback",
+        value: "[callback fn]",
       };
     }
     return {
-      type: 'useMemo',
+      type: "useMemo",
       value: stateNode.memoizedState,
     };
   }
@@ -131,13 +151,13 @@ function classifyHook(
   // useContext (tag 9 or 10 typically)
   if (tag === 9 || tag === 10) {
     return {
-      type: 'useContext',
+      type: "useContext",
       value: stateNode.memoizedState,
     };
   }
 
   return {
-    type: 'other',
+    type: "other",
     value: stateNode.memoizedState,
     name: tag !== undefined ? `hook(tag=${tag})` : `hook[${index}]`,
   };
@@ -167,7 +187,7 @@ function extractReactState(element: HTMLElement): ReactComponentState | null {
   const name = getComponentName(componentFiber);
   const props = componentFiber.memoizedProps
     ? Object.entries(componentFiber.memoizedProps)
-        .filter(([k]) => !k.startsWith('__') && k !== 'children' && k !== 'key')
+        .filter(([k]) => !k.startsWith("__") && k !== "children" && k !== "key")
         .reduce<Record<string, unknown>>((acc, [k, v]) => {
           acc[k] = v;
           return acc;
@@ -183,16 +203,16 @@ function extractReactState(element: HTMLElement): ReactComponentState | null {
 // Value rendering
 // ---------------------------------------------------------------------------
 
-function formatValue(value: unknown, maxLength = 60): string {
-  if (value === undefined) return 'undefined';
-  if (value === null) return 'null';
-  if (typeof value === 'function') return '[Function]';
-  if (typeof value === 'symbol') return value.toString();
+export function formatValue(value: unknown, maxLength = 60): string {
+  if (value === undefined) return "undefined";
+  if (value === null) return "null";
+  if (typeof value === "function") return "[Function]";
+  if (typeof value === "symbol") return value.toString();
 
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     try {
       const str = JSON.stringify(value, null, 0);
-      if (str && str.length > maxLength) return str.slice(0, maxLength) + '...';
+      if (str && str.length > maxLength) return str.slice(0, maxLength) + "...";
       return str || String(value);
     } catch {
       return String(value);
@@ -200,17 +220,17 @@ function formatValue(value: unknown, maxLength = 60): string {
   }
 
   const str = String(value);
-  return str.length > maxLength ? str.slice(0, maxLength) + '...' : str;
+  return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
 }
 
-function getTypeColor(value: unknown): string {
-  if (value === undefined || value === null) return '#64748b';
-  if (typeof value === 'string') return '#a5d6ff';
-  if (typeof value === 'number') return '#79c0ff';
-  if (typeof value === 'boolean') return '#ff7b72';
-  if (typeof value === 'function') return '#d2a8ff';
-  if (typeof value === 'object') return '#7ee787';
-  return '#e2e8f0';
+export function getTypeColor(value: unknown): string {
+  if (value === undefined || value === null) return "#64748b";
+  if (typeof value === "string") return "#a5d6ff";
+  if (typeof value === "number") return "#79c0ff";
+  if (typeof value === "boolean") return "#ff7b72";
+  if (typeof value === "function") return "#d2a8ff";
+  if (typeof value === "object") return "#7ee787";
+  return "#e2e8f0";
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +242,7 @@ function createSectionHeader(
   count: number,
   color: string,
 ): { header: HTMLDivElement; content: HTMLDivElement } {
-  const header = document.createElement('div');
+  const header = document.createElement("div");
   header.style.cssText = `
     display: flex;
     align-items: center;
@@ -235,16 +255,16 @@ function createSectionHeader(
     user-select: none;
   `;
 
-  const chevron = document.createElement('span');
-  chevron.style.cssText = 'font-size:10px;transition:transform 0.2s;';
-  chevron.textContent = '▼';
+  const chevron = document.createElement("span");
+  chevron.style.cssText = "font-size:10px;transition:transform 0.2s;";
+  chevron.textContent = "▼";
   header.appendChild(chevron);
 
-  const label = document.createElement('span');
+  const label = document.createElement("span");
   label.textContent = title;
   header.appendChild(label);
 
-  const badge = document.createElement('span');
+  const badge = document.createElement("span");
   badge.style.cssText = `
     font-weight: 400;
     color: #64748b;
@@ -253,21 +273,26 @@ function createSectionHeader(
   badge.textContent = `(${count})`;
   header.appendChild(badge);
 
-  const content = document.createElement('div');
-  content.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-bottom:8px;';
+  const content = document.createElement("div");
+  content.style.cssText =
+    "display:flex;flex-direction:column;gap:2px;margin-bottom:8px;";
 
   let expanded = true;
-  header.addEventListener('click', () => {
+  header.addEventListener("click", () => {
     expanded = !expanded;
-    content.style.display = expanded ? 'flex' : 'none';
-    chevron.style.transform = expanded ? '' : 'rotate(-90deg)';
+    content.style.display = expanded ? "flex" : "none";
+    chevron.style.transform = expanded ? "" : "rotate(-90deg)";
   });
 
   return { header, content };
 }
 
-function createKeyValueRow(key: string, value: unknown, highlight = false): HTMLDivElement {
-  const row = document.createElement('div');
+function createKeyValueRow(
+  key: string,
+  value: unknown,
+  highlight = false,
+): HTMLDivElement {
+  const row = document.createElement("div");
   row.style.cssText = `
     display: flex;
     justify-content: space-between;
@@ -276,15 +301,15 @@ function createKeyValueRow(key: string, value: unknown, highlight = false): HTML
     border-radius: 4px;
     background: #1e293b;
     gap: 8px;
-    ${highlight ? 'border-left: 3px solid #f59e0b;' : ''}
+    ${highlight ? "border-left: 3px solid #f59e0b;" : ""}
   `;
 
-  const keyEl = document.createElement('span');
+  const keyEl = document.createElement("span");
   keyEl.style.cssText = `color:#94a3b8;font-size:11px;white-space:nowrap;flex-shrink:0;`;
   keyEl.textContent = key;
   row.appendChild(keyEl);
 
-  const valueEl = document.createElement('span');
+  const valueEl = document.createElement("span");
   valueEl.style.cssText = `
     color:${getTypeColor(value)};
     font-family:'SF Mono',Menlo,monospace;
@@ -315,7 +340,7 @@ function buildReactPanelContent(
   const showContext = (config.showContext as boolean) ?? true;
 
   // Component name header
-  const nameRow = document.createElement('div');
+  const nameRow = document.createElement("div");
   nameRow.style.cssText = `
     display: flex;
     align-items: center;
@@ -324,25 +349,25 @@ function buildReactPanelContent(
     padding-bottom: 8px;
     border-bottom: 1px solid #334155;
   `;
-  const nameEl = document.createElement('span');
+  const nameEl = document.createElement("span");
   nameEl.style.cssText = `
     font-size: 14px;
     font-weight: 600;
     color: #f5c2e7;
     font-family: 'SF Mono', Menlo, monospace;
   `;
-  nameEl.textContent = '<' + compState.name + ' />';
+  nameEl.textContent = "<" + compState.name + " />";
   nameRow.appendChild(nameEl);
-  nameRow.appendChild(createBadge('React', '#61dafb'));
+  nameRow.appendChild(createBadge("React", "#61dafb"));
 
   if (debugSource) {
-    const srcBtn = document.createElement('button');
-    srcBtn.textContent = 'Open source';
+    const srcBtn = document.createElement("button");
+    srcBtn.textContent = "Open source";
     srcBtn.style.cssText = `
       margin-left:auto;background:transparent;color:#6366f1;border:1px solid #6366f1;
       border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit;
     `;
-    srcBtn.addEventListener('click', () => {
+    srcBtn.addEventListener("click", () => {
       const bridge = getBridge();
       if (bridge.connected) {
         bridge.jumpToSource(debugSource.fileName, debugSource.lineNumber, 0);
@@ -356,51 +381,62 @@ function buildReactPanelContent(
   // Props section
   if (showProps && Object.keys(compState.props).length > 0) {
     const props = compState.props;
-    const { header, content } = createSectionHeader('Props', Object.keys(props).length, '#a5d6ff');
+    const { header, content } = createSectionHeader(
+      "Props",
+      Object.keys(props).length,
+      "#a5d6ff",
+    );
     container.appendChild(header);
 
     for (const [key, value] of Object.entries(props)) {
-      const prevVal = previousValues.get('prop:' + key);
+      const prevVal = previousValues.get("prop:" + key);
       const changed = prevVal !== undefined && prevVal !== value;
       content.appendChild(createKeyValueRow(key, value, changed));
-      previousValues.set('prop:' + key, value);
+      previousValues.set("prop:" + key, value);
     }
     container.appendChild(content);
   }
 
   // Group hooks by type
-  const stateHooks = compState.hooks.filter((h) => h.type === 'useState');
-  const effectHooks = compState.hooks.filter((h) => h.type === 'useEffect');
-  const contextHooks = compState.hooks.filter((h) => h.type === 'useContext');
+  const stateHooks = compState.hooks.filter((h) => h.type === "useState");
+  const effectHooks = compState.hooks.filter((h) => h.type === "useEffect");
+  const contextHooks = compState.hooks.filter((h) => h.type === "useContext");
   const memoHooks = compState.hooks.filter(
-    (h) => h.type === 'useMemo' || h.type === 'useCallback' || h.type === 'useRef',
+    (h) =>
+      h.type === "useMemo" || h.type === "useCallback" || h.type === "useRef",
   );
-  const otherHooks = compState.hooks.filter(
-    (h) => h.type === 'other',
-  );
+  const otherHooks = compState.hooks.filter((h) => h.type === "other");
 
   // State section (useState)
   if (showState && stateHooks.length > 0) {
-    const { header, content } = createSectionHeader('State (useState)', stateHooks.length, '#4ade80');
+    const { header, content } = createSectionHeader(
+      "State (useState)",
+      stateHooks.length,
+      "#4ade80",
+    );
     container.appendChild(header);
 
     stateHooks.forEach((hook, i) => {
       const key = hook.name || `state[${i}]`;
-      const prevVal = previousValues.get('state:' + key);
+      const prevVal = previousValues.get("state:" + key);
       const changed = prevVal !== undefined && prevVal !== hook.value;
       content.appendChild(createKeyValueRow(key, hook.value, changed));
-      previousValues.set('state:' + key, hook.value);
+      previousValues.set("state:" + key, hook.value);
     });
     container.appendChild(content);
   }
 
   // Effects section
   if (showEffects && effectHooks.length > 0) {
-    const { header, content } = createSectionHeader('Effects', effectHooks.length, '#f59e0b');
+    const { header, content } = createSectionHeader(
+      "Effects",
+      effectHooks.length,
+      "#f59e0b",
+    );
     container.appendChild(header);
 
     effectHooks.forEach((hook, i) => {
-      const row = document.createElement('div');
+      const row = document.createElement("div");
       row.style.cssText = `
         padding: 4px 8px;
         border-radius: 4px;
@@ -417,22 +453,30 @@ function buildReactPanelContent(
 
   // Context section
   if (showContext && contextHooks.length > 0) {
-    const { header, content } = createSectionHeader('Context', contextHooks.length, '#c084fc');
+    const { header, content } = createSectionHeader(
+      "Context",
+      contextHooks.length,
+      "#c084fc",
+    );
     container.appendChild(header);
 
     contextHooks.forEach((hook, i) => {
       const key = `context[${i}]`;
-      const prevVal = previousValues.get('ctx:' + key);
+      const prevVal = previousValues.get("ctx:" + key);
       const changed = prevVal !== undefined && prevVal !== hook.value;
       content.appendChild(createKeyValueRow(key, hook.value, changed));
-      previousValues.set('ctx:' + key, hook.value);
+      previousValues.set("ctx:" + key, hook.value);
     });
     container.appendChild(content);
   }
 
   // Memoized values
   if (memoHooks.length > 0) {
-    const { header, content } = createSectionHeader('Memoized', memoHooks.length, '#67e8f9');
+    const { header, content } = createSectionHeader(
+      "Memoized",
+      memoHooks.length,
+      "#67e8f9",
+    );
     container.appendChild(header);
 
     memoHooks.forEach((hook, i) => {
@@ -444,11 +488,17 @@ function buildReactPanelContent(
 
   // Other hooks
   if (otherHooks.length > 0) {
-    const { header, content } = createSectionHeader('Other Hooks', otherHooks.length, '#94a3b8');
+    const { header, content } = createSectionHeader(
+      "Other Hooks",
+      otherHooks.length,
+      "#94a3b8",
+    );
     container.appendChild(header);
 
     otherHooks.forEach((hook, i) => {
-      content.appendChild(createKeyValueRow(hook.name || `hook[${i}]`, hook.value));
+      content.appendChild(
+        createKeyValueRow(hook.name || `hook[${i}]`, hook.value),
+      );
     });
     container.appendChild(content);
   }
@@ -463,9 +513,10 @@ function buildReactPanelContent(
     otherHooks.length;
 
   if (totalItems === 0) {
-    const empty = document.createElement('div');
-    empty.style.cssText = 'padding:24px 16px;text-align:center;color:#64748b;font-size:12px;';
-    empty.textContent = 'No state or props detected for this component.';
+    const empty = document.createElement("div");
+    empty.style.cssText =
+      "padding:24px 16px;text-align:center;color:#64748b;font-size:12px;";
+    empty.textContent = "No state or props detected for this component.";
     container.appendChild(empty);
   }
 }
@@ -475,17 +526,17 @@ function buildReactPanelContent(
 // ---------------------------------------------------------------------------
 
 export const reactStatePanel: ToolDefinition = {
-  id: 'react-state-panel',
-  name: 'React State Panel',
-  description: 'Inspect React component hooks, props, and state in real-time',
-  category: 'inspection',
-  icon: 'Atom',
+  id: "react-state-panel",
+  name: "React State Panel",
+  description: "Inspect React component hooks, props, and state in real-time",
+  category: "inspection",
+  icon: "Atom",
   configSchema: {
-    showProps: { type: 'boolean', label: 'Show Props', default: true },
-    showState: { type: 'boolean', label: 'Show State', default: true },
-    showEffects: { type: 'boolean', label: 'Show Effects', default: false },
-    showContext: { type: 'boolean', label: 'Show Context', default: true },
-    liveUpdate: { type: 'boolean', label: 'Live Updates', default: true },
+    showProps: { type: "boolean", label: "Show Props", default: true },
+    showState: { type: "boolean", label: "Show State", default: true },
+    showEffects: { type: "boolean", label: "Show Effects", default: false },
+    showContext: { type: "boolean", label: "Show Context", default: true },
+    liveUpdate: { type: "boolean", label: "Live Updates", default: true },
   },
 
   run(ctx, config) {
@@ -500,14 +551,14 @@ export const reactStatePanel: ToolDefinition = {
 
     // Panel
     const panel = new ToolPanel({
-      title: 'React State Panel',
+      title: "React State Panel",
       width: 440,
       onClose: () => cleanup(),
     });
     panel.mount(shadow);
 
     // Initial content - prompt user to hover
-    const promptEl = document.createElement('div');
+    const promptEl = document.createElement("div");
     promptEl.style.cssText = `
       padding:32px 16px;
       text-align:center;
@@ -515,34 +566,37 @@ export const reactStatePanel: ToolDefinition = {
       font-size:13px;
       line-height:1.6;
     `;
-    const icon = document.createElement('div');
-    icon.style.cssText = 'font-size:28px;margin-bottom:12px;';
-    icon.textContent = '⚛'; // Atom symbol
+    const icon = document.createElement("div");
+    icon.style.cssText = "font-size:28px;margin-bottom:12px;";
+    icon.textContent = "⚛"; // Atom symbol
     promptEl.appendChild(icon);
 
-    const text = document.createElement('div');
-    text.textContent = 'Hover over a React component to inspect its state, props, and hooks.';
+    const text = document.createElement("div");
+    text.textContent =
+      "Hover over a React component to inspect its state, props, and hooks.";
     promptEl.appendChild(text);
 
-    const hint = document.createElement('div');
-    hint.style.cssText = 'font-size:11px;margin-top:8px;color:#64748b;';
-    hint.textContent = 'Click on an element to lock selection.';
+    const hint = document.createElement("div");
+    hint.style.cssText = "font-size:11px;margin-top:8px;color:#64748b;";
+    hint.textContent = "Click on an element to lock selection.";
     promptEl.appendChild(hint);
 
     panel.appendContent(promptEl);
 
     // Footer showing status
-    const footer = document.createElement('div');
+    const footer = document.createElement("div");
     footer.style.cssText = `
       display:flex;align-items:center;gap:6px;font-size:11px;color:#64748b;
     `;
-    const statusDot = document.createElement('span');
+    const statusDot = document.createElement("span");
     statusDot.style.cssText = `
       width:8px;height:8px;border-radius:50%;background:#3b82f6;
     `;
     footer.appendChild(statusDot);
-    const statusText = document.createElement('span');
-    statusText.textContent = liveUpdate ? 'Live polling: ON (500ms)' : 'Live polling: OFF';
+    const statusText = document.createElement("span");
+    statusText.textContent = liveUpdate
+      ? "Live polling: ON (500ms)"
+      : "Live polling: OFF";
     footer.appendChild(statusText);
     panel.getContainer().parentElement?.appendChild(footer);
 
@@ -562,21 +616,28 @@ export const reactStatePanel: ToolDefinition = {
         }
         current = current.return;
       }
-      buildReactPanelContent(compState, panel.getContainer(), config ?? {}, previousValues, debugSource);
+      buildReactPanelContent(
+        compState,
+        panel.getContainer(),
+        config ?? {},
+        previousValues,
+        debugSource,
+      );
     }
 
     function showNoReact(): void {
       panel.clearContent();
-      const el = document.createElement('div');
-      el.style.cssText = 'padding:24px 16px;text-align:center;color:#f38ba8;font-size:12px;';
-      el.textContent = 'No React component found on this element.';
+      const el = document.createElement("div");
+      el.style.cssText =
+        "padding:24px 16px;text-align:center;color:#f38ba8;font-size:12px;";
+      el.textContent = "No React component found on this element.";
       panel.appendContent(el);
     }
 
     function highlightElement(target: HTMLElement): void {
       removeHighlight();
       const rect = target.getBoundingClientRect();
-      highlightEl = document.createElement('div');
+      highlightEl = document.createElement("div");
       highlightEl.style.cssText = `
         position: fixed;
         top: ${rect.top}px;
@@ -603,10 +664,10 @@ export const reactStatePanel: ToolDefinition = {
     function repositionHighlight(): void {
       if (!highlightEl || !currentElement) return;
       const rect = currentElement.getBoundingClientRect();
-      highlightEl.style.top = rect.top + 'px';
-      highlightEl.style.left = rect.left + 'px';
-      highlightEl.style.width = rect.width + 'px';
-      highlightEl.style.height = rect.height + 'px';
+      highlightEl.style.top = rect.top + "px";
+      highlightEl.style.left = rect.left + "px";
+      highlightEl.style.width = rect.width + "px";
+      highlightEl.style.height = rect.height + "px";
     }
 
     function pollState(): void {
@@ -621,7 +682,12 @@ export const reactStatePanel: ToolDefinition = {
     function handleMouseMove(e: MouseEvent): void {
       if (locked || disposed) return;
       const target = e.target as HTMLElement;
-      if (!target || target === document.documentElement || target === document.body) return;
+      if (
+        !target ||
+        target === document.documentElement ||
+        target === document.body
+      )
+        return;
       // Avoid highlighting panel elements
       if (panel.getPanelElement().contains(target)) return;
 
@@ -648,15 +714,17 @@ export const reactStatePanel: ToolDefinition = {
       if (locked && currentElement === target) {
         // Unlock
         locked = false;
-        statusText.textContent = liveUpdate ? 'Live polling: ON (500ms)' : 'Live polling: OFF';
-        statusDot.style.background = '#3b82f6';
+        statusText.textContent = liveUpdate
+          ? "Live polling: ON (500ms)"
+          : "Live polling: OFF";
+        statusDot.style.background = "#3b82f6";
         return;
       }
 
       locked = true;
       currentElement = target;
-      statusText.textContent = 'Locked — click same element to unlock';
-      statusDot.style.background = '#f59e0b';
+      statusText.textContent = "Locked — click same element to unlock";
+      statusDot.style.background = "#f59e0b";
       highlightElement(target);
 
       const compState = extractReactState(target);
@@ -672,11 +740,13 @@ export const reactStatePanel: ToolDefinition = {
     }
 
     function handleKeydown(e: KeyboardEvent): void {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (locked) {
           locked = false;
-          statusText.textContent = liveUpdate ? 'Live polling: ON (500ms)' : 'Live polling: OFF';
-          statusDot.style.background = '#3b82f6';
+          statusText.textContent = liveUpdate
+            ? "Live polling: ON (500ms)"
+            : "Live polling: OFF";
+          statusDot.style.background = "#3b82f6";
         } else {
           cleanup();
         }
@@ -685,7 +755,6 @@ export const reactStatePanel: ToolDefinition = {
 
     // Start live polling if enabled
     if (liveUpdate) {
-      // Use IntersectionObserver to only poll when panel is visible
       observer = new IntersectionObserver(
         (entries) => {
           const visible = entries[0]?.isIntersecting ?? false;
@@ -699,17 +768,14 @@ export const reactStatePanel: ToolDefinition = {
         { threshold: 0.1 },
       );
       observer.observe(panel.getPanelElement());
-
-      // Also poll when we have a locked element
-      pollInterval = setInterval(pollState, 500);
     }
 
     // Attach events
-    document.addEventListener('mousemove', handleMouseMove, true);
-    document.addEventListener('click', handleClick, true);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
-    document.addEventListener('keydown', handleKeydown, true);
+    document.addEventListener("mousemove", handleMouseMove, true);
+    document.addEventListener("click", handleClick, true);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    document.addEventListener("keydown", handleKeydown, true);
 
     function cleanup(): void {
       if (disposed) return;
@@ -717,11 +783,11 @@ export const reactStatePanel: ToolDefinition = {
 
       if (pollInterval !== null) clearInterval(pollInterval);
       if (observer) observer.disconnect();
-      document.removeEventListener('mousemove', handleMouseMove, true);
-      document.removeEventListener('click', handleClick, true);
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-      document.removeEventListener('keydown', handleKeydown, true);
+      document.removeEventListener("mousemove", handleMouseMove, true);
+      document.removeEventListener("click", handleClick, true);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      document.removeEventListener("keydown", handleKeydown, true);
 
       removeHighlight();
       panel.destroy();

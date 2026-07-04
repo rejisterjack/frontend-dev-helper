@@ -1,4 +1,5 @@
 import type { ToolDefinition } from "../types";
+import { computeSpecificity, specificityToString } from "@/lib/css-analysis";
 
 type Severity = "error" | "warning" | "info";
 
@@ -11,9 +12,18 @@ interface ScanResult {
   value?: string;
   fix?: string;
   source?: string;
+  specificity?: string;
 }
 
-function scanStylesheets(options?: { scanUnused?: boolean }): ScanResult[] {
+interface ScanOptions {
+  scanUnused?: boolean;
+  scanDuplicates?: boolean;
+  scanSpecificity?: boolean;
+  scanImportants?: boolean;
+  maxResults?: number;
+}
+
+function scanStylesheets(options: ScanOptions = {}): ScanResult[] {
   const issues: ScanResult[] = [];
 
   for (let i = 0; i < document.styleSheets.length; i++) {
@@ -38,9 +48,9 @@ function scanStylesheets(options?: { scanUnused?: boolean }): ScanResult[] {
     }
 
     try {
-      scanRules(sheet.cssRules, issues, source);
-      if (options?.scanUnused !== false) {
-        scanUnusedRules(sheet.cssRules, issues, source);
+      scanRules(sheet.cssRules, issues, source, options);
+      if (options.scanUnused !== false) {
+        scanUnusedRules(sheet.cssRules, issues, source, options);
       }
     } catch {
       issues.push({
@@ -53,7 +63,15 @@ function scanStylesheets(options?: { scanUnused?: boolean }): ScanResult[] {
     }
   }
 
-  scanInlineStyles(issues);
+  scanInlineStyles(issues, options);
+  // Cap final results so huge pages don't overwhelm the panel.
+  const cap = options.maxResults ?? 100;
+  if (issues.length > cap) {
+    // Keep severity-ranked ordering: error > warning > info, then original order.
+    const rank = { error: 0, warning: 1, info: 2 };
+    issues.sort((a, b) => rank[a.severity] - rank[b.severity]);
+    return issues.slice(0, cap);
+  }
   return issues;
 }
 
@@ -61,6 +79,7 @@ function scanUnusedRules(
   rules: CSSRuleList,
   issues: ScanResult[],
   source: string,
+  _options: ScanOptions = {},
 ): void {
   for (let r = 0; r < rules.length; r++) {
     const rule = rules[r];
@@ -89,7 +108,12 @@ function scanUnusedRules(
     for (const sel of selectors) {
       if (shouldSkipUnusedSelector(sel)) continue;
       try {
-        if (document.querySelector(sel) === null) {
+        // Use the full compound selector directly (handles `div.foo`,
+        // `.bar > .baz`, `a[href^="https"]:hover`, etc.) instead of trying
+        // to walk by tag/class parts. Walking up from a found match for any
+        // computed-style extraction is a separate concern downstream.
+        const matches = document.querySelectorAll(sel);
+        if (matches.length === 0) {
           issues.push({
             severity: "info",
             category: "unused-css",
@@ -135,6 +159,7 @@ function scanRules(
   rules: CSSRuleList,
   issues: ScanResult[],
   source: string,
+  options: ScanOptions = {},
 ): void {
   for (let r = 0; r < rules.length; r++) {
     const rule = rules[r];
@@ -144,7 +169,7 @@ function scanRules(
       rule instanceof CSSLayerBlockRule
     ) {
       try {
-        scanRules(rule.cssRules, issues, source);
+        scanRules(rule.cssRules, issues, source, options);
       } catch {
         /* nested cross-origin */
       }
@@ -153,6 +178,19 @@ function scanRules(
     if (!(rule instanceof CSSStyleRule)) continue;
     const selector = rule.selectorText;
 
+    const specificity = options.scanSpecificity
+      ? (() => {
+          try {
+            return computeSpecificity(selector);
+          } catch {
+            return null;
+          }
+        })()
+      : null;
+    const specificityStr = specificity
+      ? specificityToString(specificity)
+      : undefined;
+
     if (rule.style.length === 0) {
       issues.push({
         severity: "info",
@@ -160,6 +198,7 @@ function scanRules(
         message: "Empty rule — has no declarations",
         selector,
         source,
+        specificity: specificityStr,
       });
       continue;
     }
@@ -171,7 +210,34 @@ function scanRules(
         message: "Universal selector used (performance concern)",
         selector,
         source,
+        specificity: specificityStr,
       });
+    }
+
+    // Explicit specificity smell: flag ID-based selectors and very deep
+    // chains. These make future overrides harder and are a common code smell.
+    if (options.scanSpecificity && specificity) {
+      if (specificity.a > 0) {
+        issues.push({
+          severity: "info",
+          category: "specificity-id",
+          message:
+            "ID-based selector raises specificity (" + specificityStr + ")",
+          selector,
+          source,
+          specificity: specificityStr,
+        });
+      } else if (specificity.c >= 4) {
+        issues.push({
+          severity: "info",
+          category: "specificity-deep",
+          message:
+            "Deeply chained selector (" + specificity.c + " classes/tags)",
+          selector,
+          source,
+          specificity: specificityStr,
+        });
+      }
     }
 
     const props = new Map<string, { value: string; important: boolean }>();
@@ -198,6 +264,7 @@ function scanRules(
           value,
           source,
           fix: prop + ": 0;",
+          specificity: specificityStr,
         });
       }
 
@@ -214,13 +281,16 @@ function scanRules(
             value,
             source,
             fix: standardProp + ": " + value + ";",
+            specificity: specificityStr,
           });
         }
       }
 
       if (props.has(prop)) {
         const prev = props.get(prop)!;
-        if (prev.value === value && !prev.important) {
+        if (options.scanDuplicates === false) {
+          // skip
+        } else if (prev.value === value && !prev.important) {
           issues.push({
             severity: "warning",
             category: "duplicate-property",
@@ -229,6 +299,7 @@ function scanRules(
             property: prop,
             value,
             source,
+            specificity: specificityStr,
           });
         } else if (prev.value !== value && !prev.important) {
           issues.push({
@@ -239,25 +310,30 @@ function scanRules(
             property: prop,
             value,
             source,
+            specificity: specificityStr,
           });
         }
       }
       props.set(prop, { value, important });
     }
 
-    if (importantCount > 3) {
+    if (options.scanImportants !== false && importantCount > 3) {
       issues.push({
         severity: "warning",
         category: "important-overuse",
         message: importantCount + " !important declarations in single rule",
         selector,
         source,
+        specificity: specificityStr,
       });
     }
   }
 }
 
-function scanInlineStyles(issues: ScanResult[]): void {
+function scanInlineStyles(
+  issues: ScanResult[],
+  _options: ScanOptions = {},
+): void {
   const styled = document.querySelectorAll("[style]");
   let importantInline = 0;
   for (const el of styled) {
@@ -315,19 +391,31 @@ export const cssScanner: ToolDefinition = {
     maxResults: {
       type: "slider",
       label: "Max Results",
-      default: 50,
+      default: 100,
       min: 10,
-      max: 200,
+      max: 500,
       step: 10,
     },
   },
   run: (ctx, config) => {
     const scanUnused = config?.scanUnused !== false;
-    let results: ScanResult[] = scanStylesheets({ scanUnused });
+    const scanDuplicates = config?.scanDuplicates !== false;
+    const scanSpecificity = config?.scanSpecificity !== false;
+    const scanImportants = config?.scanImportants !== false;
+    const maxResults =
+      typeof config?.maxResults === "number" ? config.maxResults : 100;
+    let results: ScanResult[] = scanStylesheets({
+      scanUnused,
+      scanDuplicates,
+      scanSpecificity,
+      scanImportants,
+      maxResults,
+    });
     let filterSeverity: Severity | "all" = "all";
 
     const panelHost = document.createElement("div");
     panelHost.className = "fdh-css-scan";
+    panelHost.setAttribute("data-fdh-overlay", "css-scanner");
     const shadow = panelHost.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");
@@ -429,7 +517,7 @@ export const cssScanner: ToolDefinition = {
         empty.textContent = "No issues found. Your CSS looks clean!";
         resultsDiv.appendChild(empty);
       } else {
-        for (const r of filtered.slice(0, 100)) {
+        for (const r of filtered.slice(0, maxResults)) {
           const row = document.createElement("div");
           row.className = "row";
 
@@ -477,7 +565,13 @@ export const cssScanner: ToolDefinition = {
         return;
       }
       if (target.dataset.action === "rescan") {
-        results = scanStylesheets({ scanUnused });
+        results = scanStylesheets({
+          scanUnused,
+          scanDuplicates,
+          scanSpecificity,
+          scanImportants,
+          maxResults,
+        });
         buildPanel();
         return;
       }

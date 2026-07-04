@@ -4,6 +4,162 @@ import {
 } from "../../content/overlay-manager";
 import type { ToolDefinition } from "../types";
 
+interface AnalyzerConfig {
+  analyzeStructure: boolean;
+  analyzeSemantics: boolean;
+  analyzePatterns: boolean;
+  detailLevel: "brief" | "medium" | "detailed";
+  includeCode: boolean;
+}
+
+const FENCE_RE = /```(\w+)?\n([\s\S]*?)```/g;
+
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderMarkdownToNode(md: string, target: HTMLElement) {
+  target.textContent = "";
+
+  const sections = splitFencedBlocks(md);
+  for (const section of sections) {
+    if (section.kind === "code") {
+      const pre = document.createElement("pre");
+      pre.style.cssText =
+        "background:#0c1222;border:1px solid #1e293b;border-radius:6px;padding:8px;margin:6px 0;" +
+        'font-family:"SF Mono",Menlo,Consolas,monospace;font-size:11px;color:#cbd5e1;overflow-x:auto;';
+      const code = document.createElement("code");
+      code.textContent = section.content;
+      if (section.lang) {
+        code.setAttribute("data-lang", section.lang);
+      }
+      pre.appendChild(code);
+      target.appendChild(pre);
+    } else {
+      const lines = section.content.split("\n");
+      let listType: "ul" | "ol" | null = null;
+      let listEl: HTMLUListElement | HTMLOListElement | null = null;
+      const closeList = () => {
+        listEl = null;
+        listType = null;
+      };
+      for (const rawLine of lines) {
+        const line = rawLine.replace(/\s+$/, "");
+        if (!line.trim()) {
+          closeList();
+          continue;
+        }
+
+        const h = /^(#{1,6})\s+(.*)$/.exec(line);
+        const ulItem = /^\s*[-*+]\s+(.*)$/.exec(line);
+        const olItem = /^\s*\d+\.\s+(.*)$/.exec(line);
+
+        if (h) {
+          closeList();
+          const level = h[1].length;
+          const headEl = document.createElement("h" + Math.min(6, level + 1));
+          headEl.style.cssText = `font-weight:600;color:#e2e8f0;margin:8px 0 4px;font-size:${16 - level}px;`;
+          headEl.appendChild(renderInline(h[2]));
+          target.appendChild(headEl);
+        } else if (ulItem) {
+          if (listType !== "ul") {
+            closeList();
+            listType = "ul";
+            listEl = document.createElement("ul");
+            listEl.style.cssText =
+              "margin:4px 0 4px 18px;padding:0;list-style:disc;";
+            target.appendChild(listEl);
+          }
+          const li = document.createElement("li");
+          li.style.cssText =
+            "font-size:12px;color:#cbd5e1;line-height:1.5;margin:2px 0;";
+          li.appendChild(renderInline(ulItem[1]));
+          listEl!.appendChild(li);
+        } else if (olItem) {
+          if (listType !== "ol") {
+            closeList();
+            listType = "ol";
+            listEl = document.createElement("ol");
+            listEl.style.cssText =
+              "margin:4px 0 4px 20px;padding:0;list-style:decimal;";
+            target.appendChild(listEl);
+          }
+          const li = document.createElement("li");
+          li.style.cssText =
+            "font-size:12px;color:#cbd5e1;line-height:1.5;margin:2px 0;";
+          li.appendChild(renderInline(olItem[1]));
+          listEl!.appendChild(li);
+        } else {
+          closeList();
+          const p = document.createElement("p");
+          p.style.cssText =
+            "font-size:12px;color:#cbd5e1;line-height:1.5;margin:4px 0;";
+          p.appendChild(renderInline(line));
+          target.appendChild(p);
+        }
+      }
+    }
+  }
+}
+
+function renderInline(text: string): Node {
+  const fragment = document.createDocumentFragment();
+  const pattern = /(\*\*([^*]+)\*\*)|(`([^`]+)`)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = pattern.exec(text)) !== null) {
+    if (m.index > last) {
+      fragment.appendChild(document.createTextNode(text.slice(last, m.index)));
+    }
+    if (m[2] !== undefined) {
+      const strong = document.createElement("strong");
+      strong.style.cssText = "color:#f1f5f9;font-weight:600;";
+      strong.textContent = m[2];
+      fragment.appendChild(strong);
+    } else if (m[4] !== undefined) {
+      const code = document.createElement("code");
+      code.style.cssText =
+        "background:#1e293b;color:#a78bfa;padding:1px 4px;border-radius:3px;" +
+        'font-family:"SF Mono",Menlo,Consolas,monospace;font-size:11px;';
+      code.textContent = m[4];
+      fragment.appendChild(code);
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) {
+    fragment.appendChild(document.createTextNode(text.slice(last)));
+  }
+  return fragment;
+}
+
+interface MdSection {
+  kind: "text" | "code";
+  content: string;
+  lang?: string;
+}
+
+function splitFencedBlocks(md: string): MdSection[] {
+  const out: MdSection[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  FENCE_RE.lastIndex = 0;
+  while ((m = FENCE_RE.exec(md)) !== null) {
+    if (m.index > last) {
+      out.push({ kind: "text", content: md.slice(last, m.index) });
+    }
+    out.push({ kind: "code", content: m[2].replace(/\n$/, ""), lang: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < md.length) {
+    out.push({ kind: "text", content: md.slice(last) });
+  }
+  return out;
+}
+
 export const aiAnalyzer: ToolDefinition = {
   id: "ai-analyzer",
   name: "AI Analyzer",
@@ -42,17 +198,18 @@ export const aiAnalyzer: ToolDefinition = {
       default: true,
     },
   },
-  run: (ctx, _config) => {
+  run: (ctx, config) => {
+    const cfg: AnalyzerConfig = {
+      analyzeStructure: (config?.analyzeStructure ?? true) as boolean,
+      analyzeSemantics: (config?.analyzeSemantics ?? true) as boolean,
+      analyzePatterns: (config?.analyzePatterns ?? true) as boolean,
+      detailLevel: (config?.detailLevel ??
+        "medium") as AnalyzerConfig["detailLevel"],
+      includeCode: (config?.includeCode ?? true) as boolean,
+    };
+
     const overlays: HTMLElement[] = [];
     let disposed = false;
-
-    function esc(s: string): string {
-      return s
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
 
     function getPageContext() {
       const imgs = document.querySelectorAll("img");
@@ -68,6 +225,34 @@ export const aiAnalyzer: ToolDefinition = {
           headings: headings.length,
         },
         techStack: detectTech(),
+      };
+    }
+
+    function getSemanticContext() {
+      const headings = Array.from(
+        document.querySelectorAll("h1,h2,h3,h4,h5,h6"),
+      )
+        .slice(0, 30)
+        .map(
+          (h) =>
+            `${h.tagName.toLowerCase()}: ${(h.textContent || "").trim().slice(0, 60)}`,
+        );
+      const landmarks = Array.from(
+        document.querySelectorAll(
+          "main,header,footer,nav,aside,section,article",
+        ),
+      )
+        .slice(0, 20)
+        .map((l) => `<${l.tagName.toLowerCase()}>`);
+      const altMissing = document.querySelectorAll(
+        'img:not([alt]),img[alt=""]',
+      ).length;
+      const totalImgs = document.querySelectorAll("img").length;
+      return {
+        headingsSample: headings,
+        landmarksSample: landmarks,
+        totalImgs,
+        altMissing,
       };
     }
 
@@ -93,6 +278,52 @@ export const aiAnalyzer: ToolDefinition = {
       if (document.querySelector('meta[name="generator"][content*="Nuxt"]'))
         tech.push("Nuxt");
       return tech.length ? tech : ["Unknown"];
+    }
+
+    function buildQuery(context: ReturnType<typeof getPageContext>): string {
+      const detailWordCount =
+        cfg.detailLevel === "brief"
+          ? 80
+          : cfg.detailLevel === "detailed"
+            ? 400
+            : 200;
+      const sections: string[] = [];
+      sections.push(
+        `Analyze this page. URL: ${context.url}, Title: ${context.title}, Tech: ${context.techStack.join(", ")}.`,
+      );
+
+      if (cfg.analyzeStructure) {
+        sections.push(
+          `DOM stats: ${context.domStats.totalElements} elements, ${context.domStats.images} images, ${context.domStats.links} links, ${context.domStats.headings} headings.`,
+        );
+      }
+
+      if (cfg.analyzeSemantics) {
+        const sem = getSemanticContext();
+        sections.push(
+          `Semantics: ${sem.headingsSample.length} headings (sample: ${sem.headingsSample.slice(0, 5).join(" | ")}); ${sem.landmarksSample.length} landmarks; ${sem.altMissing}/${sem.totalImgs} images missing alt.`,
+        );
+      }
+
+      if (cfg.analyzePatterns) {
+        sections.push(
+          "Identify repeating UI patterns (cards, lists, forms) and design-system inconsistencies.",
+        );
+      }
+
+      sections.push(
+        `Be ${cfg.detailLevel}. Keep the response under ~${detailWordCount} words.`,
+      );
+
+      if (cfg.includeCode) {
+        sections.push(
+          "Where helpful, include short fenced code blocks (\`\`\`) with concrete fixes.",
+        );
+      } else {
+        sections.push("Do NOT include code blocks; describe changes in prose.");
+      }
+
+      return sections.join(" ");
     }
 
     const panel = document.createElement("div");
@@ -129,17 +360,19 @@ export const aiAnalyzer: ToolDefinition = {
 
     async function analyze() {
       const context = getPageContext();
+      const query = buildQuery(context);
       try {
         const response = await browser.runtime.sendMessage({
           type: "LLM_QUERY",
-          payload: {
-            query: `Analyze this page for issues. URL: ${context.url}, Title: ${context.title}, Tech: ${context.techStack.join(", ")}, Elements: ${context.domStats.totalElements}, Images: ${context.domStats.images}, Links: ${context.domStats.links}, Headings: ${context.domStats.headings}`,
-            context,
-          },
+          payload: { query, context },
         });
         if (disposed) return;
         body.removeChild(loading);
-        if (response?.response) {
+        if (
+          response?.response &&
+          typeof response.response === "string" &&
+          response.response.trim()
+        ) {
           renderSuggestions(response.response);
         } else {
           renderError(
@@ -149,72 +382,18 @@ export const aiAnalyzer: ToolDefinition = {
       } catch (err) {
         if (disposed) return;
         body.removeChild(loading);
-        renderError("AI analysis failed. Ensure AI is configured in Settings.");
+        const detail =
+          err instanceof Error && err.message ? err.message : "Unknown error";
+        renderError(
+          `AI analysis failed: ${detail}. Ensure AI is configured in Settings.`,
+        );
       }
     }
 
     function renderSuggestions(text: string) {
       const container = document.createElement("div");
       container.style.cssText = "display:flex;flex-direction:column;gap:8px;";
-
-      const categories = [
-        { pattern: /accessibility/i, label: "Accessibility", color: "#a855f7" },
-        { pattern: /performance/i, label: "Performance", color: "#3b82f6" },
-        { pattern: /seo/i, label: "SEO", color: "#22c55e" },
-        {
-          pattern: /best.?practice|security/i,
-          label: "Best Practices",
-          color: "#f59e0b",
-        },
-      ];
-
-      const lines = text.split("\n").filter((l) => l.trim());
-      let currentCat: { label: string; color: string } | null = null;
-      const groups: Map<string, string[]> = new Map();
-      groups.set("Analysis", []);
-
-      for (const line of lines) {
-        let matched = false;
-        for (const cat of categories) {
-          if (cat.pattern.test(line)) {
-            currentCat = cat;
-            if (!groups.has(cat.label)) groups.set(cat.label, []);
-            matched = true;
-            break;
-          }
-        }
-        if (
-          (!matched && line.trim().startsWith("-")) ||
-          line.trim().startsWith("*") ||
-          line.trim().match(/^\d+\./)
-        ) {
-          const g = currentCat ? currentCat.label : "Analysis";
-          groups.get(g)?.push(line.replace(/^[\s\-\*\d.]+/, "").trim());
-        } else if (!matched && line.trim().length > 0) {
-          const g = currentCat ? currentCat.label : "Analysis";
-          groups.get(g)?.push(line.trim());
-        }
-      }
-
-      groups.forEach((items, catLabel) => {
-        if (items.length === 0) return;
-        const cat = categories.find((c) => c.label === catLabel);
-        const section = document.createElement("div");
-        section.style.cssText = "margin-bottom:12px;";
-        const catHeader = document.createElement("div");
-        catHeader.style.cssText = `font-weight:600;font-size:12px;color:${cat?.color || "#94a3b8"};margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;`;
-        catHeader.textContent = catLabel;
-        section.appendChild(catHeader);
-        for (const item of items.slice(0, 8)) {
-          const p = document.createElement("div");
-          p.style.cssText =
-            "padding:4px 8px;margin:2px 0;background:rgba(255,255,255,.04);border-radius:4px;font-size:12px;line-height:1.5;color:#cbd5e1;";
-          p.textContent = item;
-          section.appendChild(p);
-        }
-        container.appendChild(section);
-      });
-
+      renderMarkdownToNode(text, container);
       body.appendChild(container);
     }
 
@@ -234,7 +413,7 @@ export const aiAnalyzer: ToolDefinition = {
     }
 
     ctx.onInvalidated(cleanup);
-    analyze();
+    void analyze();
     return cleanup;
   },
 };

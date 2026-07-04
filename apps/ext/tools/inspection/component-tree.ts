@@ -35,6 +35,21 @@ function detectFramework(): string {
   return "unknown";
 }
 
+function deriveTitle(element: HTMLElement): string {
+  const ariaLabel = element.getAttribute("aria-label");
+  if (ariaLabel && ariaLabel.trim()) return ariaLabel.trim();
+  const role = element.getAttribute("role");
+  if (role) {
+    const txt = (element.innerText || "").trim();
+    if (txt) return txt.slice(0, 30);
+  }
+  const titleAttr = element.getAttribute("title");
+  if (titleAttr && titleAttr.trim()) return titleAttr.trim();
+  const txt = (element.innerText || "").trim();
+  if (txt) return txt.slice(0, 30);
+  return element.tagName.toLowerCase();
+}
+
 function domElementToNode(
   element: HTMLElement,
   depth: number,
@@ -61,7 +76,7 @@ function domElementToNode(
   }
   return {
     id: `dom-${element.tagName}-${depth}-${index}`,
-    name: element.tagName.toLowerCase(),
+    name: deriveTitle(element),
     type: "element",
     framework: "unknown",
     props: Object.keys(props).length > 0 ? props : undefined,
@@ -178,7 +193,9 @@ function buildNodeEl(
   node: ComponentNode,
   expandedNodes: Set<string>,
   selectedId: string | null,
+  options?: { showProps?: boolean },
 ): HTMLElement {
+  const showProps = options?.showProps ?? true;
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedId === node.id;
   const indent = node.depth * 16;
@@ -218,7 +235,7 @@ function buildNodeEl(
   name.title = node.name;
   content.appendChild(name);
 
-  if (node.props && Object.keys(node.props).length > 0) {
+  if (showProps && node.props && Object.keys(node.props).length > 0) {
     const badge = document.createElement("span");
     badge.className = "fdh-ct-badge";
     badge.textContent = String(Object.keys(node.props).length);
@@ -246,7 +263,9 @@ function buildNodeEl(
 
   if (isExpanded) {
     for (const child of node.children) {
-      fragment.appendChild(buildNodeEl(child, expandedNodes, selectedId));
+      fragment.appendChild(
+        buildNodeEl(child, expandedNodes, selectedId, options),
+      );
     }
   }
 
@@ -285,6 +304,10 @@ export const componentTree: ToolDefinition = {
   },
   run: (ctx, config) => {
     const maxDepth = (config?.maxDepth as number) ?? 6;
+    const showProps = (config?.showProps as boolean) ?? true;
+    const showState = (config?.showState as boolean) ?? false;
+    const highlightUpdates = (config?.highlightUpdates as boolean) ?? true;
+    const collapseThreshold = (config?.collapseThreshold as number) ?? 50;
     const framework = detectFramework();
     const expandedNodes = new Set<string>();
     let selectedId: string | null = null;
@@ -400,6 +423,15 @@ export const componentTree: ToolDefinition = {
         for (const child of root.children) {
           if (child.depth < 2) expandedNodes.add(child.id);
         }
+        if (collapseThreshold > 0) {
+          const visit = (n: ComponentNode) => {
+            if (n.hasChildren && n.children.length > collapseThreshold) {
+              for (const c of n.children) expandedNodes.delete(c.id);
+            }
+            n.children.forEach(visit);
+          };
+          visit(root);
+        }
       }
     }
 
@@ -415,12 +447,15 @@ export const componentTree: ToolDefinition = {
       }
       let displayRoot = root;
       if (filter) displayRoot = filterTree(root, filter) || root;
-      content.appendChild(buildNodeEl(displayRoot, expandedNodes, selectedId));
+      content.appendChild(
+        buildNodeEl(displayRoot, expandedNodes, selectedId, { showProps }),
+      );
       const total = countNodes(displayRoot);
       stats.textContent = total + " component" + (total !== 1 ? "s" : "");
     }
 
     function highlightNode(node: ComponentNode): void {
+      if (!highlightUpdates) return;
       if (node.domElement) {
         const el = node.domElement;
         const orig = el.style.outline;
@@ -478,6 +513,9 @@ export const componentTree: ToolDefinition = {
     searchInput.addEventListener("input", () => {
       filter = searchInput.value.toLowerCase();
       render();
+      if (showState) {
+        status.textContent = "Filtered";
+      }
     });
 
     const handleKeyDown = (e: KeyboardEvent) => {

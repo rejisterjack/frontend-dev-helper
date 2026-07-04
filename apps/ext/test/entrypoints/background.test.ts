@@ -215,15 +215,41 @@ describe("background message router", () => {
     expect(res).toEqual({ tabId: 99, supported: true });
   });
 
-  it("POPUP_UPDATE_SETTINGS writes to fdh-settings-storage", async () => {
+  it("POPUP_UPDATE_SETTINGS deep-merges into fdh-settings-storage", async () => {
+    // Seed existing settings that should survive a partial update.
+    harness.storageLocal.set("fdh-settings-storage", {
+      state: { vscode: { port: 1234 }, theme: "dark" },
+    });
     const res = await harness.dispatch({
       type: "POPUP_UPDATE_SETTINGS",
       settings: { ai: { provider: "openai" } },
     });
     expect(res).toEqual({ success: true });
-    expect(harness.chromeMock.storage.local.set).toHaveBeenCalledWith({
-      "fdh-settings-storage": { state: { ai: { provider: "openai" } } },
+    // The merged state must preserve vscode + theme while adding ai.
+    const stored = harness.storageLocal.get("fdh-settings-storage") as {
+      state: Record<string, unknown>;
+    };
+    expect(stored.state).toMatchObject({
+      ai: { provider: "openai" },
+      vscode: { port: 1234 },
+      theme: "dark",
     });
+  });
+
+  it("POPUP_UPDATE_SETTINGS replaces primitive leaves on partial update", async () => {
+    harness.storageLocal.set("fdh-settings-storage", {
+      state: { ai: { provider: "openai", model: "gpt-4o" } },
+    });
+    const res = await harness.dispatch({
+      type: "POPUP_UPDATE_SETTINGS",
+      settings: { ai: { provider: "anthropic" } },
+    });
+    expect(res).toEqual({ success: true });
+    const stored = harness.storageLocal.get("fdh-settings-storage") as {
+      state: Record<string, unknown>;
+    };
+    // Nested object merge: provider is replaced, model preserved.
+    expect(stored.state.ai).toEqual({ provider: "anthropic", model: "gpt-4o" });
   });
 
   it("POPUP_GET_SETTINGS reads from fdh-settings-storage", async () => {

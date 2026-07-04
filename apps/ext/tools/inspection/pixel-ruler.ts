@@ -42,6 +42,7 @@ export const pixelRuler: ToolDefinition = {
     let startY = 0;
     let endX = 0;
     let endY = 0;
+    let measuredElement: HTMLElement | null = null;
 
     const guideLine = document.createElement("div");
     guideLine.style.cssText = `
@@ -153,8 +154,16 @@ export const pixelRuler: ToolDefinition = {
         return `${px}px (${(px / REM_BASE).toFixed(2)}rem)`;
       }
       if (unit === "em") {
-        const baseFontSize =
-          parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const baseFontSize = (() => {
+          if (measuredElement) {
+            const fs = parseFloat(getComputedStyle(measuredElement).fontSize);
+            if (!isNaN(fs) && fs > 0) return fs;
+          }
+          return (
+            parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+            16
+          );
+        })();
         return `${px}px (${(px / baseFontSize).toFixed(2)}em)`;
       }
       return `${px}px`;
@@ -287,6 +296,13 @@ export const pixelRuler: ToolDefinition = {
       startY = snap(e.clientY);
       endX = startX;
       endY = startY;
+      const target = e.target as HTMLElement | null;
+      measuredElement =
+        target &&
+        target !== document.body &&
+        target !== document.documentElement
+          ? target
+          : null;
       updateGuideLine();
     }
 

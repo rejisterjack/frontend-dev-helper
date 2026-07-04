@@ -253,11 +253,38 @@ function generateComponentName(data: ExtractedElement): string {
 function buildCSSBlock(
   className: string,
   styles: Record<string, string>,
+  responsive = false,
 ): string {
   const entries = Object.entries(styles);
   if (entries.length === 0) return "";
   const props = entries.map(([k, v]) => `  ${k}: ${v};`).join("\n");
-  return `.${className} {\n${props}\n}`;
+  if (!responsive) return `.${className} {\n${props}\n}`;
+  // When makeResponsive is enabled, emit mobile-first breakpoint overrides for
+  // width/min-width/max-width/font-size so the component adapts across common
+  // device widths (640/768/1024/1280). Only properties declared on the source
+  // element get a responsive override, keeping the output lean.
+  const responsiveProps = entries.filter(
+    ([k]) =>
+      k === "width" ||
+      k === "min-width" ||
+      k === "max-width" ||
+      k === "font-size",
+  );
+  const base = `.${className} {\n${props}\n}`;
+  if (responsiveProps.length === 0) return base;
+  const scale: Array<[string, number]> = [
+    ["sm", 640],
+    ["md", 768],
+    ["lg", 1024],
+    ["xl", 1280],
+  ];
+  const blocks = scale.map(
+    ([name, min]) =>
+      `@media (min-width: ${min}px) {\n  .${className} {\n${responsiveProps
+        .map(([k, v]) => `    ${k}: ${v};`)
+        .join("\n")}\n  }\n}`,
+  );
+  return base + "\n" + blocks.join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -285,6 +312,36 @@ function ariaString(attrs: Record<string, string>, role: string): string {
   return parts.join(" ");
 }
 
+// React renames a handful of HTML attributes. Mapping them prevents runtime
+// warnings ("Invalid DOM property `for`") when the generated component is
+// rendered. Unknown attributes pass through verbatim.
+const REACT_ATTR_RENAMES: Record<string, string> = {
+  for: "htmlFor",
+  class: "className",
+  tabindex: "tabIndex",
+  readonly: "readOnly",
+  maxlength: "maxLength",
+  minlength: "minLength",
+  contenteditable: "contentEditable",
+  colspan: "colSpan",
+  rowspan: "rowSpan",
+  cellspacing: "cellSpacing",
+  cellpadding: "cellPadding",
+  usemap: "useMap",
+  frameborder: "frameBorder",
+  srcset: "srcSet",
+  crossorigin: "crossOrigin",
+  autocomplete: "autoComplete",
+  autocapitalize: "autoCapitalize",
+  autocorrect: "autoCorrect",
+  enctype: "encType",
+  spellcheck: "spellCheck",
+};
+
+function reactAttrName(htmlAttr: string): string {
+  return REACT_ATTR_RENAMES[htmlAttr.toLowerCase()] ?? htmlAttr;
+}
+
 function buildChildMarkupReact(data: ExtractedElement, indent: string): string {
   const ariaPart = ariaString(data.ariaAttributes, data.role);
   const classPart =
@@ -293,7 +350,7 @@ function buildChildMarkupReact(data: ExtractedElement, indent: string): string {
       : "";
   const idPart = data.id ? ` id="${escapeAttr(data.id)}"` : "";
   const extraAttrs = Object.entries(data.attributes)
-    .map(([k, v]) => ` ${k}="${escapeAttr(v)}"`)
+    .map(([k, v]) => ` ${reactAttrName(k)}="${escapeAttr(v)}"`)
     .join("");
   const ariaAttr = ariaPart ? ` ${ariaPart}` : "";
 
@@ -369,6 +426,8 @@ function generateReact(
   const includeTypes = config.includeTypes !== false;
   const includeStyles = config.includeStyles !== false;
   const includeA11y = config.includeAccessibility !== false;
+  const styleMode = (config.styleMode as string) ?? "css";
+  const useShadcn = styleMode === "shadcn";
   const defaultClass =
     data.classes.length > 0
       ? data.classes.join(" ")
@@ -395,15 +454,25 @@ function generateReact(
     ? `interface ${componentName}Props {\n  children?: React.ReactNode;\n  className?: string;\n}\n\n`
     : "";
 
+  // shadcn/ui mode: emit the canonical `cn()` helper and consume it via
+  // `className={cn(base, className)}`. Skips the standalone stylesheet
+  // because the design system is expected to provide tokens via Tailwind.
+  const shadcnHelper = useShadcn
+    ? `import { clsx, type ClassValue } from "clsx";\nimport { twMerge } from "tailwind-merge";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n\n`
+    : "";
+
   const cssExport =
-    includeStyles && Object.keys(data.computedStyles).length > 0
-      ? `/* --- styles.css (copy into your stylesheet) --- */\n${buildCSSBlock(defaultClass, data.computedStyles)}\n\n`
+    includeStyles && !useShadcn && Object.keys(data.computedStyles).length > 0
+      ? `/* --- styles.css (copy into your stylesheet) --- */\n${buildCSSBlock(defaultClass, data.computedStyles, config.makeResponsive === true)}\n\n`
       : "";
 
   const propsType = includeTypes ? `${componentName}Props` : "any";
   const defaultClassLit = JSON.stringify(defaultClass);
+  const classExpr = useShadcn
+    ? `{cn(${defaultClassLit}, className)}`
+    : `{className}`;
 
-  return `${cssExport}import React from 'react';\n\n${propsInterface}export function ${componentName}({ children, className = ${defaultClassLit} }: ${propsType}) {\n  return (\n    <${data.tag} className={className}${ariaAttr}>${innerContent}\n    </${data.tag}>\n  );\n}\n`;
+  return `${cssExport}${shadcnHelper}import React from 'react';\n\n${propsInterface}export function ${componentName}({ children, className = ${defaultClassLit} }: ${propsType}) {\n  return (\n    <${data.tag} className=${classExpr}${ariaAttr}>${innerContent}\n    </${data.tag}>\n  );\n}\n`;
 }
 
 // ---- Vue SFC ----
@@ -444,7 +513,7 @@ function generateVue(
 
   const styleBlock =
     includeStyles && Object.keys(data.computedStyles).length > 0
-      ? `\n<style scoped>\n${buildCSSBlock(defaultClass, data.computedStyles)}\n</style>\n`
+      ? `\n<style scoped>\n${buildCSSBlock(defaultClass, data.computedStyles, config.makeResponsive === true)}\n</style>\n`
       : "";
 
   return `<template>\n  <${data.tag}${classAttr}${ariaAttr}>${innerContent}</${data.tag}>\n</template>\n\n<script setup ${includeTypes ? 'lang="ts"' : ""}>\n${propsBlock}\n</script>${styleBlock}`;
@@ -486,7 +555,7 @@ function generateSvelte(
 
   const styleBlock =
     includeStyles && Object.keys(data.computedStyles).length > 0
-      ? `\n<style>\n${buildCSSBlock(defaultClass, data.computedStyles)}\n</style>\n`
+      ? `\n<style>\n${buildCSSBlock(defaultClass, data.computedStyles, config.makeResponsive === true)}\n</style>\n`
       : "";
 
   return `${scriptBlock}<${data.tag}${classAttr}${ariaAttr}>${innerContent}</${data.tag}>${styleBlock}`;
@@ -525,7 +594,7 @@ function generateHTML(
 
   const styleBlock =
     includeStyles && Object.keys(data.computedStyles).length > 0
-      ? `\n<style>\n${buildCSSBlock(className, data.computedStyles)}\n</style>\n`
+      ? `\n<style>\n${buildCSSBlock(className, data.computedStyles, config.makeResponsive === true)}\n</style>\n`
       : "";
 
   return `<${data.tag}${classAttr}${ariaAttr}>${innerContent}</${data.tag}>${styleBlock}`;
@@ -685,6 +754,15 @@ export const copyAsComponent: ToolDefinition = {
       type: "boolean",
       label: "Make Responsive",
       default: false,
+    },
+    styleMode: {
+      type: "select",
+      label: "Style Mode",
+      default: "css",
+      options: [
+        { label: "CSS stylesheet", value: "css" },
+        { label: "shadcn/ui + clsx + tailwind-merge", value: "shadcn" },
+      ],
     },
   },
 

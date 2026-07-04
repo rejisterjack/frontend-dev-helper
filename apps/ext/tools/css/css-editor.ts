@@ -2,6 +2,7 @@ import type { ToolDefinition } from "../types";
 import {
   addOverlayElement,
   removeOverlayElement,
+  attachViewportTracker,
 } from "@/content/overlay-manager";
 import { getBridge } from "@/lib/vscode-bridge";
 
@@ -23,15 +24,19 @@ interface CSSPropertyCategory {
 interface CSSEdit {
   property: string;
   oldValue: string;
+  oldValuePriority: string;
   newValue: string;
 }
 
 interface ElementStyleData {
   selector: string;
   originalCssText: string;
-  originalValues: Map<string, string>;
+  originalValues: Map<string, { value: string; priority: string }>;
   modifiedStyles: Map<string, string>;
 }
+
+const COLOR_PREVIEW_PROPS =
+  /^(color|background-color|border-color|border-(top|right|bottom|left)-color|fill|stroke|box-shadow|text-shadow)$/;
 
 const CSS_CATEGORIES: CSSPropertyCategory[] = [
   {
@@ -249,6 +254,24 @@ function generateSelector(el: HTMLElement): string {
 }
 
 function rgbToHex(cssColor: string): string {
+  if (!cssColor) return "#000000";
+  // Fast path: already a 6/8/3-digit hex
+  const trimmed = cssColor.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) return trimmed.slice(0, 7);
+  if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+    return (
+      "#" +
+      trimmed
+        .slice(1)
+        .split("")
+        .map((c) => c + c)
+        .join("")
+    );
+  }
+  // transparent / empty -> black opaque (color input can't represent alpha)
+  if (trimmed === "transparent" || trimmed === "rgba(0, 0, 0, 0)") {
+    return "#000000";
+  }
   const temp = document.createElement("div");
   temp.style.color = cssColor;
   temp.style.position = "absolute";
@@ -256,12 +279,14 @@ function rgbToHex(cssColor: string): string {
   document.body.appendChild(temp);
   const computed = getComputedStyle(temp).color;
   document.body.removeChild(temp);
-  const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  const match = computed.match(
+    /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/,
+  );
   if (!match) return "#000000";
   return (
     "#" +
-    [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])]
-      .map((x) => Math.round(x).toString(16).padStart(2, "0"))
+    [match[1], match[2], match[3]]
+      .map((x) => Math.round(parseFloat(x)).toString(16).padStart(2, "0"))
       .join("")
   );
 }
@@ -297,7 +322,12 @@ export const cssEditor: ToolDefinition = {
       ],
     },
   },
-  run: (ctx) => {
+  run: (ctx, config = {}) => {
+    const autoApply = config.autoApply !== false;
+    const showDiff = config.showDiff !== false;
+    const persistChanges = config.persistChanges === true;
+    const editorTheme = (config.editorTheme as string) || "dark";
+
     let activeCategory = "Layout";
     let selectedElement: HTMLElement | null = null;
     const history: CSSEdit[] = [];
@@ -306,6 +336,7 @@ export const cssEditor: ToolDefinition = {
 
     // Highlight overlay
     const highlightBox = document.createElement("div");
+    highlightBox.setAttribute("data-fdh-overlay", "css-editor");
     highlightBox.style.cssText = `
       position:fixed;pointer-events:none;z-index:2147483646;
       border:2px solid #8b5cf6;background-color:${hexToRgba("#8b5cf6", 0.1)};
@@ -317,12 +348,18 @@ export const cssEditor: ToolDefinition = {
     // Panel
     const panel = document.createElement("div");
     panel.className = "fdh-css-editor-panel";
+    panel.setAttribute("data-fdh-overlay", "css-editor");
+    const themeBg =
+      editorTheme === "light"
+        ? "rgba(255,255,255,0.98)"
+        : "rgba(15,23,42,0.98)";
+    const themeFg = editorTheme === "light" ? "#0f172a" : "#e2e8f0";
     panel.style.cssText = `
       position:fixed;top:20px;right:20px;width:380px;max-height:calc(100vh - 40px);
-      z-index:2147483647;background:rgba(15,23,42,0.98);
+      z-index:2147483647;background:${themeBg};
       border:1px solid rgba(99,102,241,0.3);border-radius:12px;
       font-family:'JetBrains Mono','Fira Code',system-ui,monospace;
-      font-size:13px;color:#e2e8f0;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);
+      font-size:13px;color:${themeFg};box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);
       backdrop-filter:blur(12px);overflow:hidden;display:flex;flex-direction:column;
       pointer-events:auto;
     `;
@@ -383,19 +420,29 @@ export const cssEditor: ToolDefinition = {
 
     function applyStyle(property: string, value: string) {
       if (!selectedElement) return;
+      const style = selectedElement.style;
+      const computed = window.getComputedStyle(selectedElement);
       const oldVal =
-        selectedElement.style.getPropertyValue(property) ||
-        window.getComputedStyle(selectedElement).getPropertyValue(property);
-      selectedElement.style.setProperty(property, value);
+        style.getPropertyValue(property) || computed.getPropertyValue(property);
+      const oldPriority = style.getPropertyPriority(property);
+      style.setProperty(property, value);
       const data = modifiedElements.get(selectedElement);
       if (data) {
         if (!data.originalValues.has(property)) {
-          data.originalValues.set(property, oldVal);
+          data.originalValues.set(property, {
+            value: oldVal,
+            priority: oldPriority,
+          });
         }
         data.modifiedStyles.set(property, value);
       }
       if (historyIndex < history.length - 1) history.splice(historyIndex + 1);
-      history.push({ property, oldValue: oldVal, newValue: value });
+      history.push({
+        property,
+        oldValue: oldVal,
+        oldValuePriority: oldPriority,
+        newValue: value,
+      });
       historyIndex++;
       if (history.length > 50) {
         history.shift();
@@ -406,7 +453,11 @@ export const cssEditor: ToolDefinition = {
     function undo() {
       if (historyIndex < 0 || !selectedElement) return;
       const edit = history[historyIndex];
-      selectedElement.style.setProperty(edit.property, edit.oldValue);
+      selectedElement.style.setProperty(
+        edit.property,
+        edit.oldValue,
+        edit.oldValuePriority || "",
+      );
       const data = modifiedElements.get(selectedElement);
       if (data) {
         if (edit.oldValue)
@@ -434,6 +485,17 @@ export const cssEditor: ToolDefinition = {
         selectedElement.style.cssText = data.originalCssText;
         data.modifiedStyles.clear();
       }
+      updateHighlight(selectedElement);
+    }
+
+    function resetAll() {
+      for (const [el, data] of modifiedElements) {
+        el.style.cssText = data.originalCssText;
+        data.modifiedStyles.clear();
+        data.originalValues.clear();
+      }
+      history.length = 0;
+      historyIndex = -1;
       updateHighlight(selectedElement);
     }
 
@@ -495,6 +557,13 @@ export const cssEditor: ToolDefinition = {
         "background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);border-radius:6px;padding:4px 8px;color:#f87171;font-size:11px;cursor:pointer";
       resetBtn.textContent = "Reset";
 
+      const resetAllBtn = document.createElement("button");
+      resetAllBtn.type = "button";
+      resetAllBtn.className = "fdh-ce-reset-all";
+      resetAllBtn.style.cssText =
+        "background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 8px;color:#fca5a5;font-size:11px;cursor:pointer";
+      resetAllBtn.textContent = "Reset All";
+
       const closeBtn = document.createElement("button");
       closeBtn.type = "button";
       closeBtn.className = "fdh-ce-close";
@@ -503,6 +572,7 @@ export const cssEditor: ToolDefinition = {
       closeBtn.textContent = "×";
 
       btnRow.appendChild(resetBtn);
+      btnRow.appendChild(resetAllBtn);
       btnRow.appendChild(closeBtn);
       headerRow.appendChild(title);
       headerRow.appendChild(btnRow);
@@ -589,11 +659,26 @@ export const cssEditor: ToolDefinition = {
             }
             labelRow.appendChild(label);
 
-            if (prop.type === "color") {
+            if (COLOR_PREVIEW_PROPS.test(prop.name)) {
+              const previewRow = document.createElement("div");
+              previewRow.style.cssText =
+                "display:flex;align-items:center;gap:4px";
               const preview = document.createElement("div");
               preview.style.cssText = `width:16px;height:16px;border-radius:4px;background:${currentVal};border:1px solid rgba(255,255,255,0.2)`;
               preview.className = "fdh-ce-color-preview";
-              labelRow.appendChild(preview);
+              preview.dataset.property = prop.name;
+              // Alpha swatch: shows the actual rgba render against a checkerboard
+              // so transparency is visible, not just the hex from rgbToHex.
+              const alphaSwatch = document.createElement("div");
+              alphaSwatch.style.cssText = `width:16px;height:16px;border-radius:4px;background:${currentVal};border:1px solid rgba(255,255,255,0.2);background-image:linear-gradient(45deg,#888 25%,transparent 25%,transparent 75%,#888 75%),linear-gradient(45deg,#888 25%,transparent 25%,transparent 75%,#888 75%);background-size:8px 8px;background-position:0 0,4px 4px;position:relative`;
+              const alphaOverlay = document.createElement("div");
+              alphaOverlay.style.cssText = `position:absolute;inset:0;background:${currentVal};border-radius:4px`;
+              alphaSwatch.appendChild(alphaOverlay);
+              alphaSwatch.className = "fdh-ce-color-alpha";
+              alphaSwatch.dataset.property = prop.name;
+              previewRow.appendChild(preview);
+              previewRow.appendChild(alphaSwatch);
+              labelRow.appendChild(previewRow);
             }
 
             row.appendChild(labelRow);
@@ -732,6 +817,12 @@ export const cssEditor: ToolDefinition = {
         resetElement();
         updatePanel();
       });
+      panel
+        .querySelector(".fdh-ce-reset-all")
+        ?.addEventListener("click", () => {
+          resetAll();
+          updatePanel();
+        });
 
       panel.querySelectorAll(".fdh-ce-tab").forEach((tab) => {
         tab.addEventListener("click", (e) => {
@@ -775,7 +866,7 @@ export const cssEditor: ToolDefinition = {
             selector: data.selector,
             property,
             value,
-            oldValue: data.originalValues.get(property) || "",
+            oldValue: data.originalValues.get(property)?.value || "",
           });
         });
 
@@ -796,7 +887,7 @@ export const cssEditor: ToolDefinition = {
             const t = e.target as HTMLInputElement;
             if (t.dataset.property) {
               applyStyle(t.dataset.property, t.value);
-              updatePanel();
+              if (autoApply && showDiff) updatePanel();
             }
           });
         });
@@ -806,7 +897,7 @@ export const cssEditor: ToolDefinition = {
           const t = e.target as HTMLSelectElement;
           if (t.dataset.property) {
             applyStyle(t.dataset.property, t.value);
-            updatePanel();
+            if (autoApply && showDiff) updatePanel();
           }
         });
       });
@@ -820,10 +911,23 @@ export const cssEditor: ToolDefinition = {
               `.fdh-ce-text-input[data-property="${t.dataset.property}"]`,
             ) as HTMLInputElement;
             if (textInput) textInput.value = t.value;
-            const preview = panel.querySelector(
-              ".fdh-ce-color-preview",
-            ) as HTMLElement;
-            if (preview) preview.style.background = t.value;
+            panel
+              .querySelectorAll(
+                `.fdh-ce-color-preview[data-property="${t.dataset.property}"]`,
+              )
+              .forEach((preview) => {
+                (preview as HTMLElement).style.background = t.value;
+              });
+            panel
+              .querySelectorAll(
+                `.fdh-ce-color-alpha[data-property="${t.dataset.property}"]`,
+              )
+              .forEach((swatch) => {
+                const overlay = (swatch as HTMLElement)
+                  .firstChild as HTMLElement;
+                if (overlay) overlay.style.background = t.value;
+              });
+            if (showDiff) updatePanel();
           }
         });
       });
@@ -877,6 +981,10 @@ export const cssEditor: ToolDefinition = {
       updateHighlight(selectedElement);
     }
 
+    const detachViewport = attachViewportTracker(() => {
+      updateHighlight(selectedElement);
+    });
+
     document.addEventListener("mousemove", onMouseMove, true);
     document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKeyDown, true);
@@ -886,12 +994,13 @@ export const cssEditor: ToolDefinition = {
     updatePanel();
 
     function cleanup() {
+      detachViewport();
       document.removeEventListener("mousemove", onMouseMove, true);
       document.removeEventListener("click", onClick, true);
       document.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("resize", onResize);
       modifiedElements.forEach((data, el) => {
-        el.style.cssText = data.originalCssText;
+        if (!persistChanges) el.style.cssText = data.originalCssText;
       });
       modifiedElements.clear();
       deselectElement();

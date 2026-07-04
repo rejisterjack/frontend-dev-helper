@@ -18,6 +18,9 @@ export class ToolPanel {
 
   constructor(private config: ToolPanelConfig) {
     this.panel = document.createElement("div");
+    this.panel.setAttribute("role", "dialog");
+    this.panel.setAttribute("aria-modal", "false");
+    this.panel.setAttribute("aria-label", config.title);
     this.panel.style.cssText = `
       position: fixed;
       top: 16px;
@@ -68,6 +71,7 @@ export class ToolPanel {
     }
 
     this.setupDragging();
+    this.setupFocusManagement();
   }
 
   private createHeader(): HTMLDivElement {
@@ -106,6 +110,7 @@ export class ToolPanel {
     }
 
     const closeBtn = document.createElement("button");
+    closeBtn.setAttribute("aria-label", `Close ${this.config.title}`);
     closeBtn.style.cssText = `
       background: none;
       border: none;
@@ -172,6 +177,58 @@ export class ToolPanel {
     });
   }
 
+  private setupFocusManagement(): void {
+    // Capture the element that had focus before the panel opened so we can
+    // restore it on destroy.
+    this.previousActiveElement =
+      (document.activeElement as HTMLElement | null) ?? null;
+
+    // Move focus into the panel so keyboard users land here first.
+    queueMicrotask(() => {
+      if (!this.panel.isConnected) return;
+      const focusable = this.panel.querySelector<HTMLElement>(
+        'button, [href], [tabindex]:not([tabindex="-1"]), input, select, textarea, [contenteditable="true"]',
+      );
+      (focusable ?? this.panel).focus?.();
+    });
+
+    // Lightweight Tab-cycle within the panel: when focus would escape, wrap
+    // back to the first/last focusable element inside the panel. We use a
+    // capture-phase keydown listener so we run before the page's own handlers.
+    const FOCUSABLE =
+      'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"]';
+
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (!this.panel.contains(e.target as Node)) return;
+      const focusable = Array.from(
+        this.panel.querySelectorAll<HTMLElement>(FOCUSABLE),
+      ).filter(
+        (el) =>
+          el.offsetParent !== null ||
+          window.getComputedStyle(el).display !== "none",
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    this.panel.addEventListener("keydown", onKeydown, true);
+    this.cleanupFns.push(() => {
+      this.panel.removeEventListener("keydown", onKeydown, true);
+    });
+  }
+
+  private previousActiveElement: HTMLElement | null = null;
+
   mount(shadowRoot: ShadowRoot): this {
     shadowRoot.appendChild(this.panel);
     return this;
@@ -199,6 +256,12 @@ export class ToolPanel {
     for (const fn of this.cleanupFns) fn();
     this.cleanupFns = [];
     this.panel.remove();
+    // Restore focus to whatever had it before the panel opened.
+    try {
+      this.previousActiveElement?.focus?.();
+    } catch {
+      // best-effort
+    }
   }
 }
 

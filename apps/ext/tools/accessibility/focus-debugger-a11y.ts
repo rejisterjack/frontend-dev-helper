@@ -12,20 +12,34 @@ const FOCUSABLE_SELECTOR = [
   "select:not([disabled])",
   "textarea:not([disabled])",
   '[tabindex]:not([tabindex="-1"])',
-  '[contenteditable]:not([contenteditable="false"])',
+  '[contenteditable=""],[contenteditable="true"]',
   "audio[controls]",
   "video[controls]",
   "iframe",
   "details",
   "summary",
+  "embed",
+  "object",
 ].join(", ");
 
 function hasHiddenAncestor(el: Element): boolean {
   let current: Element | null = el;
   while (current && current !== document.documentElement) {
     if (current.getAttribute("aria-hidden") === "true") return true;
+    if (current.hasAttribute("hidden")) return true;
+    if (current.closest("[inert]")) return true;
+    // Closed <dialog> without open makes its descendants non-focusable.
+    if (
+      current instanceof HTMLDialogElement &&
+      !current.open &&
+      current !== el
+    ) {
+      return true;
+    }
     const style = window.getComputedStyle(current as HTMLElement);
     if (style.display === "none") return true;
+    // visibility:hidden cascades to descendants unless they redeclare it.
+    if (style.visibility === "hidden") return true;
     current = current.parentElement;
   }
   return false;
@@ -34,12 +48,43 @@ function hasHiddenAncestor(el: Element): boolean {
 function isVisibleFocusable(el: HTMLElement): boolean {
   if (hasHiddenAncestor(el)) return false;
   if (el.getAttribute("aria-hidden") === "true") return false;
+  if (el.hasAttribute("hidden")) return false;
+  if (el.closest("[inert]")) return false;
+  if (el.disabled) return false;
   const style = window.getComputedStyle(el);
-  return (
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.opacity !== "0"
-  );
+  // NOTE: opacity:0 IS focusable per the HTML spec — only display:none,
+  // visibility:hidden, hidden, inert, disabled, or aria-hidden remove
+  // focusability. Do not filter opacity.
+  return style.display !== "none" && style.visibility !== "hidden";
+}
+
+/**
+ * Walk the focusable elements in correct tab order:
+ *   1. elements with tabindex > 0, sorted ascending by tabindex
+ *   2. elements with tabindex = 0 OR naturally focusable, in DOM-tree order
+ *   3. elements with tabindex = -1 are excluded (only programmatically focusable)
+ *
+ * Per https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute
+ */
+function getFocusableElements(): HTMLElement[] {
+  const all = Array.from(
+    document.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+  ).filter(isVisibleFocusable);
+
+  const positive: HTMLElement[] = [];
+  const rest: HTMLElement[] = [];
+  for (const el of all) {
+    const tabindex = el.getAttribute("tabindex");
+    const ti = tabindex ? parseInt(tabindex, 10) : 0;
+    if (ti > 0) positive.push(el);
+    else rest.push(el); // ti === 0 OR invalid OR naturally focusable
+  }
+  positive.sort((a, b) => {
+    const ta = parseInt(a.getAttribute("tabindex") || "0", 10);
+    const tb = parseInt(b.getAttribute("tabindex") || "0", 10);
+    return ta - tb;
+  });
+  return [...positive, ...rest];
 }
 
 function positionFixedOverlay(
@@ -135,30 +180,75 @@ function detectBrokenFocusTraps(): { element: Element; issue: string }[] {
   );
 
   modals.forEach((modal) => {
-    const focusable = modal.querySelectorAll(FOCUSABLE_SELECTOR);
-    if (focusable.length === 0) {
+    const focusableAll = Array.from(
+      modal.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    ).filter(isVisibleFocusable);
+
+    if (focusableAll.length === 0) {
       issues.push({ element: modal, issue: "Modal has no focusable elements" });
       return;
     }
 
-    let firstFocusable: Element | null = null;
-    let lastFocusable: Element | null = null;
-    focusable.forEach((el) => {
-      const style = window.getComputedStyle(el as HTMLElement);
-      if (style.display === "none" || style.visibility === "hidden") return;
-      if (!firstFocusable) firstFocusable = el;
-      lastFocusable = el;
-    });
+    const firstFocusable = focusableAll[0];
+    const lastFocusable = focusableAll[focusableAll.length - 1];
 
+    // Static check: if focus is currently outside the modal but somewhere on
+    // the page (and not on body), the trap has leaked.
     if (
-      firstFocusable &&
-      !modal.contains(document.activeElement) &&
-      document.activeElement !== document.body
+      document.activeElement &&
+      document.activeElement !== document.body &&
+      !modal.contains(document.activeElement)
     ) {
       issues.push({
         element: modal,
         issue: "Focus may have escaped the modal",
       });
+    }
+
+    // Synthetic Tab simulation: programmatically focus the last focusable
+    // element in the modal and dispatch a Tab keydown. A correctly-trapped
+    // modal should move focus back to the first focusable element (or wrap
+    // within the modal). If focus ends up outside the modal, the trap is
+    // broken. This catches JS-based traps that look correct in markup but
+    // fail at runtime (e.g. missing keydown listener, wrong selector).
+    if (
+      modal instanceof HTMLElement &&
+      typeof firstFocusable.focus === "function"
+    ) {
+      try {
+        const previouslyFocused = document.activeElement as HTMLElement | null;
+        lastFocusable.focus();
+        const syntheticTab = new KeyboardEvent("keydown", {
+          key: "Tab",
+          code: "Tab",
+          keyCode: 9,
+          which: 9,
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+        });
+        document.dispatchEvent(syntheticTab);
+        // After the dispatched Tab, check where focus landed.
+        const after = document.activeElement;
+        if (after && !modal.contains(after) && after !== document.body) {
+          issues.push({
+            element: modal,
+            issue:
+              "Synthetic Tab from last focusable escaped the modal — trap handler may be missing or broken",
+          });
+        }
+        // Restore prior focus to avoid disturbing the user.
+        if (
+          previouslyFocused &&
+          typeof previouslyFocused.focus === "function"
+        ) {
+          previouslyFocused.focus();
+        } else {
+          firstFocusable.blur();
+        }
+      } catch {
+        // Focus manipulation can throw on detached/removed elements; skip.
+      }
     }
   });
 
@@ -220,12 +310,6 @@ export const focusDebuggerA11y: ToolDefinition = {
     const arrows: SVGSVGElement[] = [];
     const detachTrackers: Array<() => void> = [];
     let activeFocusTarget: HTMLElement | null = null;
-
-    function getFocusableElements(): HTMLElement[] {
-      return Array.from(
-        document.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      ).filter(isVisibleFocusable);
-    }
 
     function trackOverlay(tracker: () => void): void {
       detachTrackers.push(attachViewportTracker(tracker));

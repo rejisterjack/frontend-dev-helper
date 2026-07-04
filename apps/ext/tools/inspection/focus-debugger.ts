@@ -133,12 +133,19 @@ export const focusDebugger: ToolDefinition = {
   },
   run: (ctx, config) => {
     const showFocusOrder = (config?.showFocusOrder as boolean) ?? true;
+    const showTabindex = (config?.showTabindex as boolean) ?? true;
+    const highlightFocused = (config?.highlightFocused as boolean) ?? true;
+    const showFocusRing = (config?.showFocusRing as boolean) ?? true;
+    const trapFocus = (config?.trapFocus as boolean) ?? false;
     let focusableItems: FocusableItem[] = [];
     let focusHistory: FocusHistoryEntry[] = [];
     let currentFocused: HTMLElement | null = null;
     let lastKeyboardFocusTime = 0;
     const overlayEls: HTMLDivElement[] = [];
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let focusTrapActive = false;
+    let trappedTabbable: HTMLElement[] = [];
+    let lastFocusedBeforeTrap: HTMLElement | null = null;
 
     const panelHost = document.createElement("div");
     panelHost.style.cssText =
@@ -264,7 +271,7 @@ export const focusDebugger: ToolDefinition = {
         tag.textContent = item.element.tagName.toLowerCase();
         row.appendChild(tag);
 
-        if (item.tabIndex !== 0) {
+        if (showTabindex && item.tabIndex !== 0) {
           const ti = document.createElement("span");
           ti.className = "fdh-fd-ti";
           ti.textContent = 'tabindex="' + item.tabIndex + '"';
@@ -314,13 +321,60 @@ export const focusDebugger: ToolDefinition = {
       });
       if (focusHistory.length > 50) focusHistory = focusHistory.slice(0, 50);
 
-      updateOverlays();
-      renderList();
+      if (highlightFocused) {
+        if (showFocusRing) {
+          target.style.outline = target.style.outline || "";
+          const prevOutline = target.style.outline;
+          const prevOutlineOffset = target.style.outlineOffset;
+          target.style.outline = "3px solid #22c55e";
+          target.style.outlineOffset = "2px";
+          window.setTimeout(() => {
+            target.style.outline = prevOutline;
+            target.style.outlineOffset = prevOutlineOffset;
+          }, 1200);
+        }
+        updateOverlays();
+        renderList();
+      }
     }
 
     function handleKeyDown(e: KeyboardEvent): void {
-      if (e.key === "Tab") lastKeyboardFocusTime = Date.now();
-      if (e.key === "Escape") cleanup();
+      if (e.key === "Tab") {
+        lastKeyboardFocusTime = Date.now();
+        if (trapFocus && focusTrapActive && trappedTabbable.length > 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          const active = document.activeElement as HTMLElement | null;
+          const idx = trappedTabbable.indexOf(active as HTMLElement);
+          const shift = e.shiftKey;
+          let next: HTMLElement;
+          if (idx === -1) {
+            next = shift
+              ? trappedTabbable[trappedTabbable.length - 1]
+              : trappedTabbable[0];
+          } else {
+            const delta = shift ? -1 : 1;
+            const nextIdx =
+              (idx + delta + trappedTabbable.length) % trappedTabbable.length;
+            next = trappedTabbable[nextIdx];
+          }
+          next.focus();
+          return;
+        }
+      }
+      if (e.key === "Escape") {
+        if (trapFocus && focusTrapActive) {
+          focusTrapActive = false;
+          trappedTabbable = [];
+          if (lastFocusedBeforeTrap) {
+            lastFocusedBeforeTrap.focus();
+            lastFocusedBeforeTrap = null;
+          }
+          statusEl.textContent = "Trap off";
+          return;
+        }
+        cleanup();
+      }
     }
 
     document.addEventListener("focusin", handleFocusIn, true);
@@ -348,6 +402,24 @@ export const focusDebugger: ToolDefinition = {
           statusEl.textContent = "Ready";
         }, 2000);
       } else if (action === "toggle") {
+        if (trapFocus) {
+          if (!focusTrapActive) {
+            trappedTabbable = focusableItems.map((i) => i.element);
+            focusTrapActive = true;
+            lastFocusedBeforeTrap =
+              (document.activeElement as HTMLElement) || null;
+            statusEl.textContent = "Trap on";
+          } else {
+            focusTrapActive = false;
+            trappedTabbable = [];
+            if (lastFocusedBeforeTrap) {
+              lastFocusedBeforeTrap.focus();
+              lastFocusedBeforeTrap = null;
+            }
+            statusEl.textContent = "Trap off";
+          }
+          return;
+        }
         overlaysVisible = !overlaysVisible;
         updateOverlays();
       }

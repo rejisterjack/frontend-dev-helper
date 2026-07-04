@@ -65,6 +65,9 @@ async function runAxeAudit(
 ): Promise<AuditIssue[]> {
   const issues: AuditIssue[] = [];
   const level = (config.level as WcagLevel) ?? "aa";
+  const resultTypes = (config.resultTypes as string) ?? "violations";
+  const showIncomplete = resultTypes !== "violations";
+  const showPasses = resultTypes === "all";
 
   try {
     const axe = await import("axe-core");
@@ -75,11 +78,21 @@ async function runAxeAudit(
         // Ignore cleanup errors during teardown.
       }
     });
+    // Always ask axe for every result bucket — the resultTypes toggle
+    // controls what we surface to the user, not what axe computes. Asking for
+    // `['violations', 'incomplete', 'passes']` upfront avoids a re-run when
+    // the user flips the toggle in the UI.
+    const resultTypesQuery = showPasses
+      ? ["violations", "incomplete", "passes"]
+      : showIncomplete
+        ? ["violations", "incomplete"]
+        : ["violations"];
     const results = await axe.default.run(document, {
       runOnly: {
         type: "tag",
         values: wcagTagsForLevel(level),
       },
+      resultTypes: resultTypesQuery as unknown as string[],
     });
 
     for (const violation of results.violations) {
@@ -99,22 +112,34 @@ async function runAxeAudit(
       }
     }
 
-    for (const incomplete of results.incomplete) {
-      for (const node of incomplete.nodes) {
-        const selector = node.target.join(" > ");
-        issues.push({
-          severity: "info",
-          rule: incomplete.id,
-          message: "Needs review: " + incomplete.description,
-          element: node.html?.slice(0, 60) || selector,
-          selector,
-        });
+    if (showIncomplete) {
+      for (const incomplete of results.incomplete) {
+        for (const node of incomplete.nodes) {
+          const selector = node.target.join(" > ");
+          issues.push({
+            severity: "info",
+            rule: incomplete.id,
+            message: "Needs review: " + incomplete.description,
+            element: node.html?.slice(0, 60) || selector,
+            selector,
+          });
+        }
       }
     }
 
-    for (const pass of results.passes) {
-      // Don't report passing rules
-      void pass;
+    if (showPasses) {
+      for (const pass of results.passes) {
+        for (const node of pass.nodes) {
+          const selector = node.target.join(" > ");
+          issues.push({
+            severity: "info",
+            rule: pass.id,
+            message: "Passing: " + pass.description,
+            element: node.html?.slice(0, 60) || selector,
+            selector,
+          });
+        }
+      }
     }
   } catch (err) {
     console.warn(
@@ -501,12 +526,54 @@ function renderIssues(issues: AuditIssue[]): HTMLElement {
 
     item.appendChild(row);
 
-    // Scroll to element on hover
+    // Scroll to element on hover and draw a colored outline + role tag.
+    // Outlining the matched element makes it obvious which node a violation
+    // refers to — DevTools parity. The role tag floats above the outline so
+    // the user can see e.g. "role=button" without opening the inspector.
     if (issue.selector) {
+      const outlineColor = severityColor[issue.severity];
       item.addEventListener("mouseenter", () => {
         const target = document.querySelector(issue.selector!);
-        if (target)
+        if (target instanceof HTMLElement) {
           target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.style.outline = `2px solid ${outlineColor}`;
+          target.style.outlineOffset = "1px";
+          // Role tag (only if the element has an explicit role or landmark tag).
+          const role = target.getAttribute("role");
+          const landmark = [
+            "main",
+            "header",
+            "footer",
+            "nav",
+            "aside",
+            "section",
+            "article",
+            "form",
+            "search",
+          ].includes(target.tagName.toLowerCase());
+          if (role || landmark) {
+            const tag = document.createElement("div");
+            tag.setAttribute("data-fdh-a11y-tag", "true");
+            tag.style.cssText = `position:fixed;z-index:2147483646;background:${outlineColor};color:#1e1e2e;font-size:10px;font-weight:600;font-family:system-ui,sans-serif;padding:1px 6px;border-radius:3px;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.3);`;
+            const r = target.getBoundingClientRect();
+            tag.style.top = `${Math.max(0, r.top - 16)}px`;
+            tag.style.left = `${r.left}px`;
+            tag.textContent = role
+              ? `role=${role}`
+              : target.tagName.toLowerCase();
+            document.documentElement.appendChild(tag);
+          }
+        }
+      });
+      item.addEventListener("mouseleave", () => {
+        const target = document.querySelector(issue.selector!);
+        if (target instanceof HTMLElement) {
+          target.style.outline = "";
+          target.style.outlineOffset = "";
+        }
+        document
+          .querySelectorAll('[data-fdh-a11y-tag="true"]')
+          .forEach((t) => t.remove());
       });
     }
 
@@ -610,6 +677,16 @@ export const accessibilityAudit: ToolDefinition = {
         { label: "Level A", value: "a" },
         { label: "Level AA", value: "aa" },
         { label: "Level AAA", value: "aaa" },
+      ],
+    },
+    resultTypes: {
+      type: "select",
+      label: "Show Result Types",
+      default: "violations",
+      options: [
+        { label: "Violations only", value: "violations" },
+        { label: "Violations + Incomplete", value: "violations-incomplete" },
+        { label: "All (incl. Passes)", value: "all" },
       ],
     },
   },

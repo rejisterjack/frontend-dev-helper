@@ -34,7 +34,7 @@ interface ReactFiber {
 }
 
 const HOOK_TAG_EFFECT = 5;
-const HOOK_TAG_LAYOUT_EFFECT = 7;
+const HOOK_TAG_LAYOUT_EFFECT = 6;
 const HOOK_TAG_REF = 7;
 
 function classifyHookName(
@@ -222,17 +222,27 @@ export const frameworkDevtools: ToolDefinition = {
       ],
     },
     showOverlay: { type: "boolean", label: "Show Overlay", default: true },
+    // Note: a content script cannot programmatically open the host page's
+    // framework DevTools panel — that requires the user to open DevTools
+    // themselves. We expose `autoOpen` only to surface the in-extension
+    // "Open DevTools" guide; the value is consumed below.
     autoOpen: { type: "boolean", label: "Auto Open DevTools", default: false },
   },
   run: (ctx, config) => {
     const targetFramework = (config?.framework as string) ?? "auto";
     const showOverlay = (config?.showOverlay as boolean) ?? true;
+    const autoOpen = (config?.autoOpen as boolean) ?? false;
     const framework =
       targetFramework === "auto"
         ? detectFramework()
         : (targetFramework as FrameworkType);
     const version = getVersion(framework);
     const overlayEls: HTMLDivElement[] = [];
+
+    // autoOpen is honored here: when true and the framework's DevTools hook
+    // is missing, surface an in-panel banner guiding the user to open DevTools
+    // manually (a content script cannot do this itself).
+    const showAutoOpenHint = autoOpen;
 
     const panelHost = document.createElement("div");
     panelHost.style.cssText =
@@ -349,6 +359,15 @@ export const frameworkDevtools: ToolDefinition = {
       if (version) addRow("Version", version);
       addRow("URL", window.location.href);
       content.appendChild(infoSection);
+
+      if (showAutoOpenHint && !devtoolsAvailable) {
+        const hint = document.createElement("div");
+        hint.style.cssText =
+          "padding:8px 12px;background:rgba(249,226,150,0.1);border:1px solid rgba(249,226,150,0.3);border-radius:6px;font-size:11px;color:#f9e2af;margin-bottom:12px;";
+        hint.textContent =
+          "Auto-Open is on but DevTools hooks weren't found. Open the browser DevTools and install/enable the framework's DevTools extension to inspect components.";
+        content.appendChild(hint);
+      }
 
       const componentsSection = document.createElement("div");
       componentsSection.className = "section";

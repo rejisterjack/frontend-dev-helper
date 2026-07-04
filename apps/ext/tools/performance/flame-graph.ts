@@ -4,28 +4,80 @@ import {
   removeOverlayElement,
 } from "@/content/overlay-manager";
 
+type FlameType = "scripting" | "rendering" | "painting";
+
 interface FlameEntry {
   name: string;
-  type: "script" | "layout" | "paint" | "render" | "idle";
+  type: FlameType;
   startTime: number;
   duration: number;
   depth: number;
 }
 
-const TYPE_COLORS: Record<FlameEntry["type"], string> = {
-  script: "#3b82f6",
-  layout: "#ef4444",
-  paint: "#22c55e",
-  render: "#a855f7",
-  idle: "#6b7280",
+const TYPE_COLORS: Record<FlameType, string> = {
+  scripting: "#3b82f6",
+  rendering: "#a855f7",
+  painting: "#22c55e",
 };
+
+function inferResourceType(r: PerformanceResourceTiming): FlameType {
+  const url = r.name.toLowerCase();
+  const ct = (r as PerformanceResourceTiming & { contentType?: string })
+    .contentType;
+  const initator = (
+    r as PerformanceResourceTiming & {
+      initiatorType?: string;
+    }
+  ).initiatorType;
+  if (
+    url.match(/\.(js|mjs|cjs)(\?|$)/) ||
+    initator === "script" ||
+    initator === "xmlhttprequest" ||
+    (ct && ct.includes("javascript"))
+  ) {
+    return "scripting";
+  }
+  if (url.match(/\.(css)(\?|$)/) || (ct && ct.includes("css"))) {
+    return "rendering";
+  }
+  return "painting";
+}
+
+function getNavigationType(): string {
+  try {
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav && nav.type) return nav.type;
+  } catch {
+    // navigation entry unavailable
+  }
+  try {
+    const nt = (
+      performance as unknown as {
+        navigation?: { type?: number };
+      }
+    ).navigation;
+    if (nt && typeof nt.type === "number") {
+      // Legacy PerformanceNavigation enum: 0 navigate, 1 reload, 2 back_forward
+      switch (nt.type) {
+        case 0:
+          return "navigate";
+        case 1:
+          return "reload";
+        case 2:
+          return "back_forward";
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return "navigate";
+}
 
 export const flameGraph: ToolDefinition = {
   id: "flame-graph",
   name: "Performance Entries Viewer",
-  // Honest description: this tool reads PerformanceEntry marks/measures/resources,
-  // it does not sample the JS call stack. A real flame graph would require
-  // the JS Self-Profiling API or the in-house lib/profiler/ pipeline.
   description:
     "Visualize performance.measure / mark / resource / longtask entries as a timeline",
   category: "performance",
@@ -64,12 +116,9 @@ export const flameGraph: ToolDefinition = {
     const longTaskThreshold = (config?.longTaskThreshold as number) ?? 50;
 
     const entries: FlameEntry[] = [];
-    // Dedupe by (name, startTime, duration) — captureEntries() runs on a
-    // 2s timer AND on every PerformanceObserver callback, so without this
-    // the previous implementation accumulated duplicates on every tick.
     const seenKeys = new Set<string>();
-    const overlayEls: HTMLElement[] = [];
     let active = true;
+    let navType = getNavigationType();
 
     function pushEntry(e: FlameEntry): void {
       const key = `${e.name}|${e.startTime.toFixed(2)}|${e.duration.toFixed(2)}`;
@@ -78,72 +127,7 @@ export const flameGraph: ToolDefinition = {
       entries.push(e);
     }
 
-    // -- Capture Performance entries --
-    function captureEntries(): void {
-      const now = performance.now();
-      const cutoff = now - timeRange;
-
-      // Gather measures
-      const measures = performance.getEntriesByType(
-        "measure",
-      ) as PerformanceMeasure[];
-      for (const m of measures) {
-        if (m.startTime < cutoff || m.duration < minDuration) continue;
-        pushEntry({
-          name: m.name || "measure",
-          type: "script",
-          startTime: m.startTime,
-          duration: m.duration,
-          depth: 0,
-        });
-      }
-
-      // Gather marks (zero-duration, inflate slightly for visibility)
-      const marks = performance.getEntriesByType("mark") as PerformanceMark[];
-      for (const mk of marks) {
-        if (mk.startTime < cutoff) continue;
-        pushEntry({
-          name: mk.name || "mark",
-          type: "render",
-          startTime: mk.startTime,
-          duration: Math.max(minDuration, 0.1),
-          depth: 0,
-        });
-      }
-
-      // Gather resource timing entries
-      const resources = performance.getEntriesByType(
-        "resource",
-      ) as PerformanceResourceTiming[];
-      for (const r of resources) {
-        if (r.startTime < cutoff || r.duration < minDuration) continue;
-        const rType = inferResourceType(r);
-        pushEntry({
-          name: r.name.split("/").pop() || r.name,
-          type: rType,
-          startTime: r.startTime,
-          duration: r.duration,
-          depth: 1,
-        });
-      }
-
-      // Gather navigation timing
-      const navigations = performance.getEntriesByType(
-        "navigation",
-      ) as PerformanceNavigationTiming[];
-      for (const n of navigations) {
-        if (n.startTime < cutoff) continue;
-        pushEntry({
-          name: "navigation",
-          type: "script",
-          startTime: n.startTime,
-          duration: n.duration,
-          depth: 0,
-        });
-      }
-
-      // Recompute depth from overlap on every pass — duplicates have been
-      // removed so the greedy stack is stable.
+    function recomputeDepth(): void {
       entries.sort(
         (a, b) => a.startTime - b.startTime || b.duration - a.duration,
       );
@@ -156,35 +140,137 @@ export const flameGraph: ToolDefinition = {
       }
     }
 
-    function inferResourceType(
-      r: PerformanceResourceTiming,
-    ): FlameEntry["type"] {
-      const url = r.name.toLowerCase();
-      if (url.match(/\.(js|mjs|cjs)(\?|$)/)) return "script";
-      if (url.match(/\.(css)(\?|$)/)) return "render";
-      if (url.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)(\?|$)/)) return "paint";
-      return "layout";
+    function captureStaticEntries(): void {
+      const now = performance.now();
+      const cutoff = now - timeRange;
+
+      const measures = performance.getEntriesByType(
+        "measure",
+      ) as PerformanceMeasure[];
+      for (const m of measures) {
+        if (m.startTime < cutoff || m.duration < minDuration) continue;
+        pushEntry({
+          name: m.name || "measure",
+          type: "scripting",
+          startTime: m.startTime,
+          duration: m.duration,
+          depth: 0,
+        });
+      }
+
+      const marks = performance.getEntriesByType("mark") as PerformanceMark[];
+      for (const mk of marks) {
+        if (mk.startTime < cutoff) continue;
+        pushEntry({
+          name: mk.name || "mark",
+          type: "rendering",
+          startTime: mk.startTime,
+          duration: Math.max(minDuration, 0.1),
+          depth: 0,
+        });
+      }
+
+      const resources = performance.getEntriesByType(
+        "resource",
+      ) as PerformanceResourceTiming[];
+      for (const r of resources) {
+        if (r.startTime < cutoff || r.duration < minDuration) continue;
+        pushEntry({
+          name: r.name.split("/").pop() || r.name,
+          type: inferResourceType(r),
+          startTime: r.startTime,
+          duration: r.duration,
+          depth: 0,
+        });
+      }
+
+      const paints = performance.getEntriesByType(
+        "paint",
+      ) as PerformancePaintTiming[];
+      for (const p of paints) {
+        if (p.startTime < cutoff) continue;
+        pushEntry({
+          name: p.name || "paint",
+          type: "painting",
+          startTime: p.startTime,
+          duration: Math.max(minDuration, 0.1),
+          depth: 0,
+        });
+      }
+
+      navType = getNavigationType();
+      recomputeDepth();
     }
 
-    // -- PerformanceObserver for live entries --
-    let perfObserver: PerformanceObserver | null = null;
-    try {
-      perfObserver = new PerformanceObserver(() => {
-        if (!active) return;
-        captureEntries();
-        renderFlameGraph();
-      });
-      perfObserver.observe({
-        entryTypes: ["measure", "mark", "resource", "longtask"],
-      });
-    } catch {
-      // PerformanceObserver may not support all entry types; fall back to polling
+    // One PerformanceObserver per entry type for cleaner teardown and so a
+    // single unsupported entryType does not disable the others.
+    const observers: PerformanceObserver[] = [];
+    const observedTypes = ["measure", "mark", "resource", "paint", "longtask"];
+    for (const entryType of observedTypes) {
+      try {
+        const obs = new PerformanceObserver((list) => {
+          if (!active) return;
+          const now = performance.now();
+          const cutoff = now - timeRange;
+          for (const entry of list.getEntries()) {
+            if (entry.startTime < cutoff) continue;
+            if (entryType === "longtask") {
+              pushEntry({
+                name: "longtask",
+                type: "scripting",
+                startTime: entry.startTime,
+                duration: entry.duration,
+                depth: 0,
+              });
+            } else if (entryType === "measure") {
+              if (entry.duration < minDuration) continue;
+              pushEntry({
+                name: entry.name || "measure",
+                type: "scripting",
+                startTime: entry.startTime,
+                duration: entry.duration,
+                depth: 0,
+              });
+            } else if (entryType === "mark") {
+              pushEntry({
+                name: entry.name || "mark",
+                type: "rendering",
+                startTime: entry.startTime,
+                duration: Math.max(minDuration, 0.1),
+                depth: 0,
+              });
+            } else if (entryType === "resource") {
+              if (entry.duration < minDuration) continue;
+              pushEntry({
+                name: entry.name.split("/").pop() || entry.name,
+                type: inferResourceType(entry as PerformanceResourceTiming),
+                startTime: entry.startTime,
+                duration: entry.duration,
+                depth: 0,
+              });
+            } else if (entryType === "paint") {
+              pushEntry({
+                name: entry.name || "paint",
+                type: "painting",
+                startTime: entry.startTime,
+                duration: Math.max(minDuration, 0.1),
+                depth: 0,
+              });
+            }
+          }
+          recomputeDepth();
+          renderFlameGraph();
+        });
+        obs.observe({ type: entryType, buffered: true });
+        observers.push(obs);
+      } catch {
+        // entryType unsupported in this browser
+      }
     }
 
-    // -- Build panel in shadow DOM --
     const panelHost = document.createElement("div");
     panelHost.style.cssText =
-      "position:fixed;top:20px;right:20px;width:780px;height:480px;z-index:2147483647;";
+      "position:fixed;top:20px;right:20px;width:780px;height:480px;z-index:2147483647;pointer-events:auto;";
     const shadow = panelHost.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");
@@ -194,6 +280,7 @@ export const flameGraph: ToolDefinition = {
       .fg-panel { background: #0f172a; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); display: flex; flex-direction: column; height: 100%; overflow: hidden; color: #e2e8f0; font-size: 13px; }
       .fg-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; flex-shrink: 0; }
       .fg-header-title { font-weight: 600; font-size: 14px; }
+      .fg-header-sub { font-size: 11px; color: #94a3b8; margin-left: 8px; }
       .fg-header-actions { display: flex; gap: 4px; }
       .fg-header-actions button { background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 14px; }
       .fg-header-actions button:hover { background: #334155; color: #f8fafc; }
@@ -215,12 +302,17 @@ export const flameGraph: ToolDefinition = {
     const panel = document.createElement("div");
     panel.className = "fg-panel";
 
-    // Header
     const header = document.createElement("div");
     header.className = "fg-header";
+    const titleWrap = document.createElement("div");
+    titleWrap.style.cssText = "display:flex;align-items:baseline;";
     const title = document.createElement("div");
     title.className = "fg-header-title";
     title.textContent = "Performance Entries";
+    const subtitle = document.createElement("span");
+    subtitle.className = "fg-header-sub";
+    subtitle.textContent = "nav: " + navType;
+    titleWrap.append(title, subtitle);
     const actions = document.createElement("div");
     actions.className = "fg-header-actions";
     const btnRefresh = document.createElement("button");
@@ -230,9 +322,8 @@ export const flameGraph: ToolDefinition = {
     btnClose.textContent = "Close";
     btnClose.dataset.action = "close";
     actions.append(btnRefresh, btnClose);
-    header.append(title, actions);
+    header.append(titleWrap, actions);
 
-    // Legend
     const legend = document.createElement("div");
     legend.className = "fg-legend";
     for (const [t, c] of Object.entries(TYPE_COLORS)) {
@@ -246,18 +337,15 @@ export const flameGraph: ToolDefinition = {
       legend.appendChild(item);
     }
 
-    // Stats bar
     const stats = document.createElement("div");
     stats.className = "fg-stats";
     const statsText = document.createElement("span");
     statsText.textContent = "Entries: 0";
     stats.appendChild(statsText);
 
-    // Canvas wrapper
     const canvasWrap = document.createElement("div");
     canvasWrap.className = "fg-canvas-wrap";
 
-    // Footer
     const footer = document.createElement("div");
     footer.className = "fg-footer";
     const footerLeft = document.createElement("span");
@@ -267,27 +355,22 @@ export const flameGraph: ToolDefinition = {
       "Time range: " + ((config?.maxDuration as number) ?? 30) + "s";
     footer.append(footerLeft, footerRight);
 
-    // Tooltip (lives outside canvas wrap so it is not clipped)
     const tooltip = document.createElement("div");
     tooltip.className = "fg-tooltip";
 
     panel.append(header, legend, stats, canvasWrap, footer);
     shadow.append(panel, tooltip);
 
-    document.body.appendChild(panelHost);
+    addOverlayElement(panelHost);
 
-    // -- Rendering --
     const BAR_HEIGHT = 22;
     const BAR_GAP = 2;
     const ROW = BAR_HEIGHT + BAR_GAP;
 
     function renderFlameGraph(): void {
-      // Remove old bars
       while (canvasWrap.firstChild)
         canvasWrap.removeChild(canvasWrap.firstChild);
-      // Remove overlay highlights
-      for (const o of overlayEls) removeOverlayElement(o);
-      overlayEls.length = 0;
+      subtitle.textContent = "nav: " + navType;
 
       if (entries.length === 0) {
         const empty = document.createElement("div");
@@ -321,12 +404,13 @@ export const flameGraph: ToolDefinition = {
         bar.style.left = x + "px";
         bar.style.top = entry.depth * ROW + "px";
         bar.style.width = w + "px";
-        bar.style.background = TYPE_COLORS[entry.type] || TYPE_COLORS.idle;
+        bar.style.background = TYPE_COLORS[entry.type] || TYPE_COLORS.scripting;
 
-        // Long task indicator
-        if (
+        if (entry.name === "longtask") {
+          bar.style.borderRight = "3px solid #f59e0b";
+        } else if (
           showLongTasks &&
-          entry.type === "script" &&
+          entry.type === "scripting" &&
           entry.duration > longTaskThreshold
         ) {
           bar.style.borderRight = "3px solid #f59e0b";
@@ -340,8 +424,6 @@ export const flameGraph: ToolDefinition = {
         }
 
         bar.addEventListener("mouseenter", (ev: MouseEvent) => {
-          // User input is escaped via escapeText() above. Audited Phase 1.1.
-          // eslint-disable-next-line no-restricted-syntax
           tooltip.innerHTML = `
             <div class="fg-tooltip-name">${escapeText(entry.name)}</div>
             <div class="fg-tooltip-details">
@@ -364,7 +446,6 @@ export const flameGraph: ToolDefinition = {
       statsText.textContent =
         "Entries: " + entries.length + " | Depth: " + (maxDepth + 1);
 
-      // Add long-task count
       const longCount = entries.filter(
         (e) => e.duration > longTaskThreshold,
       ).length;
@@ -389,34 +470,37 @@ export const flameGraph: ToolDefinition = {
         .replace(/"/g, "&quot;");
     }
 
-    // -- Event handlers --
     panel.addEventListener("click", (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.dataset.action === "close") cleanup();
       else if (target.dataset.action === "refresh") {
-        captureEntries();
+        captureStaticEntries();
         renderFlameGraph();
       }
     });
 
-    // Initial capture & render
-    captureEntries();
+    captureStaticEntries();
     renderFlameGraph();
 
-    // Auto-refresh every 2 seconds
     const refreshTimer = setInterval(() => {
       if (!active) return;
-      captureEntries();
+      captureStaticEntries();
       renderFlameGraph();
     }, 2000);
 
     function cleanup() {
+      if (!active) return;
       active = false;
       clearInterval(refreshTimer);
-      if (perfObserver) perfObserver.disconnect();
-      for (const o of overlayEls) removeOverlayElement(o);
-      overlayEls.length = 0;
-      panelHost.remove();
+      for (const obs of observers) {
+        try {
+          obs.disconnect();
+        } catch {
+          // ignore
+        }
+      }
+      observers.length = 0;
+      removeOverlayElement(panelHost);
     }
 
     ctx.onInvalidated(cleanup);
