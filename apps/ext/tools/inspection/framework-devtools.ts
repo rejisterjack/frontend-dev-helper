@@ -1,9 +1,5 @@
 import type { ToolDefinition } from "../types";
-import {
-  addOverlayElement,
-  removeOverlayElement,
-  clearAllOverlays,
-} from "@/content/overlay-manager";
+import { addOverlayElement, removeOverlayElement } from "@/content/overlay-manager";
 import { jumpToElementSource } from "@/lib/element-source-resolver";
 
 type FrameworkType = "react" | "vue" | "angular" | "svelte" | "none";
@@ -70,7 +66,7 @@ function classifyHookName(
 }
 
 function detectFramework(): FrameworkType {
-  const w = window as unknown as Record<string, unknown>;
+  const w = window as any as Record<string, unknown>;
   if (
     w.__REACT_DEVTOOLS_GLOBAL_HOOK__ ||
     document.querySelector("[data-reactroot], [data-reactid]")
@@ -85,7 +81,7 @@ function detectFramework(): FrameworkType {
 }
 
 function getVersion(framework: FrameworkType): string | undefined {
-  const w = window as unknown as Record<string, unknown>;
+  const w = window as any as Record<string, unknown>;
   if (framework === "react")
     return (w.React as { version?: string } | undefined)?.version;
   if (framework === "vue")
@@ -106,7 +102,7 @@ function getReactComponentInfo(
       k.startsWith("__reactFiber$") || k.startsWith("__reactInternalInstance$"),
   );
   if (!key) return null;
-  const fiber = (element as unknown as Record<string, ReactFiber>)[key];
+  const fiber = (element as any as Record<string, ReactFiber>)[key];
   if (!fiber) return null;
   let owner = fiber._debugOwner || fiber.return;
   while (owner && !owner.type?.name) owner = owner.return;
@@ -129,7 +125,7 @@ function getReactComponentInfo(
 function getVueComponentInfo(element: HTMLElement): FrameworkComponent | null {
   let target: HTMLElement | null = element;
   while (target) {
-    const el = target as unknown as Record<string, unknown>;
+    const el = target as any as Record<string, unknown>;
     const parentComp = el.__vueParentComponent as
       | Record<string, unknown>
       | undefined;
@@ -193,7 +189,7 @@ function getComponentInfo(
   }
 }
 
-function escapeHtml(str: string): string {
+function _escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -307,7 +303,7 @@ export const frameworkDevtools: ToolDefinition = {
       while (content.firstChild) content.removeChild(content.firstChild);
 
       const devtoolsAvailable = (() => {
-        const w = window as unknown as Record<string, unknown>;
+        const w = window as any as Record<string, unknown>;
         switch (framework) {
           case "react":
             return !!w.__REACT_DEVTOOLS_GLOBAL_HOOK__;

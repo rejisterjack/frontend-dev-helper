@@ -82,7 +82,7 @@ function getElementInfo(): Promise<ElementInfo | null> {
           resolve(null);
         } else {
           try {
-            resolve(JSON.parse(result as unknown as string));
+            resolve(JSON.parse(result as any as string));
           } catch {
             resolve(null);
           }

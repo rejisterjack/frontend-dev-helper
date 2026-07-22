@@ -1,4 +1,4 @@
-import type { LLMConfig, LLMMessage } from './types';
+import type { LLMMessage } from './types';
 import type { PageContextData } from './messaging/types';
 
 export interface AIFunction {

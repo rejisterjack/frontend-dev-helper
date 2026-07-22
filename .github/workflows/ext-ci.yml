@@ -6,6 +6,8 @@ on:
     paths:
       - "apps/ext/**"
       - "packages/bridge-protocol/**"
+      - "packages/profiler-analyzer/**"
+      - "packages/profiler-contract/**"
       - "packages/eslint-config/**"
       - "bun.lock"
       - ".github/workflows/ext-ci.yml"
@@ -14,6 +16,8 @@ on:
     paths:
       - "apps/ext/**"
       - "packages/bridge-protocol/**"
+      - "packages/profiler-analyzer/**"
+      - "packages/profiler-contract/**"
       - "packages/eslint-config/**"
       - "bun.lock"
       - ".github/workflows/ext-ci.yml"
@@ -40,20 +44,12 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        working-directory: apps/ext
         run: bun install --frozen-lockfile
 
-      # Phase 1.1: --max-warnings=0 parity with web CI.
-      # Current baseline (Phase 0/1 cleanup): ~229 warnings — almost all pre-existing
-      # `@typescript-eslint/no-unused-vars` (~117) and `@typescript-eslint/no-explicit-any`
-      # (~77, including test-file chrome.* mocks) documented in apps/ext/CLAUDE.md.
-      # The threshold caps at the current baseline so new warnings fail CI immediately
-      # while the legacy debt is burned down (tracked in MASTER_PLAN_EXT.md → Phase 2.7).
-      # The no-restricted-syntax innerHTML ban above is a hard error regardless of this
-      # threshold.
+      # Zero-warning lint budget (Phase 2.7 burn-down complete).
       - name: Lint
         working-directory: apps/ext
-        run: bun run lint -- --max-warnings=229
+        run: bun run lint -- --max-warnings=0
 
       - name: Type check
         working-directory: apps/ext
@@ -74,6 +70,21 @@ jobs:
       - name: Build extension
         working-directory: apps/ext
         run: bun run build
+
+      - name: Post-build smoke / e2e (manifest + catalog)
+        working-directory: apps/ext
+        run: bun run test:e2e
+
+      - name: Bundle size budget
+        working-directory: apps/ext
+        run: |
+          SIZE_KB=$(du -sk .output/chrome-mv3 | cut -f1)
+          echo "Bundle size: ${SIZE_KB} KB"
+          # Budget: 8 MB (8192 KB) — calibrated above current ~3.5 MB with headroom
+          if [ "$SIZE_KB" -gt 8192 ]; then
+            echo "Bundle exceeds 8 MB budget"
+            exit 1
+          fi
 
       - name: Upload build artifact
         if: always()

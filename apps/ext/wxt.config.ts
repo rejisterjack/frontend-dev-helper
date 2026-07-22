@@ -13,7 +13,7 @@ export default defineConfig({
     version: pkg.version,
     // Phase 1.7: tool count derived from the registry so the manifest never
     // drifts from the actual loader count again.
-    description: `A comprehensive frontend debugging toolkit with ${toolCount}+ tools for inspection, CSS analysis, performance profiling, accessibility auditing, and AI-powered analysis.`,
+    description: `A comprehensive frontend debugging toolkit with ${toolCount} tools for inspection, CSS analysis, performance profiling, accessibility auditing, and AI-powered analysis.`,
     permissions: [
       "activeTab",
       "storage",
@@ -24,7 +24,9 @@ export default defineConfig({
       "contextMenus",
       "sidePanel",
     ],
-    host_permissions: ["http://*/*", "https://*/*"],
+    // Opt-in per origin (Phase 2.2). Content scripts only inject after the
+    // user grants host access via "Enable on this site".
+    optional_host_permissions: ["http://*/*", "https://*/*"],
     side_panel: {
       default_path: "sidepanel.html",
     },

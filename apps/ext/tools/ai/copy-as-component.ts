@@ -279,7 +279,7 @@ function buildCSSBlock(
     ["xl", 1280],
   ];
   const blocks = scale.map(
-    ([name, min]) =>
+    ([_name, min]) =>
       `@media (min-width: ${min}px) {\n  .${className} {\n${responsiveProps
         .map(([k, v]) => `    ${k}: ${v};`)
         .join("\n")}\n  }\n}`,

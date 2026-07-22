@@ -64,7 +64,7 @@ export function applyFix(element: HTMLElement, fix: FixPayload): boolean {
   try {
     if (fix.styleChanges) {
       for (const [prop, value] of Object.entries(fix.styleChanges)) {
-        (element.style as unknown as Record<string, string>)[prop] = value;
+        (element.style as any as Record<string, string>)[prop] = value;
       }
     }
     if (fix.html) {

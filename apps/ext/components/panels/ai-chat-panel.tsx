@@ -142,7 +142,7 @@ export function AIChatPanel() {
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [activeSession?.messages]);
 
   useEffect(() => {
     const listener = (message: {

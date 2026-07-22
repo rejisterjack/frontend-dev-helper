@@ -101,7 +101,7 @@ async function fetchContent(url: string): Promise<string | null> {
   }
 }
 
-function extractSourceMapUrlFromHeaders(url: string): string | null {
+function _extractSourceMapUrlFromHeaders(_url: string): string | null {
   // We can't read response headers from content scripts for cross-origin resources,
   // but we can check for the SourceMap header via a fetch. This is done inline
   // in the fetch functions below rather than here since we need the Response object.
@@ -288,7 +288,7 @@ export async function enrichSourceMapInfo(info: SourceMapInfo): Promise<SourceMa
   const consumer = await getConsumer(info.sourceMapUrl);
   if (!consumer) return null;
 
-  const sources: string[] = (consumer as unknown as { sources: string[] }).sources ?? [];
+  const sources: string[] = (consumer as any as { sources: string[] }).sources ?? [];
   const hasContent = sources.some((s: string) => consumer.sourceContentFor(s, true) !== null);
 
   return {

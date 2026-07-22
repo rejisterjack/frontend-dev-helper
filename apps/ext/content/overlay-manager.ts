@@ -1,7 +1,7 @@
 import { CanvasOverlay } from "./canvas-overlay";
 
 const CONTAINER_ID = "fdh-overlay-container";
-const SHADOW_HOST_ID = "fdh-shadow-host";
+const _SHADOW_HOST_ID = "fdh-shadow-host";
 
 let container: HTMLDivElement | null = null;
 let shadowRoot: ShadowRoot | null = null;
@@ -117,7 +117,7 @@ export function attachViewportTracker(tracker: Tracker): () => void {
 
 export function clearAllOverlays(): void {
   if (shadowRoot) {
-    const style = shadowRoot.querySelector("style");
+    const _style = shadowRoot.querySelector("style");
     while (shadowRoot.childNodes.length > 1) {
       shadowRoot.removeChild(shadowRoot.lastChild!);
     }

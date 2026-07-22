@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toolMetadata } from "@/tools/metadata";
 import { chromeStorageAdapter } from "@/lib/storage";
+import { ensureActiveTabHostAccess } from "@/lib/host-permissions";
 
 interface ActiveTool {
   toolId: string;
@@ -13,13 +14,18 @@ interface ActiveTool {
 
 interface ToolsState {
   activeTools: Record<string, ActiveTool>;
-  toggleTool: (toolId: string) => void;
-  activateTool: (toolId: string, config?: Record<string, unknown>) => void;
+  toggleTool: (toolId: string) => Promise<void>;
+  activateTool: (
+    toolId: string,
+    config?: Record<string, unknown>,
+  ) => Promise<void>;
   deactivateTool: (toolId: string) => void;
   deactivateAll: () => void;
   deactivateCategory: (category: string) => void;
   updateToolConfig: (toolId: string, config: Record<string, unknown>) => void;
   setToolError: (toolId: string, error: string) => void;
+  lastPermissionError: string | null;
+  clearPermissionError: () => void;
 }
 
 const chromeStorageAdapterInstance = chromeStorageAdapter<ToolsState>();
@@ -43,17 +49,32 @@ export const useToolsStore = create<ToolsState>()(
   persist(
     (set, get) => ({
       activeTools: {},
+      lastPermissionError: null,
+      clearPermissionError: () => set({ lastPermissionError: null }),
 
-      toggleTool: (toolId) => {
+      toggleTool: async (toolId) => {
         const current = get().activeTools[toolId];
         if (current?.active) {
           get().deactivateTool(toolId);
         } else {
-          get().activateTool(toolId);
+          await get().activateTool(toolId);
         }
       },
 
-      activateTool: (toolId, config = {}) => {
+      activateTool: async (toolId, config = {}) => {
+        try {
+          const access = await ensureActiveTabHostAccess();
+          if (!access.ok) {
+            set({
+              lastPermissionError:
+                access.reason ?? "Host permission required for this site.",
+            });
+            return;
+          }
+        } catch {
+          // Non-extension contexts (unit tests) skip permission checks.
+        }
+        set({ lastPermissionError: null });
         sendToolMessage("POPUP_ACTIVATE_TOOL", toolId, config);
         set((state) => ({
           activeTools: {

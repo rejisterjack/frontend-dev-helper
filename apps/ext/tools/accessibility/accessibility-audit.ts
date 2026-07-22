@@ -87,13 +87,47 @@ async function runAxeAudit(
       : showIncomplete
         ? ["violations", "incomplete"]
         : ["violations"];
-    const results = await axe.default.run(document, {
+    const results = (await (
+      axe.default.run as (
+        context: Document,
+        options: Record<string, unknown>,
+      ) => Promise<{
+        violations: Array<{
+          impact?: string | null;
+          nodes: Array<{
+            target: string[];
+            html?: string;
+            failureSummary?: string;
+          }>;
+          id: string;
+          description: string;
+          help: string;
+        }>;
+        incomplete: Array<{
+          impact?: string | null;
+          nodes: Array<{
+            target: string[];
+            html?: string;
+            failureSummary?: string;
+          }>;
+          id: string;
+          description: string;
+          help: string;
+        }>;
+        passes: Array<{
+          nodes: Array<{ target: string[]; html?: string }>;
+          id: string;
+          description: string;
+          help: string;
+        }>;
+      }>
+    )(document, {
       runOnly: {
         type: "tag",
         values: wcagTagsForLevel(level),
       },
-      resultTypes: resultTypesQuery as unknown as string[],
-    });
+      resultTypes: resultTypesQuery,
+    }));
 
     for (const violation of results.violations) {
       for (const node of violation.nodes) {

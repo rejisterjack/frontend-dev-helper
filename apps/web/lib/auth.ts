@@ -1,8 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { authConfig } from "./auth.config";
 import { prisma } from "./db";
+
+const LINK_COOKIE = "fdh-oauth-link";
 
 /**
  * Full NextAuth setup for Node-runtime contexts (route handlers, server
@@ -13,17 +16,10 @@ import { prisma } from "./db";
  * which the Edge runtime can resolve. Edge code imports `lib/auth.config.ts`
  * instead, which contains the edge-safe subset (providers list + the
  * `authorized` callback).
- *
- * NextAuth's `NextAuth(config)` merges the config from `authConfig` with the
- * additional callbacks defined here. The callbacks defined here override
- * their namesakes in `authConfig` (so the `authorized` callback in
- * `authConfig` keeps running in middleware; the `signIn` / `jwt` / `session`
- * callbacks defined here run in the Node runtime).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   callbacks: {
-    // Carry forward the edge-safe `authorized` callback so types stay in sync.
     authorized: authConfig.callbacks?.authorized,
 
     async jwt({ token, user }) {
@@ -36,20 +32,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (token && session.user) {
-        // Cast through the augmented JWT type — TS sometimes fails to merge
-        // the module augmentation when strict mode + Next.js plugin interact.
         const t = token as { userId: string; emailVerified: boolean };
         session.user.id = t.userId;
-        // Force-override emailVerified; the base Session.user type from
-        // @auth/core types it as `Date | string | null`, but we store and
-        // propagate a boolean.
         (session.user as { emailVerified: boolean }).emailVerified =
           t.emailVerified;
       }
       return session;
     },
     async signIn({ user, account, profile }) {
-      // Only run linking/creation logic for OAuth providers.
       if (
         !account ||
         (account.provider !== "google" && account.provider !== "github")
@@ -64,8 +54,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       });
 
       if (!existingUser) {
-        // No user yet — provision one. OAuth providers have already verified
-        // the email at the IdP, so we stamp emailVerified: true.
         await prisma.user.create({
           data: {
             email: user.email,
@@ -79,13 +67,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      // Existing user. Decide whether to allow this OAuth sign-in.
       const sameOAuthIdentity =
         existingUser.oauthProvider === account.provider &&
         existingUser.oauthId === account.providerAccountId;
 
       if (sameOAuthIdentity) {
-        // Returning OAuth user — allow. Refresh avatar from profile.
         const avatarFromProfile = (profile as Record<string, unknown> | null)
           ?.image as string | undefined;
         if (avatarFromProfile && avatarFromProfile !== existingUser.avatarUrl) {
@@ -97,18 +83,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      // The email matches a user that did NOT sign in with this OAuth identity.
-      // Refuse to link automatically — that would let anyone controlling a
-      // matching-email OAuth identity take over the credentials account.
-      // The user must sign in with their existing credentials and link the
-      // OAuth account explicitly from the dashboard (TODO: build that flow).
-      // Returning `false` redirects to /login?error=OAuthAccountNotLinked.
+      // Explicit dashboard link: cookie set by POST /api/auth/prepare-link.
+      try {
+        const jar = await cookies();
+        const link = jar.get(LINK_COOKIE)?.value;
+        if (link) {
+          const [linkUserId, linkProvider] = link.split(":");
+          jar.delete(LINK_COOKIE);
+          if (
+            linkUserId === existingUser.id &&
+            linkProvider === account.provider &&
+            existingUser.passwordHash &&
+            !existingUser.oauthProvider
+          ) {
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: {
+                oauthProvider: account.provider,
+                oauthId: account.providerAccountId,
+                avatarUrl: user.image ?? existingUser.avatarUrl,
+                emailVerified: true,
+              },
+            });
+            return true;
+          }
+        }
+      } catch {
+        // cookies() may throw outside a request context — fall through.
+      }
+
+      // Refuse silent linking — prevents OAuth takeover of credentials accounts.
       return false;
     },
   },
   providers: [
-    // Credentials provider lives here (not in auth.config.ts) because it
-    // transitively imports Prisma + bcrypt — Node-only.
     Credentials({
       name: "credentials",
       credentials: {
@@ -127,9 +135,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email },
         });
 
-        // Always run a bcrypt compare against a throwaway hash when the user
-        // doesn't exist so the failure path takes the same time as the
-        // success path (mitigates user-enumeration via timing).
         const placeholderHash =
           "$2a$12$00000000000000000000000000000000000000000000000000000001";
         const hashToCompare = user?.passwordHash ?? placeholderHash;
@@ -139,10 +144,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // Email verification is enforced by the `authorized` callback in
-        // lib/auth.config.ts: unverified users get a session (so they can hit
-        // /verify-email to resend the link) but are redirected away from any
-        // protected route.
         return {
           id: user.id,
           email: user.email,
@@ -151,10 +152,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    // The OAuth providers from `authConfig` are inherited via the spread
-    // above; we don't re-declare them here. (Adding Credentials via the
-    // providers array here would replace the inherited array, so we list
-    // them all together.)
     ...(authConfig.providers ?? []),
   ],
 });

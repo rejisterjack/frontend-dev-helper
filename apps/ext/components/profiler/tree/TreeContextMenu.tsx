@@ -36,12 +36,10 @@ interface TreeContextMenuProps {
 }
 
 export function TreeContextMenu({
-  componentName,
   sourceLocation,
   hasChildren,
   isExpanded,
   onViewAnalysis,
-  onOpenInEditor,
   onCopyName,
   onToggleExpand,
   children,

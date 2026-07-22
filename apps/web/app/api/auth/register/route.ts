@@ -3,14 +3,14 @@ import { hash } from "bcryptjs";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { sendVerificationEmail } from "@/lib/email";
+import {
+  sendVerificationEmail,
+  sendReferralNotificationEmail,
+} from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { hashToken } from "@/lib/tokens";
 
-// Validate the request body up front so we can fail fast with a 400 before
-// hitting the rate limiter / DB. Mirrors the validation in the sibling auth
-// routes (login, reset-password, forgot-password).
 const registerSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(80),
   email: z.string().trim().toLowerCase().email("Invalid email"),
@@ -18,10 +18,15 @@ const registerSchema = z.object({
     .string()
     .min(8, "Password must be at least 8 characters")
     .max(160),
+  referralCode: z.string().trim().max(32).optional(),
 });
 
+const successMessage =
+  "If this email is not already registered, an account has been created and a verification link sent.";
+
 export async function POST(request: Request) {
-  // IP-level: 5 signups per minute. Email-level: 3 per hour (below).
+  const requestId = request.headers.get("x-request-id") ?? undefined;
+
   const ipLimited = await enforceRateLimit(request, {
     limit: 5,
     windowSeconds: 60,
@@ -33,12 +38,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
 
-    // For validation errors we deliberately return the SAME success-shaped
-    // response we use to avoid email enumeration. The actual `error` path is
-    // only used when the body is structurally invalid JSON.
     if (!parsed.success) {
-      // Re-run rate limit on the email (if present) so attackers can't bypass
-      // the per-email throttle by sending malformed payloads.
       const email = body?.email;
       if (typeof email === "string") {
         await enforceRateLimit(request, {
@@ -47,20 +47,12 @@ export async function POST(request: Request) {
           identifierSuffix: `register:${email.toLowerCase()}`,
         });
       }
-      return NextResponse.json(
-        {
-          message:
-            "If this email is not already registered, an account has been created and a verification link sent.",
-        },
-        { status: 200 },
-      );
+      return NextResponse.json({ message: successMessage }, { status: 200 });
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, referralCode: rawCode } = parsed.data;
+    const referralCode = rawCode?.trim() || undefined;
 
-    // Email-level throttling: 3 registrations per email per hour. Limits
-    // both abuse and accidental re-registration storms. We deliberately do
-    // NOT return a different response shape here to avoid email enumeration.
     const emailLimited = await enforceRateLimit(request, {
       limit: 3,
       windowSeconds: 3600,
@@ -70,16 +62,7 @@ export async function POST(request: Request) {
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      // CF-5: to close the email-enumeration vector, return the success
-      // message (but do NOT create a session). The user is told to check
-      // their inbox either way.
-      return NextResponse.json(
-        {
-          message:
-            "If this email is not already registered, an account has been created and a verification link sent.",
-        },
-        { status: 200 },
-      );
+      return NextResponse.json({ message: successMessage }, { status: 200 });
     }
 
     const passwordHash = await hash(password, 12);
@@ -92,7 +75,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // 256-bit random token; plaintext goes only to email, hash goes to DB.
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -104,18 +86,72 @@ export async function POST(request: Request) {
       },
     });
 
-    await sendVerificationEmail(email, token, name);
+    const emailResult = await sendVerificationEmail(email, token, name);
+    if (!emailResult.success) {
+      await prisma.emailVerification.deleteMany({ where: { userId: user.id } });
+      await prisma.user.delete({ where: { id: user.id } });
+      logger.error("Registration email failed", {
+        requestId,
+        error: emailResult.error,
+      });
+      return NextResponse.json(
+        {
+          error:
+            "We could not send a verification email. Please try again later.",
+        },
+        { status: 502 },
+      );
+    }
 
-    logger.info(`User registered: ${email}`);
+    // Soft referral redemption — invalid codes are ignored (anti-enumeration).
+    if (referralCode) {
+      try {
+        const referral = await prisma.referral.findUnique({
+          where: { referralCode },
+          include: { referrer: { select: { id: true, email: true, name: true } } },
+        });
+        if (
+          referral &&
+          referral.status === "PENDING" &&
+          !referral.referredId &&
+          referral.referrerId !== user.id
+        ) {
+          await prisma.$transaction([
+            prisma.referral.update({
+              where: { id: referral.id },
+              data: {
+                referredId: user.id,
+                status: "COMPLETED",
+                redeemedAt: new Date(),
+              },
+            }),
+            prisma.user.update({
+              where: { id: user.id },
+              data: { referredById: referral.referrerId },
+            }),
+          ]);
+          void sendReferralNotificationEmail(
+            referral.referrer.email,
+            referral.referralCode,
+            name,
+          );
+        }
+      } catch (err) {
+        logger.warn("Referral redemption skipped", { requestId, err });
+      }
+    }
+
+    logger.info("User registered", { requestId, email });
     return NextResponse.json(
       {
         message:
           "Account created. Please check your email to verify your account.",
+        requiresVerification: true,
       },
       { status: 201 },
     );
   } catch (error) {
-    logger.error("Registration error:", error);
+    logger.error("Registration error", { requestId, error });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

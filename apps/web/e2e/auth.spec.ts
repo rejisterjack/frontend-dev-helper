@@ -19,14 +19,15 @@ test.describe("Auth gating", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("/licenses is gated", async ({ page }) => {
-    await page.goto("/licenses");
-    await expect(page).toHaveURL(/\/login/);
+  test("/licenses is not a protected app route", async ({ page }) => {
+    const response = await page.goto("/licenses");
+    // Free-OSS: no licenses product — expect 404, not a login gate.
+    expect(response?.status()).toBe(404);
   });
 
-  test("/teams is gated", async ({ page }) => {
-    await page.goto("/teams");
-    await expect(page).toHaveURL(/\/login/);
+  test("/teams is not a protected app route", async ({ page }) => {
+    const response = await page.goto("/teams");
+    expect(response?.status()).toBe(404);
   });
 });
 
@@ -63,6 +64,9 @@ test.describe("Signup page", () => {
       page.getByPlaceholder("Password (min 8 characters)"),
     ).toBeVisible();
     await expect(page.getByPlaceholder("Confirm password")).toBeVisible();
+    await expect(
+      page.getByPlaceholder("Referral code (optional)"),
+    ).toBeVisible();
   });
 
   test("client-side validation rejects mismatched passwords", async ({

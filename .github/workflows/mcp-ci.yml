@@ -1,0 +1,55 @@
+name: MCP CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mcp/**"
+      - "bun.lock"
+      - ".github/workflows/mcp-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/mcp/**"
+      - "bun.lock"
+      - ".github/workflows/mcp-ci.yml"
+
+concurrency:
+  group: mcp-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Build vendored MCP
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Vendored Google chrome-devtools-mcp: full upstream suite needs Chrome and
+      # tolerates TS errors in chrome-devtools-frontend (see tsconfig.build.json).
+      # Monorepo gate: build emits the CLI entrypoints.
+      - name: Build
+        working-directory: apps/mcp
+        env:
+          CI: "true"
+          CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1"
+        run: bun run build
+
+      - name: Smoke CLI entrypoints
+        working-directory: apps/mcp
+        run: |
+          test -f build/src/bin/chrome-devtools-mcp.js
+          test -f build/src/bin/chrome-devtools.js
+          node -e "require('./build/src/bin/chrome-devtools-mcp.js')" 2>&1 | head -5 || true

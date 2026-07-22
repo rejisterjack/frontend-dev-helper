@@ -2,13 +2,19 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { auth } from "@/lib/auth";
 import { randomCode } from "@/lib/crypto";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
-// 8 chars from a 32-char alphabet = ~40 bits of entropy. The previous
-// implementation drew 5 chars from a 36-char alphabet using Math.random()
-// (~25 bits, and not cryptographically secure).
 const REFERRAL_CODE_LENGTH = 8;
 
-export async function POST() {
+export async function POST(request: Request) {
+  const requestId = request.headers.get("x-request-id") ?? undefined;
+  const limited = await enforceRateLimit(request, {
+    limit: 10,
+    windowSeconds: 60,
+    identifierSuffix: "referrals-code",
+  });
+  if (limited) return limited;
+
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -17,7 +23,6 @@ export async function POST() {
 
     const userId = session.user.id;
 
-    // Check if user already has a referral code
     const existing = await prisma.referral.findFirst({
       where: { referrerId: userId },
     });
@@ -26,8 +31,6 @@ export async function POST() {
       return Response.json({ referralCode: existing.referralCode });
     }
 
-    // Generate a unique code using a CSPRNG. Retry on (very unlikely)
-    // collisions up to a bounded number of attempts.
     let code: string | undefined;
     for (let attempt = 0; attempt < 10; attempt++) {
       const candidate = `FDH-${randomCode(REFERRAL_CODE_LENGTH)}`;
@@ -41,9 +44,10 @@ export async function POST() {
     }
 
     if (!code) {
-      // Extremely unlikely — 10 collisions in a row means a biased RNG or a
-      // saturated keyspace. Fail loudly rather than writing undefined.
-      logger.error(`Failed to allocate unique referral code for ${userId}`);
+      logger.error("Failed to allocate unique referral code", {
+        requestId,
+        userId,
+      });
       return Response.json(
         { error: "Failed to allocate referral code" },
         { status: 500 },
@@ -58,14 +62,14 @@ export async function POST() {
       },
     });
 
-    logger.info(`Referral code generated for user ${userId}`);
+    logger.info("Referral code generated", { requestId, userId });
 
     return Response.json(
       { referralCode: referral.referralCode },
       { status: 201 },
     );
   } catch (error) {
-    logger.error("Generate referral code error:", error);
+    logger.error("Generate referral code error", { requestId, error });
     return Response.json(
       { error: "Failed to generate referral code" },
       { status: 500 },

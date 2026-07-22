@@ -32,6 +32,8 @@
     "SENTRY_PROJECT",
     "SENTRY_CSP_INGEST_HOST",
     "LOG_LEVEL",
+    "ALLOW_MEMORY_RATE_LIMIT",
+    "RATE_LIMIT_FAIL_CLOSED",
     "E2E_BASE_URL"
   ],
   "tasks": {

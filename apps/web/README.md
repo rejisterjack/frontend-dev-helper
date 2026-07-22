@@ -5,8 +5,9 @@ Resend (transactional email). Hosted at **frontenddevhelper.com**.
 
 This is the public-facing site: landing page, tool-specific SEO pages, auth
 (email/password + Google + GitHub), referral program, and the auth-gated
-dashboard. The browser extension hits `/api/*` for license verification and
-referral tracking.
+dashboard. The browser extension is free and local-first; it does **not** call
+this site for license verification. Referrals are account-only (web dashboard
+and signup).
 
 ---
 
@@ -65,14 +66,22 @@ Required for boot:
 - `NEXTAUTH_SECRET` / `NEXTAUTH_URL` — JWT signing + canonical URL
 - `RESEND_API_KEY` — for verification and password-reset emails
 
+**Required in production** (in addition to the boot vars above):
+
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — distributed rate
+  limiting. Without these in `NODE_ENV=production`, rate-limited routes return
+  503 (fail-closed). Dev and CI use an in-memory limiter.
+
 Optional (the app boots without them but degrades gracefully):
 
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth
 - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` — GitHub OAuth
-- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — distributed rate
-  limiting (falls back to in-memory limiter if unset)
 - `NEXT_PUBLIC_SENTRY_DSN` — Sentry error reporting
+- `NEXT_PUBLIC_SENTRY_RELEASE` — release tag for Sentry
+- `SENTRY_CSP_INGEST_HOST` — optional CSP `connect-src` host for Sentry ingest
+- `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` — CI source-map upload
 - `LOG_LEVEL` — winston level (default `info`)
+- `E2E_BASE_URL` — Playwright base URL (CI/local e2e only)
 
 ---
 

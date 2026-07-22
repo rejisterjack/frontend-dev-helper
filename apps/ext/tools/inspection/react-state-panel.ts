@@ -1,10 +1,5 @@
 import type { ToolDefinition } from "../types";
-import {
-  ToolPanel,
-  createBadge,
-  createTabBar,
-  createScrollList,
-} from "@/content/tool-panel";
+import { ToolPanel, createBadge } from "@/content/tool-panel";
 import { getOverlayContainer } from "@/content/overlay-manager";
 import { getBridge } from "@/lib/vscode-bridge";
 
@@ -33,7 +28,10 @@ interface ReactComponentState {
 }
 
 interface ReactFiber {
-  type?: { name?: string; displayName?: string } | string | Function;
+  type?:
+    | { name?: string; displayName?: string }
+    | string
+    | ((...args: unknown[]) => unknown);
   memoizedProps?: Record<string, unknown>;
   memoizedState?: {
     queue?: { name?: string; lastRenderedState?: unknown };
@@ -48,7 +46,10 @@ interface ReactFiber {
   sibling?: ReactFiber;
   return?: ReactFiber;
   _debugOwner?: ReactFiber;
-  elementType?: { name?: string; displayName?: string } | string | Function;
+  elementType?:
+    | { name?: string; displayName?: string }
+    | string
+    | ((...args: unknown[]) => unknown);
 }
 
 // ---------------------------------------------------------------------------
@@ -66,7 +67,7 @@ function getFiberFromElement(element: HTMLElement): ReactFiber | null {
       k.startsWith("__reactFiber$") || k.startsWith("__reactInternalInstance$"),
   );
   if (!key) return null;
-  return (element as unknown as Record<string, ReactFiber>)[key] ?? null;
+  return (element as any as Record<string, ReactFiber>)[key] ?? null;
 }
 
 function findNearestComponentFiber(fiber: ReactFiber): ReactFiber | null {
@@ -82,7 +83,10 @@ function findNearestComponentFiber(fiber: ReactFiber): ReactFiber | null {
 function getComponentName(fiber: ReactFiber): string {
   const type = fiber.type;
   if (typeof type === "function") {
-    const fn = type as Function & { displayName?: string; name?: string };
+    const fn = type as ((...args: unknown[]) => unknown) & {
+      displayName?: string;
+      name?: string;
+    };
     return fn.displayName || fn.name || "Anonymous";
   }
   if (typeof type === "object" && type !== null) {

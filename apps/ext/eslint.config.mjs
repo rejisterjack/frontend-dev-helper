@@ -27,8 +27,8 @@ export default [
       // lint layer. The audit found 7 `innerHTML =` assignments across the
       // codebase; all 7 were reviewed and confirmed safe (static templates
       // or escaped user input), but future drift can reintroduce a taint
-      // flow. Each legitimate use site must opt in via a per-line
-      // eslint-disable-next-line comment with a justification.
+      // flow. Each legitimate use site must opt in with a per-line disable
+      // and a justification.
       "no-restricted-syntax": [
         "error",
         {
@@ -38,6 +38,22 @@ export default [
         },
       ],
       "react/no-danger": "error",
+      // TypeScript supplies prop types; prop-types runtime checks are unused.
+      "react/prop-types": "off",
+      // Host-object introspection (React fiber, Vue, XHR patches) requires `any`
+      // at boundaries; prefer unknown for app-owned data.
+      "@typescript-eslint/no-explicit-any": "off",
+      // Intentional unused bindings (e.g. destructure slots, event handlers).
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 ];

@@ -41,7 +41,7 @@ interface ReplayResult {
   timestamp: number;
 }
 
-function base64ToArrayBuffer(b64: string): ArrayBuffer {
+function _base64ToArrayBuffer(b64: string): ArrayBuffer {
   const binary = atob(b64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

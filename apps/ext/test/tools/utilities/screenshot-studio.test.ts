@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { screenshotStudio } from '@/tools/utilities/screenshot-studio';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('screenshotStudio', () => {
   beforeEach(() => {

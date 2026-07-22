@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { TOOL_COUNT } from "@/data/tools";
+import { AuthSessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -57,7 +58,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="bg-bg-base text-text-secondary antialiased">
-        {children}
+        <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>
   );

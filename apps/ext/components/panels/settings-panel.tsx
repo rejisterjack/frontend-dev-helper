@@ -476,7 +476,7 @@ export function SettingsPanel() {
           <Separator />
           <SettingRow>
             <div className="flex flex-col gap-0.5">
-              <Label className="text-xs">Local diagnostics (no network)</Label>
+              <Label className="text-xs">Usage telemetry (opt-in Plausible)</Label>
               <p className="text-[10px] text-muted-foreground">
                 Records anonymous tool-usage events to local extension storage
                 only. No data is sent to any server. Disable at any time.

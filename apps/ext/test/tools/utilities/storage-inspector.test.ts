@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { storageInspector } from '@/tools/utilities/storage-inspector';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('storageInspector', () => {
   beforeEach(() => {

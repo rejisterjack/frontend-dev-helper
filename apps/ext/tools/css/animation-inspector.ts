@@ -228,15 +228,16 @@ function createTimelineStrip(
 function updateTimelineProgress(strip: HTMLDivElement, anim: Animation): void {
   const fill = strip.querySelector<HTMLDivElement>("div:nth-child(3)");
   if (!fill) return;
-  const startTime = anim.startTime ?? 0;
+  const _startTime = anim.startTime ?? 0;
   const duration =
     anim.effect && "getTiming" in anim.effect
       ? anim.effect.getTiming().duration
       : 0;
   const dur = typeof duration === "number" ? duration : 0;
   if (dur <= 0) return;
-  const currentTime = anim.currentTime ?? 0;
-  const pct = Math.min(100, Math.max(0, ((currentTime - 0) / dur) * 100));
+  const currentTime =
+    typeof anim.currentTime === "number" ? anim.currentTime : 0;
+  const pct = Math.min(100, Math.max(0, (currentTime / dur) * 100));
   const baseLeft = parseFloat(strip.dataset.fillLeft || "0");
   const durPct = parseFloat(strip.dataset.durPct || "0");
   fill.style.left = `${baseLeft}%`;
@@ -279,7 +280,9 @@ function createAnimationPanel(
     btn.addEventListener("click", () => {
       controls
         .querySelectorAll("button[data-speed]")
-        .forEach((b) => (b.style.background = "#45475a"));
+        .forEach((b) => {
+          (b as HTMLElement).style.background = "#45475a";
+        });
       btn.style.background = "#89b4fa55";
       onSpeedChange(speed);
     });

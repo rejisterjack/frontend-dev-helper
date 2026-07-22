@@ -1,8 +1,17 @@
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { auth } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const requestId = request.headers.get("x-request-id") ?? undefined;
+  const limited = await enforceRateLimit(request, {
+    limit: 30,
+    windowSeconds: 60,
+    identifierSuffix: "referrals-list",
+  });
+  if (limited) return limited;
+
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -11,9 +20,6 @@ export async function GET() {
 
     const userId = session.user.id;
 
-    // Only fetch fields needed for the referrer's view. We deliberately do
-    // NOT include the referred user's email/name — a referrer should only see
-    // aggregate state, not the identity of who they referred.
     const referrals = await prisma.referral.findMany({
       where: { referrerId: userId },
       select: {
@@ -34,8 +40,6 @@ export async function GET() {
         referralCode: r.referralCode,
         status: r.status,
         reward: r.reward,
-        // Expose only the fact of sign-up + the redemption timestamp. PII
-        // (referred user's email/name) is intentionally withheld.
         referred: r.referredId
           ? { status: "signed_up" as const, joinedAt: r.redeemedAt }
           : null,
@@ -44,7 +48,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    logger.error("Get referrals error:", error);
+    logger.error("Get referrals error", { requestId, error });
     return Response.json({ error: "Failed to get referrals" }, { status: 500 });
   }
 }

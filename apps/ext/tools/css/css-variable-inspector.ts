@@ -98,7 +98,7 @@ function walkForPropertyRules(
       typeof CSSPropertyRule !== "undefined" &&
       rule instanceof CSSPropertyRule
     ) {
-      const pr = rule as unknown as {
+      const pr = rule as any as {
         name: string;
         syntax?: string;
         initialValue?: string;

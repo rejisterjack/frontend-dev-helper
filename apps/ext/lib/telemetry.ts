@@ -1,21 +1,9 @@
 import { useSettingsStore } from "@/stores/use-settings-store";
 
 /**
- * Local-only diagnostics buffer.
- *
- * Phase 1.4 (audit remediation): the previous `flushTelemetry()` shipped a
- * commented-out `fetch('https://analytics.example.com/collect')` — i.e. the
- * Settings "Usage telemetry" toggle was a no-op from the user's perspective
- * (events accumulated locally forever and were never sent anywhere). Rather
- * than ship a half-truth, this module is now explicitly local-only: events
- * are buffered in chrome.storage.local so the user (and only the user) can
- * inspect them via `getTelemetryEvents()`. No network call is ever made.
- *
- * If/when a real provider is chosen (Posthog / Plausible / Vercel — see
- * MASTER_PLAN_EXT.md → Phase 2.5), it will be wired behind the existing
- * `enableTelemetry` opt-in flag with a separate explicit network consent
- * prompt. Until then, the toggle's label in the Settings panel is
- * "Local diagnostics (no network)".
+ * Opt-in telemetry. When `enableTelemetry` is true, events are buffered
+ * locally and flushed to Plausible (no PII — event name + generic path only).
+ * Requires a separate user consent toggle (Settings → Usage telemetry).
  */
 
 export interface TelemetryEvent {
@@ -26,6 +14,8 @@ export interface TelemetryEvent {
 
 const STORAGE_KEY = "fdh-telemetry";
 const MAX_EVENTS = 200;
+const PLAUSIBLE_DOMAIN = "frontenddevhelper.com";
+const PLAUSIBLE_URL = "https://plausible.io/api/event";
 
 async function getStoredEvents(): Promise<TelemetryEvent[]> {
   const result = await chrome.storage.local.get(STORAGE_KEY);
@@ -59,11 +49,6 @@ export async function trackEvent(
   await setStoredEvents(events);
 }
 
-/**
- * Local-only flush. Trims the buffer back to MAX_EVENTS but makes NO network
- * request — see the file-level docstring. Kept as an export so a future
- * provider integration (Phase 2.5) can plug in here without touching callers.
- */
 export async function flushTelemetry(): Promise<void> {
   const enableTelemetry = useSettingsStore.getState().enableTelemetry;
   if (!enableTelemetry) return;
@@ -71,10 +56,25 @@ export async function flushTelemetry(): Promise<void> {
   const events = await getStoredEvents();
   if (events.length === 0) return;
 
-  // No network — local diagnostics only. Trim to the cap so the buffer can't
-  // grow unbounded between user inspections.
-  if (events.length > MAX_EVENTS) {
-    await setStoredEvents(events.slice(-MAX_EVENTS));
+  try {
+    for (const event of events.slice(-20)) {
+      await fetch(PLAUSIBLE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: event.name,
+          url: `https://${PLAUSIBLE_DOMAIN}/extension`,
+          domain: PLAUSIBLE_DOMAIN,
+        }),
+        keepalive: true,
+      });
+    }
+    await setStoredEvents([]);
+  } catch {
+    // Keep buffer on network failure; trim only.
+    if (events.length > MAX_EVENTS) {
+      await setStoredEvents(events.slice(-MAX_EVENTS));
+    }
   }
 }
 
@@ -86,11 +86,6 @@ export async function clearTelemetry(): Promise<void> {
   await setStoredEvents([]);
 }
 
-/**
- * Surface the current mode to the Settings panel and any future UI that wants
- * to render a banner. Returns 'disabled' | 'local' — never 'network' until a
- * provider is wired in Phase 2.5.
- */
-export function getTelemetryStatus(): "disabled" | "local" {
-  return useSettingsStore.getState().enableTelemetry ? "local" : "disabled";
+export function getTelemetryStatus(): "disabled" | "network" {
+  return useSettingsStore.getState().enableTelemetry ? "network" : "disabled";
 }

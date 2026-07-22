@@ -262,7 +262,7 @@ async function deleteBaselineById(id: string): Promise<void> {
   });
 }
 
-async function findBaselineByUrl(
+async function _findBaselineByUrl(
   url: string,
 ): Promise<BaselineEntry | undefined> {
   const baselines = await loadBaselines();

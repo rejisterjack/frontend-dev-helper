@@ -217,7 +217,7 @@ describe("getComputedProperties", () => {
 
 describe("resolveVariableValue", () => {
   function makeStyle(vars: Record<string, string>): CSSStyleDeclaration {
-    const store = vars as Record<string, any>;
+    const store = vars as Record<string, unknown>;
     return {
       getPropertyValue: (name: string) => store[name] ?? "",
     } as any;

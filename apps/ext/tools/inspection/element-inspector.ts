@@ -8,7 +8,7 @@ import {
   resolveElementSource,
 } from "@/lib/element-source-resolver";
 
-function escapeHtml(str: string): string {
+function _escapeHtml(str: string): string {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;

@@ -157,7 +157,7 @@ if (!global.performance) {
 
 if (!global.requestAnimationFrame) {
   global.requestAnimationFrame = (cb: FrameRequestCallback) =>
-    setTimeout(cb, 0) as unknown as number;
+    setTimeout(cb, 0) as any as number;
   global.cancelAnimationFrame = (id: number) => clearTimeout(id);
 }
 

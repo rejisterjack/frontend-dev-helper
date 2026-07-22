@@ -2542,6 +2542,1456 @@ export const allTools: ToolPageData[] = [
       "flame-graph",
     ],
   },
+  {
+    slug: "dom-outliner",
+    name: "DOM Outliner",
+    tagline: "Visualize DOM structure with colored outlines around elements",
+    description: "DOM Outliner is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Visualize DOM structure with colored outlines around elements",
+    metaTitle: "DOM Outliner Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Visualize DOM structure with colored outlines around elements. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select DOM Outliner.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is DOM Outliner free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "source-map-viewer",
+    name: "Source Map Viewer",
+    tagline: "Resolve minified code to original sources using source maps",
+    description: "Source Map Viewer is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Resolve minified code to original sources using source maps",
+    metaTitle: "Source Map Viewer Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Resolve minified code to original sources using source maps. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Source Map Viewer.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Source Map Viewer free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "smart-element-picker",
+    name: "Smart Element Picker",
+    tagline: "Intelligent element selection with CSS selector generation",
+    description: "Smart Element Picker is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Intelligent element selection with CSS selector generation",
+    metaTitle: "Smart Element Picker Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Intelligent element selection with CSS selector generation. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Smart Element Picker.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Smart Element Picker free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "framework-devtools",
+    name: "Framework DevTools",
+    tagline: "Bridge to framework-specific developer tools (React, Vue, etc.)",
+    description: "Framework DevTools is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Bridge to framework-specific developer tools (React, Vue, etc.)",
+    metaTitle: "Framework DevTools Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Bridge to framework-specific developer tools (React, Vue, etc.). Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Framework DevTools.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Framework DevTools free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "react-state-panel",
+    name: "React State Panel",
+    tagline: "Inspect React component hooks, props, and state in real-time",
+    description: "React State Panel is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Inspect React component hooks, props, and state in real-time",
+    metaTitle: "React State Panel Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Inspect React component hooks, props, and state in real-time. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select React State Panel.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is React State Panel free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "vue-state-panel",
+    name: "Vue State Panel",
+    tagline: "Inspect Vue component reactive data and computed properties",
+    description: "Vue State Panel is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Inspect Vue component reactive data and computed properties",
+    metaTitle: "Vue State Panel Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Inspect Vue component reactive data and computed properties. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Vue State Panel.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Vue State Panel free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "container-query-inspector",
+    name: "Container Query Inspector",
+    tagline: "Inspect container queries and their matched conditions",
+    description: "Container Query Inspector is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Inspect container queries and their matched conditions",
+    metaTitle: "Container Query Inspector Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Inspect container queries and their matched conditions. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Container Query Inspector.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Container Query Inspector free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "view-transitions-debugger",
+    name: "View Transitions Debugger",
+    tagline: "Debug and preview View Transitions API animations",
+    description: "View Transitions Debugger is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Debug and preview View Transitions API animations",
+    metaTitle: "View Transitions Debugger Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Debug and preview View Transitions API animations. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select View Transitions Debugger.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is View Transitions Debugger free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "x-ray-mode",
+    name: "X-Ray Mode",
+    tagline: "Instant visual overlay of all issues: accessibility, performance, SEO, and best practices",
+    description: "X-Ray Mode is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Instant visual overlay of all issues: accessibility, performance, SEO, and best practices",
+    metaTitle: "X-Ray Mode Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Instant visual overlay of all issues: accessibility, performance, SEO, and best practices. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select X-Ray Mode.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is X-Ray Mode free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "css-editor",
+    name: "CSS Editor",
+    tagline: "Live-edit CSS properties on any element with instant preview",
+    description: "CSS Editor is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Live-edit CSS properties on any element with instant preview",
+    metaTitle: "CSS Editor Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Live-edit CSS properties on any element with instant preview. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select CSS Editor.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is CSS Editor free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "css-variable-inspector",
+    name: "CSS Variable Inspector",
+    tagline: "Browse and inspect CSS custom properties and their values",
+    description: "CSS Variable Inspector is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Browse and inspect CSS custom properties and their values",
+    metaTitle: "CSS Variable Inspector Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Browse and inspect CSS custom properties and their values. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select CSS Variable Inspector.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is CSS Variable Inspector free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "layout-visualizer",
+    name: "Layout Visualizer",
+    tagline: "Visualize Flexbox, Grid, and block layout properties",
+    description: "Layout Visualizer is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Visualize Flexbox, Grid, and block layout properties",
+    metaTitle: "Layout Visualizer Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Visualize Flexbox, Grid, and block layout properties. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Layout Visualizer.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Layout Visualizer free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "grid-overlay",
+    name: "Grid Overlay",
+    tagline: "Overlay CSS Grid lines, areas, and tracks on the page",
+    description: "Grid Overlay is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Overlay CSS Grid lines, areas, and tracks on the page",
+    metaTitle: "Grid Overlay Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Overlay CSS Grid lines, areas, and tracks on the page. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Grid Overlay.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Grid Overlay free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "design-system-validator",
+    name: "Design System Validator",
+    tagline: "Validate page elements against a design system specification",
+    description: "Design System Validator is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Validate page elements against a design system specification",
+    metaTitle: "Design System Validator Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Validate page elements against a design system specification. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Design System Validator.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Design System Validator free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "breakpoint-overlay",
+    name: "Breakpoint Overlay",
+    tagline: "Show active CSS breakpoints and media query boundaries",
+    description: "Breakpoint Overlay is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Show active CSS breakpoints and media query boundaries",
+    metaTitle: "Breakpoint Overlay Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Show active CSS breakpoints and media query boundaries. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Breakpoint Overlay.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Breakpoint Overlay free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "design-token-extractor",
+    name: "Design Token Extractor",
+    tagline: "Extract and export design tokens: colors, spacing, typography, shadows, and breakpoints",
+    description: "Design Token Extractor is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Extract and export design tokens: colors, spacing, typography, shadows, and breakpoints",
+    metaTitle: "Design Token Extractor Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Extract and export design tokens: colors, spacing, typography, shadows, and breakpoints. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Design Token Extractor.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Design Token Extractor free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "specificity-cascade",
+    name: "Specificity Cascade",
+    tagline: "Visualize CSS cascade showing which rules win and why for each property",
+    description: "Specificity Cascade is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Visualize CSS cascade showing which rules win and why for each property",
+    metaTitle: "Specificity Cascade Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Visualize CSS cascade showing which rules win and why for each property. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Specificity Cascade.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Specificity Cascade free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "performance-budget",
+    name: "Performance Budget",
+    tagline: "Set and monitor performance budgets for page metrics",
+    description: "Performance Budget is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Set and monitor performance budgets for page metrics",
+    metaTitle: "Performance Budget Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Set and monitor performance budgets for page metrics. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Performance Budget.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Performance Budget free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "scroll-animations-debugger",
+    name: "Scroll Animations Debugger",
+    tagline: "Debug scroll-driven animations and scroll-linked effects",
+    description: "Scroll Animations Debugger is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Debug scroll-driven animations and scroll-linked effects",
+    metaTitle: "Scroll Animations Debugger Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Debug scroll-driven animations and scroll-linked effects. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Scroll Animations Debugger.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Scroll Animations Debugger free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "performance-audit",
+    name: "Performance Audit",
+    tagline: "Measure Core Web Vitals and get actionable performance suggestions",
+    description: "Performance Audit is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Measure Core Web Vitals and get actionable performance suggestions",
+    metaTitle: "Performance Audit Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Measure Core Web Vitals and get actionable performance suggestions. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Performance Audit.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Performance Audit free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "network-replay",
+    name: "Network Replay",
+    tagline: "Capture, replay, and export network requests as cURL, fetch, or Postman",
+    description: "Network Replay is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Capture, replay, and export network requests as cURL, fetch, or Postman",
+    metaTitle: "Network Replay Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Capture, replay, and export network requests as cURL, fetch, or Postman. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Network Replay.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Network Replay free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "focus-debugger-a11y",
+    name: "Focus Debugger (A11y)",
+    tagline: "Accessibility-focused focus and keyboard navigation debugger",
+    description: "Focus Debugger (A11y) is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Accessibility-focused focus and keyboard navigation debugger",
+    metaTitle: "Focus Debugger (A11y) Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Accessibility-focused focus and keyboard navigation debugger. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Focus Debugger (A11y).",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Focus Debugger (A11y) free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "smart-suggestions",
+    name: "Smart Suggestions",
+    tagline: "AI-powered design and code suggestions for the current page",
+    description: "Smart Suggestions is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. AI-powered design and code suggestions for the current page",
+    metaTitle: "Smart Suggestions Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "AI-powered design and code suggestions for the current page. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Smart Suggestions.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Smart Suggestions free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "ai-analyzer",
+    name: "AI Analyzer",
+    tagline: "Analyze page structure, patterns, and issues using AI",
+    description: "AI Analyzer is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Analyze page structure, patterns, and issues using AI",
+    metaTitle: "AI Analyzer Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Analyze page structure, patterns, and issues using AI. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select AI Analyzer.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is AI Analyzer free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "ai-auto-fix",
+    name: "AI Auto-Fix",
+    tagline: "AI-powered automatic fix suggestions with diff preview",
+    description: "AI Auto-Fix is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. AI-powered automatic fix suggestions with diff preview",
+    metaTitle: "AI Auto-Fix Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "AI-powered automatic fix suggestions with diff preview. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select AI Auto-Fix.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is AI Auto-Fix free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "responsive-preview",
+    name: "Responsive Preview",
+    tagline: "Preview the page at different screen sizes and device viewports",
+    description: "Responsive Preview is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Preview the page at different screen sizes and device viewports",
+    metaTitle: "Responsive Preview Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Preview the page at different screen sizes and device viewports. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Responsive Preview.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Responsive Preview free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "site-report-generator",
+    name: "Site Report Generator",
+    tagline: "Generate comprehensive reports about page quality and metrics",
+    description: "Site Report Generator is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Generate comprehensive reports about page quality and metrics",
+    metaTitle: "Site Report Generator Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Generate comprehensive reports about page quality and metrics. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Site Report Generator.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Site Report Generator free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "full-audit",
+    name: "Full Audit",
+    tagline: "One-click comprehensive audit across accessibility, performance, SEO, and best practices",
+    description: "Full Audit is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. One-click comprehensive audit across accessibility, performance, SEO, and best practices",
+    metaTitle: "Full Audit Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "One-click comprehensive audit across accessibility, performance, SEO, and best practices. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Full Audit.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Full Audit free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  },
+  {
+    slug: "session-replay",
+    name: "Session Replay",
+    tagline: "Record and replay debugging sessions for team collaboration",
+    description: "Session Replay is part of FrontendDevHelper — a free, open-source Manifest V3 browser extension with 50 professional visual debugging tools. Record and replay debugging sessions for team collaboration",
+    metaTitle: "Session Replay Chrome Extension — Visual Debugging Tool | FrontendDevHelper",
+    metaDescription: "Record and replay debugging sessions for team collaboration. Free, open-source, Manifest V3.",
+    features: [
+      {
+        title: "Built into FrontendDevHelper",
+        description: "Activate from the popup, command palette, or DevTools panel — no separate install.",
+      },
+      {
+        title: "On-page overlays",
+        description: "Visual feedback renders directly on the page you are debugging.",
+      },
+      {
+        title: "Free and open source",
+        description: "MIT licensed. No paid tiers, license keys, or subscriptions.",
+      },
+    ],
+    howItWorks: [
+      {
+        step: "01",
+        title: "Install",
+        description: "Add FrontendDevHelper from the Chrome Web Store or load the unpacked extension.",
+      },
+      {
+        step: "02",
+        title: "Activate",
+        description: "Open the popup or command palette and select Session Replay.",
+      },
+      {
+        step: "03",
+        title: "Debug",
+        description: "Inspect live results on the page and export or share findings with your team.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Session Replay free?",
+        answer: "Yes. FrontendDevHelper is free and open source under the MIT License.",
+      },
+      {
+        question: "Do I need a license key?",
+        answer: "No. All tools are available without accounts or license keys.",
+      },
+    ],
+    relatedTools: [],
+  }
 ];
 
 export function getToolBySlug(slug: string): ToolPageData | undefined {
@@ -2555,8 +4005,7 @@ export function getRelatedTools(slugs: string[]): ToolPageData[] {
 }
 
 /**
- * Single source of truth for the marketing copy. Use this everywhere the
- * number of shipped tools is mentioned — landing page, OG image, email
- * templates, terms. The `data/domain` field on the marketing site must match.
+ * Marketing tool count — must match apps/ext/tools/metadata.ts `toolCount`.
+ * `allTools` includes SEO pages for every extension tool (metadata parity).
  */
-export const TOOL_COUNT = allTools.length;
+export const TOOL_COUNT = 50;

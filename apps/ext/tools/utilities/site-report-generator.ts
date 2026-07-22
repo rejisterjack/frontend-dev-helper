@@ -44,7 +44,7 @@ export const siteReportGenerator: ToolDefinition = {
     const includeA11y = (cfg.includeAccessibility as boolean) ?? true;
     const includeSEO = (cfg.includeSEO as boolean) ?? true;
     const includeBP = (cfg.includeBestPractices as boolean) ?? true;
-    const format = (cfg.format as string) ?? "html";
+    const _format = (cfg.format as string) ?? "html";
 
     const overlays: HTMLElement[] = [];
     let disposed = false;

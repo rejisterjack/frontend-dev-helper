@@ -54,7 +54,7 @@ function getNavigationType(): string {
   }
   try {
     const nt = (
-      performance as unknown as {
+      performance as any as {
         navigation?: { type?: number };
       }
     ).navigation;
@@ -424,6 +424,8 @@ export const flameGraph: ToolDefinition = {
         }
 
         bar.addEventListener("mouseenter", (ev: MouseEvent) => {
+          // Tooltip body uses escapeText() for all dynamic fields.
+          // eslint-disable-next-line no-restricted-syntax -- static template + escaped entry fields
           tooltip.innerHTML = `
             <div class="fg-tooltip-name">${escapeText(entry.name)}</div>
             <div class="fg-tooltip-details">

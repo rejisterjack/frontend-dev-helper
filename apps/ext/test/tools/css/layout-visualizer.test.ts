@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { layoutVisualizer } from '@/tools/css/layout-visualizer';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('layoutVisualizer', () => {
   beforeEach(() => {

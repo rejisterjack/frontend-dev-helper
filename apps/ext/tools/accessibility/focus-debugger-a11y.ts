@@ -50,7 +50,8 @@ function isVisibleFocusable(el: HTMLElement): boolean {
   if (el.getAttribute("aria-hidden") === "true") return false;
   if (el.hasAttribute("hidden")) return false;
   if (el.closest("[inert]")) return false;
-  if (el.disabled) return false;
+  if ("disabled" in el && Boolean((el as HTMLInputElement).disabled))
+    return false;
   const style = window.getComputedStyle(el);
   // NOTE: opacity:0 IS focusable per the HTML spec — only display:none,
   // visibility:hidden, hidden, inert, disabled, or aria-hidden remove
@@ -102,8 +103,8 @@ function positionFixedOverlay(
 function createSvgArrow(
   fromRect: DOMRect,
   toRect: DOMRect,
-  fromIdx: number,
-  toIdx: number,
+  _fromIdx: number,
+  _toIdx: number,
 ): SVGSVGElement {
   const fromX = fromRect.left + fromRect.width / 2;
   const fromY = fromRect.top + fromRect.height / 2;
@@ -132,7 +133,7 @@ function createSvgArrow(
   const ey = edgeToY - minY;
 
   const midX = (sx + ex) / 2;
-  const midY = (sy + ey) / 2;
+  const _midY = (sy + ey) / 2;
 
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   const dx = ex - sx;
@@ -315,7 +316,7 @@ export const focusDebuggerA11y: ToolDefinition = {
       detachTrackers.push(attachViewportTracker(tracker));
     }
 
-    function createBadge(el: HTMLElement, index: number): HTMLElement {
+    function createBadge(el: HTMLElement, _index: number): HTMLElement {
       const badge = document.createElement("div");
       badge.style.cssText =
         "position:fixed;z-index:2147483646;pointer-events:none;" +

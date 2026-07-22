@@ -330,7 +330,7 @@ export const designSystemValidator: ToolDefinition = {
         radii: Array.from(radii).sort((a, b) => a - b),
       };
 
-      const hasAnything =
+      const _hasAnything =
         spec.colors.length > 0 ||
         spec.spacings.length > 0 ||
         spec.fontSizes.length > 0;
@@ -565,6 +565,8 @@ export const designSystemValidator: ToolDefinition = {
         (f) => f.category === "radius",
       ).length;
 
+      // Static panel chrome; dynamic fields go through escapeHtml().
+      // eslint-disable-next-line no-restricted-syntax -- static template + escaped labels
       el.innerHTML = `
         <div data-drag-handle style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#1e293b;border-bottom:1px solid #334155;cursor:move;">
           <div style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;">

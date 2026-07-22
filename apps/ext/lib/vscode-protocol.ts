@@ -32,6 +32,7 @@ export type {
   TypedBridgeMessage,
 } from "@repo/bridge-protocol/types";
 
-// Back-compat alias. The original name in this file was `VSCodeMessage`.
+// Back-compat alias. Wire format is the loose envelope; callers may cast
+// strongly-typed payloads to Record<string, unknown> at the boundary.
 import type { BridgeMessageEnvelope } from "@repo/bridge-protocol/types";
 export type VSCodeMessage = BridgeMessageEnvelope;

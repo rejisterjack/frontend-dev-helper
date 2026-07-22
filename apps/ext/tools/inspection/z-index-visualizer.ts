@@ -49,7 +49,7 @@ function createsStackingContext(el: HTMLElement): boolean {
   if (cs.filter && cs.filter !== "none") return true;
   if (cs.perspective && cs.perspective !== "none") return true;
   if (cs.clipPath && cs.clipPath !== "none") return true;
-  const mask = (cs as unknown as { mask?: string }).mask;
+  const mask = (cs as any as { mask?: string }).mask;
   if (mask && mask !== "none" && mask !== "") return true;
 
   // will-change with any of the stacking-context-triggering properties
@@ -105,26 +105,26 @@ function createsStackingContext(el: HTMLElement): boolean {
 
   // Modern additions: container-type (size/inline-size), backdrop-filter,
   // content-visibility, and the :fullscreen / :modal pseudos.
-  const containerType = (cs as unknown as { containerType?: string })
+  const containerType = (cs as any as { containerType?: string })
     .containerType;
   if (containerType && containerType !== "normal") return true;
 
-  const backdropFilter = (cs as unknown as { backdropFilter?: string })
+  const backdropFilter = (cs as any as { backdropFilter?: string })
     .backdropFilter;
   if (backdropFilter && backdropFilter !== "none") return true;
   const webkitBackdropFilter = (
-    cs as unknown as { webkitBackdropFilter?: string }
+    cs as any as { webkitBackdropFilter?: string }
   ).webkitBackdropFilter;
   if (webkitBackdropFilter && webkitBackdropFilter !== "none") return true;
 
-  const contentVisibility = (cs as unknown as { contentVisibility?: string })
+  const contentVisibility = (cs as any as { contentVisibility?: string })
     .contentVisibility;
   if (contentVisibility && contentVisibility !== "visible") return true;
 
   // :fullscreen and :modal elements are promoted to a top-layer stacking
   // context in modern browsers.
   if (
-    typeof (el as unknown as { matches?: (s: string) => boolean }).matches ===
+    typeof (el as any as { matches?: (s: string) => boolean }).matches ===
       "function" &&
     (el.matches(":fullscreen") || el.matches(":modal"))
   ) {

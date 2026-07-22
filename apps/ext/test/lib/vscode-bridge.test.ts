@@ -22,7 +22,7 @@ vi.mock("@repo/bridge-protocol", () => ({
 }));
 
 // ---- Test WebSocket stub ---------------------------------------------------
-type Listener = (event: any) => void;
+type Listener = (event: unknown) => void;
 
 class FakeWebSocket {
   static instances: FakeWebSocket[] = [];
@@ -37,7 +37,7 @@ class FakeWebSocket {
   onclose: Listener | null = null;
   onerror: Listener | null = null;
   onmessage: Listener | null = null;
-  sent: any[] = [];
+  sent: unknown[] = [];
   closed = false;
 
   constructor(url: string) {
@@ -103,7 +103,7 @@ describe("VSCodeBridge", () => {
     expect(FakeWebSocket.instances).toHaveLength(1);
 
     const sock = FakeWebSocket.instances[0];
-    expect(sock.url).toBe("ws://localhost:9456");
+    expect(sock.url).toBe("ws://127.0.0.1:9456");
 
     // Before open, no Auth sent.
     expect(sock.sent).toHaveLength(0);
@@ -194,7 +194,7 @@ describe("VSCodeBridge", () => {
       payload: { uri: "file:///x.ts", diagnostics: [] },
     });
     expect(handler).toHaveBeenCalledTimes(1);
-    expect((handler.mock.calls[0] as any[])[0].type).toBe("PublishDiagnostics");
+    expect((handler.mock.calls[0] as unknown[])[0].type).toBe("PublishDiagnostics");
 
     // Unsubscribe works.
     off();

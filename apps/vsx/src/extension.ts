@@ -39,9 +39,13 @@ function startServer(port?: number): void {
   // VS Code process restart (the token persists for the server's lifetime).
   const token = server.authToken;
   if (token) {
-    outputChannel.appendLine(`[FDH] Bridge auth token: ${token}`);
+    const preview =
+      token.length > 8 ? `${token.slice(0, 4)}…${token.slice(-4)}` : "****";
     outputChannel.appendLine(
-      "[FDH] Paste this token into the browser extension Settings → Bridge to pair.",
+      `[FDH] Bridge auth token ready (${preview}). Run "FDH: Copy Bridge Token" to copy it.`,
+    );
+    outputChannel.appendLine(
+      "[FDH] Paste the token into the browser extension Settings → Bridge to pair.",
     );
   }
   updateStatus();

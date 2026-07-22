@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { visualRegression } from '@/tools/utilities/visual-regression';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('visualRegression', () => {
   beforeEach(() => {

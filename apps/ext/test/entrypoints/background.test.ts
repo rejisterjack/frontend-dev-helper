@@ -34,16 +34,16 @@ vi.mock("@/lib/secrets", () => ({
 // Build it fresh for each test.
 
 type MessageListener = (
-  message: any,
+  message: unknown,
   sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void,
+  sendResponse: (response?: unknown) => void,
 ) => boolean | undefined;
 
 function makeChromeMock() {
   const onMessageListeners: MessageListener[] = [];
   const storageLocal = new Map<string, unknown>();
-  const sentTabs: Array<{ tabId: number; message: any }> = [];
-  const sentRuntime: any[] = [];
+  const sentTabs: Array<{ tabId: number; message: unknown }> = [];
+  const sentRuntime: unknown[] = [];
 
   const chromeMock = {
     storage: {
@@ -70,7 +70,7 @@ function makeChromeMock() {
     },
     tabs: {
       query: vi.fn(async () => [{ id: 42, url: "https://example.com" }]),
-      sendMessage: vi.fn(async (tabId: number, message: any) => {
+      sendMessage: vi.fn(async (tabId: number, message: unknown) => {
         sentTabs.push({ tabId, message });
         return {};
       }),
@@ -100,7 +100,7 @@ function makeChromeMock() {
         addListener: vi.fn(),
         removeListener: vi.fn(),
       },
-      sendMessage: vi.fn(async (message: any) => {
+      sendMessage: vi.fn(async (message: unknown) => {
         sentRuntime.push(message);
       }),
       id: "test-extension-id",
@@ -130,9 +130,9 @@ function makeChromeMock() {
     sentRuntime,
     /** Drive the registered router with a message; resolves the sendResponse value. */
     async dispatch(
-      message: any,
+      message: unknown,
       sender: chrome.runtime.MessageSender = {},
-    ): Promise<any> {
+    ): Promise<unknown> {
       // background.ts registers multiple onMessage listeners; the *first* one is
       // the main router (later ones are narrow profiler/getTabId handlers that
       // short-circuit on message.type). Drive the first; if it returns false
@@ -143,7 +143,7 @@ function makeChromeMock() {
       const listeners = [...onMessageListeners];
       return new Promise((resolve) => {
         let settled = false;
-        const finish = (response: any) => {
+        const finish = (response: unknown) => {
           if (!settled) {
             settled = true;
             resolve(response);
@@ -160,7 +160,7 @@ function makeChromeMock() {
           }
           let listenerHandled = false;
           const listener = listeners[idx];
-          const sendResponseSpy = (response: any) => {
+          const sendResponseSpy = (response: unknown) => {
             listenerHandled = true;
             finish(response);
           };
@@ -452,8 +452,7 @@ describe("background message router", () => {
 
     // The command listener was registered with chrome.commands.onCommand.addListener.
     const cmdListener = (
-      harness.chromeMock.commands.onCommand.addListener as any
-    ).mock.calls[0]?.[0];
+      harness.chromeMock.commands.onCommand.addListener as any     ).mock.calls[0]?.[0];
     expect(cmdListener).toBeTruthy();
     cmdListener("disable-all-tools", { id: 99 });
 
@@ -469,8 +468,7 @@ describe("background message router", () => {
 
   it("keyboard command for a registered tool toggle invokes handleToggleTool", async () => {
     const cmdListener = (
-      harness.chromeMock.commands.onCommand.addListener as any
-    ).mock.calls[0]?.[0];
+      harness.chromeMock.commands.onCommand.addListener as any     ).mock.calls[0]?.[0];
     // "toggle-css-inspector" → COMMAND_TO_TOOL_ID.cssInspector
     cmdListener("toggle-css-inspector", { id: 7 });
     // handleToggleTool → debouncedToggle → setTimeout(DEBOUNCE_MS=100).
@@ -485,8 +483,7 @@ describe("background message router", () => {
       state: { activeTools: { a: { active: true } } },
     });
     const clickListener = (
-      harness.chromeMock.contextMenus.onClicked.addListener as any
-    ).mock.calls[0]?.[0];
+      harness.chromeMock.contextMenus.onClicked.addListener as any     ).mock.calls[0]?.[0];
     clickListener({ menuItemId: "fdh-disable-all" }, { id: 42 });
     await new Promise((r) => setTimeout(r, 0));
     expect(harness.sentTabs).toContainEqual({
@@ -497,8 +494,7 @@ describe("background message router", () => {
 
   it('context menu "fdh-copy-selector" forwards BG_COPY_CSS_SELECTOR', async () => {
     const clickListener = (
-      harness.chromeMock.contextMenus.onClicked.addListener as any
-    ).mock.calls[0]?.[0];
+      harness.chromeMock.contextMenus.onClicked.addListener as any     ).mock.calls[0]?.[0];
     clickListener({ menuItemId: "fdh-copy-selector" }, { id: 11 });
     await new Promise((r) => setTimeout(r, 0));
     expect(harness.sentTabs).toContainEqual({
@@ -509,8 +505,7 @@ describe("background message router", () => {
 
   it('context menu "fdh-toggle-*" routes through handleToggleTool', async () => {
     const clickListener = (
-      harness.chromeMock.contextMenus.onClicked.addListener as any
-    ).mock.calls[0]?.[0];
+      harness.chromeMock.contextMenus.onClicked.addListener as any     ).mock.calls[0]?.[0];
     clickListener({ menuItemId: "fdh-toggle-css-inspector" }, { id: 5 });
     // handleToggleTool debounces 100ms before sending.
     await new Promise((r) => setTimeout(r, 250));

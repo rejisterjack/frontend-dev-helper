@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { smartSuggestions } from '@/tools/ai/smart-suggestions';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('smartSuggestions', () => {
   beforeEach(() => {

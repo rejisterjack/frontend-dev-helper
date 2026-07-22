@@ -520,7 +520,7 @@ export const formDebugger: ToolDefinition = {
               "pattern",
               "step",
             ] as const) {
-              const v = (inputEl as unknown as Record<string, unknown>)[c];
+              const v = (inputEl as any as Record<string, unknown>)[c];
               if (
                 v !== null &&
                 v !== undefined &&

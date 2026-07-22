@@ -52,7 +52,6 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        working-directory: apps/web
         run: bun install --frozen-lockfile
 
       - name: Lint
@@ -62,6 +61,10 @@ jobs:
       - name: Type check
         working-directory: apps/web
         run: bun run check-types
+
+      - name: Unit tests
+        working-directory: apps/web
+        run: bun run test
 
       - name: Build
         working-directory: apps/web

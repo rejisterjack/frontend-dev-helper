@@ -265,7 +265,7 @@ function collectPageContext(consoleErrors: string[]): PageContextData {
   if (document.querySelector("[data-svelte]")) techStack.push("Svelte");
   if (
     document.querySelector('script[src*="jquery"]') ||
-    (window as unknown as Record<string, unknown>).jQuery
+    (window as any as Record<string, unknown>).jQuery
   )
     techStack.push("jQuery");
   if (
@@ -495,7 +495,6 @@ async function handleVSCodeRequest(
             k.startsWith("__reactInternalInstance$"),
         );
         if (fiberKey) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const walkFiber = (fiber: any, depth = 0) => {
             if (depth > 20 || !fiber) return;
             const name = fiber.type?.displayName || fiber.type?.name;
@@ -515,7 +514,7 @@ async function handleVSCodeRequest(
             if (fiber.sibling) walkFiber(fiber.sibling, depth + 1);
           };
           walkFiber(
-            (reactRoot as unknown as Record<string, unknown>)[fiberKey],
+            (reactRoot as any as Record<string, unknown>)[fiberKey],
           );
         }
       }
@@ -536,7 +535,6 @@ async function handleVSCodeRequest(
           k.startsWith("__reactInternalInstance$"),
       );
       if (fiberKey) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const fiber = (el as any)[fiberKey];
         const src = fiber?._debugSource;
         if (src) {
@@ -552,7 +550,6 @@ async function handleVSCodeRequest(
         (k) => k.startsWith("__vue__") || k.startsWith("__vue_app__"),
       );
       if (vueKey) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const instance = (el as any)[vueKey];
         const file =
           instance?.$options?.__file || instance?._instance?.type?.__file;

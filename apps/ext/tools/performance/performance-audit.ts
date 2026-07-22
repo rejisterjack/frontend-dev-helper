@@ -294,7 +294,7 @@ function collectWebVitals(): Promise<{
 
     observe("layout-shift", (entries) => {
       for (const entry of entries) {
-        const e = entry as unknown as {
+        const e = entry as any as {
           value: number;
           hadRecentInput: boolean;
           startTime: number;
@@ -329,7 +329,7 @@ function collectWebVitals(): Promise<{
 
     observe("event", (entries) => {
       for (const entry of entries) {
-        const e = entry as unknown as { duration: number };
+        const e = entry as any as { duration: number };
         if (e.duration > worstInteraction) worstInteraction = e.duration;
       }
       if (worstInteraction > 0) {

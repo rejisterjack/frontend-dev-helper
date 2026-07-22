@@ -59,7 +59,10 @@ export const scrollAnimationsDebugger: ToolDefinition = {
         const animations = document.getAnimations();
         for (const anim of animations) {
           if (anim.playState !== "paused") {
-            pausedAnimations.set(anim, anim.playState);
+            pausedAnimations.set(
+              anim,
+              anim.playState as "idle" | "paused" | "running",
+            );
             try {
               anim.pause();
             } catch {
@@ -151,7 +154,7 @@ export const scrollAnimationsDebugger: ToolDefinition = {
       try {
         const animations = document.getAnimations();
         for (const anim of animations) {
-          const timeline = anim.timeline as unknown as {
+          const timeline = anim.timeline as any as {
             constructor: { name: string };
           } | null;
           const ctorName = timeline?.constructor?.name ?? "";

@@ -154,17 +154,23 @@ interface UpstashClient {
 // crash if `@upstash/ratelimit` isn't installed — we want graceful fallback.
 let cachedLimiter: RateLimiter | null = null;
 
-async function getLimiter(): Promise<RateLimiter> {
+async function getLimiter(): Promise<RateLimiter | "unavailable"> {
   if (cachedLimiter) return cachedLimiter;
 
   const restUrl = process.env.UPSTASH_REDIS_REST_URL;
   const restToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Fail-closed in real production runtimes (not CI / local e2e). Vercel
+  // production sets VERCEL_ENV=production; CI sets CI=true and must keep the
+  // in-memory limiter so builds and Playwright can run without Upstash.
+  const requireUpstash =
+    process.env.NODE_ENV === "production" &&
+    process.env.CI !== "true" &&
+    process.env.ALLOW_MEMORY_RATE_LIMIT !== "true" &&
+    (process.env.VERCEL_ENV === "production" ||
+      process.env.RATE_LIMIT_FAIL_CLOSED === "true");
 
   if (restUrl && restToken) {
     try {
-      // Dynamic import — `@upstash/ratelimit` and `@upstash/redis` are
-      // optional peer deps. They live in dependencies, but if for some reason
-      // they fail to resolve (e.g. partial install) we fall back gracefully.
       const { Ratelimit } = await import("@upstash/ratelimit");
       const { Redis } = await import("@upstash/redis");
       const redis = new Redis({ url: restUrl, token: restToken });
@@ -175,8 +181,12 @@ async function getLimiter(): Promise<RateLimiter> {
       });
       return cachedLimiter;
     } catch {
-      // Fall through to memory limiter
+      if (requireUpstash) return "unavailable";
     }
+  }
+
+  if (requireUpstash) {
+    return "unavailable";
   }
 
   cachedLimiter = new MemoryRateLimiter();
@@ -219,6 +229,17 @@ export async function enforceRateLimit(
     ? `${ip}:${opts.identifierSuffix}`
     : ip;
   const limiter = await getLimiter();
+
+  if (limiter === "unavailable") {
+    return Response.json(
+      {
+        error:
+          "Rate limiting is misconfigured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.",
+      },
+      { status: 503 },
+    );
+  }
+
   const result = await limiter.limit(
     identifier,
     opts.limit,

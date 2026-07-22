@@ -50,7 +50,6 @@ code --install-extension fdh-vsx-0.0.1.vsix
 | `fdh.port`                   | `9456`                                                   | WebSocket port the bridge listens on         |
 | `fdh.autoStart`              | `true`                                                   | Auto-start the server when VS Code opens     |
 | `fdh.sourceMapPathOverrides` | `{ "webpack:///./src/": "src/", "webpack:///./": "./" }` | Browser bundle path → workspace path mapping |
-| `fdh.logLevel`               | `info`                                                   | Output channel verbosity                     |
 
 ### Commands
 
@@ -98,14 +97,15 @@ apps/vsx/src/handlers.ts ─ handlerMap routes to handler fn
 
 ## Bridge protocol
 
-The message protocol is **defined in the browser extension** at
-[`apps/ext/lib/vscode-protocol.ts`](../ext/lib/vscode-protocol.ts). This
-extension consumes those messages.
+The message protocol is defined in the shared package
+[`@repo/bridge-protocol`](../../packages/bridge-protocol) (`packages/bridge-protocol`).
+Both the browser extension and this VS Code extension import from that package.
+`apps/ext/lib/vscode-protocol.ts` is a thin re-export for back-compat only.
 
-**Maintenance hazard**: the protocol is currently duplicated between the two
-apps. Both must be updated together when adding/changing a message type.
-Track work to extract a shared `packages/bridge-protocol` package (see
-[`MASTER_PLAN.md`](../../MASTER_PLAN.md), task 1.7).
+The bridge binds **loopback only** (`127.0.0.1`) and requires a shared auth
+token handshake (`Auth` / `AuthOk` / `AuthFail`). After 5 failed auth attempts
+the server closes the socket. Prefer `ws://127.0.0.1:${port}` (not `localhost`)
+to avoid IPv6 surprises.
 
 ### Message types
 
@@ -125,11 +125,11 @@ Track work to extract a shared `packages/bridge-protocol` package (see
 
 ### When modifying the bridge
 
-1. **Adding a message type**: Add the type string to the union in
-   `apps/ext/lib/vscode-protocol.ts` AND add a handler + entry in
-   `handlerMap` in `apps/vsx/src/handlers.ts`. Both must be updated together.
-2. **Changing a payload**: Update the payload interface in `vscode-protocol.ts`
-   AND the cast in the corresponding handler in `handlers.ts`.
+1. **Adding a message type**: Update types/schemas in
+   `packages/bridge-protocol` **and** add a handler + entry in
+   `handlerMap` in `apps/vsx/src/handlers.ts`.
+2. **Changing a payload**: Update the payload in `@repo/bridge-protocol`
+   **and** the corresponding handler in `handlers.ts`.
 3. **Source map resolution**: If path resolution breaks for a new bundler,
    add a prefix pattern to `fdh.sourceMapPathOverrides` in VS Code settings.
 
@@ -137,13 +137,8 @@ Track work to extract a shared `packages/bridge-protocol` package (see
 
 ## Testing
 
-Current coverage is the default Yeoman stub at
-[`src/test/extension.test.ts`](src/test/extension.test.ts). Real coverage
-of the bridge protocol is tracked as task 1.6 in
-[`MASTER_PLAN.md`](../../MASTER_PLAN.md).
-
-To add a test, create a file under `src/test/` and use the `@vscode/test-cli`
-runner:
+Unit tests for the WebSocket server live in
+[`src/test/server.test.ts`](src/test/server.test.ts) (run with `bun run test`).
 
 ```ts
 import { expect } from "chai";

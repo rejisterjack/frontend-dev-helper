@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check-types": "tsc --noEmit",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "analyze": "ANALYZE=true bun run build",
@@ -36,12 +37,12 @@
     "gsap": "^3.12.5",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
-    "next-auth": "^5.0.0-beta.25",
+    "next-auth": "5.0.0-beta.32",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^4.0.0",
     "winston": "^3.11.0",
-    "zod": "^3.22.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",
@@ -61,6 +62,7 @@
     "prisma": "^7.8.0",
     "sharp": "^0.35.3",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.6"
   }
 }

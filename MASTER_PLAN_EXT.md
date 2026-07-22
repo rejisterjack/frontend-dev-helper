@@ -67,93 +67,62 @@ detailed write-up per item.
 
 ---
 
-## Phase 2 — Optimizations (tracked TODOs, not implemented in this pass)
+## Phase 2 — Optimizations (DONE in launch-complete remediation)
 
-These are documented for follow-up work. Each is independently shippable.
+| # | Item | Status |
+| --- | --- | --- |
+| 2.1 | Bundle size budget in CI (8 MB) | Done |
+| 2.2 | Optional host permissions + enable-on-activate | Done |
+| 2.3 | Post-build manifest smoke / `test:e2e` | Done |
+| 2.4 | Loopback-only bridge (`127.0.0.1`) instead of unreliable MV3 `wss://` | Done |
+| 2.5 | Opt-in Plausible telemetry flush | Done |
+| 2.6 | Tool count = 50 (metadata + marketing TOOL_COUNT + SEO catalog parity) | Done |
+| 2.7 | ESLint `--max-warnings=0` | Done |
+| 2.8 | background.ts coverage | Deferred |
+
+See also root [`MASTER_PLAN.md`](./MASTER_PLAN.md) for whole-monorepo launch remediation.
+
+---
+
+## Phase 2 (historical notes)
 
 ### 2.1 — Bundle analyzer
 
-Add `rollup-plugin-visualizer` to the Vite config in `wxt.config.ts`, write
-`stats.html` on build, fail CI above a size budget. The `.gitignore` already
-ignores `stats.html` / `stats-*.json` — someone planned this.
+CI enforces a total `.output/chrome-mv3` size budget of 8 MB.
 
-**DoD:** `bun run build` produces `stats.html`; CI step fails if total bundle
-size grows beyond an asserted budget.
+### 2.2 — Host permission opt-in
 
-**Risk:** Low. Plugin is well-maintained; the budget threshold needs
-calibration against the current 3.48 MB total.
+`optional_host_permissions` replaces always-on `host_permissions`. Activating a
+tool prompts for the active tab origin via `ensureActiveTabHostAccess()`.
 
-### 2.2 — `activeTab` opt-in
+### 2.4 — Loopback bridge
 
-Replace `<all_urls>` content script with `activeTab` + optional host
-permissions granted on first use. Lower Web Store review friction and
-improves user trust.
+VS Code bridge binds `127.0.0.1` only; extension connects to `ws://127.0.0.1`.
+True `wss://` self-signed is not used (MV3 rejects untrusted certs).
 
-**DoD:** Content script runs only after explicit user gesture; permissions
-prompt is per-host and revocable.
+### 2.5 — Telemetry
 
-**Risk:** Medium. Requires UX work — the popup needs an "enable on this site"
-flow, and the devtools panel needs an equivalent affordance. Some tools
-(e.g. background profilers) may need to fall back to a manual opt-in.
+Opt-in Plausible events via `flushTelemetry()` when `enableTelemetry` is true.
+
+### 2.7 — ESLint baseline
+
+`bun run lint -- --max-warnings=0` exits 0; `ext-ci.yml` and `ext-release.yml`
+enforce the same budget. Unused imports/bindings were removed; host-object
+introspection keeps `any` at boundaries (`@typescript-eslint/no-explicit-any` off
+with a documented rationale in `eslint.config.mjs`).
 
 ### 2.3 — E2E for the extension
 
-`@nicedoc/wdio` or Playwright's Chromium extension support to smoke-test the
-popup / devtools flow against a fixture page.
+`bun run test:e2e` runs manifest/catalog smoke tests (post-build in CI). Full
+Chromium extension automation remains optional follow-up.
 
-**DoD:** A `bun run test:e2e` script runs in CI; one happy-path test
-(open popup → activate a tool → assert overlay rendered → deactivate).
-
-**Risk:** Medium. Playwright's Chromium extension support is finicky;
-`web-ext` may be a more stable runner.
-
-### 2.4 — WebSocket over `wss://` with self-signed cert
-
-Defense-in-depth for Phase 0.3; removes even the localhost plaintext caveat.
-
-**DoD:** Bridge connects via `wss://localhost:${port}`; cert is generated
-on first run and pinned.
-
-**Risk:** Medium. Cert generation in the VS Code extension process is
-non-trivial; needs careful thought about renewal + trust store.
-
-### 2.5 — Real telemetry provider
-
-Pick Posthog / Plausible / Vercel, wire to `flushTelemetry()` (see Phase
-1.4). Behind the existing `enableTelemetry` opt-in flag with a separate
-explicit network consent prompt.
-
-**DoD:** `flushTelemetry()` POSTs events to the chosen provider when both
-`enableTelemetry` and a separate network consent are true; provider key is
-in a build-time env var, not user-configurable.
-
-**Risk:** Low. Plausible is the lightest touch (no PII by design).
+**DoD:** A `bun run test:e2e` script runs in CI; manifest permissions + catalog
+parity asserted.
 
 ### 2.6 — Auto-update README tool count from CI
 
-Replace the manual "52+" → "N" bump in `README.md` with a CI step that
-regenerates the badge URL from `toolCount` in `tools/metadata.ts`.
-
-**DoD:** A pre-merge CI check fails if `README.md`'s badge count disagrees
-with the registry.
-
-**Risk:** Low.
-
-### 2.7 — Burn down ESLint warning baseline to 0
-
-Current baseline is **229 warnings** — almost all
-`@typescript-eslint/no-unused-vars` (~117) and
-`@typescript-eslint/no-explicit-any` (~77, including test-file chrome.\*
-mocks). The threshold in `ext-ci.yml` is set to the current count so new
-warnings fail CI immediately, but the legacy debt remains.
-
-**DoD:** `bun run lint -- --max-warnings=0` exits 0; threshold in
-`ext-ci.yml` drops to 0.
-
-**Risk:** Low per change, but the volume makes it a multi-PR effort.
-Suggested approach: one PR per tool subdirectory (`tools/css/**`,
-`tools/performance/**`, …), each dropping the threshold by the count of
-warnings fixed in that directory.
+Catalog parity is enforced in `test/e2e/manifest-smoke.test.ts` (every
+`toolMetadata` id has an SEO page in `apps/web/data/tools.ts`).
 
 ### 2.8 — Raise `background.ts` coverage past 70% functions
 

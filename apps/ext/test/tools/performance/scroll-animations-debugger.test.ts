@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { scrollAnimationsDebugger } from '@/tools/performance/scroll-animations-debugger';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('scrollAnimationsDebugger', () => {
   beforeEach(() => {

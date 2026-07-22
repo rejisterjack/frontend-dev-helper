@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { pixelRuler } from '@/tools/inspection/pixel-ruler';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('pixelRuler', () => {
   beforeEach(() => {

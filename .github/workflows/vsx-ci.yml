@@ -1,0 +1,56 @@
+name: VS Code Extension CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/vsx/**"
+      - "packages/bridge-protocol/**"
+      - "bun.lock"
+      - ".github/workflows/vsx-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/vsx/**"
+      - "packages/bridge-protocol/**"
+      - "bun.lock"
+      - ".github/workflows/vsx-ci.yml"
+
+concurrency:
+  group: vsx-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, type-check, test, package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        working-directory: apps/vsx
+        run: bun run lint
+
+      - name: Type check
+        working-directory: apps/vsx
+        run: bun run check-types
+
+      - name: Unit tests
+        working-directory: apps/vsx
+        run: bun run test
+
+      - name: Package
+        working-directory: apps/vsx
+        run: bun run package

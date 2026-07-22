@@ -406,7 +406,7 @@ function buildFixedPreview(el: HTMLElement, fix: AIFix): string {
   if (fix.styleChanges && Object.keys(fix.styleChanges).length > 0) {
     const clone = el.cloneNode(true) as HTMLElement;
     for (const [prop, value] of Object.entries(fix.styleChanges)) {
-      (clone.style as unknown as Record<string, string>)[prop] = value;
+      (clone.style as any as Record<string, string>)[prop] = value;
     }
     return clone.outerHTML;
   }
@@ -877,7 +877,10 @@ export const aiAutoFix: ToolDefinition = {
             description,
             fixId: issue.id,
           };
-          bridge.send({ type: "PreviewFix", payload });
+          bridge.send({
+            type: "PreviewFix",
+            payload: payload as any as Record<string, unknown>,
+          });
           return;
         }
 
@@ -906,7 +909,10 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
             if (typeof response.fix === "string") {
               const cleaned = stripCodeFences(response.fix);
               edits = cleaned
-                ? parseJsonArrayResponse<(typeof edits)[number]>(cleaned)
+                ? parseJsonArrayResponse<{
+                    range: SourceFixRange;
+                    newText: string;
+                  }>(cleaned)
                 : null;
             } else if (Array.isArray(response.fix)) {
               edits = response.fix as typeof edits;
@@ -931,7 +937,10 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
             file: source.file,
             edits,
           };
-          bridge.send({ type: "ApplySourceFix", payload: applyPayload });
+          bridge.send({
+            type: "ApplySourceFix",
+            payload: applyPayload as any as Record<string, unknown>,
+          });
         } else {
           const payload: PreviewFixPayload = {
             file: source.file,
@@ -940,7 +949,10 @@ Only include the minimal edits needed to fix the specific issue. Do not change u
             description,
             fixId: issue.id,
           };
-          bridge.send({ type: "PreviewFix", payload });
+          bridge.send({
+            type: "PreviewFix",
+            payload: payload as any as Record<string, unknown>,
+          });
         }
       });
       actions.appendChild(vscodeBtn);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/command';
 import { useUIStore } from '@/stores/use-ui-store';
 import { useToolsStore } from '@/stores/use-tools-store';
-import { toolMetadata, metadataByCategory } from '@/tools/metadata';
+import { metadataByCategory } from '@/tools/metadata';
 import type { ToolCategory } from '@/tools/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -48,7 +48,7 @@ export function CommandPalette() {
     toggleCommandPalette();
   };
 
-  const handleOpenDetail = (toolId: string) => {
+  const _handleOpenDetail = (toolId: string) => {
     toggleCommandPalette();
     navigateTo('tool-detail', { toolId });
   };

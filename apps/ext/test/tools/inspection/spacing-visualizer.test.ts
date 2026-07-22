@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi } from 'vitest';
 import { spacingVisualizer } from '@/tools/inspection/spacing-visualizer';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('spacingVisualizer', () => {
   beforeEach(() => {

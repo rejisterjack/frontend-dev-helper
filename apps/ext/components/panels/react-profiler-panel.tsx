@@ -79,7 +79,7 @@ export function ReactProfilerPanel({ tabId }: { tabId: number | null }) {
     null,
   );
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
-  const [treeFilter, setTreeFilter] = useState("");
+  const [treeFilter, _setTreeFilter] = useState("");
 
   const fibersArray = useMemo(() => Array.from(fiberMap.values()), [fiberMap]);
 

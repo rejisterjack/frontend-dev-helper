@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { responsivePreview } from '@/tools/utilities/responsive-preview';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('responsivePreview', () => {
   beforeEach(() => {

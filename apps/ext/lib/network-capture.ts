@@ -59,7 +59,7 @@ function arrayBufferToBase64(buf: ArrayBuffer): string {
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
     const slice = bytes.subarray(i, Math.min(i + chunk, bytes.length));
-    binary += String.fromCharCode.apply(null, slice as unknown as number[]);
+    binary += String.fromCharCode.apply(null, slice as any as number[]);
   }
   return btoa(binary);
 }
@@ -229,6 +229,7 @@ export class NetworkCapture {
   private interceptFetch(): void {
     this.originalFetch = window.fetch;
     const origFetch = this.originalFetch;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- needed for window.fetch interceptor closure
     const self = this;
     const maxSize = this.maxBodySize;
     const captureBinary = this.captureBinary;
@@ -398,6 +399,7 @@ export class NetworkCapture {
   }
 
   private interceptXHR(): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- needed for XHR prototype interceptor closure
     const self = this;
     const maxSize = this.maxBodySize;
 

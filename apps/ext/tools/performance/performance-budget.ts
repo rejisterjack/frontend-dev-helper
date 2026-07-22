@@ -157,9 +157,9 @@ export const performanceBudget: ToolDefinition = {
       const lastLcp =
         lcpEntries.length > 0 ? lcpEntries[lcpEntries.length - 1] : null;
       const lcp = lastLcp
-        ? ((lastLcp as unknown as { renderTime?: number; loadTime?: number })
+        ? ((lastLcp as any as { renderTime?: number; loadTime?: number })
             .renderTime ??
-          (lastLcp as unknown as { loadTime?: number }).loadTime ??
+          (lastLcp as any as { loadTime?: number }).loadTime ??
           0)
         : 0;
 
@@ -168,7 +168,7 @@ export const performanceBudget: ToolDefinition = {
       let cls = 0;
       try {
         const shifts = (
-          performance.getEntriesByType("layout-shift") as unknown as Array<{
+          performance.getEntriesByType("layout-shift") as any as Array<{
             value: number;
             hadRecentInput: boolean;
             startTime: number;
@@ -200,7 +200,7 @@ export const performanceBudget: ToolDefinition = {
       let inp = 0;
       try {
         const events = (
-          performance.getEntriesByType("event") as unknown as Array<{
+          performance.getEntriesByType("event") as any as Array<{
             startTime: number;
             duration: number;
           }>

@@ -1,9 +1,4 @@
-import {
-  findSourceMapUrls,
-  discoverExternalSourceMaps,
-  resolvePosition,
-  enrichSourceMapInfo,
-} from './source-map-resolver';
+import { findSourceMapUrls, discoverExternalSourceMaps, enrichSourceMapInfo } from './source-map-resolver';
 import { getBridge } from './vscode-bridge';
 
 export interface ElementSource {
@@ -40,7 +35,7 @@ function getReactFiber(el: HTMLElement): ReactFiber | null {
     (k) => REACT_FIBER_RE.test(k) || REACT_INTERNAL_RE.test(k),
   );
   if (!key) return null;
-  return (el as unknown as Record<string, ReactFiber>)[key] ?? null;
+  return (el as any as Record<string, ReactFiber>)[key] ?? null;
 }
 
 const reactResolver: SourceResolver = {

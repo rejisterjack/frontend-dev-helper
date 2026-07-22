@@ -14,7 +14,7 @@ interface AnalyzerConfig {
 
 const FENCE_RE = /```(\w+)?\n([\s\S]*?)```/g;
 
-function esc(s: string): string {
+function _esc(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -317,7 +317,7 @@ export const aiAnalyzer: ToolDefinition = {
 
       if (cfg.includeCode) {
         sections.push(
-          "Where helpful, include short fenced code blocks (\`\`\`) with concrete fixes.",
+          "Where helpful, include short fenced code blocks (```) with concrete fixes.",
         );
       } else {
         sections.push("Do NOT include code blocks; describe changes in prose.");

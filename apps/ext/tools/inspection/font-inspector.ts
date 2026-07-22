@@ -39,7 +39,7 @@ function detectFontSource(fontFamily: string): {
         if (rule instanceof CSSFontFaceRule) {
           const ruleFamily = rule.style.fontFamily?.replace(/['"]/g, "").trim();
           if (ruleFamily?.toLowerCase() === cleanFamily.toLowerCase()) {
-            const src = (rule.style as unknown as Record<string, string>).src;
+            const src = (rule.style as any as Record<string, string>).src;
             if (src) {
               const urlMatch = src.match(/url\(["']?([^"')]+)["']?\)/);
               if (urlMatch) {

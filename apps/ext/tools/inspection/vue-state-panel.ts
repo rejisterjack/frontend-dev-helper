@@ -31,7 +31,7 @@ function findVue3Component(element: HTMLElement): VueComponentInfo | null {
   let target: HTMLElement | null = element;
 
   while (target) {
-    const el = target as unknown as Record<string, unknown>;
+    const el = target as any as Record<string, unknown>;
 
     // Vue 3 attaches __vue_parent_component or the internal instance
     if (el.__vue_app__) {
@@ -56,7 +56,7 @@ function findVue3Component(element: HTMLElement): VueComponentInfo | null {
   // Fallback: walk all elements looking for __vueParentComponent
   target = element;
   while (target) {
-    const vnode = (target as unknown as Record<string, unknown>).__vnode;
+    const vnode = (target as any as Record<string, unknown>).__vnode;
     if (vnode && typeof vnode === "object") {
       const vn = vnode as Record<string, unknown>;
       if (vn.component) {
@@ -176,7 +176,10 @@ function getVue3ComponentName(instance: Record<string, unknown>): string {
         return type.displayName;
     }
     if (typeof type === "function") {
-      const fn = type as Function & { displayName?: string; name?: string };
+      const fn = type as ((...args: unknown[]) => unknown) & {
+        displayName?: string;
+        name?: string;
+      };
       return fn.displayName || fn.name || "Anonymous";
     }
   }
@@ -191,7 +194,7 @@ function findVue2Component(element: HTMLElement): VueComponentInfo | null {
   let target: HTMLElement | null = element;
 
   while (target) {
-    const el = target as unknown as Record<string, unknown>;
+    const el = target as any as Record<string, unknown>;
     const vue = el.__vue__;
 
     if (vue && typeof vue === "object") {

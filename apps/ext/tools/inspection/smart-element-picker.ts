@@ -4,10 +4,7 @@ import {
   generateSelector,
   getComputedStyles,
 } from "@/content/highlight-engine";
-import {
-  addOverlayElement,
-  removeOverlayElement,
-} from "@/content/overlay-manager";
+
 
 interface ElementAnalysis {
   tag: string;

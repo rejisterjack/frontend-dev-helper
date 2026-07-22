@@ -33,7 +33,7 @@ export function DashboardView() {
   const activeTools = useToolsStore((s) => s.activeTools);
   const deactivateAll = useToolsStore((s) => s.deactivateAll);
   const searchQuery = useUIStore((s) => s.searchQuery);
-  const setSearchQuery = useUIStore((s) => s.setSearchQuery);
+  const _setSearchQuery = useUIStore((s) => s.setSearchQuery);
   const favoriteToolIds = useUIStore((s) => s.favoriteToolIds);
   const recentToolIds = useUIStore((s) => s.recentToolIds);
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette);

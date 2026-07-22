@@ -1,9 +1,5 @@
 import type { ToolDefinition } from "../types";
-import {
-  addOverlayElement,
-  removeOverlayElement,
-  clearAllOverlays,
-} from "@/content/overlay-manager";
+import { addOverlayElement, removeOverlayElement } from "@/content/overlay-manager";
 
 interface ContainerQueryMatch {
   condition: string;
@@ -28,7 +24,7 @@ interface ContainerRule {
 function isConditionRule(rule: CSSRule): rule is CSSConditionRule {
   return (
     rule instanceof CSSConditionRule ||
-    typeof (rule as unknown as { conditionText?: unknown }).conditionText !==
+    typeof (rule as any as { conditionText?: unknown }).conditionText !==
       "undefined"
   );
 }

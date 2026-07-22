@@ -8,7 +8,6 @@ import {
   collectCascadedRules,
   detectConflicts,
   specificityToString,
-  type PropertyConflict,
 } from "@/lib/css-analysis";
 
 const CSS_CATEGORIES = [
@@ -186,7 +185,7 @@ const CSS_CATEGORIES = [
   },
 ];
 
-function escapeHtml(s: string): string {
+function _escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

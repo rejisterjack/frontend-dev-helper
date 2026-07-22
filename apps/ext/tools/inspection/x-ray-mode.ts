@@ -1,4 +1,4 @@
-import type { ToolDefinition, ToolContext } from "../types";
+import type { ToolDefinition } from "../types";
 import {
   addOverlayElement,
   removeOverlayElement,
@@ -945,7 +945,7 @@ function buildSummaryContent(
   issues: XRayIssue[],
   contentArea: HTMLDivElement,
   overlays: Map<string, HTMLElement>,
-  tooltip: HTMLDivElement,
+  _tooltip: HTMLDivElement,
 ): void {
   while (contentArea.firstChild)
     contentArea.removeChild(contentArea.firstChild);

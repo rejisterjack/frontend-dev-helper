@@ -10,6 +10,7 @@
 /// <reference lib="webworker" />
 
 import type { AnalysisResult, CommitData } from "@repo/profiler-contract";
+import { profileDataSchema } from "@repo/profiler-contract/schema";
 import {
   analyzeWastedRenders,
   analyzeMemoization,
@@ -103,7 +104,7 @@ function generateOpportunities(
   return opportunities;
 }
 
-const ctx = self as unknown as {
+const ctx = self as any as {
   onmessage: ((ev: MessageEvent<WorkerAnalysisRequest>) => void) | null;
   postMessage: (
     message:
@@ -118,21 +119,31 @@ ctx.onmessage = (ev: MessageEvent<WorkerAnalysisRequest>) => {
   if (type !== "ANALYZE") return;
 
   try {
+    const parsed = profileDataSchema.safeParse(commits);
+    if (!parsed.success) {
+      ctx.postMessage({
+        type: "ERROR",
+        error: `Invalid profile payload: ${parsed.error.issues[0]?.message ?? "schema mismatch"}`,
+      });
+      return;
+    }
+    const validCommits = parsed.data;
+
     ctx.postMessage({
       type: "PROGRESS",
       phase: "wasted-renders",
       progress: 0.25,
     });
-    const wastedRenderReports = analyzeWastedRenders(commits);
+    const wastedRenderReports = analyzeWastedRenders(validCommits);
 
     ctx.postMessage({ type: "PROGRESS", phase: "memoization", progress: 0.5 });
-    const memoReports = analyzeMemoization(commits);
+    const memoReports = analyzeMemoization(validCommits);
 
     ctx.postMessage({ type: "PROGRESS", phase: "scoring", progress: 0.75 });
     const performanceScore = calculatePerformanceScore(
       wastedRenderReports,
       memoReports,
-      commits,
+      validCommits,
     );
 
     ctx.postMessage({
@@ -147,7 +158,7 @@ ctx.onmessage = (ev: MessageEvent<WorkerAnalysisRequest>) => {
 
     const result: AnalysisResult = {
       timestamp: Date.now(),
-      totalCommits: commits.length,
+      totalCommits: validCommits.length,
       wastedRenderReports,
       memoReports,
       performanceScore,

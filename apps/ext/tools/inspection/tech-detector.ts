@@ -14,7 +14,7 @@ function detectAllTech(config: Record<string, unknown>): DetectedTech[] {
   // arbitrary keys. We cast to a permissive index signature so optional-chain
   // access compiles without a per-site cast. Every read site guards with
   // `?.` so unknown / undefined values short-circuit safely.
-  const w = window as unknown as Record<
+  const w = window as any as Record<
     string,
     Record<string, unknown> | undefined
   >;
@@ -28,7 +28,8 @@ function detectAllTech(config: Record<string, unknown>): DetectedTech[] {
     // React
     if (
       w.__REACT_DEVTOOLS_GLOBAL_HOOK__ ||
-      w.React?.hasOwnProperty("createElement")
+      (w.React != null &&
+        Object.prototype.hasOwnProperty.call(w.React, "createElement"))
     ) {
       const evidence: string[] = ["window.__REACT_DEVTOOLS_GLOBAL_HOOK__"];
       if (document.querySelector("[data-reactroot], [data-reactid]"))
@@ -596,7 +597,7 @@ function detectAllTech(config: Record<string, unknown>): DetectedTech[] {
   return results;
 }
 
-function escapeHtml(str: string): string {
+function _escapeHtml(str: string): string {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;

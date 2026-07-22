@@ -24,12 +24,12 @@ export async function readStorage<T = unknown>(
   // here sidesteps a quirk in @types/chrome where `local` is exported as a
   // const, not a re-exportable type — both `browser.storage.local` and
   // `chrome.storage.local` resolve to the same StorageArea at runtime.
-  const area = ((globalThis as { browser?: { storage?: { local?: any } } })
+  const area = ((globalThis as { browser?: { storage?: { local?: unknown } } })
     .browser?.storage?.local ?? chrome.storage.local) as {
     get: (
       keys?: string | string[] | Record<string, unknown> | null,
-    ) => Promise<Record<string, unknown>>;
-    set: (items: Record<string, unknown>) => Promise<void>;
+    ) => Promise<Record<string, any>>;
+    set: (items: Record<string, any>) => Promise<void>;
     remove: (keys: string | string[]) => Promise<void>;
   };
   const result = await area.get(key);

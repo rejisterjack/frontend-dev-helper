@@ -8,5 +8,5 @@
       "@/*": ["./*"]
     }
   },
-  "exclude": ["test/**", "node_modules", ".output"]
+  "exclude": ["test/**", "node_modules", ".output", "vitest.config.ts"]
 }

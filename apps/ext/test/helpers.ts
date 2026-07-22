@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+
 import type { ToolDefinition } from "@/tools/types";
 
 export function createMockCtx() {
@@ -27,7 +27,7 @@ export function testConfigSchema(tool: ToolDefinition) {
   it("should have valid config schema fields", () => {
     const schema = tool.configSchema;
     if (!schema) return;
-    for (const [key, field] of Object.entries(schema)) {
+    for (const [_key, field] of Object.entries(schema)) {
       expect(field.type).toBeDefined();
       expect([
         "boolean",

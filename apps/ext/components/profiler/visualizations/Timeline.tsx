@@ -120,7 +120,7 @@ const Timeline: React.FC<TimelineProps> = ({
     g.append("g")
       .attr("transform", `translate(0,${innerHeight})`)
       .call(
-        xAxis as unknown as (
+        xAxis as any as (
           sel: d3.Selection<SVGGElement, unknown, null, undefined>,
         ) => void,
       )
@@ -145,7 +145,7 @@ const Timeline: React.FC<TimelineProps> = ({
 
     g.append("g")
       .call(
-        yAxis as unknown as (
+        yAxis as any as (
           sel: d3.Selection<SVGGElement, unknown, null, undefined>,
         ) => void,
       )

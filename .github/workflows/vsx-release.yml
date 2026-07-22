@@ -22,7 +22,6 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        working-directory: apps/vsx
         run: bun install --frozen-lockfile
 
       - name: Lint
@@ -32,6 +31,10 @@ jobs:
       - name: Type check
         working-directory: apps/vsx
         run: bun run check-types
+
+      - name: Unit tests
+        working-directory: apps/vsx
+        run: bun run test
 
       - name: Production package
         working-directory: apps/vsx
@@ -47,21 +50,16 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "vsix=fdh-vsx-v${VERSION}.vsix" >> "$GITHUB_OUTPUT"
+          echo "vsix=fdh-vsx-${VERSION}.vsix" >> "$GITHUB_OUTPUT"
 
-      # Publish only if a PAT is configured. On personal forks without a
-      # PAT, this step is skipped — the .vsix is still attached to the
-      # release for manual install.
       - name: Publish to Marketplace
         if: env.VSCE_PAT != ''
         working-directory: apps/vsx
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: bunx @vscode/vsce publish --no-dependencies --packagePath ../vsx/*.vsix
+        run: bunx @vscode/vsce publish --no-dependencies --packagePath "./${{ steps.version.outputs.vsix }}"
 
-      - name: Create GitHub Release
+      - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/vsx/*.vsix
-          generate_release_notes: true
-          name: VS Code Extension ${{ steps.version.outputs.version }}
+          files: apps/vsx/${{ steps.version.outputs.vsix }}

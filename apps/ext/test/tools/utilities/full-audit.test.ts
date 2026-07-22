@@ -1,4 +1,4 @@
-import { describe, beforeEach, vi, it, expect } from "vitest";
+import { describe, beforeEach, vi } from "vitest";
 import { fullAudit } from "@/tools/utilities/full-audit";
 import { runStandardToolTests } from "../../helpers";
 

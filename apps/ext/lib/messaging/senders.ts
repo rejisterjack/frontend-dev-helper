@@ -1,4 +1,4 @@
-import type { FDHMessage, PopupMessage, BackgroundToContentMessage } from './types';
+import type { PopupMessage, BackgroundToContentMessage } from './types';
 
 export async function sendToBackground<T extends PopupMessage>(msg: T): Promise<unknown> {
   return browser.runtime.sendMessage(msg);

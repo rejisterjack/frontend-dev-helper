@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { breakpointOverlay } from '@/tools/css/breakpoint-overlay';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('breakpointOverlay', () => {
   beforeEach(() => {

@@ -34,9 +34,9 @@ export const commandPalette: ToolDefinition = {
   },
   run: (ctx, config) => {
     const {
-      shortcut = "Ctrl+Shift+P",
-      showRecent = true,
-      maxRecent = 5,
+      _shortcut = "Ctrl+Shift+P",
+      _showRecent = true,
+      _maxRecent = 5,
       fuzzySearch = true,
     } = config ?? {};
 

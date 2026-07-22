@@ -48,7 +48,7 @@ The extension **only** makes network requests when you explicitly configure and 
 
 1. **AI Assistant**: Messages are sent to your configured AI provider (OpenRouter, Ollama, or custom endpoint). You choose the provider and API key. When using Ollama (local), no data leaves your machine.
 2. **GitHub Integration**: Audit results are posted as PR comments only when you click "Post to PR". Requires your GitHub Personal Access Token.
-3. **VS Code Bridge**: Element/source data is sent to a local WebSocket connection (`ws://localhost:9456`). Never leaves your machine. The connection requires a shared secret printed by the VS Code extension; both sides validate every message against a strict schema before processing.
+3. **VS Code Bridge**: Element/source data is sent to a local WebSocket connection (`ws://127.0.0.1:9456`, loopback only). Never leaves your machine. The connection requires a shared secret from the VS Code extension; both sides validate every message against a strict schema before processing.
 
 **No data is sent to the extension developers or any third-party analytics service.**
 

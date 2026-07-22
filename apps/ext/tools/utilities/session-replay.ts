@@ -255,7 +255,7 @@ export const sessionReplay: ToolDefinition = {
           }
           container.appendChild(list);
         }
-      } catch (err) {
+      } catch (_err) {
         const errorEl = h("div", {
           color: "#ef4444",
           "font-size": "12px",
@@ -861,7 +861,7 @@ export const sessionReplay: ToolDefinition = {
         document.addEventListener("fdh-tool-deactivated", onToolDeactivated);
 
         // Store listeners for cleanup
-        (recorder as unknown as Record<string, unknown>)._cleanupListeners =
+        (recorder as any as Record<string, unknown>)._cleanupListeners =
           () => {
             document.removeEventListener("fdh-tool-activated", onToolActivated);
             document.removeEventListener(
@@ -881,9 +881,9 @@ export const sessionReplay: ToolDefinition = {
           });
         };
         document.addEventListener("fdh-element-selected", onElementSelected);
-        const prevCleanup = (recorder as unknown as Record<string, unknown>)
+        const prevCleanup = (recorder as any as Record<string, unknown>)
           ._cleanupListeners as (() => void) | undefined;
-        (recorder as unknown as Record<string, unknown>)._cleanupListeners =
+        (recorder as any as Record<string, unknown>)._cleanupListeners =
           () => {
             prevCleanup?.();
             document.removeEventListener(
@@ -903,9 +903,9 @@ export const sessionReplay: ToolDefinition = {
           });
         };
         document.addEventListener("fdh-ai-message", onAIMessage);
-        const prevCleanup = (recorder as unknown as Record<string, unknown>)
+        const prevCleanup = (recorder as any as Record<string, unknown>)
           ._cleanupListeners as (() => void) | undefined;
-        (recorder as unknown as Record<string, unknown>)._cleanupListeners =
+        (recorder as any as Record<string, unknown>)._cleanupListeners =
           () => {
             prevCleanup?.();
             document.removeEventListener("fdh-ai-message", onAIMessage);
@@ -921,7 +921,7 @@ export const sessionReplay: ToolDefinition = {
 
     async function handleStopRecording(): Promise<void> {
       // Cleanup listeners
-      const cleanupListeners = (recorder as unknown as Record<string, unknown>)
+      const cleanupListeners = (recorder as any as Record<string, unknown>)
         ._cleanupListeners as (() => void) | undefined;
       if (cleanupListeners) cleanupListeners();
 
@@ -997,7 +997,7 @@ export const sessionReplay: ToolDefinition = {
       stopPlayback();
       if (recorder.isActive()) {
         const cleanupListeners = (
-          recorder as unknown as Record<string, unknown>
+          recorder as any as Record<string, unknown>
         )._cleanupListeners as (() => void) | undefined;
         if (cleanupListeners) cleanupListeners();
         recorder.stop();

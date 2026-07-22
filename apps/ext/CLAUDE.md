@@ -2,28 +2,32 @@
 
 ## Companion Project
 
-This Chrome extension is paired with **FDH-VSX** (`apps/vsx/` in this monorepo), a VS Code extension. They communicate over a **WebSocket bridge on port 9456**. Changes to the protocol or bridge in one project must be reflected in the other.
+This Chrome extension is paired with **FDH-VSX** (`apps/vsx/` in this monorepo), a VS Code extension. They communicate over a **WebSocket bridge on `127.0.0.1:9456`** with a shared auth token. Protocol changes go through `@repo/bridge-protocol`.
 
 ## Architecture: Browser ↔ VS Code Bridge
 
 ```
-┌─ FDH-EXT (Chrome Extension) ───────────────┐   WebSocket    ┌─ FDH-VSX (VS Code Extension) ──┐
-│                                              │   port 9456    │                                 │
+┌─ FDH-EXT (Chrome Extension) ───────────────┐   WebSocket     ┌─ FDH-VSX (VS Code Extension) ──┐
+│                                              │ 127.0.0.1:9456 │                                 │
 │  Tools (inspection, CSS, AI)                 │ ──────────────>│  handlers.ts                   │
-│    ↓ call bridge.send() or bridge.jumpTo()   │                │    ↓ route to handler functions │
+│    ↓ call bridge.send() or bridge.jumpTo()   │   + Auth token │    ↓ route to handler functions │
 │  vscode-bridge.ts ─ WebSocket client         │                │  decorations.ts ─ editor glow   │
-│  vscode-protocol.ts ─ message type defs      │                │  diagnostics.ts ─ Problems panel│
+│  @repo/bridge-protocol ─ message type defs   │                │  diagnostics.ts ─ Problems panel│
 │  element-source-resolver.ts ─ DOM → source   │                │  server.ts ─ WebSocket server   │
 │  css-source-resolver.ts ─ CSS prop → source  │                │                                 │
 └──────────────────────────────────────────────┘                └─────────────────────────────────┘
 ```
+
+Protocol source of truth: `packages/bridge-protocol` (`@repo/bridge-protocol`).
+`lib/vscode-protocol.ts` is a thin re-export for back-compat only. The client connects to `ws://127.0.0.1:${port}` (not `localhost`).
 
 ### Key Files
 
 | File                             | Role                                                                                                                     |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `lib/vscode-bridge.ts`           | WebSocket client singleton. `getBridge()` returns shared instance. Methods: `send()`, `jumpToSource()`, `openInEditor()` |
-| `lib/vscode-protocol.ts`         | All message types and payload interfaces. **Must stay in sync with FDH-VSX handlers.**                                   |
+| `lib/vscode-protocol.ts`         | Re-exports from `@repo/bridge-protocol` (back-compat)                                                                    |
+| `lib/host-permissions.ts`        | Optional host permission opt-in (`ensureActiveTabHostAccess`)                                                            |
 | `lib/element-source-resolver.ts` | Resolves HTMLElement → `{ file, line, column }` via React fibers, Vue instances, or source map matching                  |
 | `lib/css-source-resolver.ts`     | Resolves element + CSS property → source file/line via stylesheet source maps                                            |
 | `lib/source-map-resolver.ts`     | Low-level source map consumer: `resolvePosition()`, `getSourceContent()`, `findSourceMapUrls()`                          |
@@ -53,7 +57,9 @@ This Chrome extension is paired with **FDH-VSX** (`apps/vsx/` in this monorepo),
 ## Build
 
 - `bun run build` — production build to `.output/chrome-mv3/` (load unpacked in Chrome)
-- `bun run compile` (`tsc --noEmit`) is **green** as of the Phase 0.5 audit pass — pre-existing type debt across `background.ts`, `content.ts`, and ~15 tool files has been cleared.
+- `bun run compile` (`tsc --noEmit`) — type-check
+- `bun run lint -- --max-warnings=0` — zero-warning lint budget
+- `bun run test:e2e` — manifest/catalog smoke (post-build)
 
 ## Design System Rules
 

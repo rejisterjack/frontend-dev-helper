@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { zIndexVisualizer } from '@/tools/inspection/z-index-visualizer';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('zIndexVisualizer', () => {
   beforeEach(() => {

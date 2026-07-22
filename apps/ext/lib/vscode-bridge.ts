@@ -52,7 +52,7 @@ export class VSCodeBridge {
   private pendingToken: string | null = null;
 
   constructor(port: number = 9456) {
-    this.url = `ws://localhost:${port}`;
+    this.url = `ws://127.0.0.1:${port}`;
   }
 
   get connected(): boolean {

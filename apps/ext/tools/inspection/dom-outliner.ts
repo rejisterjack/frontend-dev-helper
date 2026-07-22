@@ -47,7 +47,7 @@ const DEPTH_PALETTE = [
 ];
 const OVERLAY_CLASS = "fdh-dom-outline";
 
-function escapeHtml(str: string): string {
+function _escapeHtml(str: string): string {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
@@ -169,7 +169,7 @@ export const domOutliner: ToolDefinition = {
     const tooltip = createTooltip();
     addOverlayElement(tooltip);
 
-    function getColorForElement(el: Element): string {
+    function _getColorForElement(el: Element): string {
       if (customColor) return customColor;
       const tag = el.tagName.toLowerCase();
       if (ELEMENT_COLORS[tag]) return ELEMENT_COLORS[tag];

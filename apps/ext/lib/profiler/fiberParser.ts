@@ -313,7 +313,7 @@ export function walkFiberTree(
   callback: (fiber: unknown) => void,
 ): void {
   if (!rootFiber) return;
-  let current: unknown = rootFiber;
+  let current: any = rootFiber;
   while (current !== null && current !== undefined) {
     callback(current);
     const currentObj = current as Record<string, unknown>;

@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { siteReportGenerator } from '@/tools/utilities/site-report-generator';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('siteReportGenerator', () => {
   beforeEach(() => {

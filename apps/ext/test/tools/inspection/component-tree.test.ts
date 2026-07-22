@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from "vitest";
 import { componentTree } from "@/tools/inspection/component-tree";
-import { runStandardToolTests, createMockCtx } from "../../helpers";
+import { runStandardToolTests } from "../../helpers";
 
 describe("componentTree", () => {
   beforeEach(() => {

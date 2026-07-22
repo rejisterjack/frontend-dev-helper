@@ -1,10 +1,5 @@
 import type { ToolDefinition } from "../types";
-import {
-  addOverlayElement,
-  removeOverlayElement,
-  clearAllOverlays,
-  createHighlightBox,
-} from "@/content/overlay-manager";
+import { addOverlayElement, removeOverlayElement } from "@/content/overlay-manager";
 
 const FOCUSABLE_SELECTORS = [
   "a[href]",

@@ -44,6 +44,7 @@ export default auth((req) => {
   // AND echoed on the response for diagnostics. Layout scripts read it via
   // `headers().get('x-nonce')` and pass it to `<Script nonce={...}>`.
   const nonce = generateNonce();
+  const requestId = crypto.randomUUID();
 
   // Sentry ingest endpoint. Once your Sentry org is provisioned, replace the
   // wildcard with your specific ingest host, e.g.
@@ -72,7 +73,6 @@ export default auth((req) => {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://plausible.io${
       isDev ? " 'unsafe-eval'" : ""
     }`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://plausible.io`,
     `img-src 'self' data: blob: https:`,
     `font-src 'self' data: https://fonts.gstatic.com`,
     `connect-src 'self' https://plausible.io ${sentryIngestHost}`,
@@ -89,21 +89,24 @@ export default auth((req) => {
   const res = NextResponse.next();
   res.headers.set("Content-Security-Policy", csp);
   res.headers.set("x-nonce", nonce);
+  res.headers.set("x-request-id", requestId);
   // Also stamp the nonce on a request header so downstream `headers()` reads
   // (which see request headers, not response headers) can find it.
   req.headers.set("x-nonce", nonce);
+  req.headers.set("x-request-id", requestId);
 
   // The NextAuth `auth()` wrapper runs `authConfig.callbacks.authorized`
   // against the resolved session. If `authorized` returned false, the wrapper
   // itself emits the redirect. As a belt-and-braces check, we also redirect
   // unauthenticated users hitting protected prefixes here.
-  const protectedPrefixes = ["/dashboard", "/licenses", "/teams"];
+  const protectedPrefixes = ["/dashboard"];
   if (protectedPrefixes.some((p) => pathname.startsWith(p))) {
     if (!req.auth) {
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       const redirect = NextResponse.redirect(loginUrl);
       redirect.headers.set("Content-Security-Policy", csp);
+      redirect.headers.set("x-request-id", requestId);
       return redirect;
     }
   }

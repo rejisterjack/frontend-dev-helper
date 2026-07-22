@@ -21,87 +21,33 @@ datasource db {
   provider = "postgresql"
 }
 
-// ---------------------------------------------------------------------------
-// Enums (mirror migration 20260507130046_init)
-// ---------------------------------------------------------------------------
-
-enum LicenseTier {
-  FREE
-  PRO
-  TEAM
-}
-
-enum LicenseStatus {
-  ACTIVE
-  EXPIRED
-  REVOKED
-  SUSPENDED
-}
-
-enum SubscriptionStatus {
-  INCOMPLETE
-  INCOMPLETE_EXPIRED
-  TRIALING
-  ACTIVE
-  PAST_DUE
-  CANCELED
-  UNPAID
-  PAUSED
-}
-
-enum TeamRole {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
 enum ReferralStatus {
   PENDING
   COMPLETED
   EXPIRED
 }
 
-// ---------------------------------------------------------------------------
-// Core identity
-// ---------------------------------------------------------------------------
-
 model User {
-  id               String   @id @default(uuid())
-  email            String   @unique
+  id               String    @id @default(uuid())
+  email            String    @unique
   passwordHash     String?
   name             String?
-  emailVerified    Boolean  @default(false)
+  emailVerified    Boolean   @default(false)
   oauthProvider    String?
   oauthId          String?
   avatarUrl        String?
-  // Password-reset token, hashed with SHA-256 before storage (see lib/tokens).
-  // Unique + indexed because the reset-password route looks it up by exact
-  // match (WHERE resetToken = ? AND resetTokenExpiry > ?). Without an index
-  // this would be a full table scan on every reset request.
-  resetToken       String?  @unique
+  resetToken       String?   @unique
   resetTokenExpiry DateTime?
   deletedAt        DateTime?
-  // The user who referred this user (1:1 — a user can only be referred once).
-  // Back-relation; the FK lives on Referral.referredId. Prisma v7 enforces
-  // that fields/references/onDelete are declared on exactly one side.
   referredById     String?
   referredBy       Referral? @relation("Referred")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   emailVerifications EmailVerification[]
-  referrals          Referral[]       @relation("Referrer")
-  licenses           License[]
-  subscriptions      Subscription[]
-  teamsOwned         Team[]
-  teamMemberships    TeamMember[]
-  teamPresets        TeamPreset[]
+  referrals          Referral[]          @relation("Referrer")
 
-  // Composite uniqueness on (oauthProvider, oauthId) already creates the index
-  // needed for OAuth lookups; no separate @@index on `email` is required
-  // because `@unique` already provides one.
   @@unique([oauthProvider, oauthId])
-  // FK index for the `referredBy` relation back-reference.
   @@index([referredById])
 }
 
@@ -113,136 +59,21 @@ model EmailVerification {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  // No separate @@index([token]) — the `@unique` on `token` already creates
-  // a unique index that serves both uniqueness and lookup.
   @@index([userId])
 }
-
-// ---------------------------------------------------------------------------
-// Billing
-// ---------------------------------------------------------------------------
-
-model License {
-  id              String        @id @default(uuid())
-  key             String        @unique
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
-  tier            LicenseTier
-  status          LicenseStatus @default(ACTIVE)
-  expiresAt       DateTime?
-  lastValidated   DateTime      @default(now())
-  validationCount Int           @default(0)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  // No separate @@index([key]) — `@unique` already provides an index.
-  @@index([userId])
-}
-
-model Subscription {
-  id                   String             @id @default(uuid())
-  userId               String
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Restrict)
-  stripeCustomerId     String             @unique
-  stripeSubscriptionId String?            @unique
-  tier                 LicenseTier
-  status               SubscriptionStatus @default(INCOMPLETE)
-  currentPeriodStart   DateTime?
-  currentPeriodEnd     DateTime?
-  canceledAt           DateTime?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-
-  @@index([userId])
-  // No separate @@index([stripeCustomerId]) — `@unique` already provides one.
-}
-
-// ---------------------------------------------------------------------------
-// Teams
-// ---------------------------------------------------------------------------
-
-model Team {
-  id        String       @id @default(uuid())
-  name      String
-  ownerId   String
-  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
-  maxMembers Int         @default(5)
-  members   TeamMember[]
-  presets   TeamPreset[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  @@index([ownerId])
-}
-
-model TeamMember {
-  id        String   @id @default(uuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  role      TeamRole @default(MEMBER)
-  joinedAt  DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([teamId, userId])
-  @@index([teamId])
-  @@index([userId])
-}
-
-model TeamPreset {
-  id        String   @id @default(uuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  name      String
-  config    Json
-  createdBy String
-  creator   User     @relation(fields: [createdBy], references: [id], onDelete: Restrict)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([teamId])
-  // FK index for the `createdBy` relation.
-  @@index([createdBy])
-}
-
-// ---------------------------------------------------------------------------
-// Referrals
-// ---------------------------------------------------------------------------
 
 model Referral {
-  id           String          @id @default(uuid())
+  id           String         @id @default(uuid())
   referrerId   String
-  referrer     User            @relation("Referrer", fields: [referrerId], references: [id], onDelete: Restrict)
-  referralCode String          @unique
-  // The user who redeemed this referral code (optional until redeemed).
-  referredId   String?         @unique
-  referred     User?           @relation("Referred", fields: [referredId], references: [id], onDelete: SetNull)
+  referrer     User           @relation("Referrer", fields: [referrerId], references: [id], onDelete: Restrict)
+  referralCode String         @unique
+  referredId   String?        @unique
+  referred     User?          @relation("Referred", fields: [referredId], references: [id], onDelete: SetNull)
   reward       String?
-  status       ReferralStatus  @default(PENDING)
+  status       ReferralStatus @default(PENDING)
   redeemedAt   DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([referrerId])
-  // No separate @@index([referralCode]) — `@unique` already provides one.
-}
-
-// ---------------------------------------------------------------------------
-// Webhook idempotency (Stripe and similar)
-// ---------------------------------------------------------------------------
-
-model WebhookEvent {
-  id        String   @id @default(uuid())
-  eventId   String   @unique
-  eventType String
-  // Newly-inserted webhook events start unprocessed; flip to true only after
-  // the handler has successfully run. The previous default of `true` defeated
-  // the idempotency gate (rows looked already-done on insert).
-  processed Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // No separate @@index([eventId]) — `@unique` already provides one.
 }

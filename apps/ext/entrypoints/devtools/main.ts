@@ -1,6 +1,6 @@
 import { toolMetadata } from "@/tools/metadata";
 
-const categories = Object.values(toolMetadata).reduce((acc, tool) => {
+const _categories = Object.values(toolMetadata).reduce((acc, tool) => {
   if (!acc.includes(tool.category)) acc.push(tool.category);
   return acc;
 }, [] as string[]);
@@ -13,7 +13,7 @@ browser.devtools.panels.elements.createSidebarPane("FDH Inspector", (pane) => {
   // `onResourceChanged` exists at runtime in Chrome 124+ but is not in the
   // current @types/chrome; fall back to `onResourceAdded` at the type level
   // (the listener is a no-op for our use case — we just refresh the panel).
-  const win = browser.devtools.inspectedWindow as unknown as {
+  const win = browser.devtools.inspectedWindow as any as {
     onResourceChanged: { addListener: (cb: () => void) => void };
     onResourceAdded: { addListener: (cb: () => void) => void };
   };

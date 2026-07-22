@@ -245,8 +245,8 @@ export function handleApplyCSSEdit(message: BridgeMessage): void {
             for (let j = i; j < doc.lineCount && j < i + 200; j++) {
               const text = doc.lineAt(j).text;
               for (const ch of text) {
-                if (ch === "{") braceDepth++;
-                if (ch === "}") braceDepth--;
+                if (ch === "{") {braceDepth++;}
+                if (ch === "}") {braceDepth--;}
               }
 
               const propMatch = text.match(
@@ -266,9 +266,9 @@ export function handleApplyCSSEdit(message: BridgeMessage): void {
                 break;
               }
 
-              if (braceDepth <= 0 && text.includes("}")) break;
+              if (braceDepth <= 0 && text.includes("}")) {break;}
             }
-            if (foundProp) break;
+            if (foundProp) {break;}
           }
         }
       }
@@ -487,7 +487,7 @@ export function handlePerformanceAudit(message: BridgeMessage): void {
   };
   const score = payload.overallScore;
   const url = payload.url ?? "current page";
-  if (typeof score !== "number") return;
+  if (typeof score !== "number") {return;}
 
   const grade = score >= 90 ? "Good" : score >= 50 ? "Needs Work" : "Poor";
   const topOpp = (payload.opportunities ?? [])

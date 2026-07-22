@@ -6,6 +6,7 @@ import {
 
 describe("overlay-manager (real implementation)", () => {
   beforeEach(() => {
+    // eslint-disable-next-line no-restricted-syntax -- test reset of document shell
     document.documentElement.innerHTML = "";
     document.body.textContent = "";
     destroyOverlayContainer();

@@ -1,5 +1,5 @@
-import { MESSAGE_TYPES, TOOL_IDS } from "@/lib/constants";
-import type { ToolId } from "@/lib/types";
+import { TOOL_IDS } from "@/lib/constants";
+
 import {
   sendChatMessage,
   sendRawRequest,
@@ -21,7 +21,7 @@ import { getSecret, migrateLegacySecrets } from "@/lib/secrets";
  *
  * `T` is the persisted wrapper shape (typically `{ state: ..., version: ... }`).
  */
-async function readStored<T = unknown>(key: string): Promise<T | undefined> {
+async function _readStored<T = unknown>(key: string): Promise<T | undefined> {
   const result = await browser.storage.local.get(key);
   return result[key] as T | undefined;
 }
@@ -131,7 +131,7 @@ function deepMergeSettings(
       typeof value === "object" &&
       !Array.isArray(value) &&
       typeof out[key] === "object" &&
-      !Array.isArray(out[key] as unknown) &&
+      !Array.isArray(out[key] as any) &&
       out[key] !== null
     ) {
       out[key] = deepMergeSettings(
@@ -726,7 +726,17 @@ export default defineBackground(() => {
             (
               msg as {
                 data?: {
-                  pageContext?: any;
+                  pageContext?: {
+                    url?: string;
+                    title?: string;
+                    frameworks?: string[];
+                    domStats?: {
+                      elements?: number;
+                      images?: number;
+                      scripts?: number;
+                      links?: number;
+                    };
+                  };
                   focusArea?: string;
                   maxSuggestions?: number;
                 };

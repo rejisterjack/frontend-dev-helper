@@ -333,7 +333,10 @@ export const smartSuggestions: ToolDefinition = {
               description: s.description,
               fixId,
             };
-            bridge.send({ type: "PreviewFix", payload });
+            bridge.send({
+              type: "PreviewFix",
+              payload: payload as any as Record<string, unknown>,
+            });
           });
           actionRow.appendChild(vscodeBtn);
           item.appendChild(actionRow);

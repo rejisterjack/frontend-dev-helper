@@ -37,7 +37,7 @@ export const responsivePreview: ToolDefinition = {
   },
   run: (ctx, config) => {
     const cfg = config ?? {};
-    const showFrame = (cfg.showDeviceFrame as boolean) ?? true;
+    const _showFrame = (cfg.showDeviceFrame as boolean) ?? true;
     const rotated = (cfg.rotate as boolean) ?? false;
     const scaleToFit = (cfg.scaleToFit as boolean) ?? true;
 

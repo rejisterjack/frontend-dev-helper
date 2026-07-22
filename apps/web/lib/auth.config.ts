@@ -57,7 +57,7 @@ export const authConfig: NextAuthConfig = {
     // inspects the session, no DB calls, so it's safe here.
     authorized({ request, auth: session }) {
       const path = request.nextUrl.pathname;
-      const protectedPrefixes = ["/dashboard", "/licenses", "/teams"];
+      const protectedPrefixes = ["/dashboard"];
 
       if (protectedPrefixes.some((p) => path.startsWith(p))) {
         if (!session?.user) {

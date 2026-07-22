@@ -174,7 +174,7 @@ export const colorPicker: ToolDefinition = {
       header.append(titleSpan, closeBtn);
       panel.appendChild(header);
 
-      function addColorSection(label: string, formatted: { hex: string; rgb: string; hsl: string }, rgb: { r: number; g: number; b: number; a: number }): void {
+      function addColorSection(label: string, formatted: { hex: string; rgb: string; hsl: string }, _rgb: { r: number; g: number; b: number; a: number }): void {
         const section = document.createElement('div');
         section.style.cssText = 'padding:10px 14px;';
 
@@ -268,7 +268,7 @@ export const colorPicker: ToolDefinition = {
       const colorStr = cs.color;
       const bgStr = cs.backgroundColor;
       const colorRgb = parseRgb(colorStr);
-      const bgRgb = parseRgb(bgStr);
+      const _bgRgb = parseRgb(bgStr);
 
       if (!colorRgb) { removeHighlight(); removeTooltip(); return; }
 

@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { viewTransitionsDebugger } from '@/tools/inspection/view-transitions-debugger';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('viewTransitionsDebugger', () => {
   beforeEach(() => {

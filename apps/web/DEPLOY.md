@@ -18,7 +18,7 @@ migrations committed under `prisma/migrations/`).
 - A Resend account with `frontenddevhelper.com` (or your domain) verified.
 - A Sentry account and org.
 - (Optional) Google + GitHub OAuth apps.
-- (Optional) Upstash Redis DB for distributed rate limiting.
+- **Upstash Redis** (required in production for rate limiting).
 
 ---
 
@@ -169,16 +169,15 @@ For each provider you intend to support:
 
 ## 7. Upstash Redis (production rate limiting)
 
-Without Upstash, every Vercel serverless instance keeps its own in-memory
-rate-limit bucket — an attacker can multiply their budget by the instance
-count.
+**Required in production.** Without Upstash env vars when `NODE_ENV=production`,
+rate-limited routes fail closed with HTTP 503.
 
 1. Upstash console → Create DB. Pick the same region as your Vercel project
    to minimize latency.
 2. Copy **REST URL** and **REST Token** to Vercel env vars
    `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
-3. The app auto-detects these on next cold start and switches from
-   `MemoryRateLimiter` to `UpstashRateLimiter`.
+3. Redeploy — the app uses Upstash for distributed rate limiting. Dev/CI keep
+   the in-memory limiter.
 
 ---
 
@@ -253,6 +252,8 @@ Run through this on the production URL after deploy:
 
 - **Rotate `NEXTAUTH_SECRET`** by re-deploying with a new value. All existing
   JWT sessions invalidate immediately (users are signed out).
+- **Auth.js pin:** `next-auth` is pinned to `5.0.0-beta.32` (Auth.js v5 is still
+  on the beta line at time of launch). Bump deliberately and run auth E2E after.
 - **Roll back a deploy** via the Vercel dashboard → Deployments → Promote
   Previous.
 - **Add new migrations** by editing `prisma/schema.prisma`, running

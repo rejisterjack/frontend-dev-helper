@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -226,7 +219,7 @@ export function OnboardingOverlay() {
         <DialogHeader>
           <DialogTitle className="sr-only">Onboarding</DialogTitle>
           <DialogDescription className="sr-only">
-            Welcome to Frontend Dev Helper. Let's get you started.
+            Welcome to Frontend Dev Helper. Let us get you started.
           </DialogDescription>
         </DialogHeader>
         <CurrentStep

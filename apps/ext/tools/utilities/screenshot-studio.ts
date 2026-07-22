@@ -53,7 +53,7 @@ export const screenshotStudio: ToolDefinition = {
   },
   run: (ctx, config) => {
     const cfg = config ?? {};
-    const captureMode = (cfg.captureMode as string) ?? "viewport";
+    const _captureMode = (cfg.captureMode as string) ?? "viewport";
     const format = (cfg.format as string) ?? "png";
     const quality = ((cfg.quality as number) ?? 90) / 100;
     const showAnnotations = (cfg.showAnnotations as boolean) ?? true;

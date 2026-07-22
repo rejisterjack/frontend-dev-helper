@@ -4,8 +4,8 @@ import {
   removeOverlayElement,
 } from "@/content/overlay-manager";
 
-const MARGIN_COLOR_DEFAULT = "#3b82f6";
-const PADDING_COLOR_DEFAULT = "#22c55e";
+const _MARGIN_COLOR_DEFAULT = "#3b82f6";
+const _PADDING_COLOR_DEFAULT = "#22c55e";
 const LABEL_BG = "rgba(0,0,0,0.8)";
 
 function createLabel(value: number, color: string): HTMLElement {

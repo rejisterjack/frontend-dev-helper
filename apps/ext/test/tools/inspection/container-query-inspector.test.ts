@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { containerQueryInspector } from '@/tools/inspection/container-query-inspector';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('containerQueryInspector', () => {
   beforeEach(() => {

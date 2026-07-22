@@ -308,6 +308,8 @@ export function TreeView({
           break;
       }
     },
+    // scrollToIndex is stable enough for keyboard nav; including it churns the callback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scrollToIndex omitted intentionally
     [flatNodes, focusedIndex, onSelectComponent, handleToggle, onViewAnalysis],
   );
 

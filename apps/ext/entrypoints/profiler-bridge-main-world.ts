@@ -514,14 +514,14 @@ export default defineUnlistedScript(() => {
 
   function detectReact(): boolean {
     if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) return true;
-    const w = window as unknown as Record<string, unknown>;
+    const w = window as any as Record<string, unknown>;
     if (w.React || w.__REACT__) return true;
     if (document.querySelector("[data-reactroot], [data-reactid]")) return true;
 
     for (const id of ["root", "app", "__next", "__nuxt"]) {
       const el = document.getElementById(id);
       if (el) {
-        if ((el as unknown as Record<string, unknown>)._reactRootContainer)
+        if ((el as any as Record<string, unknown>)._reactRootContainer)
           return true;
         if (
           Object.getOwnPropertyNames(el).some((k) =>
@@ -584,7 +584,7 @@ export default defineUnlistedScript(() => {
       const el = walker.currentNode as Element;
       for (const prop of Object.getOwnPropertyNames(el)) {
         if (prop.startsWith("__reactFiber$")) {
-          const fiber = (el as unknown as Record<string, unknown>)[prop];
+          const fiber = (el as any as Record<string, unknown>)[prop];
           if (fiber && typeof fiber === "object") {
             const mode = (fiber as Record<string, unknown>).mode;
             if (typeof mode === "number") {
@@ -660,7 +660,7 @@ export default defineUnlistedScript(() => {
         for (const prop of Object.getOwnPropertyNames(el)) {
           for (const prefix of FIBER_KEYS) {
             if (prop.startsWith(prefix)) {
-              const value = (el as unknown as Record<string, unknown>)[prop];
+              const value = (el as any as Record<string, unknown>)[prop];
               if (
                 value &&
                 typeof value === "object" &&

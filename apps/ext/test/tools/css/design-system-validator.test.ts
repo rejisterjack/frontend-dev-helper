@@ -1,6 +1,6 @@
 import { describe, beforeEach, vi, it, expect } from 'vitest';
 import { designSystemValidator } from '@/tools/css/design-system-validator';
-import { runStandardToolTests, createMockCtx } from '../../helpers';
+import { runStandardToolTests } from '../../helpers';
 
 describe('designSystemValidator', () => {
   beforeEach(() => {
