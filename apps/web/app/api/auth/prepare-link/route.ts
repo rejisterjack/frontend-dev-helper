@@ -41,5 +41,3 @@ export async function POST(request: Request) {
 
   return Response.json({ ok: true });
 }
-
-export { LINK_COOKIE };

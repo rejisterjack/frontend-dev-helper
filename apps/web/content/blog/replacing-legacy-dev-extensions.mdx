@@ -1,0 +1,43 @@
+---
+title: "Replacing 12 Legacy Dev Extensions With One"
+description: "Why juggling Pesticide, WhatFont, ColorZilla, and nine other single-purpose extensions costs you RAM, security review surface, and time — and what a consolidated toolkit changes."
+date: "2026-07-28"
+tags: ["workflow", "productivity", "browser"]
+---
+
+The average frontend developer's browser has a graveyard of single-purpose extensions: one for CSS outlines, one for fonts, one for color picking, one for a11y, one for measuring, one for screenshots. Each made sense when it was installed. Collectively they're a problem.
+
+## The real cost of extension sprawl
+
+**Memory.** Every extension keeps a background service worker alive (Manifest V3) or a persistent page (MV2). Twelve extensions means twelve resident processes competing with your actual work tabs.
+
+**Security review surface.** Each extension requests its own permissions, and each is a separate supply-chain dependency you have to trust. A 2019–2020 wave of buyouts turned popular extensions into adware overnight. Consolidating to one extension you can [read the source of](https://github.com/rejisterjack/frontend-dev-helper) is a meaningful risk reduction.
+
+**Permission prompts.** Single-purpose tools frequently request broad host access for narrow functionality. One extension with 50 tools requests host access once, scoped to when a tool is actually activated.
+
+**Cognitive overhead.** Twelve toolbar icons, twelve sets of keyboard shortcuts that conflict, twelve update dialogs. The friction is small per-instance and large in aggregate.
+
+## What consolidation changes
+
+A consolidated toolkit shifts the interaction model from "hunt for the icon" to "invoke the tool." With [FrontendDevHelper](/), the command palette (Ctrl+Shift+P) is the primary surface — you type what you want ("contrast", "grid", "a11y") and the tool activates on the current tab. Fifty tools, one shortcut to remember.
+
+It also changes the audit story. Instead of trusting twelve vendors, you audit one MIT-licensed codebase where every tool's source is public, all processing is local, and there is no telemetry by default.
+
+## A migration checklist
+
+If you're consolidating, this is the capability set worth keeping:
+
+1. **CSS inspection** — box model, computed styles, flex/grid visualization ([CSS Debugger](/tools/css-debugger))
+2. **Color & typography** — picker, contrast, font identification ([Color Picker](/tools/color-picker), [Font Inspector](/tools/font-inspector))
+3. **Accessibility** — WCAG scanning with visual overlays ([Accessibility Checker](/tools/accessibility-checker))
+4. **Measurement** — rulers, spacing, alignment guides ([Pixel Ruler](/tools/pixel-ruler), [Spacing Visualizer](/tools/spacing-visualizer))
+5. **Capture & reporting** — screenshots, annotated reports ([Screenshot Studio](/tools/screenshot-studio), [Site Report Generator](/tools/site-report-generator))
+6. **Performance** — Core Web Vitals, render profiling ([Performance Profiler](/tools/performance-profiler))
+
+Everything else — DOM outlining, z-index visualization, design token extraction, session replay — is what makes a toolkit feel complete rather than a collection of utilities.
+
+## Manifest V3 is the forcing function
+
+Browsers are disabling Manifest V2 extensions. Many of the single-purpose tools in that graveyard are MV2 and will simply stop working. Migrating deliberately — to one MV3-native toolkit rather than hunting MV3 rewrites of each tool — is the lower-effort path.
+
+FrontendDevHelper was [built for MV3 from day one](https://github.com/rejisterjack/frontend-dev-helper), is free and open source with no paid tier, and runs entirely locally. The [full tool catalog](/#tools) has a dedicated page per tool if you want to evaluate each capability before installing.

@@ -9,6 +9,11 @@ export interface ToolPageData {
   howItWorks: { step: string; title: string; description: string }[];
   faq: { question: string; answer: string }[];
   relatedTools: string[];
+  /**
+   * Optional ISO date for sitemap `lastModified`. Falls back to
+   * SITE_CONTENT_UPDATED in the sitemap when omitted.
+   */
+  updatedAt?: string;
 }
 
 export const allTools: ToolPageData[] = [

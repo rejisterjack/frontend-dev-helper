@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import createMDX from "@next/mdx";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
+
+const withMDX = createMDX();
 
 const securityHeaders = [
   {
@@ -51,6 +54,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  pageExtensions: ["ts", "tsx", "mdx"],
   // Suppress the X-Powered-By: Next.js response header (minor info disclosure).
   poweredByHeader: false,
   // Prisma v7 + driver adapter must run server-side only. Marking it as a
@@ -82,7 +86,7 @@ const nextConfig: NextConfig = {
 
 // Sentry is now a hard dependency — source maps are uploaded in CI when
 // SENTRY_AUTH_TOKEN is present.
-const withSentry = withSentryConfig(nextConfig, {
+const withSentry = withSentryConfig(withMDX(nextConfig), {
   silent: true,
   hideSourceMaps: true,
   // Only upload source maps when building with an auth token (CI/prod).

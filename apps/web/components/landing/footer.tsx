@@ -27,6 +27,7 @@ const columns = [
   {
     title: "Tools",
     links: [
+      { label: "All tools", href: "/#tools", external: false },
       { label: "CSS Debugger", href: "/tools/css-debugger", external: false },
       {
         label: "Accessibility Checker",
@@ -45,6 +46,8 @@ const columns = [
   {
     title: "Resources",
     links: [
+      { label: "Blog", href: "/blog", external: false },
+      { label: "Comparisons", href: "/compare", external: false },
       { label: "Documentation", href: `${GITHUB_URL}#readme`, external: true },
       { label: "GitHub", href: GITHUB_URL, external: true },
       {

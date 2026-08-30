@@ -1,0 +1,48 @@
+---
+title: "How to Debug Flexbox Alignment Issues (Without Guessing)"
+description: "A practical walkthrough of the six most common flexbox alignment bugs — misaligned items, unexpected wrapping, squashed content — and how to see each one visually in the browser."
+date: "2026-08-18"
+tags: ["css", "flexbox", "debugging"]
+---
+
+Misaligned flex items are one of the most common CSS bugs in frontend work. The problem is rarely the property you think it is: `justify-content` and `align-items` interact with `flex-wrap`, `gap`, intrinsic sizes, and min-width constraints in ways that are invisible in a static stylesheet.
+
+This guide walks through the six alignment bugs we see most often, and how to diagnose each one visually instead of guessing.
+
+## 1. Items don't stretch to equal heights
+
+When flex items have different content lengths and don't stretch, the usual cause is a parent with `align-items: flex-start` (or an item with `align-self` overriding the container). The default is `stretch`, so any item not filling the cross axis has an explicit override somewhere in the cascade.
+
+To diagnose: overlay the container's cross axis and check each item's `align-self` in computed styles. A single item with `align-self: flex-start` will break an otherwise uniform row.
+
+## 2. `justify-content: space-between` looks wrong with wrapping
+
+Once `flex-wrap: wrap` is set, `justify-content` applies to each line independently. If the last line has fewer items, `space-between` pushes them to opposite edges — which looks like a bug but is specified behavior.
+
+The fix is usually a different layout strategy for the last line, or accepting the behavior and designing around it. Seeing the line boxes drawn on the page makes the cause obvious in seconds.
+
+## 3. Items shrink when they shouldn't
+
+Flex items default to `flex-shrink: 1`. An item without `min-width: 0` (or `overflow: hidden`) cannot shrink below its content's intrinsic minimum, which pushes siblings around unpredictably — the classic "long word breaks the layout" problem.
+
+Check the computed `min-width` of each item. If it's `auto`, the item is participating in min-content sizing.
+
+## 4. `gap` appears to do nothing
+
+`gap` on a flex container only works when items actually wrap or there are multiple items on a line. A single item per line with `row-gap` set will show no effect. Also verify you set `gap` on the container, not the items — a common copy-paste error.
+
+## 5. Centering fails vertically
+
+`align-items: center` centers items along the cross axis — vertical only if `flex-direction: row`. If the direction was changed to `column` elsewhere in the cascade, centering appears broken. Always confirm the resolved `flex-direction` before assuming centering is broken.
+
+## 6. Mysterious spacing from line boxes
+
+Inline-level whitespace inside flex items (nested text nodes, inline images) contributes to min-content sizing and can add spacing no margin rule explains. Rendering the item's box model with padding/margin layers exposed usually reveals it.
+
+## Doing this visually
+
+Each of these six bugs is faster to diagnose when you can see the flex container's axes, gaps, and item alignments rendered directly on the page — rather than reading computed styles one property at a time.
+
+FrontendDevHelper's [CSS Debugger](/tools/css-debugger) draws flexbox and grid structure as an overlay: line boxes, gaps, alignment, and the resolved `flex-direction` for any hovered element. Its companion [Flexbox & Grid Visualizer](/tools/flex-grid-visualizer) renders track sizes and wrapping behavior live, which makes cases 2 and 3 immediately obvious. For the min-width trap, the [CSS Inspector](/tools/css-inspector) shows resolved min-content constraints next to computed styles.
+
+All three tools run locally in the browser and work on any site — localhost or production.

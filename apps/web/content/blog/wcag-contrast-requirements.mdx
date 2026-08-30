@@ -1,0 +1,45 @@
+---
+title: "WCAG Contrast Requirements, Explained (AA vs AAA)"
+description: "The exact contrast ratios WCAG 2.1 requires for normal text, large text, and UI components — plus the common failures automated scanners miss."
+date: "2026-08-08"
+tags: ["accessibility", "wcag", "design"]
+---
+
+Contrast requirements are the most-failed WCAG success criteria in real audits, mostly because the rules have more nuance than "make it darker." This is a reference for the exact ratios and the cases that trip teams up.
+
+## The ratios
+
+WCAG 2.1 defines two conformance levels for contrast:
+
+| Content type | AA (1.4.3) | AAA (1.4.6) |
+| --- | --- | --- |
+| Normal text (under 18pt / 24px) | 4.5:1 | 7:1 |
+| Large text (18pt+, or 14pt+ bold) | 3:1 | 4.5:1 |
+| UI components & graphical objects (1.4.11) | 3:1 | — |
+
+Large text has a lower bar because larger glyphs are legible at lower contrast. Note that 1.4.11 (non-text contrast) only has an AA level — there is no AAA for icons, form borders, or focus indicators.
+
+## What counts as "text"
+
+The ratio applies to text against its background — but "background" means the visual background *behind each glyph*, including gradients and images. A button whose average gradient contrast passes can still fail where the label overlaps the darkest region. Auditing a gradient button means checking the worst-case pair, not the average.
+
+## Common failures automated scanners miss
+
+Scanners reliably catch flat color pairs. They routinely miss:
+
+- **Text over images and gradients** — worst-case region isn't computed.
+- **Disabled states** — exempt from 1.4.3, but often exempt-by-accident and unusable.
+- **Placeholder text** — frequently lighter than the entered-value style.
+- **Icon-only buttons** — 1.4.11 requires 3:1 for the meaningful graphic, and no text ratio to lean on.
+- **Focus indicators** — must have 3:1 against adjacent colors (2.4.11 in WCAG 2.2).
+- **Charts and data-viz colors** — series colors must be distinguishable from each other and the background.
+
+## Quick math
+
+Contrast is `(L1 + 0.05) / (L2 + 0.05)` where L1 is the lighter relative luminance. Two things surprise people: pure white on pure yellow fails (1.07:1), and mid-gray on mid-gray can pass AA if the grays are far enough apart. Intuition is a poor substitute for measuring.
+
+## Checking contrast in the browser
+
+Manual ratio math is slow, and eyedropper-plus-calculator workflows break on gradients. The fastest workflow is a tool that samples the actual rendered colors under the cursor and reports the ratio against both AA and AAA thresholds.
+
+FrontendDevHelper ships two tools for exactly this. The [Contrast Checker](/tools/contrast-checker) samples foreground/background pairs anywhere on the page and reports AA/AAA status per WCAG 2.1 criteria. The [Accessibility Checker](/tools/accessibility-checker) runs a full page scan across 50+ success criteria — contrast included — with on-page overlays showing exactly which elements fail. Both run locally; no page data leaves the browser.

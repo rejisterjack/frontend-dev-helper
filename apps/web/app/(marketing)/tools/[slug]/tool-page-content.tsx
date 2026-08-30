@@ -23,8 +23,39 @@ export default function ToolPageContent({
 }) {
   return (
     <div className="min-h-screen bg-bg-base">
+      {/* Breadcrumbs (matches BreadcrumbList JSON-LD) */}
+      <section className="pt-24">
+        <Container>
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-2 text-sm text-text-muted">
+              <li>
+                <Link
+                  href="/"
+                  className="transition-colors hover:text-text-secondary"
+                >
+                  Home
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li>
+                <Link
+                  href="/#tools"
+                  className="transition-colors hover:text-text-secondary"
+                >
+                  Tools
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" className="text-text-secondary">
+                {tool.name}
+              </li>
+            </ol>
+          </nav>
+        </Container>
+      </section>
+
       {/* Hero */}
-      <section className="relative overflow-hidden pb-20 pt-32 md:pt-40">
+      <section className="relative overflow-hidden pb-20 pt-10 md:pt-16">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           aria-hidden="true"
@@ -63,6 +94,23 @@ export default function ToolPageContent({
               </Button>
             </div>
           </motion.div>
+        </Container>
+      </section>
+
+      {/* At a glance — self-contained passage for LLM extraction */}
+      <section className="border-y border-line-subtle bg-bg-elevated/50">
+        <Container>
+          <div className="py-8 md:py-10">
+            <p className="text-xs font-medium uppercase tracking-widest text-brand-cyan">
+              At a glance
+            </p>
+            <p className="mt-3 max-w-3xl text-base leading-relaxed text-text-secondary">
+              {tool.name} is a visual debugging tool built into the free,
+              open-source FrontendDevHelper browser extension. {tool.tagline}{" "}
+              It runs entirely locally in the browser and works on any site,
+              including localhost and production.
+            </p>
+          </div>
         </Container>
       </section>
 
